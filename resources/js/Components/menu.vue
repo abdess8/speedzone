@@ -188,16 +188,10 @@ export default {
           <div class="collapse menu-dropdown" id="sidebarUsers">
             <ul class="nav nav-sm flex-column">
               <li class="nav-item">
-                <Link href="/users/admin" class="nav-link">Admin</Link>
+                <Link href="/users" class="nav-link">Liste des utilisateurs</Link>
               </li>
               <li class="nav-item">
-                <Link href="/users/livreur" class="nav-link">Livreur</Link>
-              </li>
-              <li class="nav-item">
-                <Link href="/users/vendeur" class="nav-link">Vendeur</Link>
-              </li>
-              <li class="nav-item">
-                <Link href="/roles" class="nav-link">Role</Link>
+                <Link href="/users/create" class="nav-link">Créer un utilisateur</Link>
               </li>
             </ul>
           </div>

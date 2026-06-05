@@ -93,7 +93,7 @@ export default {
         <BRow>
           <BCol lg="12">
             <div class="text-center">
-              <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} Velzon. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand</p>
+              <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} SpeedZone Express. Crafted with <i class="mdi mdi-heart text-danger"></i> by SpeedZone Express</p>
             </div>
           </BCol>
         </BRow>

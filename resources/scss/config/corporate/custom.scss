@@ -614,3 +614,214 @@ File: Custom Css File
     }
   }
 }
+
+// SpeedZone Express global brand system
+body {
+  background-color: #ffffff;
+  color: #1f2937;
+}
+
+.card {
+  border: 0;
+  border-radius: 0.9rem;
+  box-shadow: 0 10px 30px rgba(13, 74, 157, 0.08);
+}
+
+.card-title,
+.card-header .card-title,
+h4.text-primary,
+h5.text-primary {
+  color: $primary !important;
+}
+
+.btn {
+  border-radius: 0.65rem;
+  transition: all 0.25s ease;
+}
+
+.btn-primary {
+  --#{$prefix}btn-bg: #0d4a9d;
+  --#{$prefix}btn-border-color: #0d4a9d;
+  --#{$prefix}btn-hover-bg: #{shade-color(#0d4a9d, 12%)};
+  --#{$prefix}btn-hover-border-color: #{shade-color(#0d4a9d, 12%)};
+  --#{$prefix}btn-active-bg: #{shade-color(#0d4a9d, 18%)};
+  --#{$prefix}btn-active-border-color: #{shade-color(#0d4a9d, 18%)};
+}
+
+.btn-secondary {
+  --#{$prefix}btn-bg: #f15a24;
+  --#{$prefix}btn-border-color: #f15a24;
+  --#{$prefix}btn-hover-bg: #{shade-color(#f15a24, 12%)};
+  --#{$prefix}btn-hover-border-color: #{shade-color(#f15a24, 12%)};
+  --#{$prefix}btn-active-bg: #{shade-color(#f15a24, 18%)};
+  --#{$prefix}btn-active-border-color: #{shade-color(#f15a24, 18%)};
+}
+
+.btn-danger {
+  --#{$prefix}btn-bg: #dc2626;
+  --#{$prefix}btn-border-color: #dc2626;
+}
+
+.form-control,
+.form-select {
+  border-radius: 0.65rem;
+  min-height: 44px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: $primary;
+  box-shadow: 0 0 0 0.2rem rgba(241, 90, 36, 0.2);
+}
+
+.table-responsive {
+  border-radius: 0.75rem;
+}
+
+.table {
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f3f4f6;
+    color: $primary;
+    font-weight: 600;
+  }
+
+  tbody tr {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba(241, 90, 36, 0.08);
+      box-shadow: inset 3px 0 0 0 $secondary;
+    }
+  }
+}
+
+.status-badge {
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.status-badge-pending {
+  background: rgba(241, 90, 36, 0.15);
+  color: #f15a24;
+}
+
+.status-badge-in-transit {
+  background: rgba(13, 74, 157, 0.15);
+  color: #0d4a9d;
+}
+
+.status-badge-delivered {
+  background: rgba(22, 163, 74, 0.15);
+  color: #16a34a;
+}
+
+.status-badge-cancelled {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+}
+
+.speedzone-spinner {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 0.3rem solid rgba(13, 74, 157, 0.12);
+  border-top-color: #0d4a9d;
+  border-right-color: #f15a24;
+  animation: speedzone-spin 0.8s linear infinite;
+}
+
+@keyframes speedzone-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.speedzone-skeleton {
+  border-radius: 0.5rem;
+  background: linear-gradient(
+    90deg,
+    rgba(167, 169, 172, 0.2) 25%,
+    rgba(13, 74, 157, 0.08) 50%,
+    rgba(167, 169, 172, 0.2) 75%
+  );
+  background-size: 300% 100%;
+  animation: speedzone-skeleton 1.3s infinite linear;
+}
+
+@keyframes speedzone-skeleton {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+.progress-bar {
+  background: linear-gradient(90deg, #0d4a9d, #f15a24);
+}
+
+.dashboard-logistics-card {
+  background: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 12px 28px rgba(13, 74, 157, 0.08);
+}
+
+.dashboard-logistics-card .icon-wrap {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 74, 157, 0.12);
+  color: #0d4a9d;
+}
+
+.auth-logo img {
+  max-height: 52px;
+  width: auto;
+}
+
+.auth-one-bg {
+  .bg-overlay {
+    background: linear-gradient(135deg, #0d4a9d 0%, #123a78 55%, #f15a24 100%);
+    opacity: 0.96;
+  }
+}
+
+// Position-aware logo sizing
+.brand-logo-full {
+  width: auto;
+  height: 120px;
+  object-fit: contain;
+}
+
+.brand-logo-icon {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.footer-brand-logo {
+  width: auto;
+  height: 40px;
+  object-fit: contain;
+}
+
+@media (max-width: 767.98px) {
+  .brand-logo-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .footer-brand-logo {
+    height: 32px;
+  }
+}

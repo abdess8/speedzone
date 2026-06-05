@@ -313,19 +313,19 @@ export default {
           <div class="navbar-brand-box horizontal-logo">
             <Link href="/" class="logo logo-dark">
               <span class="logo-sm">
-                <img src="@assets/images/logo-sm.png" alt="" height="22" />
+                <img src="@assets/images/logo-sm.png" alt="SpeedZone Express" class="brand-logo-icon" />
               </span>
               <span class="logo-lg">
-                <img src="@assets/images/logo-dark.png" alt="" height="17" />
+                <img src="@assets/images/logo-dark.png" alt="SpeedZone Express" class="brand-logo-full" />
               </span>
             </Link>
 
             <Link href="/" class="logo logo-light">
               <span class="logo-sm">
-                <img src="@assets/images/logo-sm.png" alt="" height="22" />
+                <img src="@assets/images/logo-sm.png" alt="SpeedZone Express" class="brand-logo-icon" />
               </span>
               <span class="logo-lg">
-                <img src="@assets/images/logo-light.png" alt="" height="17" />
+                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" class="brand-logo-full" />
               </span>
             </Link>
           </div>

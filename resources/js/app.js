@@ -25,7 +25,7 @@ AOS.init({
 });
 
 createInertiaApp({
-    title: title => title ? `${title} | Velzon Inertia + Vue & Laravel Admin & Dashboard Template` : 'Velzon - Inertia + Vue & Laravel Admin & Dashboard Template',
+    title: title => title ? `${title} | SpeedZone Express` : 'SpeedZone Express',
     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
     setup({ el, App, props, plugin }) {
         return createApp({ render: () => h(App, props) })
@@ -43,6 +43,6 @@ createInertiaApp({
             .mount(el);
     },
     progress: {
-        color: '#4B5563',
+        color: '#0D4A9D',
     },
 });

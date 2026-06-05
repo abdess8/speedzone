@@ -825,7 +825,7 @@ export default {
 
 <template>
   <Layout>
-    <PageHeader title="Widgets" pageTitle="Velzon" />
+    <PageHeader title="Widgets" pageTitle="SpeedZone Express" />
     <BRow>
       <BCol cols="12">
         <h5 class="text-decoration-underline mb-3 pb-1">Tile Boxs</h5>
@@ -1383,7 +1383,7 @@ export default {
             <BLink href="#!">
               <h6 class="fs-15 fw-semibold">Marketing Director <span class="text-muted fs-13">(2-4 Yrs Exp.)</span></h6>
             </BLink>
-            <p class="text-muted mb-0"><i class="ri-building-line align-bottom"></i> Themesbrand <span class="ms-2"><i class="ri-map-pin-2-line align-bottom"></i> California</span></p>
+            <p class="text-muted mb-0"><i class="ri-building-line align-bottom"></i> SpeedZone Express <span class="ms-2"><i class="ri-map-pin-2-line align-bottom"></i> California</span></p>
           </BCardBody>
         </BCard>
       </BCol>
@@ -1402,7 +1402,7 @@ export default {
             <BLink href="#!">
               <h6 class="fs-15 fw-semibold">Sr. Web Designer <span class="text-muted fs-13">(2+ Yrs Exp.)</span></h6>
             </BLink>
-            <p class="text-muted mb-0"><i class="ri-building-line align-bottom"></i> Themesbrand <span class="ms-2"><i class="ri-map-pin-2-line align-bottom"></i> California</span></p>
+            <p class="text-muted mb-0"><i class="ri-building-line align-bottom"></i> SpeedZone Express <span class="ms-2"><i class="ri-map-pin-2-line align-bottom"></i> California</span></p>
           </BCardBody>
         </BCard>
       </BCol>
@@ -1421,7 +1421,7 @@ export default {
             <BLink href="#!">
               <h6 class="fs-15 fw-semibold">Sr. Web Designer <span class="text-muted fs-13">(2+ Yrs Exp.)</span></h6>
             </BLink>
-            <p class="text-muted mb-0"><i class="ri-building-line align-bottom"></i> Themesbrand <span class="ms-2"><i class="ri-map-pin-2-line align-bottom"></i> California</span></p>
+            <p class="text-muted mb-0"><i class="ri-building-line align-bottom"></i> SpeedZone Express <span class="ms-2"><i class="ri-map-pin-2-line align-bottom"></i> California</span></p>
           </BCardBody>
         </BCard>
       </BCol>
@@ -1440,7 +1440,7 @@ export default {
             <BLink href="#!">
               <h6 class="fs-15 fw-semibold">Sr. Web Designer <span class="text-muted fs-13">(2+ Yrs Exp.)</span></h6>
             </BLink>
-            <p class="text-muted mb-0"><i class="ri-building-line align-bottom"></i> Themesbrand <span class="ms-2"><i class="ri-map-pin-2-line align-bottom"></i> California</span></p>
+            <p class="text-muted mb-0"><i class="ri-building-line align-bottom"></i> SpeedZone Express <span class="ms-2"><i class="ri-map-pin-2-line align-bottom"></i> California</span></p>
           </BCardBody>
         </BCard>
       </BCol>

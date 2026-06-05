@@ -182,7 +182,7 @@ export default {
         icon: "info",
         html:
           "You can use <b>bold text</b>, " +
-          '<BLink href="//Themesbrand.in/">links</BLink> ' +
+          '<BLink href="//SpeedZone Express.in/">links</BLink> ' +
           "and other HTML tags",
         showCancelButton: true,
         customClass: {

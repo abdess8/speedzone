@@ -29,7 +29,7 @@ export default {
                       <div>
                         <h4 class="fw-bold">Product Designer</h4>
                         <div class="hstack gap-3 flex-wrap">
-                          <div><i class="ri-building-line align-bottom me-1"></i> Themesbrand</div>
+                          <div><i class="ri-building-line align-bottom me-1"></i> SpeedZone Express</div>
                           <div class="vr"></div>
                           <div><i class="ri-map-pin-2-line align-bottom me-1"></i> Zuweihir, UAE</div>
                           <div class="vr"></div>
@@ -175,7 +175,7 @@ export default {
                 <BLink href="#!">
                   <h5>Web designer</h5>
                 </BLink>
-                <p class="text-muted">Themesbrand</p>
+                <p class="text-muted">SpeedZone Express</p>
 
                 <div class="d-flex gap-4 mb-3">
                   <div>
@@ -216,7 +216,7 @@ export default {
                 <BLink href="#!">
                   <h5>Marketing Director</h5>
                 </BLink>
-                <p class="text-muted">Themesbrand</p>
+                <p class="text-muted">SpeedZone Express</p>
 
                 <div class="d-flex gap-4 mb-3">
                   <div>
@@ -256,7 +256,7 @@ export default {
                 <BLink href="#!">
                   <h5>Product Sales Specialist</h5>
                 </BLink>
-                <p class="text-muted">Themesbrand</p>
+                <p class="text-muted">SpeedZone Express</p>
 
                 <div class="d-flex gap-4 mb-3">
                   <div>
@@ -296,7 +296,7 @@ export default {
                 <BLink href="#!">
                   <h5>Web designer</h5>
                 </BLink>
-                <p class="text-muted">Themesbrand</p>
+                <p class="text-muted">SpeedZone Express</p>
 
                 <div class="d-flex gap-4 mb-3">
                   <div>
@@ -337,7 +337,7 @@ export default {
                 <BLink href="#!">
                   <h5>Marketing Director</h5>
                 </BLink>
-                <p class="text-muted">Themesbrand</p>
+                <p class="text-muted">SpeedZone Express</p>
 
                 <div class="d-flex gap-4 mb-3">
                   <div>
@@ -377,7 +377,7 @@ export default {
                 <BLink href="#!">
                   <h5>Product Sales Specialist</h5>
                 </BLink>
-                <p class="text-muted">Themesbrand</p>
+                <p class="text-muted">SpeedZone Express</p>
 
                 <div class="d-flex gap-4 mb-3">
                   <div>
@@ -421,7 +421,7 @@ export default {
                   </tr>
                   <tr>
                     <td class="fw-medium">Company Name</td>
-                    <td>Themesbrand</td>
+                    <td>SpeedZone Express</td>
                   </tr>
                   <tr>
                     <td class="fw-medium">Location</td>
@@ -475,7 +475,7 @@ export default {
             </div>
             <div class="text-center">
               <BLink href="#!">
-                <h5 class="mt-3">Themesbrand</h5>
+                <h5 class="mt-3">SpeedZone Express</h5>
               </BLink>
               <p class="text-muted">IT Department</p>
             </div>

@@ -28,7 +28,6 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::get('/dashboard/crm', 'dashboard_crm');
         Route::get('/dashboard/crypto', 'dashboard_crypto');
         Route::get('/dashboard/job', 'dashboard_job');
-        Route::get('/dashboard/nft', 'dashboard_nft');
         Route::get('/dashboard/projects', 'dashboard_projects');
         Route::get('/dashboard/blog', 'dashboard_blog');
 

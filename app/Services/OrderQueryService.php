@@ -27,7 +27,7 @@ class OrderQueryService
      */
     public function build(Request $request, User $user): Builder
     {
-        $query = Order::query()->with(['city', 'seller']);
+        $query = Order::query()->with(['city', 'sector', 'seller']);
 
         // Authorization scope: users without read.all only see their own orders.
         if (! $user->hasPermission('orders.read.all')) {
@@ -87,6 +87,7 @@ class OrderQueryService
 
         $query->when($request->filled('seller_id'), fn (Builder $q) => $q->where('seller_id', $request->integer('seller_id')));
         $query->when($request->filled('city_id'), fn (Builder $q) => $q->where('city_id', $request->integer('city_id')));
+        $query->when($request->filled('sector_id'), fn (Builder $q) => $q->where('sector_id', $request->integer('sector_id')));
 
         $query->when($request->input('status'), function (Builder $q, $value) {
             $values = array_values(array_intersect((array) $value, OrderStatus::values()));

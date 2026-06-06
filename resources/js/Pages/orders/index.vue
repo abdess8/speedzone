@@ -317,7 +317,10 @@ onMounted(() => {
                   <div class="fw-medium">{{ order.customer.full_name }}</div>
                   <div class="text-muted fs-12">{{ order.customer.phone }}</div>
                 </td>
-                <td>{{ order.city?.name ?? "—" }}</td>
+                <td>
+                  <div>{{ order.city?.name ?? "—" }}</div>
+                  <div v-if="order.sector" class="text-muted fs-12">{{ order.sector.name }}</div>
+                </td>
                 <td>
                   <span class="badge" :class="order.payment_method === 'COD' ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success'">
                     {{ order.payment_method_label }}

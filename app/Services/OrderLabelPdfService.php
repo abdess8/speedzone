@@ -16,7 +16,7 @@ class OrderLabelPdfService
      */
     public function build(Order $order): PdfInstance
     {
-        $order->loadMissing(['city', 'seller']);
+        $order->loadMissing(['city', 'sector', 'seller']);
 
         $width = (float) config('orders.label.paper_width', 283);
         $height = (float) config('orders.label.paper_height', 425);
@@ -36,7 +36,7 @@ class OrderLabelPdfService
      */
     public function buildBatch(Collection $orders): PdfInstance
     {
-        $orders->loadMissing(['city', 'seller']);
+        $orders->loadMissing(['city', 'sector', 'seller']);
 
         $width = (float) config('orders.label.paper_width', 283);
         $height = (float) config('orders.label.paper_height', 425);

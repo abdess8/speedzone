@@ -101,6 +101,28 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Delivery sectors this driver is assigned to serve.
+     */
+    public function sectors(): BelongsToMany
+    {
+        return $this->belongsToMany(Sector::class, 'driver_sector', 'user_id', 'sector_id')
+            ->withPivot('assigned_at')
+            ->withTimestamps();
+    }
+
+    /**
+     * Whether the user holds the Driver role.
+     */
+    public function isDriver(): bool
+    {
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles');
+        }
+
+        return $this->roles->contains(fn (Role $role) => $role->name === Role::DRIVER);
+    }
+
+    /**
      * Roles that are granted unrestricted access across the application.
      *
      * @var array<int, string>

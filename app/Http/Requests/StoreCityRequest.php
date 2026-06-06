@@ -25,9 +25,9 @@ class StoreCityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255', Rule::unique('cities', 'name')],
+            'name' => ['required', 'string', 'max:255', Rule::unique('cities', 'name')->whereNull('deleted_at')],
+            'code' => ['nullable', 'string', 'max:50', Rule::unique('cities', 'code')->whereNull('deleted_at')],
             'region' => ['nullable', 'string', 'max:255'],
-            'delivery_price' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'is_active' => ['boolean'],
         ];
     }

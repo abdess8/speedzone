@@ -48,6 +48,13 @@ class OrderResource extends JsonResource
             ] : null),
             'city_id' => $this->city_id,
 
+            'sector' => $this->whenLoaded('sector', fn () => $this->sector ? [
+                'id' => $this->sector->id,
+                'name' => $this->sector->name,
+                'delivery_price' => (float) $this->sector->delivery_price,
+            ] : null),
+            'sector_id' => $this->sector_id,
+
             'seller' => $this->whenLoaded('seller', fn () => $this->seller ? [
                 'id' => $this->seller->id,
                 'name' => $this->seller->full_name,

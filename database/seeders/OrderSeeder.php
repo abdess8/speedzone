@@ -16,9 +16,14 @@ class OrderSeeder extends Seeder
 {
     public function run(): void
     {
-        $cities = City::query()->where('is_active', true)->get();
+        $cities = City::query()
+            ->where('is_active', true)
+            ->whereHas('sectors', fn ($q) => $q->where('is_active', true))
+            ->with(['sectors' => fn ($q) => $q->where('is_active', true)])
+            ->get();
+
         if ($cities->isEmpty()) {
-            $this->command?->warn('OrderSeeder skipped: no cities found. Run CitySeeder first.');
+            $this->command?->warn('OrderSeeder skipped: no cities with active sectors found. Run CitySeeder & SectorSeeder first.');
 
             return;
         }
@@ -46,6 +51,7 @@ class OrderSeeder extends Seeder
 
         foreach ($samples as [$first, $last, $phone, $address, $payment, $amount, $flow]) {
             $city = $cities->random();
+            $sector = $city->sectors->random();
 
             $order = new Order([
                 'customer_first_name' => $first,
@@ -53,9 +59,10 @@ class OrderSeeder extends Seeder
                 'customer_phone' => $phone,
                 'customer_address' => $address,
                 'city_id' => $city->id,
+                'sector_id' => $sector->id,
                 'payment_method' => $payment->value,
                 'order_amount' => $amount,
-                'delivery_price' => (float) $city->delivery_price,
+                'delivery_price' => (float) $sector->delivery_price,
                 'notes' => 'Handle with care. Call before delivery.',
                 'is_fragile' => (bool) random_int(0, 1),
                 'can_be_opened' => (bool) random_int(0, 1),

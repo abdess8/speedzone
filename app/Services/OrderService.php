@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Enums\OrderStatus;
-use App\Models\City;
 use App\Models\Order;
+use App\Models\Sector;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -34,7 +34,7 @@ class OrderService
                 'Order created.'
             );
 
-            return $order->load(['city', 'seller']);
+            return $order->load(['city', 'sector', 'seller']);
         });
     }
 
@@ -45,17 +45,20 @@ class OrderService
      */
     public function update(Order $order, array $data): Order
     {
-        if (array_key_exists('delivery_price', $data) || array_key_exists('city_id', $data)) {
+        if (array_key_exists('delivery_price', $data) || array_key_exists('sector_id', $data)) {
             $data['delivery_price'] = $this->resolveDeliveryPrice($data, $order);
         }
 
         $order->fill($data)->save();
 
-        return $order->refresh()->load(['city', 'seller']);
+        return $order->refresh()->load(['city', 'sector', 'seller']);
     }
 
     /**
-     * Fall back to the destination city's default delivery price when none is given.
+     * Resolve the delivery price for an order.
+     *
+     * The destination sector is the source of truth for pricing. A caller may
+     * still override it explicitly (e.g. a negotiated rate).
      *
      * @param  array<string, mixed>  $data
      */
@@ -65,9 +68,9 @@ class OrderService
             return (float) $data['delivery_price'];
         }
 
-        $cityId = $data['city_id'] ?? $order?->city_id;
-        $city = $cityId ? City::find($cityId) : null;
+        $sectorId = $data['sector_id'] ?? $order?->sector_id;
+        $sector = $sectorId ? Sector::find($sectorId) : null;
 
-        return (float) ($city?->delivery_price ?? 0);
+        return (float) ($sector?->delivery_price ?? 0);
     }
 }

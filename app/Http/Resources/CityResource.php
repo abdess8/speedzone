@@ -19,9 +19,17 @@ class CityResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'code' => $this->code,
             'region' => $this->region,
-            'delivery_price' => (float) $this->delivery_price,
             'is_active' => (bool) $this->is_active,
+            'sectors_count' => $this->whenCounted('sectors'),
+            'active_sectors_count' => $this->whenCounted('activeSectors'),
+            'sectors' => $this->whenLoaded(
+                'sectors',
+                fn () => SectorResource::collection($this->sectors)->resolve($request)
+            ),
+            'created_at' => $this->created_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
         ];
     }
 }

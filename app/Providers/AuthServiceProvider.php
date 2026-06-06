@@ -2,9 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\City;
 use App\Models\Order;
+use App\Models\Sector;
 use App\Models\User;
+use App\Policies\CityPolicy;
 use App\Policies\OrderPolicy;
+use App\Policies\SectorPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -17,6 +21,8 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Order::class => OrderPolicy::class,
+        City::class => CityPolicy::class,
+        Sector::class => SectorPolicy::class,
     ];
 
     /**
@@ -30,5 +36,10 @@ class AuthServiceProvider extends ServiceProvider
         Gate::before(function (User $user) {
             return $user->isSuperAdmin() ? true : null;
         });
+
+        // Driver zone management is permission-based (no single model owner).
+        Gate::define('driver_zones.read', fn (User $user) => $user->hasPermission('driver_zones.read'));
+        Gate::define('driver_zones.assign', fn (User $user) => $user->hasPermission('driver_zones.assign'));
+        Gate::define('driver_zones.remove', fn (User $user) => $user->hasPermission('driver_zones.remove'));
     }
 }

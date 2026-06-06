@@ -26,6 +26,16 @@ class StoreOrderRequest extends FormRequest
     }
 
     /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'sector_id.exists' => 'The selected sector does not belong to the chosen city or is inactive.',
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function rules(): array
@@ -35,7 +45,15 @@ class StoreOrderRequest extends FormRequest
             'customer_last_name' => ['required', 'string', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:50'],
             'customer_address' => ['required', 'string', 'max:1000'],
-            'city_id' => ['required', 'integer', Rule::exists('cities', 'id')->where('is_active', true)],
+            'city_id' => ['required', 'integer', Rule::exists('cities', 'id')->where('is_active', true)->whereNull('deleted_at')],
+            'sector_id' => [
+                'required',
+                'integer',
+                Rule::exists('sectors', 'id')
+                    ->where('is_active', true)
+                    ->where('city_id', $this->input('city_id'))
+                    ->whereNull('deleted_at'),
+            ],
             'payment_method' => ['required', Rule::in(PaymentMethod::values())],
             'order_amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'delivery_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],

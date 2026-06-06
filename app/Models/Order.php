@@ -23,6 +23,7 @@ class Order extends Model
         'customer_phone',
         'customer_address',
         'city_id',
+        'sector_id',
         'payment_method',
         'order_amount',
         'delivery_price',
@@ -73,6 +74,11 @@ class Order extends Model
     public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);
+    }
+
+    public function sector(): BelongsTo
+    {
+        return $this->belongsTo(Sector::class);
     }
 
     public function statusHistories(): HasMany

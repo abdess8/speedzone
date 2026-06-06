@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\City;
 use App\Models\Order;
+use App\Models\Sector;
 use App\Services\OrderLabelPdfService;
 use App\Services\OrderQueryService;
 use App\Services\OrderService;
@@ -41,7 +42,7 @@ class OrderController extends Controller
             'orders' => OrderResource::collection($orders)->response()->getData(true),
             'filters' => $request->only([
                 'tracking_number', 'order_number', 'customer_name', 'customer_phone',
-                'seller', 'city_id', 'status', 'payment_method',
+                'seller', 'city_id', 'sector_id', 'status', 'payment_method',
                 'created_from', 'created_to', 'delivery_from', 'delivery_to',
                 'is_fragile', 'can_be_opened', 'sort', 'direction', 'per_page',
             ]),
@@ -56,6 +57,7 @@ class OrderController extends Controller
 
         return Inertia::render('orders/create', [
             'cities' => $this->cityOptions(),
+            'sectors' => [],
             'paymentMethods' => PaymentMethod::options(),
         ]);
     }
@@ -75,7 +77,7 @@ class OrderController extends Controller
     {
         $this->authorize('view', $order);
 
-        $order->load(['city', 'seller', 'statusHistories.user']);
+        $order->load(['city', 'sector', 'seller', 'statusHistories.user']);
 
         return Inertia::render('orders/show', [
             'order' => OrderResource::make($order)->resolve($request),
@@ -92,11 +94,12 @@ class OrderController extends Controller
     {
         $this->authorize('update', $order);
 
-        $order->load(['city', 'seller']);
+        $order->load(['city', 'sector', 'seller']);
 
         return Inertia::render('orders/edit', [
             'order' => OrderResource::make($order)->resolve($request),
             'cities' => $this->cityOptions(),
+            'sectors' => $order->city_id ? $this->sectorOptions($order->city_id) : [],
             'paymentMethods' => PaymentMethod::options(),
         ]);
     }
@@ -130,7 +133,7 @@ class OrderController extends Controller
     {
         $order = Order::query()
             ->where('tracking_number', $trackingNumber)
-            ->with(['city', 'statusHistories.user'])
+            ->with(['city', 'sector', 'statusHistories.user'])
             ->firstOrFail();
 
         $this->authorize('view', $order);
@@ -168,14 +171,14 @@ class OrderController extends Controller
             $query->whereIn('id', $this->ids($request));
         }
 
-        $orders = $query->with(['city', 'seller'])->orderByDesc('id')->get();
+        $orders = $query->with(['city', 'sector', 'seller'])->orderByDesc('id')->get();
 
         $fileName = 'orders-'.now()->format('Ymd-His').'.csv';
 
         return response()->streamDownload(function () use ($orders) {
             $handle = fopen('php://output', 'wb');
             fputcsv($handle, [
-                'Tracking Number', 'Status', 'Customer', 'Phone', 'City',
+                'Tracking Number', 'Status', 'Customer', 'Phone', 'City', 'Sector',
                 'Payment', 'Order Amount', 'Delivery Price', 'Total', 'Seller', 'Created At',
             ]);
 
@@ -186,6 +189,7 @@ class OrderController extends Controller
                     $order->customer_full_name,
                     $order->customer_phone,
                     $order->city?->name,
+                    $order->sector?->name,
                     $order->payment_method->label(),
                     number_format((float) $order->order_amount, 2, '.', ''),
                     number_format((float) $order->delivery_price, 2, '.', ''),
@@ -304,12 +308,32 @@ class OrderController extends Controller
         return City::query()
             ->where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'region', 'delivery_price'])
+            ->get(['id', 'name', 'region'])
             ->map(fn (City $city) => [
                 'id' => $city->id,
                 'name' => $city->name,
                 'region' => $city->region,
-                'delivery_price' => (float) $city->delivery_price,
+            ])
+            ->all();
+    }
+
+    /**
+     * Active sectors for a given city, used to pre-fill the dependent dropdown.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function sectorOptions(int $cityId): array
+    {
+        return Sector::query()
+            ->forCity($cityId)
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'city_id', 'name', 'delivery_price'])
+            ->map(fn (Sector $sector) => [
+                'id' => $sector->id,
+                'city_id' => $sector->city_id,
+                'name' => $sector->name,
+                'delivery_price' => (float) $sector->delivery_price,
             ])
             ->all();
     }

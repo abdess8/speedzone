@@ -10,21 +10,21 @@ class CitySeeder extends Seeder
     public function run(): void
     {
         $cities = [
-            ['name' => 'Casablanca', 'region' => 'Casablanca-Settat', 'delivery_price' => 25],
-            ['name' => 'Rabat', 'region' => 'Rabat-Salé-Kénitra', 'delivery_price' => 30],
-            ['name' => 'Marrakech', 'region' => 'Marrakech-Safi', 'delivery_price' => 35],
-            ['name' => 'Fès', 'region' => 'Fès-Meknès', 'delivery_price' => 35],
-            ['name' => 'Tanger', 'region' => 'Tanger-Tétouan-Al Hoceïma', 'delivery_price' => 40],
-            ['name' => 'Agadir', 'region' => 'Souss-Massa', 'delivery_price' => 45],
-            ['name' => 'Meknès', 'region' => 'Fès-Meknès', 'delivery_price' => 35],
-            ['name' => 'Oujda', 'region' => 'Oriental', 'delivery_price' => 50],
-            ['name' => 'Kénitra', 'region' => 'Rabat-Salé-Kénitra', 'delivery_price' => 30],
-            ['name' => 'Tétouan', 'region' => 'Tanger-Tétouan-Al Hoceïma', 'delivery_price' => 40],
-            ['name' => 'Safi', 'region' => 'Marrakech-Safi', 'delivery_price' => 40],
-            ['name' => 'El Jadida', 'region' => 'Casablanca-Settat', 'delivery_price' => 30],
-            ['name' => 'Mohammedia', 'region' => 'Casablanca-Settat', 'delivery_price' => 25],
-            ['name' => 'Béni Mellal', 'region' => 'Béni Mellal-Khénifra', 'delivery_price' => 40],
-            ['name' => 'Nador', 'region' => 'Oriental', 'delivery_price' => 50],
+            ['name' => 'Casablanca', 'code' => 'CASA', 'region' => 'Casablanca-Settat'],
+            ['name' => 'Rabat', 'code' => 'RBA', 'region' => 'Rabat-Salé-Kénitra'],
+            ['name' => 'Marrakech', 'code' => 'RAK', 'region' => 'Marrakech-Safi'],
+            ['name' => 'Fès', 'code' => 'FES', 'region' => 'Fès-Meknès'],
+            ['name' => 'Tanger', 'code' => 'TNG', 'region' => 'Tanger-Tétouan-Al Hoceïma'],
+            ['name' => 'Agadir', 'code' => 'AGA', 'region' => 'Souss-Massa'],
+            ['name' => 'Meknès', 'code' => 'MEK', 'region' => 'Fès-Meknès'],
+            ['name' => 'Oujda', 'code' => 'OUJ', 'region' => 'Oriental'],
+            ['name' => 'Kénitra', 'code' => 'KEN', 'region' => 'Rabat-Salé-Kénitra'],
+            ['name' => 'Tétouan', 'code' => 'TET', 'region' => 'Tanger-Tétouan-Al Hoceïma'],
+            ['name' => 'Safi', 'code' => 'SAF', 'region' => 'Marrakech-Safi'],
+            ['name' => 'El Jadida', 'code' => 'JDA', 'region' => 'Casablanca-Settat'],
+            ['name' => 'Mohammedia', 'code' => 'MOH', 'region' => 'Casablanca-Settat'],
+            ['name' => 'Béni Mellal', 'code' => 'BEM', 'region' => 'Béni Mellal-Khénifra'],
+            ['name' => 'Nador', 'code' => 'NDR', 'region' => 'Oriental'],
         ];
 
         foreach ($cities as $city) {

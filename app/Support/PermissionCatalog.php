@@ -12,7 +12,9 @@ class PermissionCatalog
         return array_merge(
             self::adminPermissions(),
             self::orderPermissions(),
-            self::cityPermissions()
+            self::cityPermissions(),
+            self::sectorPermissions(),
+            self::driverZonePermissions()
         );
     }
 
@@ -72,6 +74,31 @@ class PermissionCatalog
             self::make('cities.read', 'cities', 'read', null, 'admin'),
             self::make('cities.update', 'cities', 'update', null, 'admin'),
             self::make('cities.delete', 'cities', 'delete', null, 'admin'),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, string|null>>
+     */
+    public static function sectorPermissions(): array
+    {
+        return [
+            self::make('sectors.create', 'sectors', 'create', null, 'admin'),
+            self::make('sectors.read', 'sectors', 'read', null, 'admin'),
+            self::make('sectors.update', 'sectors', 'update', null, 'admin'),
+            self::make('sectors.delete', 'sectors', 'delete', null, 'admin'),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, string|null>>
+     */
+    public static function driverZonePermissions(): array
+    {
+        return [
+            self::make('driver_zones.read', 'driver_zones', 'read', null, 'admin'),
+            self::make('driver_zones.assign', 'driver_zones', 'assign', null, 'admin'),
+            self::make('driver_zones.remove', 'driver_zones', 'remove', null, 'admin'),
         ];
     }
 

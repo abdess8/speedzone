@@ -30,6 +30,10 @@ class RolePermissionSeeder extends Seeder
                 'orders.export',
                 'orders.print',
                 'cities.read',
+                'sectors.read',
+                'driver_zones.read',
+                'driver_zones.assign',
+                'driver_zones.remove',
                 'orders.transition.to_pickup_requested',
                 'orders.transition.to_waiting_pickup',
                 'orders.transition.to_picked_up',
@@ -60,6 +64,7 @@ class RolePermissionSeeder extends Seeder
                 'orders.export',
                 'orders.print',
                 'cities.read',
+                'sectors.read',
             ])->values()->all()
         );
 

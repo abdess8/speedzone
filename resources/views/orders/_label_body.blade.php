@@ -28,7 +28,7 @@
                 <div class="name">{{ $order->customer_full_name }}</div>
                 <div class="phone">{{ $order->customer_phone }}</div>
                 <div class="address">{{ $order->customer_address }}</div>
-                <div class="city">{{ $order->city?->name }}</div>
+                <div class="city">{{ $order->city?->name }}@if ($order->sector) &middot; {{ $order->sector->name }}@endif</div>
             </td>
         </tr>
     </table>

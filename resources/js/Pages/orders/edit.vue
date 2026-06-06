@@ -7,6 +7,7 @@ import OrderForm from "./Partials/OrderForm.vue";
 const props = defineProps({
   order: { type: Object, required: true },
   cities: { type: Array, default: () => [] },
+  sectors: { type: Array, default: () => [] },
   paymentMethods: { type: Array, default: () => [] },
 });
 
@@ -16,6 +17,7 @@ const form = useForm({
   customer_phone: props.order.customer.phone,
   customer_address: props.order.customer.address,
   city_id: props.order.city_id,
+  sector_id: props.order.sector_id,
   payment_method: props.order.payment_method,
   order_amount: props.order.order_amount,
   delivery_price: props.order.delivery_price,
@@ -33,7 +35,7 @@ const submit = () => {
   <Layout>
     <PageHeader :title="`Edit ${order.tracking_number}`" pageTitle="Order Management" />
     <form @submit.prevent="submit">
-      <OrderForm :form="form" :cities="cities" :payment-methods="paymentMethods" />
+      <OrderForm :form="form" :cities="cities" :sectors="sectors" :payment-methods="paymentMethods" />
 
       <div class="hstack gap-2 justify-content-end mb-4">
         <Link :href="route('orders.show', order.id)" class="btn btn-light">Cancel</Link>

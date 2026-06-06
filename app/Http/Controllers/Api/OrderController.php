@@ -49,7 +49,7 @@ class OrderController extends Controller
     {
         $this->authorize('view', $order);
 
-        $order->load(['city', 'seller', 'statusHistories.user']);
+        $order->load(['city', 'sector', 'seller', 'statusHistories.user']);
 
         return OrderResource::make($order);
     }
@@ -103,7 +103,7 @@ class OrderController extends Controller
     {
         $order = Order::query()
             ->where('tracking_number', $trackingNumber)
-            ->with(['city', 'seller', 'statusHistories.user'])
+            ->with(['city', 'sector', 'seller', 'statusHistories.user'])
             ->firstOrFail();
 
         $this->authorize('view', $order);

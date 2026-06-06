@@ -27,9 +27,9 @@ class UpdateCityRequest extends FormRequest
         $cityId = $this->route('city')?->id;
 
         return [
-            'name' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('cities', 'name')->ignore($cityId)],
+            'name' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('cities', 'name')->ignore($cityId)->whereNull('deleted_at')],
+            'code' => ['nullable', 'string', 'max:50', Rule::unique('cities', 'code')->ignore($cityId)->whereNull('deleted_at')],
             'region' => ['nullable', 'string', 'max:255'],
-            'delivery_price' => ['sometimes', 'required', 'numeric', 'min:0', 'max:99999999.99'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

@@ -6,6 +6,7 @@ import OrderForm from "./Partials/OrderForm.vue";
 
 defineProps({
   cities: { type: Array, default: () => [] },
+  sectors: { type: Array, default: () => [] },
   paymentMethods: { type: Array, default: () => [] },
 });
 
@@ -15,6 +16,7 @@ const form = useForm({
   customer_phone: "",
   customer_address: "",
   city_id: null,
+  sector_id: null,
   payment_method: "CASH",
   order_amount: "",
   delivery_price: "",
@@ -32,7 +34,7 @@ const submit = () => {
   <Layout>
     <PageHeader title="Create Order" pageTitle="Order Management" />
     <form @submit.prevent="submit">
-      <OrderForm :form="form" :cities="cities" :payment-methods="paymentMethods" />
+      <OrderForm :form="form" :cities="cities" :sectors="sectors" :payment-methods="paymentMethods" />
 
       <div class="hstack gap-2 justify-content-end mb-4">
         <Link :href="route('orders.index')" class="btn btn-light">Cancel</Link>

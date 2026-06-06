@@ -137,6 +137,7 @@ onMounted(() => {
               <BCol md="6"><div class="text-muted fs-13">Last Name</div><div class="fw-semibold">{{ order.customer.last_name }}</div></BCol>
               <BCol md="6"><div class="text-muted fs-13">Phone</div><div class="fw-semibold">{{ order.customer.phone }}</div></BCol>
               <BCol md="6"><div class="text-muted fs-13">Delivery City</div><div class="fw-semibold">{{ order.city?.name ?? "—" }}</div></BCol>
+              <BCol md="6"><div class="text-muted fs-13">Delivery Sector</div><div class="fw-semibold">{{ order.sector?.name ?? "—" }}</div></BCol>
               <BCol md="12"><div class="text-muted fs-13">Address</div><div class="fw-semibold">{{ order.customer.address }}</div></BCol>
             </BRow>
           </BCardBody>

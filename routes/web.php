@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\CityController;
+use App\Http\Controllers\DriverZoneController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SectorController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VelzonRoutesController;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +27,20 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     // Role & permission management
     Route::resource('roles', RoleController::class)->except(['show']);
+
+    // Delivery zones — Cities & Sectors management
+    Route::get('cities/{city}/sectors', [CityController::class, 'sectors'])
+        ->whereNumber('city')
+        ->name('cities.sectors');
+    Route::resource('cities', CityController::class)->whereNumber('city');
+    Route::resource('sectors', SectorController::class)->whereNumber('sector');
+
+    // Driver zone assignment
+    Route::get('driver-zones', [DriverZoneController::class, 'index'])->name('driver-zones.index');
+    Route::post('driver-zones/{driver}/sectors', [DriverZoneController::class, 'assign'])
+        ->whereNumber('driver')->name('driver-zones.assign');
+    Route::delete('driver-zones/{driver}/sectors/{sector}', [DriverZoneController::class, 'remove'])
+        ->whereNumber('driver')->whereNumber('sector')->name('driver-zones.remove');
 
     // Order management (logistics)
     Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');

@@ -173,6 +173,27 @@ export default {
         </li>
 
         <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarZones" data-bs-toggle="collapse" role="button" aria-expanded="false"
+            aria-controls="sidebarZones">
+            <i class="ri-map-pin-line"></i>
+            <span>Zones de livraison</span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarZones">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <Link href="/cities" class="nav-link">Villes</Link>
+              </li>
+              <li class="nav-item">
+                <Link href="/sectors" class="nav-link">Secteurs</Link>
+              </li>
+              <li class="nav-item">
+                <Link href="/driver-zones" class="nav-link">Affectation des livreurs</Link>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="nav-item">
           <Link href="/invoices" class="nav-link menu-link">
             <i class="ri-file-list-3-line"></i>
             <span>Gestion des factures</span>

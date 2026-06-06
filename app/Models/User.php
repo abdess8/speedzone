@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
@@ -91,6 +92,33 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Role::class)->withTimestamps();
     }
 
+    /**
+     * Orders created by this user acting as the seller.
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'seller_id');
+    }
+
+    /**
+     * Roles that are granted unrestricted access across the application.
+     *
+     * @var array<int, string>
+     */
+    public const SUPER_ADMIN_ROLES = ['Admin', 'SuperAdmin'];
+
+    /**
+     * Whether the user belongs to an all-access (super admin) role.
+     */
+    public function isSuperAdmin(): bool
+    {
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles');
+        }
+
+        return $this->roles->contains(fn (Role $role) => in_array($role->name, self::SUPER_ADMIN_ROLES, true));
+    }
+
     public function hasPermission(string $permission): bool
     {
         if (! $this->relationLoaded('roles')) {
@@ -113,7 +141,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
-        if ($order && $order->created_by === $this->id) {
+        if ($order && $order->seller_id === $this->id) {
             return $this->hasPermission("orders.{$action}.own");
         }
 

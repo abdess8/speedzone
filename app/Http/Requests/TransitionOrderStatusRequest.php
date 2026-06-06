@@ -17,6 +17,7 @@ class TransitionOrderStatusRequest extends FormRequest
     {
         return [
             'to_status' => ['required', 'string', Rule::in(OrderStatus::values())],
+            'comment' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

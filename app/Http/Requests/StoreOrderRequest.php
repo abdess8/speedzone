@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\PaymentMethod;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreOrderRequest extends FormRequest
 {
@@ -11,13 +13,35 @@ class StoreOrderRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Normalise booleans and defaults before validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'payment_method' => $this->input('payment_method', PaymentMethod::CASH->value),
+            'is_fragile' => $this->boolean('is_fragile'),
+            'can_be_opened' => $this->boolean('can_be_opened'),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
-            'reference' => ['required', 'string', 'max:100', 'unique:orders,reference'],
-            'description' => ['nullable', 'string'],
-            'assigned_to' => ['nullable', 'integer', 'exists:users,id'],
-            'metadata' => ['nullable', 'array'],
+            'customer_first_name' => ['required', 'string', 'max:255'],
+            'customer_last_name' => ['required', 'string', 'max:255'],
+            'customer_phone' => ['required', 'string', 'max:50'],
+            'customer_address' => ['required', 'string', 'max:1000'],
+            'city_id' => ['required', 'integer', Rule::exists('cities', 'id')->where('is_active', true)],
+            'payment_method' => ['required', Rule::in(PaymentMethod::values())],
+            'order_amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
+            'delivery_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'is_fragile' => ['boolean'],
+            'can_be_opened' => ['boolean'],
         ];
     }
 }

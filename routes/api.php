@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderTransitionController;
 use App\Http\Controllers\Api\PermissionController;
@@ -41,6 +42,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('users/{user}/roles', [UserRoleController::class, 'destroy'])
         ->middleware('permission:users.roles.assign');
 
-    Route::apiResource('orders', OrderController::class);
-    Route::post('orders/{order}/transition', OrderTransitionController::class);
+    // Cities (delivery destinations)
+    Route::get('cities', [CityController::class, 'index'])->middleware('permission:cities.read');
+    Route::get('cities/{city}', [CityController::class, 'show'])->middleware('permission:cities.read');
+    Route::post('cities', [CityController::class, 'store'])->middleware('permission:cities.create');
+    Route::put('cities/{city}', [CityController::class, 'update'])->middleware('permission:cities.update');
+    Route::delete('cities/{city}', [CityController::class, 'destroy'])->middleware('permission:cities.delete');
+
+    // Orders
+    Route::get('orders/{order}/tracking', [OrderController::class, 'tracking'])
+        ->whereNumber('order')->name('api.orders.tracking');
+    Route::get('orders/{order}/pdf', [OrderController::class, 'pdf'])
+        ->whereNumber('order')->name('api.orders.pdf');
+    Route::get('orders/track/{trackingNumber}', [OrderController::class, 'trackByNumber'])
+        ->name('api.orders.track');
+    Route::post('orders/{order}/transition', OrderTransitionController::class)
+        ->whereNumber('order')->name('api.orders.transition');
+    Route::apiResource('orders', OrderController::class)
+        ->whereNumber('order')
+        ->names('api.orders');
 });

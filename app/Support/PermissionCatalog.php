@@ -11,7 +11,8 @@ class PermissionCatalog
     {
         return array_merge(
             self::adminPermissions(),
-            self::orderPermissions()
+            self::orderPermissions(),
+            self::cityPermissions()
         );
     }
 
@@ -46,6 +47,8 @@ class PermissionCatalog
             self::make('orders.update.all', 'orders', 'update', 'all', 'resource'),
             self::make('orders.delete.own', 'orders', 'delete', 'own', 'resource'),
             self::make('orders.delete.all', 'orders', 'delete', 'all', 'resource'),
+            self::make('orders.export', 'orders', 'export', null, 'resource'),
+            self::make('orders.print', 'orders', 'print', null, 'resource'),
             self::make('orders.transition.to_pickup_requested', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_waiting_pickup', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_picked_up', 'orders', 'transition', null, 'workflow_transition'),
@@ -56,6 +59,19 @@ class PermissionCatalog
             self::make('orders.transition.to_delivered', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_failed', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_returned', 'orders', 'transition', null, 'workflow_transition'),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, string|null>>
+     */
+    public static function cityPermissions(): array
+    {
+        return [
+            self::make('cities.create', 'cities', 'create', null, 'admin'),
+            self::make('cities.read', 'cities', 'read', null, 'admin'),
+            self::make('cities.update', 'cities', 'update', null, 'admin'),
+            self::make('cities.delete', 'cities', 'delete', null, 'admin'),
         ];
     }
 

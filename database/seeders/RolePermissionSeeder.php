@@ -27,6 +27,9 @@ class RolePermissionSeeder extends Seeder
             $permissions->only([
                 'orders.read.all',
                 'orders.update.all',
+                'orders.export',
+                'orders.print',
+                'cities.read',
                 'orders.transition.to_pickup_requested',
                 'orders.transition.to_waiting_pickup',
                 'orders.transition.to_picked_up',
@@ -40,6 +43,7 @@ class RolePermissionSeeder extends Seeder
             $permissions->only([
                 'orders.read.own',
                 'orders.update.own',
+                'orders.print',
                 'orders.transition.to_out_for_delivery',
                 'orders.transition.to_delivered',
                 'orders.transition.to_failed',
@@ -53,6 +57,9 @@ class RolePermissionSeeder extends Seeder
                 'orders.read.own',
                 'orders.update.own',
                 'orders.delete.own',
+                'orders.export',
+                'orders.print',
+                'cities.read',
             ])->values()->all()
         );
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VelzonRoutesController;
@@ -23,6 +24,19 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     // Role & permission management
     Route::resource('roles', RoleController::class)->except(['show']);
+
+    // Order management (logistics)
+    Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
+    Route::get('orders/labels', [OrderController::class, 'labels'])->name('orders.labels');
+    Route::post('orders/bulk-status', [OrderController::class, 'bulkStatus'])->name('orders.bulk-status');
+    Route::get('orders/{order}/pdf', [OrderController::class, 'pdf'])
+        ->whereNumber('order')
+        ->name('orders.pdf');
+    Route::resource('orders', OrderController::class)->whereNumber('order');
+    // QR code target: /orders/SPD-2026-583920 → public tracking timeline.
+    Route::get('orders/{trackingNumber}', [OrderController::class, 'track'])
+        ->where('trackingNumber', '[A-Za-z0-9]+-[0-9]{4}-[0-9]+')
+        ->name('orders.track');
 
     Route::controller(VelzonRoutesController::class)->group(function () {
 

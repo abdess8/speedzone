@@ -23,4 +23,75 @@ enum OrderStatus: string
     {
         return array_map(static fn (self $status) => $status->value, self::cases());
     }
+
+    /**
+     * Human-friendly label for the status.
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::CREATED => 'Created',
+            self::PICKUP_REQUESTED => 'Pickup Requested',
+            self::WAITING_PICKUP => 'Waiting for Pickup',
+            self::PICKED_UP => 'Picked Up',
+            self::IN_DEPOT => 'In Depot',
+            self::IN_TRANSIT => 'In Transit',
+            self::IN_DELIVERY_CITY => 'In Delivery City',
+            self::OUT_FOR_DELIVERY => 'Out for Delivery',
+            self::DELIVERED => 'Delivered',
+            self::FAILED => 'Failed',
+            self::RETURNED => 'Returned',
+        };
+    }
+
+    /**
+     * Bootstrap contextual colour used by badges / the timeline.
+     */
+    public function color(): string
+    {
+        return match ($this) {
+            self::CREATED => 'secondary',
+            self::PICKUP_REQUESTED, self::WAITING_PICKUP => 'info',
+            self::PICKED_UP, self::IN_DEPOT, self::IN_TRANSIT, self::IN_DELIVERY_CITY => 'primary',
+            self::OUT_FOR_DELIVERY => 'warning',
+            self::DELIVERED => 'success',
+            self::FAILED => 'danger',
+            self::RETURNED => 'dark',
+        };
+    }
+
+    /**
+     * Icon (Remix Icon) used in the tracking timeline.
+     */
+    public function icon(): string
+    {
+        return match ($this) {
+            self::CREATED => 'ri-file-add-line',
+            self::PICKUP_REQUESTED => 'ri-hand-heart-line',
+            self::WAITING_PICKUP => 'ri-time-line',
+            self::PICKED_UP => 'ri-hand-coin-line',
+            self::IN_DEPOT => 'ri-building-line',
+            self::IN_TRANSIT => 'ri-truck-line',
+            self::IN_DELIVERY_CITY => 'ri-map-pin-line',
+            self::OUT_FOR_DELIVERY => 'ri-e-bike-2-line',
+            self::DELIVERED => 'ri-checkbox-circle-line',
+            self::FAILED => 'ri-close-circle-line',
+            self::RETURNED => 'ri-arrow-go-back-line',
+        };
+    }
+
+    /**
+     * @return array<int, array{value: string, label: string, color: string}>
+     */
+    public static function options(): array
+    {
+        return array_map(
+            static fn (self $status) => [
+                'value' => $status->value,
+                'label' => $status->label(),
+                'color' => $status->color(),
+            ],
+            self::cases()
+        );
+    }
 }

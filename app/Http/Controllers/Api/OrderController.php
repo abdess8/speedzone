@@ -5,59 +5,109 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
+use App\Http\Resources\OrderResource;
+use App\Http\Resources\OrderStatusHistoryResource;
 use App\Models\Order;
+use App\Services\OrderLabelPdfService;
+use App\Services\OrderQueryService;
+use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Symfony\Component\HttpFoundation\Response;
 
 class OrderController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function __construct(
+        private readonly OrderService $orderService,
+        private readonly OrderQueryService $orderQuery,
+    ) {}
+
+    public function index(Request $request): AnonymousResourceCollection
     {
-        $user = $request->user();
+        $this->authorize('viewAny', Order::class);
 
-        $orders = Order::query()
-            ->when(
-                ! $user->hasPermission('orders.read.all'),
-                fn ($query) => $query->where('created_by', $user->id)
-            )
-            ->latest()
-            ->paginate(20);
+        $orders = $this->orderQuery->build($request, $request->user())
+            ->paginate($this->orderQuery->perPage($request))
+            ->withQueryString();
 
-        return response()->json($orders);
+        return OrderResource::collection($orders);
     }
 
     public function store(StoreOrderRequest $request): JsonResponse
     {
         $this->authorize('create', Order::class);
 
-        $order = Order::create([
-            ...$request->validated(),
-            'created_by' => $request->user()->id,
-        ]);
+        $order = $this->orderService->create($request->validated(), $request->user());
 
-        return response()->json($order, JsonResponse::HTTP_CREATED);
+        return OrderResource::make($order)
+            ->response()
+            ->setStatusCode(Response::HTTP_CREATED);
     }
 
-    public function show(Order $order): JsonResponse
+    public function show(Order $order): OrderResource
     {
         $this->authorize('view', $order);
 
-        return response()->json($order);
+        $order->load(['city', 'seller', 'statusHistories.user']);
+
+        return OrderResource::make($order);
     }
 
-    public function update(UpdateOrderRequest $request, Order $order): JsonResponse
+    public function update(UpdateOrderRequest $request, Order $order): OrderResource
     {
         $this->authorize('update', $order);
-        $order->update($request->validated());
 
-        return response()->json($order->refresh());
+        $order = $this->orderService->update($order, $request->validated());
+
+        return OrderResource::make($order);
     }
 
     public function destroy(Order $order): JsonResponse
     {
         $this->authorize('delete', $order);
+
         $order->delete();
 
-        return response()->json(null, JsonResponse::HTTP_NO_CONTENT);
+        return response()->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Full status timeline for an order.
+     */
+    public function tracking(Order $order): AnonymousResourceCollection
+    {
+        $this->authorize('view', $order);
+
+        $order->load(['statusHistories.user']);
+
+        return OrderStatusHistoryResource::collection($order->statusHistories);
+    }
+
+    /**
+     * Stream the thermal shipping label as a PDF.
+     */
+    public function pdf(Order $order, OrderLabelPdfService $pdfService): Response
+    {
+        $this->authorize('print', $order);
+
+        $pdf = $pdfService->build($order);
+
+        return $pdf->stream($pdfService->fileName($order));
+    }
+
+    /**
+     * Resolve an order by its tracking number (used by the QR tracking page).
+     */
+    public function trackByNumber(string $trackingNumber): OrderResource
+    {
+        $order = Order::query()
+            ->where('tracking_number', $trackingNumber)
+            ->with(['city', 'seller', 'statusHistories.user'])
+            ->firstOrFail();
+
+        $this->authorize('view', $order);
+
+        return OrderResource::make($order);
     }
 }

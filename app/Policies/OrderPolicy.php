@@ -31,4 +31,19 @@ class OrderPolicy
     {
         return $user->hasOrderScopePermission('delete', $order);
     }
+
+    public function export(User $user): bool
+    {
+        return $user->hasPermission('orders.export');
+    }
+
+    public function print(User $user, ?Order $order = null): bool
+    {
+        if (! $user->hasPermission('orders.print')) {
+            return false;
+        }
+
+        // Printing a specific label still respects read scope.
+        return $order === null || $user->hasOrderScopePermission('read', $order);
+    }
 }

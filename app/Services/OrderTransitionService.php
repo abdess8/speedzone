@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class OrderTransitionService
@@ -32,12 +33,12 @@ class OrderTransitionService
     ];
 
     /**
-     * @throws \Illuminate\Validation\ValidationException
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws ValidationException
+     * @throws AuthorizationException
      */
-    public function transition(Order $order, string $toStatus, User $actor): Order
+    public function transition(Order $order, string $toStatus, User $actor, ?string $comment = null): Order
     {
-        $fromStatus = $order->status;
+        $fromStatus = $order->status instanceof OrderStatus ? $order->status->value : $order->status;
         $allowedNextStatuses = self::ALLOWED_TRANSITIONS[$fromStatus] ?? [];
 
         if (! in_array($toStatus, $allowedNextStatuses, true)) {
@@ -52,8 +53,23 @@ class OrderTransitionService
             throw new AuthorizationException("Missing required permission: {$permission}");
         }
 
-        $order->update(['status' => $toStatus]);
+        return DB::transaction(function () use ($order, $toStatus, $actor, $comment): Order {
+            $order->update(['status' => $toStatus]);
+            $order->recordStatus($toStatus, $actor, $comment);
 
-        return $order->refresh();
+            return $order->refresh();
+        });
+    }
+
+    /**
+     * Statuses an order may legally transition to from its current status.
+     *
+     * @return array<int, string>
+     */
+    public function allowedNextStatuses(Order $order): array
+    {
+        $current = $order->status instanceof OrderStatus ? $order->status->value : $order->status;
+
+        return self::ALLOWED_TRANSITIONS[$current] ?? [];
     }
 }

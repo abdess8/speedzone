@@ -4,17 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Role extends Model
 {
     use HasFactory;
 
-    public const SUPER_ADMIN = 'SuperAdmin';
     public const ADMIN = 'Admin';
-    public const VENDEUR = 'Vendeur';
-    public const LIVREUR = 'Livreur';
-    public const PARTENAIRE = 'Partenaire';
+    public const DISPATCHER = 'Dispatcher';
+    public const DRIVER = 'Driver';
+    public const SELLER = 'Seller';
+    public const SUPER_ADMIN = self::ADMIN;
+    public const VENDEUR = self::SELLER;
+    public const LIVREUR = self::DRIVER;
+    public const PARTENAIRE = 'Partner';
 
     /**
      * The default roles seeded into the application.
@@ -22,11 +26,10 @@ class Role extends Model
      * @var array<int, string>
      */
     public const DEFAULTS = [
-        self::SUPER_ADMIN,
         self::ADMIN,
-        self::VENDEUR,
-        self::LIVREUR,
-        self::PARTENAIRE,
+        self::DISPATCHER,
+        self::DRIVER,
+        self::SELLER,
     ];
 
     /**
@@ -38,13 +41,21 @@ class Role extends Model
         'name',
     ];
 
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)->withTimestamps();
+    }
+
     /**
-     * The users that belong to the role.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * Backward-compatible single-role relation for legacy screens using `users.role_id`.
      */
-    public function users(): HasMany
+    public function primaryUsers(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function permissions(): BelongsToMany
+    {
+        return $this->belongsToMany(Permission::class)->withTimestamps();
     }
 }

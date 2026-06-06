@@ -73,7 +73,10 @@ class UserController extends Controller
 
         $data['attached_files'] = $this->storeAttachedFiles($request);
 
-        User::create($data);
+        $user = User::create($data);
+        if (! empty($data['role_id'])) {
+            $user->roles()->sync([$data['role_id']]);
+        }
 
         return redirect()->route('users.index')
             ->with('success', 'User created successfully.');
@@ -133,6 +136,9 @@ class UserController extends Controller
         unset($data['removed_files']);
 
         $user->update($data);
+        if (array_key_exists('role_id', $data) && ! empty($data['role_id'])) {
+            $user->roles()->sync([$data['role_id']]);
+        }
 
         return redirect()->route('users.index')
             ->with('success', 'User updated successfully.');

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VelzonRoutesController;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +20,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     // User management
     Route::resource('users', UserController::class);
+
+    // Role & permission management
+    Route::resource('roles', RoleController::class)->except(['show']);
 
     Route::controller(VelzonRoutesController::class)->group(function () {
 

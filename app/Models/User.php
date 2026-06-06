@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -83,6 +84,40 @@ class User extends Authenticatable implements MustVerifyEmail
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
+    }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class)->withTimestamps();
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles.permissions');
+        } elseif (! $this->roles->every(fn (Role $role) => $role->relationLoaded('permissions'))) {
+            $this->load('roles.permissions');
+        }
+
+        return $this->roles
+            ->flatMap(fn (Role $role) => $role->permissions)
+            ->contains(fn (Permission $item) => $item->name === $permission);
+    }
+
+    /**
+     * Scope-aware permission check for order access controls.
+     */
+    public function hasOrderScopePermission(string $action, ?Order $order = null): bool
+    {
+        if ($this->hasPermission("orders.{$action}.all")) {
+            return true;
+        }
+
+        if ($order && $order->created_by === $this->id) {
+            return $this->hasPermission("orders.{$action}.own");
+        }
+
+        return false;
     }
 
     /**

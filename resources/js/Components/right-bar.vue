@@ -1,6 +1,7 @@
 <script>
 localStorage.setItem("rightbar_isopen", false);
 import { layoutMethods, layoutComputed } from "@/state/helpers";
+import { STORAGE_KEY, defaultState } from "@/state/modules/layout";
 import simplebar from "simplebar-vue";
 /**
  * Right sidebar component
@@ -15,7 +16,9 @@ export default {
     };
   },
   beforeCreate() {
-    localStorage.setItem("resetValue", JSON.stringify(this.$store.state.layout));
+    // Baseline for the "Reset" button is the default theme config, not the
+    // currently persisted state, so Reset always restores the defaults.
+    localStorage.setItem("resetValue", JSON.stringify(defaultState));
   },
   methods: {
     ...layoutMethods,
@@ -63,7 +66,9 @@ export default {
     },
 
     resetLayout() {
-      let reset = JSON.parse(localStorage.getItem("resetValue"));
+      let reset = JSON.parse(localStorage.getItem("resetValue")) || defaultState;
+      // Drop the persisted customizer state so defaults take effect on reload too.
+      localStorage.removeItem(STORAGE_KEY);
       document.documentElement.setAttribute("data-sidebar-size", "lg");
       this.changeMode({ mode: reset.mode });
       this.changeSidebarColor({ sidebarColor: reset.sidebarColor });

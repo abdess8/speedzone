@@ -198,6 +198,24 @@ export default {
         </li>
 
         <li class="nav-item">
+          <a class="nav-link menu-link" href="#sidebarRoles" data-bs-toggle="collapse" role="button" aria-expanded="false"
+            aria-controls="sidebarRoles">
+            <i class="ri-shield-keyhole-line"></i>
+            <span>Gestion des rôles</span>
+          </a>
+          <div class="collapse menu-dropdown" id="sidebarRoles">
+            <ul class="nav nav-sm flex-column">
+              <li class="nav-item">
+                <Link href="/roles" class="nav-link">Liste des rôles</Link>
+              </li>
+              <li class="nav-item">
+                <Link href="/roles/create" class="nav-link">Créer un rôle</Link>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="nav-item">
           <Link href="/api-integration" class="nav-link menu-link">
             <i class="ri-plug-2-line"></i>
             <span>API integration</span>

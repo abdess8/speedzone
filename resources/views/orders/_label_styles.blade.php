@@ -57,6 +57,38 @@
         font-weight: bold;
         font-size: 13px;
     }
+    .collection {
+        margin-top: 6px;
+        border: 3px solid #000;
+        padding: 6px 8px;
+        text-align: center;
+    }
+    .collection.cash-required {
+        background: #000;
+        color: #fff;
+    }
+    .collection.card-paid {
+        background: #f2f2f2;
+    }
+    .collection-title {
+        font-size: 15px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .collection-row {
+        font-size: 12px;
+        margin-bottom: 2px;
+    }
+    .collection-amount {
+        font-size: 14px;
+        margin-top: 4px;
+        padding-top: 4px;
+        border-top: 1px dashed #fff;
+    }
+    .collection.card-paid .collection-amount {
+        border-top-color: #000;
+    }
     .flags { margin-top: 6px; }
     .flag {
         display: inline-block;

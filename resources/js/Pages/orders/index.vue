@@ -3,6 +3,7 @@ import { reactive, ref, computed, watch, onMounted } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
 import Swal from "sweetalert2";
 
 const props = defineProps({
@@ -42,6 +43,8 @@ const money = (value) =>
   new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
     Number(value || 0)
   );
+
+const displayMoney = (value) => (value != null && value !== "" ? money(value) : "—");
 
 const query = () => {
   const params = { sort: sort.value, direction: direction.value, per_page: perPage.value };
@@ -290,7 +293,10 @@ onMounted(() => {
                 <th>City</th>
                 <th>Payment</th>
                 <th role="button" class="text-end" @click="sortBy('order_amount')">
-                  Order <i :class="sortIcon('order_amount')"></i>
+                  To Collect <i :class="sortIcon('order_amount')"></i>
+                </th>
+                <th role="button" class="text-end" @click="sortBy('order_value')">
+                  Order Value <i :class="sortIcon('order_value')"></i>
                 </th>
                 <th role="button" class="text-end" @click="sortBy('delivery_price')">
                   Delivery <i :class="sortIcon('delivery_price')"></i>
@@ -322,11 +328,14 @@ onMounted(() => {
                   <div v-if="order.sector" class="text-muted fs-12">{{ order.sector.name }}</div>
                 </td>
                 <td>
-                  <span class="badge" :class="order.payment_method === 'COD' ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success'">
-                    {{ order.payment_method_label }}
-                  </span>
+                  <PaymentMethodBadge
+                    :label="order.payment_method_label"
+                    :emoji="order.payment_method_emoji"
+                    :color="order.payment_method_color"
+                  />
                 </td>
-                <td class="text-end">{{ money(order.order_amount) }}</td>
+                <td class="text-end">{{ displayMoney(order.amount_to_collect) }}</td>
+                <td class="text-end">{{ displayMoney(order.order_value) }}</td>
                 <td class="text-end">{{ money(order.delivery_price) }}</td>
                 <td class="text-end fw-semibold">{{ money(order.total_amount) }}</td>
                 <td>
@@ -350,7 +359,7 @@ onMounted(() => {
                 </td>
               </tr>
               <tr v-if="rows.length === 0">
-                <td colspan="11" class="text-center text-muted py-4">No orders found.</td>
+                <td colspan="12" class="text-center text-muted py-4">No orders found.</td>
               </tr>
             </tbody>
           </table>

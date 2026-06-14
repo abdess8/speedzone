@@ -55,22 +55,53 @@ class OrderController extends Controller
     {
         $this->authorize('create', Order::class);
 
+        $cloneData = null;
+        $sectors = [];
+
+        if ($request->filled('clone')) {
+            $source = Order::query()->findOrFail($request->integer('clone'));
+            $this->authorize('view', $source);
+            $cloneData = $this->orderService->clonePayload($source);
+
+            if ($cloneData['city_id']) {
+                $sectors = $this->sectorOptions((int) $cloneData['city_id']);
+            }
+        }
+
         return Inertia::render('orders/create', [
             'cities' => $this->cityOptions(),
-            'sectors' => [],
+            'sectors' => $sectors,
             'paymentMethods' => PaymentMethod::options(),
+            'cloneData' => $cloneData,
         ]);
     }
 
     public function store(StoreOrderRequest $request): RedirectResponse
     {
-        $this->authorize('create', Order::class);
-
-        $order = $this->orderService->create($request->validated(), $request->user());
+        $order = $this->storeOrder($request);
 
         return redirect()
             ->route('orders.show', $order)
             ->with('success', "Order {$order->tracking_number} created successfully.");
+    }
+
+    public function storeAndNew(StoreOrderRequest $request): RedirectResponse
+    {
+        $this->storeOrder($request);
+
+        return redirect()
+            ->route('orders.create')
+            ->with('success', 'Order created successfully. You can create a new order.');
+    }
+
+    /**
+     * Persist a new order using validated request data.
+     */
+    private function storeOrder(StoreOrderRequest $request): Order
+    {
+        $this->authorize('create', Order::class);
+
+        return $this->orderService->create($request->validated(), $request->user());
     }
 
     public function show(Request $request, Order $order): Response
@@ -179,7 +210,7 @@ class OrderController extends Controller
             $handle = fopen('php://output', 'wb');
             fputcsv($handle, [
                 'Tracking Number', 'Status', 'Customer', 'Phone', 'City', 'Sector',
-                'Payment', 'Order Amount', 'Delivery Price', 'Total', 'Seller', 'Created At',
+                'Payment', 'Order Value', 'To Collect', 'Delivery Price', 'Total', 'Seller', 'Created At',
             ]);
 
             foreach ($orders as $order) {
@@ -191,7 +222,8 @@ class OrderController extends Controller
                     $order->city?->name,
                     $order->sector?->name,
                     $order->payment_method->label(),
-                    number_format((float) $order->order_amount, 2, '.', ''),
+                    $order->order_value !== null ? number_format((float) $order->order_value, 2, '.', '') : '',
+                    $order->order_amount !== null ? number_format((float) $order->order_amount, 2, '.', '') : '',
                     number_format((float) $order->delivery_price, 2, '.', ''),
                     number_format((float) $order->total_amount, 2, '.', ''),
                     $order->seller?->full_name,

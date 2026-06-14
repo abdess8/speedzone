@@ -3,6 +3,7 @@
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\DriverZoneController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PickupRequestController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\UserController;
@@ -46,6 +47,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
     Route::get('orders/labels', [OrderController::class, 'labels'])->name('orders.labels');
     Route::post('orders/bulk-status', [OrderController::class, 'bulkStatus'])->name('orders.bulk-status');
+    Route::post('orders/create-and-new', [OrderController::class, 'storeAndNew'])->name('orders.store-and-new');
     Route::get('orders/{order}/pdf', [OrderController::class, 'pdf'])
         ->whereNumber('order')
         ->name('orders.pdf');
@@ -54,6 +56,22 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('orders/{trackingNumber}', [OrderController::class, 'track'])
         ->where('trackingNumber', '[A-Za-z0-9]+-[0-9]{4}-[0-9]+')
         ->name('orders.track');
+
+    // Pickup requests (Ramassages)
+    Route::post('pickup-requests/bulk-scan', [PickupRequestController::class, 'bulkScan'])
+        ->name('pickup-requests.bulk-scan');
+    Route::get('pickup-requests/{pickupRequest}/pdf', [PickupRequestController::class, 'pdf'])
+        ->whereNumber('pickupRequest')
+        ->name('pickup-requests.pdf');
+    Route::post('pickup-requests/{pickupRequest}/assign-driver', [PickupRequestController::class, 'assignDriver'])
+        ->whereNumber('pickupRequest')
+        ->name('pickup-requests.assign-driver');
+    Route::post('pickup-requests/{pickupRequest}/change-status', [PickupRequestController::class, 'changeStatus'])
+        ->whereNumber('pickupRequest')
+        ->name('pickup-requests.change-status');
+    Route::resource('pickup-requests', PickupRequestController::class)
+        ->only(['index', 'store', 'show'])
+        ->whereNumber('pickupRequest');
 
     Route::controller(VelzonRoutesController::class)->group(function () {
 

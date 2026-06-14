@@ -163,6 +163,13 @@ export default {
         </li>
 
         <li class="nav-item">
+          <Link href="/pickup-requests" class="nav-link menu-link">
+            <i class="ri-truck-line"></i>
+            <span>Ramassages</span>
+          </Link>
+        </li>
+
+        <li class="nav-item">
           <a class="nav-link menu-link" href="#sidebarZones" data-bs-toggle="collapse" role="button" aria-expanded="false"
             aria-controls="sidebarZones">
             <i class="ri-map-pin-line"></i>

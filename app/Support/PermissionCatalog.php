@@ -12,6 +12,7 @@ class PermissionCatalog
         return array_merge(
             self::adminPermissions(),
             self::orderPermissions(),
+            self::pickupRequestPermissions(),
             self::cityPermissions(),
             self::sectorPermissions(),
             self::driverZonePermissions()
@@ -61,6 +62,22 @@ class PermissionCatalog
             self::make('orders.transition.to_delivered', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_failed', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_returned', 'orders', 'transition', null, 'workflow_transition'),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, string|null>>
+     */
+    public static function pickupRequestPermissions(): array
+    {
+        return [
+            self::make('pickup_requests.create', 'pickup_requests', 'create', null, 'resource'),
+            self::make('pickup_requests.read.own', 'pickup_requests', 'read', 'own', 'resource'),
+            self::make('pickup_requests.read.all', 'pickup_requests', 'read', 'all', 'resource'),
+            self::make('pickup_requests.read.assigned', 'pickup_requests', 'read', 'assigned', 'resource'),
+            self::make('pickup_requests.assign', 'pickup_requests', 'assign', null, 'resource'),
+            self::make('pickup_requests.change_status', 'pickup_requests', 'change_status', null, 'resource'),
+            self::make('pickup_requests.pickup', 'pickup_requests', 'pickup', null, 'resource'),
         ];
     }
 

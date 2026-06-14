@@ -20,6 +20,8 @@ const form = useForm({
   role_id: props.user.role_id || "",
   city: props.user.city || "",
   address: props.user.address || "",
+  pickup_address_1: props.user.pickup_address_1 || "",
+  pickup_address_2: props.user.pickup_address_2 || "",
   phone_number: props.user.phone_number || "",
   cin: props.user.cin || "",
   ice_number: props.user.ice_number || "",
@@ -139,6 +141,16 @@ const submit = () => {
                   <label class="form-label">Address</label>
                   <textarea class="form-control" rows="3" v-model="form.address" :class="{ 'is-invalid': form.errors.address }"></textarea>
                   <InputError :message="form.errors.address" />
+                </BCol>
+                <BCol md="6">
+                  <label class="form-label">Pickup Address 1</label>
+                  <textarea class="form-control" rows="2" v-model="form.pickup_address_1" :class="{ 'is-invalid': form.errors.pickup_address_1 }"></textarea>
+                  <InputError :message="form.errors.pickup_address_1" />
+                </BCol>
+                <BCol md="6">
+                  <label class="form-label">Pickup Address 2</label>
+                  <textarea class="form-control" rows="2" v-model="form.pickup_address_2" :class="{ 'is-invalid': form.errors.pickup_address_2 }"></textarea>
+                  <InputError :message="form.errors.pickup_address_2" />
                 </BCol>
               </BRow>
             </BCardBody>

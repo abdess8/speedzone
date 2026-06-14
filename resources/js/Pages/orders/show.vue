@@ -4,6 +4,7 @@ import { Link, router, usePage } from "@inertiajs/vue3";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import OrderTimeline from "./Partials/OrderTimeline.vue";
+import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
 import Swal from "sweetalert2";
 
 const props = defineProps({
@@ -16,6 +17,8 @@ const money = (value) =>
   new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
     Number(value || 0)
   );
+
+const displayMoney = (value) => (value != null && value !== "" ? `${money(value)} MAD` : "—");
 
 const formatDate = (value) => (value ? new Date(value).toLocaleString() : "—");
 
@@ -96,6 +99,9 @@ onMounted(() => {
         </div>
 
         <div class="ms-auto hstack gap-2">
+          <Link v-if="can.create" :href="route('orders.create', { clone: order.id })" class="btn btn-sm btn-soft-info">
+            <i class="ri-file-copy-line align-bottom me-1"></i> Clone
+          </Link>
           <Link v-if="can.update" :href="route('orders.edit', order.id)" class="btn btn-sm btn-soft-warning">
             <i class="ri-pencil-line align-bottom me-1"></i> Edit
           </Link>
@@ -168,10 +174,27 @@ onMounted(() => {
           <BCardBody>
             <div class="d-flex justify-content-between mb-2">
               <span class="text-muted">Payment Method</span>
-              <span class="badge" :class="order.payment_method === 'COD' ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success'">{{ order.payment_method_label }}</span>
+              <PaymentMethodBadge
+                :label="order.payment_method_label"
+                :emoji="order.payment_method_emoji"
+                :color="order.payment_method_color"
+              />
             </div>
-            <div class="d-flex justify-content-between mb-2"><span class="text-muted">Order Amount</span><span>{{ money(order.order_amount) }} MAD</span></div>
-            <div class="d-flex justify-content-between mb-2"><span class="text-muted">Delivery Price</span><span>{{ money(order.delivery_price) }} MAD</span></div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Cash Collection</span>
+              <span class="badge" :class="order.cash_collection_required ? 'bg-warning-subtle text-warning' : 'bg-primary-subtle text-primary'">
+                {{ order.cash_collection_required ? "YES" : "NO" }}
+              </span>
+            </div>
+            <div v-if="order.order_amount != null" class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Amount to Collect</span>
+              <span class="fw-semibold">{{ displayMoney(order.amount_to_collect) }}</span>
+            </div>
+            <div v-if="order.order_value != null" class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Order Value</span>
+              <span>{{ displayMoney(order.order_value) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2"><span class="text-muted">Delivery Price</span><span>{{ displayMoney(order.delivery_price) }}</span></div>
             <div class="d-flex justify-content-between border-top pt-2 mt-2">
               <span class="fw-semibold">Total Amount</span>
               <span class="fw-bold fs-16 text-primary">{{ money(order.total_amount) }} MAD</span>

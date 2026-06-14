@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\DriverZoneController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderTransitionController;
 use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\PickupRequestController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SectorController;
 use App\Http\Controllers\Api\UserRoleController;
@@ -76,4 +77,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('orders', OrderController::class)
         ->whereNumber('order')
         ->names('api.orders');
+
+    // Pickup requests
+    Route::post('pickup-requests/bulk-scan', [PickupRequestController::class, 'bulkScan'])
+        ->name('api.pickup-requests.bulk-scan');
+    Route::get('pickup-requests/{pickupRequest}/pdf', [PickupRequestController::class, 'pdf'])
+        ->whereNumber('pickupRequest')
+        ->name('api.pickup-requests.pdf');
+    Route::post('pickup-requests/{pickupRequest}/assign-driver', [PickupRequestController::class, 'assignDriver'])
+        ->whereNumber('pickupRequest')
+        ->name('api.pickup-requests.assign-driver');
+    Route::post('pickup-requests/{pickupRequest}/change-status', [PickupRequestController::class, 'changeStatus'])
+        ->whereNumber('pickupRequest')
+        ->name('api.pickup-requests.change-status');
+    Route::apiResource('pickup-requests', PickupRequestController::class)
+        ->whereNumber('pickupRequest')
+        ->except(['destroy'])
+        ->names('api.pickup-requests');
 });

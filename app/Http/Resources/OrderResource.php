@@ -21,7 +21,7 @@ class OrderResource extends JsonResource
         $status = $this->status instanceof OrderStatus ? $this->status : OrderStatus::from($this->status);
         $payment = $this->payment_method instanceof PaymentMethod
             ? $this->payment_method
-            : PaymentMethod::from($this->payment_method);
+            : PaymentMethod::resolve((string) $this->payment_method);
 
         return [
             'id' => $this->id,
@@ -64,8 +64,17 @@ class OrderResource extends JsonResource
 
             'payment_method' => $payment->value,
             'payment_method_label' => $payment->label(),
+            'payment_method_display' => $payment->displayLabel(),
+            'payment_method_icon' => $payment->icon(),
+            'payment_method_emoji' => $payment->emoji(),
+            'payment_method_color' => $payment->color(),
+            'cash_collection_required' => $payment->requiresCashCollection(),
 
-            'order_amount' => (float) $this->order_amount,
+            'order_amount' => $this->order_amount !== null ? (float) $this->order_amount : null,
+            'order_value' => $this->order_value !== null ? (float) $this->order_value : null,
+            'amount_to_collect' => $payment->amountToCollect(
+                $this->order_amount !== null ? (float) $this->order_amount : null
+            ),
             'delivery_price' => (float) $this->delivery_price,
             'total_amount' => (float) $this->total_amount,
 

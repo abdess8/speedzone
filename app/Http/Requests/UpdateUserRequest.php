@@ -33,6 +33,8 @@ class UpdateUserRequest extends FormRequest
             'role_id' => ['required', 'integer', 'exists:roles,id'],
             'city' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:1000'],
+            'pickup_address_1' => ['nullable', 'string', 'max:1000'],
+            'pickup_address_2' => ['nullable', 'string', 'max:1000'],
             'phone_number' => ['nullable', 'string', 'max:50'],
             'cin' => ['nullable', 'string', 'max:50'],
             'ice_number' => ['nullable', 'string', 'max:50'],

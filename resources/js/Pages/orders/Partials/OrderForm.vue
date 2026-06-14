@@ -15,8 +15,23 @@ const props = defineProps({
 const money = (value) =>
   new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
 
-const totalAmount = computed(
-  () => Number(props.form.order_amount || 0) + Number(props.form.delivery_price || 0)
+const isCashPayment = computed(() => props.form.payment_method === "CASH");
+
+const totalAmount = computed(() => {
+  const collectible = isCashPayment.value ? Number(props.form.order_amount || 0) : 0;
+  return collectible + Number(props.form.delivery_price || 0);
+});
+
+// Switching payment method clears the field that is not used.
+watch(
+  () => props.form.payment_method,
+  (method) => {
+    if (method === "CASH") {
+      props.form.order_value = "";
+    } else {
+      props.form.order_amount = "";
+    }
+  }
 );
 
 // Sectors available for the currently selected city (Step 2 of the workflow).
@@ -173,20 +188,48 @@ watch(
         <BCardBody>
           <div class="mb-3">
             <label class="form-label d-block">Payment Method <span class="text-danger">*</span></label>
-            <div v-for="method in paymentMethods" :key="method.value" class="form-check form-check-inline">
-              <input class="form-check-input" type="radio" :id="`pm-${method.value}`" :value="method.value" v-model="form.payment_method" />
-              <label class="form-check-label" :for="`pm-${method.value}`">{{ method.label }}</label>
-            </div>
+            <BRow class="g-2">
+              <BCol v-for="method in paymentMethods" :key="method.value" cols="6">
+                <div class="form-check card-radio h-100">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    :id="`pm-${method.value}`"
+                    :value="method.value"
+                    v-model="form.payment_method"
+                  />
+                  <label class="form-check-label w-100" :for="`pm-${method.value}`">
+                    <span class="fs-20 d-block mb-1">
+                      <span class="me-1">{{ method.emoji }}</span>
+                      <i :class="`${method.icon} align-bottom text-${method.color}`"></i>
+                    </span>
+                    <span class="fs-14 fw-medium">{{ method.label }}</span>
+                  </label>
+                </div>
+              </BCol>
+            </BRow>
             <InputError :message="form.errors.payment_method" />
           </div>
 
-          <div class="mb-3">
+          <div v-if="isCashPayment" class="mb-3">
             <label class="form-label">Order Amount <span class="text-danger">*</span></label>
             <div class="input-group">
               <input type="number" step="0.01" min="0" class="form-control" v-model="form.order_amount" :class="{ 'is-invalid': form.errors.order_amount }" />
               <span class="input-group-text">MAD</span>
             </div>
             <InputError :message="form.errors.order_amount" />
+          </div>
+
+          <div v-else class="mb-3">
+            <label class="form-label">
+              Order Value
+              <small class="text-muted">(optional)</small>
+            </label>
+            <div class="input-group">
+              <input type="number" step="0.01" min="0" class="form-control" v-model="form.order_value" :class="{ 'is-invalid': form.errors.order_value }" placeholder="Package value if needed" />
+              <span class="input-group-text">MAD</span>
+            </div>
+            <InputError :message="form.errors.order_value" />
           </div>
 
           <div class="mb-3">

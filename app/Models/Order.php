@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\PaymentMethodCast;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,6 +19,7 @@ class Order extends Model
     protected $fillable = [
         'tracking_number',
         'seller_id',
+        'pickup_request_id',
         'customer_first_name',
         'customer_last_name',
         'customer_phone',
@@ -25,6 +27,7 @@ class Order extends Model
         'city_id',
         'sector_id',
         'payment_method',
+        'order_value',
         'order_amount',
         'delivery_price',
         'total_amount',
@@ -35,8 +38,9 @@ class Order extends Model
     ];
 
     protected $casts = [
-        'payment_method' => PaymentMethod::class,
+        'payment_method' => PaymentMethodCast::class,
         'status' => OrderStatus::class,
+        'order_value' => 'decimal:2',
         'order_amount' => 'decimal:2',
         'delivery_price' => 'decimal:2',
         'total_amount' => 'decimal:2',
@@ -55,8 +59,16 @@ class Order extends Model
                 $order->status = OrderStatus::CREATED->value;
             }
 
-            // Total is always derived from order amount + delivery price.
-            $order->total_amount = round((float) $order->order_amount + (float) $order->delivery_price, 2);
+            $payment = $order->payment_method instanceof PaymentMethod
+                ? $order->payment_method
+                : PaymentMethod::resolve((string) $order->payment_method);
+
+            if ($payment === PaymentMethod::CASH) {
+                $order->order_value = $order->order_amount;
+            }
+
+            $orderAmount = (float) ($order->order_amount ?? 0);
+            $order->total_amount = round($orderAmount + (float) $order->delivery_price, 2);
         });
     }
 
@@ -69,6 +81,11 @@ class Order extends Model
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id');
+    }
+
+    public function pickupRequest(): BelongsTo
+    {
+        return $this->belongsTo(PickupRequest::class);
     }
 
     public function city(): BelongsTo
@@ -136,6 +153,14 @@ class Order extends Model
     public function scopeOwnedBy(Builder $query, int $userId): Builder
     {
         return $query->where('seller_id', $userId);
+    }
+
+    public function scopeEligibleForPickup(Builder $query, int $sellerId): Builder
+    {
+        return $query
+            ->where('seller_id', $sellerId)
+            ->where('status', OrderStatus::CREATED)
+            ->whereNull('pickup_request_id');
     }
 
     public function getRouteKeyName(): string

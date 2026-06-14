@@ -4,10 +4,12 @@ namespace App\Providers;
 
 use App\Models\City;
 use App\Models\Order;
+use App\Models\PickupRequest;
 use App\Models\Sector;
 use App\Models\User;
 use App\Policies\CityPolicy;
 use App\Policies\OrderPolicy;
+use App\Policies\PickupRequestPolicy;
 use App\Policies\SectorPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -23,6 +25,7 @@ class AuthServiceProvider extends ServiceProvider
         Order::class => OrderPolicy::class,
         City::class => CityPolicy::class,
         Sector::class => SectorPolicy::class,
+        PickupRequest::class => PickupRequestPolicy::class,
     ];
 
     /**

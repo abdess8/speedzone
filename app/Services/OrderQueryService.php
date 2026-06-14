@@ -14,6 +14,7 @@ class OrderQueryService
         'created_at',
         'tracking_number',
         'order_amount',
+        'order_value',
         'delivery_price',
         'status',
     ];

@@ -3,11 +3,14 @@
 namespace App\Http\Requests;
 
 use App\Enums\PaymentMethod;
+use App\Http\Requests\Concerns\NormalizesOrderPaymentAmounts;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateOrderRequest extends FormRequest
 {
+    use NormalizesOrderPaymentAmounts;
+
     public function authorize(): bool
     {
         return true;
@@ -28,6 +31,10 @@ class UpdateOrderRequest extends FormRequest
         if ($merge !== []) {
             $this->merge($merge);
         }
+
+        if ($this->hasAny(['payment_method', 'order_amount', 'order_value'])) {
+            $this->mergeNormalizedPaymentAmounts();
+        }
     }
 
     /**
@@ -45,6 +52,16 @@ class UpdateOrderRequest extends FormRequest
      */
     public function rules(): array
     {
+        $paymentRules = $this->hasAny(['payment_method', 'order_amount', 'order_value'])
+            ? $this->paymentAmountRules()
+            : [];
+
+        foreach ($paymentRules as $field => $rules) {
+            if ($field === 'order_amount') {
+                $paymentRules[$field] = array_merge(['sometimes'], $rules);
+            }
+        }
+
         return [
             'customer_first_name' => ['sometimes', 'required', 'string', 'max:255'],
             'customer_last_name' => ['sometimes', 'required', 'string', 'max:255'],
@@ -60,7 +77,7 @@ class UpdateOrderRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'payment_method' => ['sometimes', 'required', Rule::in(PaymentMethod::values())],
-            'order_amount' => ['sometimes', 'required', 'numeric', 'min:0', 'max:99999999.99'],
+            ...$paymentRules,
             'delivery_price' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_fragile' => ['sometimes', 'boolean'],

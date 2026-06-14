@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Models\Order;
 use App\Models\Sector;
 use App\Models\User;
@@ -52,6 +53,40 @@ class OrderService
         $order->fill($data)->save();
 
         return $order->refresh()->load(['city', 'sector', 'seller']);
+    }
+
+    /**
+     * Extract the fields that can be pre-filled when cloning an order.
+     *
+     * @return array<string, mixed>
+     */
+    public function clonePayload(Order $order): array
+    {
+        $payment = $order->payment_method instanceof PaymentMethod
+            ? $order->payment_method
+            : PaymentMethod::resolve((string) $order->payment_method);
+
+        $payload = [
+            'customer_first_name' => $order->customer_first_name,
+            'customer_last_name' => $order->customer_last_name,
+            'customer_phone' => $order->customer_phone,
+            'customer_address' => $order->customer_address,
+            'city_id' => $order->city_id,
+            'sector_id' => $order->sector_id,
+            'is_fragile' => (bool) $order->is_fragile,
+            'can_be_opened' => (bool) $order->can_be_opened,
+            'notes' => $order->notes,
+            'payment_method' => $payment->value,
+            'delivery_price' => (float) $order->delivery_price,
+            'order_value' => $order->order_value !== null ? (float) $order->order_value : null,
+            'order_amount' => null,
+        ];
+
+        if ($payment === PaymentMethod::CASH && $order->order_amount !== null) {
+            $payload['order_amount'] = (float) $order->order_amount;
+        }
+
+        return $payload;
     }
 
     /**

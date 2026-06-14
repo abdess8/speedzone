@@ -36,6 +36,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'city',
         'address',
+        'pickup_address_1',
+        'pickup_address_2',
         'phone_number',
         'cin',
         'ice_number',
@@ -100,6 +102,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Order::class, 'seller_id');
     }
 
+    public function pickupRequestsCreated(): HasMany
+    {
+        return $this->hasMany(PickupRequest::class, 'created_by');
+    }
+
+    public function pickupRequestsAssigned(): HasMany
+    {
+        return $this->hasMany(PickupRequest::class, 'assigned_to');
+    }
+
     /**
      * Delivery sectors this driver is assigned to serve.
      */
@@ -120,6 +132,15 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return $this->roles->contains(fn (Role $role) => $role->name === Role::DRIVER);
+    }
+
+    public function isSeller(): bool
+    {
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles');
+        }
+
+        return $this->roles->contains(fn (Role $role) => $role->name === Role::SELLER);
     }
 
     /**
@@ -165,6 +186,30 @@ class User extends Authenticatable implements MustVerifyEmail
 
         if ($order && $order->seller_id === $this->id) {
             return $this->hasPermission("orders.{$action}.own");
+        }
+
+        return false;
+    }
+
+    /**
+     * Scope-aware permission check for pickup request access controls.
+     */
+    public function hasPickupRequestScopePermission(string $action, ?PickupRequest $pickup = null): bool
+    {
+        if ($this->hasPermission('pickup_requests.read.all')) {
+            return true;
+        }
+
+        if ($pickup && $pickup->assigned_to === $this->id && $this->hasPermission('pickup_requests.read.assigned')) {
+            return $action === 'read' || ($action === 'pickup' && $this->hasPermission('pickup_requests.pickup'));
+        }
+
+        if ($pickup && $pickup->created_by === $this->id && $this->hasPermission('pickup_requests.read.own')) {
+            return $action === 'read';
+        }
+
+        if (! $pickup && $action === 'read' && $this->hasPermission('pickup_requests.read.own')) {
+            return true;
         }
 
         return false;

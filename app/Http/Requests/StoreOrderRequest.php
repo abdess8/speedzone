@@ -3,11 +3,14 @@
 namespace App\Http\Requests;
 
 use App\Enums\PaymentMethod;
+use App\Http\Requests\Concerns\NormalizesOrderPaymentAmounts;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreOrderRequest extends FormRequest
 {
+    use NormalizesOrderPaymentAmounts;
+
     public function authorize(): bool
     {
         return true;
@@ -23,6 +26,8 @@ class StoreOrderRequest extends FormRequest
             'is_fragile' => $this->boolean('is_fragile'),
             'can_be_opened' => $this->boolean('can_be_opened'),
         ]);
+
+        $this->mergeNormalizedPaymentAmounts();
     }
 
     /**
@@ -55,7 +60,7 @@ class StoreOrderRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'payment_method' => ['required', Rule::in(PaymentMethod::values())],
-            'order_amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
+            ...$this->paymentAmountRules(),
             'delivery_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_fragile' => ['boolean'],

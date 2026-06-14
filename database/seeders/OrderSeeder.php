@@ -43,13 +43,13 @@ class OrderSeeder extends Seeder
         $transition = app(OrderTransitionService::class);
 
         $samples = [
-            ['Youssef', 'Amrani', '0612345678', '12 Rue des Fleurs, Maarif', PaymentMethod::COD, 320.00, [OrderStatus::PICKUP_REQUESTED, OrderStatus::WAITING_PICKUP, OrderStatus::PICKED_UP]],
-            ['Salma', 'Bennani', '0698765432', '45 Avenue Hassan II', PaymentMethod::CASH, 150.50, [OrderStatus::PICKUP_REQUESTED]],
-            ['Karim', 'El Idrissi', '0655443322', 'Résidence Al Manar, Apt 8', PaymentMethod::COD, 540.00, [OrderStatus::PICKUP_REQUESTED, OrderStatus::WAITING_PICKUP, OrderStatus::PICKED_UP, OrderStatus::IN_DEPOT, OrderStatus::IN_TRANSIT]],
-            ['Imane', 'Ouazzani', '0677889900', '3 Boulevard Zerktouni', PaymentMethod::CASH, 89.90, []],
+            ['Youssef', 'Amrani', '0612345678', '12 Rue des Fleurs, Maarif', PaymentMethod::CARD_PAYMENT, null, 320.00, [OrderStatus::PICKUP_REQUESTED, OrderStatus::WAITING_PICKUP, OrderStatus::PICKED_UP]],
+            ['Salma', 'Bennani', '0698765432', '45 Avenue Hassan II', PaymentMethod::CASH, 150.50, null, [OrderStatus::PICKUP_REQUESTED]],
+            ['Karim', 'El Idrissi', '0655443322', 'Résidence Al Manar, Apt 8', PaymentMethod::CARD_PAYMENT, null, 540.00, [OrderStatus::PICKUP_REQUESTED, OrderStatus::WAITING_PICKUP, OrderStatus::PICKED_UP, OrderStatus::IN_DEPOT, OrderStatus::IN_TRANSIT]],
+            ['Imane', 'Ouazzani', '0677889900', '3 Boulevard Zerktouni', PaymentMethod::CASH, 89.90, null, []],
         ];
 
-        foreach ($samples as [$first, $last, $phone, $address, $payment, $amount, $flow]) {
+        foreach ($samples as [$first, $last, $phone, $address, $payment, $orderAmount, $orderValue, $flow]) {
             $city = $cities->random();
             $sector = $city->sectors->random();
 
@@ -61,7 +61,8 @@ class OrderSeeder extends Seeder
                 'city_id' => $city->id,
                 'sector_id' => $sector->id,
                 'payment_method' => $payment->value,
-                'order_amount' => $amount,
+                'order_amount' => $orderAmount,
+                'order_value' => $payment === PaymentMethod::CASH ? $orderAmount : $orderValue,
                 'delivery_price' => (float) $sector->delivery_price,
                 'notes' => 'Handle with care. Call before delivery.',
                 'is_fragile' => (bool) random_int(0, 1),

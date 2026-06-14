@@ -33,17 +33,35 @@
         </tr>
     </table>
 
+    @if ($order->payment_method->requiresCashCollection())
+        <div class="collection cash-required">
+            <div class="collection-title">💵 PAYMENT REQUIRED</div>
+            <div class="collection-row">Cash Collection: <strong>YES</strong></div>
+            <div class="collection-amount">
+                Amount to collect:
+                <strong>{{ number_format((float) $order->order_amount, 2) }} MAD</strong>
+            </div>
+        </div>
+    @else
+        <div class="collection card-paid">
+            <div class="collection-title">💳 ALREADY PAID BY CARD</div>
+            <div class="collection-row">Cash Collection: <strong>NO</strong></div>
+        </div>
+    @endif
+
     <table class="amounts">
         <tr>
-            <td>Payment</td>
+            <td>Payment Method</td>
             <td style="text-align:right;">
-                <span class="pay">{{ $order->payment_method->label() }}</span>
+                <span class="pay">{{ $order->payment_method->displayLabel() }}</span>
             </td>
         </tr>
-        <tr>
-            <td>Order amount</td>
-            <td style="text-align:right;">{{ number_format((float) $order->order_amount, 2) }}</td>
-        </tr>
+        @if ($order->order_value !== null)
+            <tr>
+                <td>Order value</td>
+                <td style="text-align:right;">{{ number_format((float) $order->order_value, 2) }}</td>
+            </tr>
+        @endif
         <tr>
             <td>Delivery price</td>
             <td style="text-align:right;">{{ number_format((float) $order->delivery_price, 2) }}</td>

@@ -87,17 +87,29 @@ const clearPhotoFileInput = () => {
                 <div class="mb-2">
                     <!-- Current Profile Photo -->
                     <div v-show="!photoPreview">
-                        <img :src="user.profile_photo_url" :alt="user.name" class="rounded-circle" width="100">
+                        <img
+                            :src="user.profile_photo_url"
+                            :alt="user.name"
+                            class="rounded-circle object-fit-cover"
+                            width="100"
+                            height="100"
+                        >
                     </div>
 
                     <!-- New Profile Photo Preview -->
                     <div v-show="photoPreview">
-                        <span class="d-block rounded-circle w-25" :style="'background-image: url(\'' + photoPreview + '\');'" />
+                        <img
+                            :src="photoPreview"
+                            :alt="user.name"
+                            class="rounded-circle object-fit-cover"
+                            width="100"
+                            height="100"
+                        >
                     </div>
                 </div>
 
                 <BButton variant="primary" class="me-2 btn-sm" type="button" @click.prevent="selectNewPhoto">Select A New Photo</BButton>
-                <BButton v-if="user.profile_photo_path" variant="danger" type="button" class="btn-sm" @click.prevent="deletePhoto">Remove Photo</BButton>
+                <BButton v-if="user.profile_photo_path || user.photo" variant="danger" type="button" class="btn-sm" @click.prevent="deletePhoto">Remove Photo</BButton>
 
                 <div class="text-danger mt-2">
                     <span>{{ form.errors.photo }}</span>

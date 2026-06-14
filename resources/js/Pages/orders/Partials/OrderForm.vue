@@ -164,15 +164,33 @@ watch(
               <InputError :message="form.errors.notes" />
             </BCol>
             <BCol md="6">
-              <div class="form-check form-switch fs-15">
-                <input class="form-check-input" type="checkbox" role="switch" id="isFragile" v-model="form.is_fragile" />
-                <label class="form-check-label" for="isFragile">Fragile package</label>
+              <div class="form-check card-radio h-100">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="isFragile"
+                  v-model="form.is_fragile"
+                />
+                <label class="form-check-label w-100 text-center py-3" for="isFragile">
+                  <span class="fs-24 d-block mb-2">📦</span>
+                  <span class="fs-14 fw-medium d-block">Fragile Package</span>
+                  <small class="text-muted d-block mt-1">Handle with extra care</small>
+                </label>
               </div>
             </BCol>
             <BCol md="6">
-              <div class="form-check form-switch fs-15">
-                <input class="form-check-input" type="checkbox" role="switch" id="canBeOpened" v-model="form.can_be_opened" />
-                <label class="form-check-label" for="canBeOpened">Can be opened by customer</label>
+              <div class="form-check card-radio h-100">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="canBeOpened"
+                  v-model="form.can_be_opened"
+                />
+                <label class="form-check-label w-100 text-center py-3" for="canBeOpened">
+                  <span class="fs-24 d-block mb-2">🔓</span>
+                  <span class="fs-14 fw-medium d-block">Can be opened by customer</span>
+                  <small class="text-muted d-block mt-1">Customer may inspect contents</small>
+                </label>
               </div>
             </BCol>
           </BRow>

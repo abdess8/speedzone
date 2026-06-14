@@ -30,14 +30,24 @@ class PickupRequest extends Model
         'total_orders_amount' => 'decimal:2',
     ];
 
-    public function creator(): BelongsTo
+    public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function assignee(): BelongsTo
+    public function creator(): BelongsTo
+    {
+        return $this->createdBy();
+    }
+
+    public function assignedDriver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function assignee(): BelongsTo
+    {
+        return $this->assignedDriver();
     }
 
     public function orders(): HasMany

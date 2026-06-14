@@ -1,10 +1,13 @@
 <script setup>
-import { onBeforeUnmount, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
+import axios from "axios";
 import Swal from "sweetalert2";
 
 const props = defineProps({
   show: { type: Boolean, default: false },
+  scanTargetStatus: { type: String, default: "PICKED_UP" },
+  scanMode: { type: String, default: "driver" },
 });
 
 const emit = defineEmits(["close"]);
@@ -13,9 +16,35 @@ const manualInput = ref("");
 const batch = ref([]);
 const scanning = ref(false);
 const cameraError = ref("");
+const validating = ref(false);
+const submitting = ref(false);
 const videoRef = ref(null);
 let stream = null;
 let scanInterval = null;
+let lastScannedValue = "";
+let lastScannedAt = 0;
+
+const validBatch = computed(() => batch.value.filter((item) => item.valid));
+const updateButtonLabel = computed(() => {
+  if (props.scanTargetStatus === "IN_DEPOT") {
+    return "Mark as In Depot";
+  }
+
+  return "Mark as Picked Up";
+});
+
+const statusLabel = (status) => {
+  const labels = {
+    CREATED: "Created",
+    WAITING_PICKUP: "Waiting for Pickup",
+    PICKED_UP: "Picked Up",
+    IN_DEPOT: "In Depot",
+    DELIVERED: "Delivered",
+    RETURNED: "Returned",
+  };
+
+  return labels[status] || status || "—";
+};
 
 const parseTrackingNumber = (raw) => {
   const value = (raw || "").trim();
@@ -30,28 +59,74 @@ const parseTrackingNumber = (raw) => {
   return null;
 };
 
-const addToBatch = () => {
-  const tracking = parseTrackingNumber(manualInput.value);
+const scanOrder = async (tracking) => {
+  const { data } = await axios.post(route("pickup.scan"), {
+    tracking_number: tracking,
+  });
+
+  return data;
+};
+
+const addToBatch = async (rawValue = manualInput.value) => {
+  const tracking = parseTrackingNumber(rawValue);
   if (!tracking) {
     Swal.fire({ icon: "warning", title: "Invalid tracking", text: "Enter a tracking number or order URL." });
     return;
   }
 
   if (batch.value.some((item) => item.tracking_number === tracking)) {
-    Swal.fire({
-      toast: true,
-      position: "top-end",
-      icon: "info",
-      title: "Already in batch",
-      timer: 2000,
-      showConfirmButton: false,
-    });
-    manualInput.value = "";
     return;
   }
 
-  batch.value.push({ tracking_number: tracking, scanned_at: new Date().toISOString() });
-  manualInput.value = "";
+  validating.value = true;
+
+  try {
+    const result = await scanOrder(tracking);
+
+    batch.value.push({
+      tracking_number: tracking,
+      customer: result.order?.customer ?? "—",
+      city: result.order?.city ?? "—",
+      status: result.order?.status ?? "—",
+      valid: Boolean(result.success && result.valid),
+      validation_message: result.success ? "Valid" : result.message,
+      scanned_at: new Date().toISOString(),
+    });
+
+    if (!result.success) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: result.message || "Scan rejected",
+        timer: 2500,
+        showConfirmButton: false,
+      });
+    }
+  } catch (error) {
+    const message = error.response?.data?.message || "Unable to validate this order.";
+    batch.value.push({
+      tracking_number: tracking,
+      customer: "—",
+      city: "—",
+      status: "—",
+      valid: false,
+      validation_message: message,
+      scanned_at: new Date().toISOString(),
+    });
+
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "error",
+      title: message,
+      timer: 2500,
+      showConfirmButton: false,
+    });
+  } finally {
+    validating.value = false;
+    manualInput.value = "";
+  }
 };
 
 const removeFromBatch = (tracking) => {
@@ -81,6 +156,7 @@ const startCamera = async () => {
 
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    await nextTick();
     if (videoRef.value) {
       videoRef.value.srcObject = stream;
       await videoRef.value.play();
@@ -88,15 +164,24 @@ const startCamera = async () => {
 
     const detector = new BarcodeDetector({ formats: ["qr_code"] });
     scanning.value = true;
+    lastScannedValue = "";
+    lastScannedAt = 0;
 
     scanInterval = setInterval(async () => {
-      if (!videoRef.value) return;
+      if (!videoRef.value || validating.value) return;
       try {
         const codes = await detector.detect(videoRef.value);
-        if (codes.length > 0) {
-          manualInput.value = codes[0].rawValue;
-          addToBatch();
+        if (codes.length === 0) return;
+
+        const rawValue = codes[0].rawValue;
+        const now = Date.now();
+        if (rawValue === lastScannedValue && now - lastScannedAt < 3000) {
+          return;
         }
+
+        lastScannedValue = rawValue;
+        lastScannedAt = now;
+        await addToBatch(rawValue);
       } catch {
         // ignore frame errors
       }
@@ -107,41 +192,64 @@ const startCamera = async () => {
 };
 
 const submitBatch = () => {
-  if (batch.value.length === 0) return;
+  if (validBatch.value.length === 0) return;
 
   Swal.fire({
-    title: `Mark ${batch.value.length} package(s) as picked up?`,
+    title: `${updateButtonLabel.value} for ${validBatch.value.length} package(s)?`,
     icon: "question",
     showCancelButton: true,
-    confirmButtonText: "Confirm",
+    confirmButtonText: "Update Status",
     confirmButtonColor: "#0ab39c",
-  }).then((result) => {
+  }).then(async (result) => {
     if (!result.isConfirmed) return;
 
-    router.post(
-      route("pickup-requests.bulk-scan"),
-      { tracking_numbers: batch.value.map((item) => item.tracking_number) },
-      {
-        preserveScroll: true,
-        onSuccess: () => {
-          batch.value = [];
-          emit("close");
-        },
-      }
-    );
+    submitting.value = true;
+
+    try {
+      const { data } = await axios.post(route("pickup.bulk-status-update"), {
+        orders: validBatch.value.map((item) => item.tracking_number),
+        status: props.scanTargetStatus,
+      });
+
+      await Swal.fire({
+        icon: "success",
+        title: "Status updated",
+        text: `${data.updated} order(s) updated successfully.`,
+        timer: 2200,
+        showConfirmButton: false,
+      });
+
+      batch.value = [];
+      emit("close");
+      router.reload({ preserveScroll: true });
+    } catch (error) {
+      const message =
+        error.response?.data?.errors?.orders?.[0]
+        || error.response?.data?.message
+        || "Bulk status update failed.";
+
+      Swal.fire({ icon: "error", title: "Update failed", text: message });
+    } finally {
+      submitting.value = false;
+    }
   });
 };
 
 const close = () => {
   stopCamera();
+  batch.value = [];
   emit("close");
 };
 
 watch(
   () => props.show,
   (visible) => {
-    if (visible) startCamera();
-    else stopCamera();
+    if (visible) {
+      batch.value = [];
+      nextTick(() => startCamera());
+    } else {
+      stopCamera();
+    }
   }
 );
 
@@ -152,13 +260,13 @@ onBeforeUnmount(stopCamera);
   <BModal
     :model-value="show"
     title="QR Bulk Pickup Scan"
-    size="lg"
+    size="xl"
     hide-footer
     scrollable
     @update:model-value="(v) => !v && close()"
   >
     <div class="row g-3">
-      <BCol md="6">
+      <BCol lg="5">
         <div class="ratio ratio-4x3 bg-light rounded border d-flex align-items-center justify-content-center overflow-hidden">
           <video v-show="scanning" ref="videoRef" class="w-100 h-100 object-fit-cover" playsinline muted></video>
           <div v-if="!scanning" class="text-center text-muted p-3">
@@ -172,7 +280,7 @@ onBeforeUnmount(stopCamera);
         </button>
       </BCol>
 
-      <BCol md="6">
+      <BCol lg="7">
         <label class="form-label">Scan or paste tracking URL / number</label>
         <div class="input-group mb-3">
           <input
@@ -180,40 +288,75 @@ onBeforeUnmount(stopCamera);
             type="text"
             class="form-control"
             placeholder="SPD-2026-000001 or /orders/SPD-2026-000001"
-            @keyup.enter="addToBatch"
+            :disabled="validating"
+            @keyup.enter="addToBatch()"
           />
-          <button type="button" class="btn btn-primary" @click="addToBatch">Add</button>
+          <button type="button" class="btn btn-primary" :disabled="validating" @click="addToBatch()">
+            <span v-if="validating" class="spinner-border spinner-border-sm"></span>
+            <span v-else>Add</span>
+          </button>
         </div>
 
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <h6 class="mb-0">Batch ({{ batch.length }})</h6>
+          <h6 class="mb-0">
+            Scanned ({{ batch.length }})
+            <span class="text-muted fw-normal">· {{ validBatch.length }} valid</span>
+          </h6>
           <button v-if="batch.length" type="button" class="btn btn-link btn-sm text-danger p-0" @click="batch = []">
             Clear all
           </button>
         </div>
 
-        <div class="border rounded" style="max-height: 220px; overflow-y: auto">
+        <div class="border rounded" style="max-height: 320px; overflow-y: auto">
           <div v-if="batch.length === 0" class="text-muted text-center py-4">No packages scanned yet.</div>
-          <ul v-else class="list-group list-group-flush">
-            <li
-              v-for="item in batch"
-              :key="item.tracking_number"
-              class="list-group-item d-flex justify-content-between align-items-center py-2"
-            >
-              <span class="fw-medium">{{ item.tracking_number }}</span>
-              <button type="button" class="btn btn-sm btn-soft-danger" @click="removeFromBatch(item.tracking_number)">
-                <i class="ri-close-line"></i>
-              </button>
-            </li>
-          </ul>
+          <div v-else class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th>Tracking Number</th>
+                  <th>Customer</th>
+                  <th>City</th>
+                  <th>Current Status</th>
+                  <th>Validation</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in batch" :key="item.tracking_number">
+                  <td class="fw-medium">{{ item.tracking_number }}</td>
+                  <td>{{ item.customer }}</td>
+                  <td>{{ item.city }}</td>
+                  <td>{{ statusLabel(item.status) }}</td>
+                  <td>
+                    <span v-if="item.valid" class="badge bg-success-subtle text-success">Valid</span>
+                    <span v-else class="badge bg-danger-subtle text-danger" :title="item.validation_message">
+                      Rejected
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-soft-danger" @click="removeFromBatch(item.tracking_number)">
+                      <i class="ri-close-line"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </BCol>
     </div>
 
     <div class="d-flex justify-content-end gap-2 mt-4">
       <button type="button" class="btn btn-light" @click="close">Close</button>
-      <button type="button" class="btn btn-success" :disabled="batch.length === 0" @click="submitBatch">
-        <i class="ri-hand-coin-line me-1"></i> Mark as Picked Up ({{ batch.length }})
+      <button
+        type="button"
+        class="btn btn-success"
+        :disabled="validBatch.length === 0 || submitting"
+        @click="submitBatch"
+      >
+        <span v-if="submitting" class="spinner-border spinner-border-sm me-1"></span>
+        <i v-else class="ri-refresh-line me-1"></i>
+        Update Status ({{ validBatch.length }})
       </button>
     </div>
   </BModal>

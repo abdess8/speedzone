@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\DB;
 
 class OrderService
 {
-    public function __construct(private readonly TrackingNumberGenerator $trackingNumbers) {}
+    public function __construct(
+        private readonly TrackingNumberGenerator $trackingNumbers,
+        private readonly OrderAuditService $auditService,
+    ) {}
 
     /**
      * Create a new order on behalf of the authenticated seller.
@@ -44,15 +47,19 @@ class OrderService
      *
      * @param  array<string, mixed>  $data
      */
-    public function update(Order $order, array $data): Order
+    public function update(Order $order, array $data, User $actor): Order
     {
-        if (array_key_exists('delivery_price', $data) || array_key_exists('sector_id', $data)) {
-            $data['delivery_price'] = $this->resolveDeliveryPrice($data, $order);
-        }
+        return DB::transaction(function () use ($order, $data, $actor): Order {
+            if (array_key_exists('delivery_price', $data) || array_key_exists('sector_id', $data)) {
+                $data['delivery_price'] = $this->resolveDeliveryPrice($data, $order);
+            }
 
-        $order->fill($data)->save();
+            $this->auditService->recordChanges($order, $data, $actor);
 
-        return $order->refresh()->load(['city', 'sector', 'seller']);
+            $order->fill($data)->save();
+
+            return $order->refresh()->load(['city', 'sector', 'seller']);
+        });
     }
 
     /**

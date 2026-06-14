@@ -108,6 +108,11 @@ class Order extends Model
         return $this->hasOne(OrderStatusHistory::class)->latestOfMany();
     }
 
+    public function changeHistories(): HasMany
+    {
+        return $this->hasMany(OrderChangeHistory::class)->orderByDesc('created_at')->orderByDesc('id');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Helpers

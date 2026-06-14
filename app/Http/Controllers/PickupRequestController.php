@@ -6,6 +6,8 @@ use App\Enums\PickupRequestStatus;
 use App\Http\Requests\AssignPickupDriverRequest;
 use App\Http\Requests\BulkScanPickupRequest;
 use App\Http\Requests\ChangePickupStatusRequest;
+use App\Http\Requests\PickupBulkStatusUpdateRequest;
+use App\Http\Requests\PickupScanRequest;
 use App\Http\Requests\StorePickupRequestRequest;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\PickupRequestResource;
@@ -16,7 +18,9 @@ use App\Services\PickupDeliveryNotePdfService;
 use App\Services\PickupRequestQueryService;
 use App\Services\PickupRequestService;
 use App\Services\PickupRequestTransitionService;
+use App\Services\PickupScanService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,6 +32,7 @@ class PickupRequestController extends Controller
         private readonly PickupRequestService $pickups,
         private readonly PickupRequestQueryService $pickupQuery,
         private readonly PickupRequestTransitionService $transitions,
+        private readonly PickupScanService $scanService,
     ) {}
 
     public function index(Request $request): Response
@@ -139,15 +144,63 @@ class PickupRequestController extends Controller
 
     public function bulkScan(BulkScanPickupRequest $request): RedirectResponse
     {
-        $result = $this->pickups->bulkScanPickup(
+        $this->authorize('scan', PickupRequest::class);
+
+        $targetStatus = $this->scanService->targetPickupStatus($request->user());
+
+        $result = $this->scanService->bulkStatusUpdate(
             $request->user(),
             $request->input('tracking_numbers', []),
-            PickupRequestStatus::PICKED_UP
+            $targetStatus->value
         );
+
+        if ($result['updated'] === 0) {
+            return back()->with('error', 'No orders were updated. Check that scanned orders are valid for your role.');
+        }
 
         return back()->with(
             'success',
             "Updated {$result['updated']} order(s) via bulk scan."
+        );
+    }
+
+    public function scan(PickupScanRequest $request): JsonResponse
+    {
+        $this->authorize('scan', PickupRequest::class);
+
+        return response()->json(
+            $this->scanService->validateScan(
+                $request->user(),
+                $request->string('tracking_number')->toString()
+            )
+        );
+    }
+
+    public function bulkStatusUpdate(PickupBulkStatusUpdateRequest $request): RedirectResponse|JsonResponse
+    {
+        $this->authorize('scan', PickupRequest::class);
+
+        $result = $this->scanService->bulkStatusUpdate(
+            $request->user(),
+            $request->input('orders', []),
+            $request->string('status')->toString()
+        );
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'updated' => $result['updated'],
+                'orders' => $result['orders']->pluck('tracking_number'),
+            ]);
+        }
+
+        if ($result['updated'] === 0) {
+            return back()->with('error', 'No orders were updated.');
+        }
+
+        return back()->with(
+            'success',
+            "Updated {$result['updated']} order(s) successfully."
         );
     }
 
@@ -238,6 +291,18 @@ class PickupRequestController extends Controller
     private function abilities(Request $request): array
     {
         $user = $request->user();
+        $canScan = $user->can('scan', PickupRequest::class);
+        $scanTargetStatus = null;
+        $scanMode = null;
+
+        if ($canScan) {
+            try {
+                $scanMode = $this->scanService->resolveScannerMode($user);
+                $scanTargetStatus = $this->scanService->targetPickupStatus($user)->value;
+            } catch (\Illuminate\Auth\Access\AuthorizationException) {
+                $canScan = false;
+            }
+        }
 
         return [
             'create' => $user->can('create', PickupRequest::class),
@@ -245,7 +310,9 @@ class PickupRequestController extends Controller
             'assign' => $user->hasPermission('pickup_requests.assign'),
             'change_status' => $user->hasPermission('pickup_requests.change_status'),
             'pickup' => $user->hasPermission('pickup_requests.pickup'),
-            'scan' => $user->hasPermission('pickup_requests.pickup') || $user->hasPermission('pickup_requests.change_status'),
+            'scan' => $canScan,
+            'scan_mode' => $scanMode,
+            'scan_target_status' => $scanTargetStatus,
         ];
     }
 }

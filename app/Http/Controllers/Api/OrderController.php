@@ -49,7 +49,15 @@ class OrderController extends Controller
     {
         $this->authorize('view', $order);
 
-        $order->load(['city', 'sector', 'seller', 'statusHistories.user']);
+        $order->load([
+            'city',
+            'sector',
+            'seller',
+            'pickupRequest.createdBy',
+            'pickupRequest.assignedDriver',
+            'statusHistories.user',
+            'changeHistories.changedByUser',
+        ]);
 
         return OrderResource::make($order);
     }
@@ -58,7 +66,7 @@ class OrderController extends Controller
     {
         $this->authorize('update', $order);
 
-        $order = $this->orderService->update($order, $request->validated());
+        $order = $this->orderService->update($order, $request->validated(), $request->user());
 
         return OrderResource::make($order);
     }

@@ -228,6 +228,11 @@ onMounted(() => {
       @created="showCreateModal = false"
     />
 
-    <QrScanner :show="showQrScanner" @close="showQrScanner = false" />
+    <QrScanner
+      :show="showQrScanner"
+      :scan-target-status="can.scan_target_status || 'PICKED_UP'"
+      :scan-mode="can.scan_mode || 'driver'"
+      @close="showQrScanner = false"
+    />
   </Layout>
 </template>

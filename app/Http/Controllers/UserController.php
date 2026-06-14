@@ -68,7 +68,9 @@ class UserController extends Controller
         $data['password'] = Hash::make($data['password']);
 
         if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')->store('users/photos', 'public');
+            $path = $request->file('photo')->store('profile-photos', 'public');
+            $data['profile_photo_path'] = $path;
+            $data['photo'] = $path;
         }
 
         $data['attached_files'] = $this->storeAttachedFiles($request);
@@ -123,12 +125,12 @@ class UserController extends Controller
         }
 
         if ($request->hasFile('photo')) {
-            if ($user->photo) {
-                Storage::disk('public')->delete($user->photo);
-            }
-            $data['photo'] = $request->file('photo')->store('users/photos', 'public');
+            $this->deleteProfilePhotoFiles($user);
+            $path = $request->file('photo')->store('profile-photos', 'public');
+            $data['profile_photo_path'] = $path;
+            $data['photo'] = $path;
         } else {
-            unset($data['photo']);
+            unset($data['photo'], $data['profile_photo_path']);
         }
 
         $data['attached_files'] = $this->resolveAttachedFiles($request, $user);
@@ -149,9 +151,7 @@ class UserController extends Controller
      */
     public function destroy(User $user): RedirectResponse
     {
-        if ($user->photo) {
-            Storage::disk('public')->delete($user->photo);
-        }
+        $this->deleteProfilePhotoFiles($user);
 
         foreach ($user->attached_files ?? [] as $file) {
             if (! empty($file['path'])) {
@@ -206,5 +206,20 @@ class UserController extends Controller
             ->all();
 
         return array_merge($existing, $this->storeAttachedFiles($request));
+    }
+
+    /**
+     * Remove stored profile photo file(s) for a user.
+     */
+    private function deleteProfilePhotoFiles(User $user): void
+    {
+        $paths = array_unique(array_filter([
+            $user->profile_photo_path,
+            $user->photo,
+        ]));
+
+        foreach ($paths as $path) {
+            Storage::disk('public')->delete($path);
+        }
     }
 }

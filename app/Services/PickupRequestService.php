@@ -115,60 +115,11 @@ class PickupRequestService
      */
     public function bulkScanPickup(User $actor, array $trackingNumbers, PickupRequestStatus $toStatus): array
     {
-        if ($toStatus !== PickupRequestStatus::PICKED_UP) {
-            throw ValidationException::withMessages([
-                'to_status' => 'Bulk scan currently supports marking orders as picked up only.',
-            ]);
-        }
-
-        if (! $actor->hasPermission('pickup_requests.pickup') && ! $actor->hasPermission('pickup_requests.change_status')) {
-            throw new AuthorizationException('You are not allowed to perform bulk pickup scans.');
-        }
-
-        $numbers = collect($trackingNumbers)->filter()->unique()->values();
-        $orders = Order::query()
-            ->whereIn('tracking_number', $numbers)
-            ->with('pickupRequest')
-            ->get();
-
-        if ($orders->isEmpty()) {
-            throw ValidationException::withMessages([
-                'tracking_numbers' => 'No matching orders were found.',
-            ]);
-        }
-
-        $updated = 0;
-
-        DB::transaction(function () use ($orders, $actor, $toStatus, &$updated): void {
-            $grouped = $orders->groupBy('pickup_request_id');
-
-            foreach ($grouped as $pickupId => $pickupOrders) {
-                if (! $pickupId) {
-                    continue;
-                }
-
-                /** @var PickupRequest|null $pickup */
-                $pickup = PickupRequest::query()->find($pickupId);
-
-                if (! $pickup || $pickup->status !== PickupRequestStatus::WAITING_FOR_PICKUP) {
-                    continue;
-                }
-
-                if ($actor->hasPermission('pickup_requests.pickup')
-                    && $pickup->assigned_to !== $actor->id
-                    && ! $actor->hasPermission('pickup_requests.change_status')) {
-                    continue;
-                }
-
-                $this->applyStatus($pickup, $toStatus, $actor, 'Bulk QR scan pickup.');
-                $updated += $pickupOrders->count();
-            }
-        });
-
-        return [
-            'updated' => $updated,
-            'orders' => $orders,
-        ];
+        return app(PickupScanService::class)->bulkStatusUpdate(
+            $actor,
+            $trackingNumbers,
+            $toStatus->value
+        );
     }
 
     /**

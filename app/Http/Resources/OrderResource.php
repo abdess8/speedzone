@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\PickupRequestStatus;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -59,8 +60,43 @@ class OrderResource extends JsonResource
                 'id' => $this->seller->id,
                 'name' => $this->seller->full_name,
                 'phone' => $this->seller->phone_number,
+                'profile_photo_url' => $this->seller->profile_photo_url,
+                'photo_url' => $this->seller->photo_url,
+                'has_profile_photo' => $this->seller->hasProfilePhoto(),
             ] : null),
             'seller_id' => $this->seller_id,
+
+            'pickup_request' => $this->whenLoaded('pickupRequest', function () {
+                if (! $this->pickupRequest) {
+                    return null;
+                }
+
+                $status = $this->pickupRequest->status instanceof PickupRequestStatus
+                    ? $this->pickupRequest->status
+                    : PickupRequestStatus::from($this->pickupRequest->status);
+
+                return [
+                    'id' => $this->pickupRequest->id,
+                    'reference' => $this->pickupRequest->reference,
+                    'status' => $status->value,
+                    'status_label' => $status->label(),
+                    'status_color' => $status->color(),
+                    'pickup_address' => $this->pickupRequest->pickup_address,
+                    'created_at' => $this->pickupRequest->created_at?->toIso8601String(),
+                    'created_by' => $this->pickupRequest->relationLoaded('createdBy') && $this->pickupRequest->createdBy
+                        ? [
+                            'id' => $this->pickupRequest->createdBy->id,
+                            'name' => $this->pickupRequest->createdBy->full_name,
+                        ]
+                        : null,
+                    'assigned_driver' => $this->pickupRequest->relationLoaded('assignedDriver') && $this->pickupRequest->assignedDriver
+                        ? [
+                            'id' => $this->pickupRequest->assignedDriver->id,
+                            'name' => $this->pickupRequest->assignedDriver->full_name,
+                        ]
+                        : null,
+                ];
+            }),
 
             'payment_method' => $payment->value,
             'payment_method_label' => $payment->label(),
@@ -90,6 +126,11 @@ class OrderResource extends JsonResource
             'status_history' => $this->whenLoaded(
                 'statusHistories',
                 fn () => OrderStatusHistoryResource::collection($this->statusHistories)->resolve($request)
+            ),
+
+            'change_history' => $this->whenLoaded(
+                'changeHistories',
+                fn () => OrderChangeHistoryResource::collection($this->changeHistories)->resolve($request)
             ),
         ];
     }

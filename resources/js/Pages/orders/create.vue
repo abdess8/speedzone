@@ -99,7 +99,7 @@ onMounted(() => {
     <form @submit.prevent="submit">
       <OrderForm :form="form" :cities="cities" :sectors="sectors" :payment-methods="paymentMethods" />
 
-      <div class="hstack gap-2 justify-content-end mb-4">
+      <div class="hstack gap-2 justify-content-center mb-4">
         <Link :href="route('orders.index')" class="btn btn-light">Cancel</Link>
         <BButton
           type="button"
@@ -107,7 +107,7 @@ onMounted(() => {
           :disabled="form.processing"
           @click="submitAndNew"
         >
-          <i class="ri-add-line align-bottom me-1"></i><i class="ri-add-line align-bottom me-1"></i>
+          <i class="ri-add-line align-bottom me-1"></i>
           Create and Create New
         </BButton>
         <BButton type="submit" variant="success" :disabled="form.processing">

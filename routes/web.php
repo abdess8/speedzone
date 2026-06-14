@@ -58,6 +58,10 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->name('orders.track');
 
     // Pickup requests (Ramassages)
+    Route::post('pickup/scan', [PickupRequestController::class, 'scan'])
+        ->name('pickup.scan');
+    Route::post('pickup/bulk-status-update', [PickupRequestController::class, 'bulkStatusUpdate'])
+        ->name('pickup.bulk-status-update');
     Route::post('pickup-requests/bulk-scan', [PickupRequestController::class, 'bulkScan'])
         ->name('pickup-requests.bulk-scan');
     Route::get('pickup-requests/{pickupRequest}/pdf', [PickupRequestController::class, 'pdf'])

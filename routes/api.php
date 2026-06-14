@@ -79,6 +79,10 @@ Route::middleware('auth:sanctum')->group(function () {
         ->names('api.orders');
 
     // Pickup requests
+    Route::post('pickup/scan', [PickupRequestController::class, 'scan'])
+        ->name('api.pickup.scan');
+    Route::post('pickup/bulk-status-update', [PickupRequestController::class, 'bulkStatusUpdate'])
+        ->name('api.pickup.bulk-status-update');
     Route::post('pickup-requests/bulk-scan', [PickupRequestController::class, 'bulkScan'])
         ->name('api.pickup-requests.bulk-scan');
     Route::get('pickup-requests/{pickupRequest}/pdf', [PickupRequestController::class, 'pdf'])

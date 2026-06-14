@@ -108,7 +108,15 @@ class OrderController extends Controller
     {
         $this->authorize('view', $order);
 
-        $order->load(['city', 'sector', 'seller', 'statusHistories.user']);
+        $order->load([
+            'city',
+            'sector',
+            'seller',
+            'pickupRequest.createdBy',
+            'pickupRequest.assignedDriver',
+            'statusHistories.user',
+            'changeHistories.changedByUser',
+        ]);
 
         return Inertia::render('orders/show', [
             'order' => OrderResource::make($order)->resolve($request),
@@ -139,7 +147,7 @@ class OrderController extends Controller
     {
         $this->authorize('update', $order);
 
-        $this->orderService->update($order, $request->validated());
+        $this->orderService->update($order, $request->validated(), $request->user());
 
         return redirect()
             ->route('orders.show', $order)

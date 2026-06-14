@@ -28,9 +28,10 @@ class DriverSectorSeeder extends Seeder
             return;
         }
 
-        // Ensure we have a few demo drivers to assign zones to.
+        // Prefer the demo driver created by DemoUsersSeeder.
         $drivers = User::query()
             ->whereHas('roles', fn ($q) => $q->where('name', Role::DRIVER))
+            ->orderByRaw("CASE WHEN email = 'driver@speedzone.ma' THEN 0 ELSE 1 END")
             ->get();
 
         if ($drivers->isEmpty()) {
@@ -46,6 +47,7 @@ class DriverSectorSeeder extends Seeder
                         'first_name' => $data['first_name'],
                         'last_name' => $data['last_name'],
                         'password' => Hash::make('password'),
+                        'email_verified_at' => now(),
                         'role_id' => $driverRole->id,
                     ]
                 );

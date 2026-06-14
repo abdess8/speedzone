@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\PickupRequestStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AssignPickupDriverRequest;
 use App\Http\Requests\BulkScanPickupRequest;
 use App\Http\Requests\ChangePickupStatusRequest;
+use App\Http\Requests\PickupBulkStatusUpdateRequest;
+use App\Http\Requests\PickupScanRequest;
 use App\Http\Requests\StorePickupRequestRequest;
 use App\Http\Resources\PickupRequestResource;
 use App\Models\PickupRequest;
@@ -15,6 +16,7 @@ use App\Services\PickupDeliveryNotePdfService;
 use App\Services\PickupRequestQueryService;
 use App\Services\PickupRequestService;
 use App\Services\PickupRequestTransitionService;
+use App\Services\PickupScanService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -27,6 +29,7 @@ class PickupRequestController extends Controller
         private readonly PickupRequestService $pickups,
         private readonly PickupRequestQueryService $pickupQuery,
         private readonly PickupRequestTransitionService $transitions,
+        private readonly PickupScanService $scanService,
     ) {}
 
     public function index(Request $request): AnonymousResourceCollection
@@ -111,13 +114,47 @@ class PickupRequestController extends Controller
 
     public function bulkScan(BulkScanPickupRequest $request): JsonResponse
     {
-        $result = $this->pickups->bulkScanPickup(
+        $this->authorize('scan', PickupRequest::class);
+
+        $targetStatus = $this->scanService->targetPickupStatus($request->user());
+
+        $result = $this->scanService->bulkStatusUpdate(
             $request->user(),
             $request->input('tracking_numbers', []),
-            PickupRequestStatus::PICKED_UP
+            $targetStatus->value
         );
 
         return response()->json([
+            'success' => $result['updated'] > 0,
+            'updated' => $result['updated'],
+            'orders' => $result['orders']->pluck('tracking_number'),
+        ]);
+    }
+
+    public function scan(PickupScanRequest $request): JsonResponse
+    {
+        $this->authorize('scan', PickupRequest::class);
+
+        return response()->json(
+            $this->scanService->validateScan(
+                $request->user(),
+                $request->string('tracking_number')->toString()
+            )
+        );
+    }
+
+    public function bulkStatusUpdate(PickupBulkStatusUpdateRequest $request): JsonResponse
+    {
+        $this->authorize('scan', PickupRequest::class);
+
+        $result = $this->scanService->bulkStatusUpdate(
+            $request->user(),
+            $request->input('orders', []),
+            $request->string('status')->toString()
+        );
+
+        return response()->json([
+            'success' => true,
             'updated' => $result['updated'],
             'orders' => $result['orders']->pluck('tracking_number'),
         ]);

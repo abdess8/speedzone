@@ -2,8 +2,11 @@
 
 namespace App\Policies;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\PickupScanService;
+use Illuminate\Auth\Access\AuthorizationException;
 
 class OrderPolicy
 {
@@ -24,7 +27,19 @@ class OrderPolicy
 
     public function update(User $user, Order $order): bool
     {
-        return $user->hasOrderScopePermission('update', $order);
+        if ($user->isSuperAdmin() && $user->hasPermission('orders.update.all')) {
+            return true;
+        }
+
+        if ($order->seller_id === $user->id && $user->hasPermission('orders.update.own')) {
+            $status = $order->status instanceof OrderStatus
+                ? $order->status
+                : OrderStatus::from($order->status);
+
+            return $status === OrderStatus::CREATED;
+        }
+
+        return false;
     }
 
     public function delete(User $user, Order $order): bool
@@ -45,5 +60,18 @@ class OrderPolicy
 
         // Printing a specific label still respects read scope.
         return $order === null || $user->hasOrderScopePermission('read', $order);
+    }
+
+    public function scanForPickup(User $user, Order $order): bool
+    {
+        if (! $user->hasPermission('pickup_requests.pickup') && ! $user->hasPermission('pickup_requests.change_status')) {
+            return false;
+        }
+
+        try {
+            return app(PickupScanService::class)->validateOrderForScan($user, $order)['valid'];
+        } catch (AuthorizationException) {
+            return false;
+        }
     }
 }

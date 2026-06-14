@@ -43,4 +43,10 @@ class PickupRequestPolicy
     {
         return $user->hasPickupRequestScopePermission('read', $pickupRequest);
     }
+
+    public function scan(User $user): bool
+    {
+        return $user->hasPermission('pickup_requests.pickup')
+            || $user->hasPermission('pickup_requests.change_status');
+    }
 }

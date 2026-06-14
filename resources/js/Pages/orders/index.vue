@@ -267,13 +267,6 @@ onMounted(() => {
           <button v-if="can.print" class="btn btn-sm btn-soft-secondary" @click="printSelected">
             <i class="ri-printer-line align-bottom me-1"></i> Print Labels
           </button>
-          <div class="d-flex align-items-center gap-1 ms-2">
-            <select v-model="bulkStatus" class="form-select form-select-sm" style="width: auto">
-              <option value="">Change status…</option>
-              <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
-            </select>
-            <button class="btn btn-sm btn-primary" :disabled="!bulkStatus" @click="applyBulkStatus">Apply</button>
-          </div>
         </div>
       </BCardBody>
 

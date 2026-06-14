@@ -4,7 +4,9 @@ import { Link, router, usePage } from "@inertiajs/vue3";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import OrderTimeline from "./Partials/OrderTimeline.vue";
+import OrderModificationHistory from "./Partials/OrderModificationHistory.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 import Swal from "sweetalert2";
 
 const props = defineProps({
@@ -128,8 +130,61 @@ onMounted(() => {
               <BCol md="4"><div class="text-muted fs-13">Order / Tracking #</div><div class="fw-semibold">{{ order.tracking_number }}</div></BCol>
               <BCol md="4"><div class="text-muted fs-13">Status</div><span class="badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">{{ order.status_label }}</span></BCol>
               <BCol md="4"><div class="text-muted fs-13">Created</div><div class="fw-semibold">{{ formatDate(order.created_at) }}</div></BCol>
-              <BCol md="4"><div class="text-muted fs-13">Seller</div><div class="fw-semibold">{{ order.seller?.name ?? "—" }}</div></BCol>
+              <BCol md="4">
+                <div class="text-muted fs-13">Seller</div>
+                <UserAvatar
+                  v-if="order.seller"
+                  :user="order.seller"
+                  :size="36"
+                  clickable
+                  show-name
+                />
+                <div v-else class="fw-semibold">—</div>
+              </BCol>
               <BCol md="4"><div class="text-muted fs-13">Seller Phone</div><div class="fw-semibold">{{ order.seller?.phone ?? "—" }}</div></BCol>
+            </BRow>
+          </BCardBody>
+        </BCard>
+
+        <!-- Pickup Request -->
+        <BCard v-if="order.pickup_request" no-body>
+          <BCardHeader><h5 class="card-title mb-0">Pickup Request</h5></BCardHeader>
+          <BCardBody>
+            <BRow class="g-3">
+              <BCol md="4">
+                <div class="text-muted fs-13">Reference</div>
+                <Link
+                  :href="route('pickup-requests.show', order.pickup_request.id)"
+                  class="fw-semibold text-primary text-decoration-none"
+                >
+                  {{ order.pickup_request.reference }}
+                </Link>
+              </BCol>
+              <BCol md="4">
+                <div class="text-muted fs-13">Status</div>
+                <span
+                  class="badge"
+                  :class="`bg-${order.pickup_request.status_color}-subtle text-${order.pickup_request.status_color}`"
+                >
+                  {{ order.pickup_request.status_label }}
+                </span>
+              </BCol>
+              <BCol md="4">
+                <div class="text-muted fs-13">Created Date</div>
+                <div class="fw-semibold">{{ formatDate(order.pickup_request.created_at) }}</div>
+              </BCol>
+              <BCol md="4">
+                <div class="text-muted fs-13">Created By</div>
+                <div class="fw-semibold">{{ order.pickup_request.created_by?.name ?? "—" }}</div>
+              </BCol>
+              <BCol md="4">
+                <div class="text-muted fs-13">Assigned Driver</div>
+                <div class="fw-semibold">{{ order.pickup_request.assigned_driver?.name ?? "—" }}</div>
+              </BCol>
+              <BCol md="12">
+                <div class="text-muted fs-13">Pickup Address</div>
+                <div class="fw-semibold">{{ order.pickup_request.pickup_address || "—" }}</div>
+              </BCol>
             </BRow>
           </BCardBody>
         </BCard>
@@ -163,6 +218,14 @@ onMounted(() => {
             </div>
             <div class="text-muted fs-13">Notes</div>
             <div>{{ order.notes || "—" }}</div>
+          </BCardBody>
+        </BCard>
+
+        <!-- Modification History -->
+        <BCard no-body>
+          <BCardHeader><h5 class="card-title mb-0">Modification History</h5></BCardHeader>
+          <BCardBody>
+            <OrderModificationHistory :history="order.change_history ?? []" />
           </BCardBody>
         </BCard>
       </BCol>

@@ -3,13 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Storage;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
@@ -42,6 +42,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'cin',
         'ice_number',
         'photo',
+        'profile_photo_path',
         'attached_files',
     ];
 
@@ -226,11 +227,51 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get the public URL of the uploaded profile photo.
+     * Path of the stored profile photo (Jetstream or user-management upload).
+     */
+    public function profilePhotoPath(): ?string
+    {
+        return $this->profile_photo_path ?: $this->photo;
+    }
+
+    /**
+     * Whether the user has uploaded a custom profile photo.
+     */
+    public function hasProfilePhoto(): bool
+    {
+        return (bool) $this->profilePhotoPath();
+    }
+
+    /**
+     * Public URL for a file on the public disk (relative, works regardless of APP_URL).
+     */
+    public static function publicStorageUrl(string $path): string
+    {
+        return '/storage/'.ltrim(str_replace('\\', '/', $path), '/');
+    }
+
+    /**
+     * Override Jetstream accessor: unify profile_photo_path and photo, use relative URLs.
+     */
+    protected function profilePhotoUrl(): Attribute
+    {
+        return Attribute::get(function (): string {
+            $path = $this->profilePhotoPath();
+
+            return $path
+                ? self::publicStorageUrl($path)
+                : $this->defaultProfilePhotoUrl();
+        });
+    }
+
+    /**
+     * Custom photo URL (null when no uploaded photo — for UIs that show their own fallback).
      */
     public function getPhotoUrlAttribute(): ?string
     {
-        return $this->photo ? Storage::disk('public')->url($this->photo) : null;
+        $path = $this->profilePhotoPath();
+
+        return $path ? self::publicStorageUrl($path) : null;
     }
 
     /**
@@ -244,7 +285,7 @@ class User extends Authenticatable implements MustVerifyEmail
             ->map(fn ($file) => [
                 'name' => $file['name'] ?? basename($file['path'] ?? ''),
                 'path' => $file['path'] ?? '',
-                'url' => isset($file['path']) ? Storage::disk('public')->url($file['path']) : '',
+                'url' => isset($file['path']) ? self::publicStorageUrl($file['path']) : '',
             ])
             ->values()
             ->all();

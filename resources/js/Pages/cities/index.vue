@@ -1,9 +1,12 @@
 <script setup>
 import { reactive, ref, computed, watch, onMounted } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import Swal from "sweetalert2";
+
+const { t } = useI18n();
 
 const props = defineProps({
   cities: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
@@ -53,12 +56,13 @@ const goToPage = (url) => {
 
 const confirmDelete = (city) => {
   Swal.fire({
-    title: "Delete this city?",
-    text: `${city.name} will be removed. Cities with active sectors cannot be deleted.`,
+    title: t("cities.delete_confirm_title"),
+    text: t("cities.delete_confirm_text", { name: city.name }),
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#f06548",
-    confirmButtonText: "Yes, delete it!",
+    confirmButtonText: t("common.confirm_delete"),
+    cancelButtonText: t("common.cancel"),
   }).then((result) => {
     if (result.isConfirmed) {
       router.delete(route("cities.destroy", city.id), { preserveScroll: true });
@@ -82,17 +86,17 @@ watch(() => usePage().props?.flash, flashToast, { deep: true });
 
 <template>
   <Layout>
-    <PageHeader title="Cities" pageTitle="Delivery Zones" />
+    <PageHeader :title="$t('cities.title')" :pageTitle="$t('common.delivery_zones')" />
 
     <BCard no-body>
       <BCardHeader class="border-bottom-dashed">
         <BRow class="g-3 align-items-center">
           <BCol sm>
-            <h5 class="card-title mb-0">City List</h5>
+            <h5 class="card-title mb-0">{{ $t('cities.list_title') }}</h5>
           </BCol>
           <BCol sm="auto">
             <Link v-if="can.create" :href="route('cities.create')" class="btn btn-success">
-              <i class="ri-add-line align-bottom me-1"></i> New City
+              <i class="ri-add-line align-bottom me-1"></i> {{ $t('cities.new_city') }}
             </Link>
           </BCol>
         </BRow>
@@ -101,32 +105,32 @@ watch(() => usePage().props?.flash, flashToast, { deep: true });
       <BCardBody class="border-bottom-dashed">
         <BRow class="g-3">
           <BCol md="5">
-            <label class="form-label">Search</label>
+            <label class="form-label">{{ $t('common.search') }}</label>
             <div class="search-box">
               <input
                 v-model="filters.search"
                 type="text"
                 class="form-control"
-                placeholder="Name, code or region…"
+                :placeholder="$t('cities.filters.search_placeholder')"
                 @keyup.enter="applyFilters"
               />
             </div>
           </BCol>
           <BCol md="3">
-            <label class="form-label">Status</label>
+            <label class="form-label">{{ $t('common.status') }}</label>
             <select v-model="filters.status" class="form-select">
-              <option value="">All</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="">{{ $t('common.all') }}</option>
+              <option value="active">{{ $t('common.active') }}</option>
+              <option value="inactive">{{ $t('common.inactive') }}</option>
             </select>
           </BCol>
           <BCol md="4" class="d-flex align-items-end">
             <div class="hstack gap-2 justify-content-end w-100">
               <button class="btn btn-light" @click="resetFilters">
-                <i class="ri-refresh-line align-bottom me-1"></i> Reset
+                <i class="ri-refresh-line align-bottom me-1"></i> {{ $t('common.reset') }}
               </button>
               <button class="btn btn-primary" @click="applyFilters">
-                <i class="ri-search-line align-bottom me-1"></i> Apply
+                <i class="ri-search-line align-bottom me-1"></i> {{ $t('common.apply') }}
               </button>
             </div>
           </BCol>
@@ -138,12 +142,12 @@ watch(() => usePage().props?.flash, flashToast, { deep: true });
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
               <tr>
-                <th>Name</th>
-                <th>Code</th>
-                <th>Region</th>
-                <th class="text-center">Sectors</th>
-                <th>Status</th>
-                <th class="text-end">Actions</th>
+                <th>{{ $t('cities.table.name') }}</th>
+                <th>{{ $t('cities.table.code') }}</th>
+                <th>{{ $t('cities.table.region') }}</th>
+                <th class="text-center">{{ $t('cities.table.sectors') }}</th>
+                <th>{{ $t('common.status') }}</th>
+                <th class="text-end">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -153,9 +157,9 @@ watch(() => usePage().props?.flash, flashToast, { deep: true });
                 </td>
                 <td>
                   <span v-if="city.code" class="badge bg-light text-body border">{{ city.code }}</span>
-                  <span v-else class="text-muted">—</span>
+                  <span v-else class="text-muted">{{ $t('common.empty_value') }}</span>
                 </td>
-                <td>{{ city.region || "—" }}</td>
+                <td>{{ city.region || $t('common.empty_value') }}</td>
                 <td class="text-center">
                   <span class="badge bg-primary-subtle text-primary">
                     {{ city.active_sectors_count ?? 0 }} / {{ city.sectors_count ?? 0 }}
@@ -163,25 +167,25 @@ watch(() => usePage().props?.flash, flashToast, { deep: true });
                 </td>
                 <td>
                   <span class="badge" :class="city.is_active ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'">
-                    {{ city.is_active ? "Active" : "Inactive" }}
+                    {{ city.is_active ? $t('common.active') : $t('common.inactive') }}
                   </span>
                 </td>
                 <td class="text-end">
                   <ul class="list-inline hstack gap-2 mb-0 justify-content-end">
-                    <li class="list-inline-item" title="View">
+                    <li class="list-inline-item" :title="$t('common.view')">
                       <Link :href="route('cities.show', city.id)" class="text-primary"><i class="ri-eye-fill fs-16"></i></Link>
                     </li>
-                    <li v-if="can.update" class="list-inline-item" title="Edit">
+                    <li v-if="can.update" class="list-inline-item" :title="$t('common.edit')">
                       <Link :href="route('cities.edit', city.id)" class="text-warning"><i class="ri-pencil-fill fs-16"></i></Link>
                     </li>
-                    <li v-if="can.delete" class="list-inline-item" title="Delete">
+                    <li v-if="can.delete" class="list-inline-item" :title="$t('common.delete')">
                       <BLink class="text-danger" @click="confirmDelete(city)"><i class="ri-delete-bin-5-fill fs-16"></i></BLink>
                     </li>
                   </ul>
                 </td>
               </tr>
               <tr v-if="rows.length === 0">
-                <td colspan="6" class="text-center text-muted py-4">No cities found.</td>
+                <td colspan="6" class="text-center text-muted py-4">{{ $t('cities.empty') }}</td>
               </tr>
             </tbody>
           </table>
@@ -190,11 +194,11 @@ watch(() => usePage().props?.flash, flashToast, { deep: true });
         <BRow class="align-items-center mt-3 g-3">
           <BCol sm="auto">
             <div class="d-flex align-items-center gap-2">
-              <span class="text-muted">Rows per page</span>
+              <span class="text-muted">{{ $t('common.rows_per_page') }}</span>
               <select v-model="perPage" class="form-select form-select-sm" style="width: auto">
                 <option v-for="size in [15, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
               </select>
-              <span class="text-muted">{{ meta.from ?? 0 }}–{{ meta.to ?? 0 }} of {{ meta.total ?? 0 }}</span>
+              <span class="text-muted">{{ $t('common.pagination_range', { from: meta.from ?? 0, to: meta.to ?? 0, total: meta.total ?? 0 }) }}</span>
             </div>
           </BCol>
           <BCol sm class="d-flex justify-content-sm-end">

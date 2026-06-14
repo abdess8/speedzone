@@ -17,7 +17,8 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 
 import store from "./state/store";
-import i18n from './i18n'
+import i18n, { syncLocaleFromPage } from './i18n'
+import { router } from '@inertiajs/vue3';
 
 AOS.init({
     easing: 'ease-out-back',
@@ -28,6 +29,12 @@ createInertiaApp({
     title: title => title ? `${title} | SpeedZone Express` : 'SpeedZone Express',
     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
     setup({ el, App, props, plugin }) {
+        syncLocaleFromPage(props.initialPage?.props);
+
+        router.on('success', (event) => {
+            syncLocaleFromPage(event.detail.page.props);
+        });
+
         return createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(store)

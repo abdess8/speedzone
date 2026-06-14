@@ -19,12 +19,7 @@ enum PickupRequestStatus: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::WAITING_FOR_PICKUP => 'Waiting for Pickup',
-            self::PICKED_UP => 'Picked Up',
-            self::IN_DEPOT => 'In Depot',
-            self::CANCELLED => 'Cancelled',
-        };
+        return __('pickup_statuses.'.$this->value);
     }
 
     public function color(): string

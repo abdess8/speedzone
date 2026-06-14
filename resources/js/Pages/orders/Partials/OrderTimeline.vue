@@ -1,4 +1,8 @@
 <script setup>
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
+
 defineProps({
   history: { type: Array, default: () => [] },
 });
@@ -9,7 +13,7 @@ const formatDate = (value) => (value ? new Date(value).toLocaleString() : "");
 <template>
   <div class="profile-timeline">
     <div v-if="history.length === 0" class="text-muted text-center py-4">
-      No tracking history yet.
+      {{ $t('orders.timeline.empty') }}
     </div>
 
     <div
@@ -40,7 +44,7 @@ const formatDate = (value) => (value ? new Date(value).toLocaleString() : "");
           <small class="text-muted">{{ formatDate(entry.created_at) }}</small>
         </div>
         <p class="text-muted mb-0 mt-1" v-if="entry.comment">{{ entry.comment }}</p>
-        <small class="text-muted" v-if="entry.user">by {{ entry.user.name }}</small>
+        <small class="text-muted" v-if="entry.user">{{ $t('orders.timeline.by', { name: entry.user.name }) }}</small>
       </div>
     </div>
   </div>

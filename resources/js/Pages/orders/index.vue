@@ -1,10 +1,13 @@
 <script setup>
 import { reactive, ref, computed, watch, onMounted } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
 import Swal from "sweetalert2";
+
+const { t } = useI18n();
 
 const props = defineProps({
   orders: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
@@ -147,18 +150,18 @@ onMounted(() => {
 
 <template>
   <Layout>
-    <PageHeader title="Orders" pageTitle="Order Management" />
+    <PageHeader :title="$t('orders.title')" :pageTitle="$t('orders.page_title')" />
 
     <BCard no-body>
       <BCardHeader class="border-bottom-dashed">
         <BRow class="g-3 align-items-center">
           <BCol sm>
-            <h5 class="card-title mb-0">Order List</h5>
+            <h5 class="card-title mb-0">{{ $t('orders.list_title') }}</h5>
           </BCol>
           <BCol sm="auto">
             <div class="hstack gap-2">
               <Link v-if="can.create" :href="route('orders.create')" class="btn btn-success">
-                <i class="ri-add-line align-bottom me-1"></i> New Order
+                <i class="ri-add-line align-bottom me-1"></i> {{ $t('orders.new_order') }}
               </Link>
             </div>
           </BCol>
@@ -169,88 +172,88 @@ onMounted(() => {
       <BCardBody class="border-bottom-dashed">
         <BRow class="g-3">
           <BCol md="3">
-            <label class="form-label">Tracking / Order #</label>
+            <label class="form-label">{{ $t('orders.filters.tracking_number') }}</label>
             <input v-model="filters.tracking_number" type="text" class="form-control" @keyup.enter="applyFilters" />
           </BCol>
           <BCol md="3">
-            <label class="form-label">Customer Name</label>
+            <label class="form-label">{{ $t('orders.filters.customer_name') }}</label>
             <input v-model="filters.customer_name" type="text" class="form-control" @keyup.enter="applyFilters" />
           </BCol>
           <BCol md="3">
-            <label class="form-label">Customer Phone</label>
+            <label class="form-label">{{ $t('orders.filters.customer_phone') }}</label>
             <input v-model="filters.customer_phone" type="text" class="form-control" @keyup.enter="applyFilters" />
           </BCol>
           <BCol md="3">
-            <label class="form-label">Seller</label>
-            <input v-model="filters.seller" type="text" class="form-control" placeholder="Name or ID" @keyup.enter="applyFilters" />
+            <label class="form-label">{{ $t('orders.filters.seller') }}</label>
+            <input v-model="filters.seller" type="text" class="form-control" :placeholder="$t('orders.filters.seller_placeholder')" @keyup.enter="applyFilters" />
           </BCol>
 
           <BCol md="3">
-            <label class="form-label">City</label>
+            <label class="form-label">{{ $t('orders.filters.city') }}</label>
             <select v-model="filters.city_id" class="form-select">
-              <option value="">All cities</option>
+              <option value="">{{ $t('orders.filters.all_cities') }}</option>
               <option v-for="city in filterOptions.cities" :key="city.id" :value="city.id">{{ city.name }}</option>
             </select>
           </BCol>
           <BCol md="3">
-            <label class="form-label">Status</label>
+            <label class="form-label">{{ $t('common.status') }}</label>
             <select v-model="filters.status" class="form-select">
-              <option value="">All statuses</option>
+              <option value="">{{ $t('common.all_statuses') }}</option>
               <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
             </select>
           </BCol>
           <BCol md="3">
-            <label class="form-label">Payment Method</label>
+            <label class="form-label">{{ $t('orders.filters.payment_method') }}</label>
             <select v-model="filters.payment_method" class="form-select">
-              <option value="">All methods</option>
+              <option value="">{{ $t('orders.filters.all_methods') }}</option>
               <option v-for="p in filterOptions.paymentMethods" :key="p.value" :value="p.value">{{ p.label }}</option>
             </select>
           </BCol>
           <BCol md="3">
             <BRow class="g-2">
               <BCol cols="6">
-                <label class="form-label">Fragile</label>
+                <label class="form-label">{{ $t('orders.filters.fragile') }}</label>
                 <select v-model="filters.is_fragile" class="form-select">
-                  <option value="">Any</option>
-                  <option value="1">Yes</option>
-                  <option value="0">No</option>
+                  <option value="">{{ $t('common.any') }}</option>
+                  <option value="1">{{ $t('common.yes') }}</option>
+                  <option value="0">{{ $t('common.no') }}</option>
                 </select>
               </BCol>
               <BCol cols="6">
-                <label class="form-label">Openable</label>
+                <label class="form-label">{{ $t('orders.filters.openable') }}</label>
                 <select v-model="filters.can_be_opened" class="form-select">
-                  <option value="">Any</option>
-                  <option value="1">Yes</option>
-                  <option value="0">No</option>
+                  <option value="">{{ $t('common.any') }}</option>
+                  <option value="1">{{ $t('common.yes') }}</option>
+                  <option value="0">{{ $t('common.no') }}</option>
                 </select>
               </BCol>
             </BRow>
           </BCol>
 
           <BCol md="3">
-            <label class="form-label">Created From</label>
+            <label class="form-label">{{ $t('orders.filters.created_from') }}</label>
             <input v-model="filters.created_from" type="date" class="form-control" />
           </BCol>
           <BCol md="3">
-            <label class="form-label">Created To</label>
+            <label class="form-label">{{ $t('orders.filters.created_to') }}</label>
             <input v-model="filters.created_to" type="date" class="form-control" />
           </BCol>
           <BCol md="3">
-            <label class="form-label">Delivered From</label>
+            <label class="form-label">{{ $t('orders.filters.delivered_from') }}</label>
             <input v-model="filters.delivery_from" type="date" class="form-control" />
           </BCol>
           <BCol md="3">
-            <label class="form-label">Delivered To</label>
+            <label class="form-label">{{ $t('orders.filters.delivered_to') }}</label>
             <input v-model="filters.delivery_to" type="date" class="form-control" />
           </BCol>
 
           <BCol cols="12">
             <div class="hstack gap-2 justify-content-end">
-              <button class="btn btn-light" @click="resetFilters">
-                <i class="ri-refresh-line align-bottom me-1"></i> Reset
+              <button class="btn btn-light text-nowrap" @click="resetFilters">
+                <i class="ri-refresh-line align-bottom me-1"></i> {{ $t('common.reset') }}
               </button>
-              <button class="btn btn-primary" @click="applyFilters">
-                <i class="ri-search-line align-bottom me-1"></i> Apply Filters
+              <button class="btn btn-primary text-nowrap" @click="applyFilters">
+                <i class="ri-search-line align-bottom me-1"></i> {{ $t('common.apply_filters') }}
               </button>
             </div>
           </BCol>
@@ -260,12 +263,12 @@ onMounted(() => {
       <!-- Bulk action bar -->
       <BCardBody v-if="selected.length" class="bg-light border-bottom-dashed py-2">
         <div class="d-flex flex-wrap align-items-center gap-2">
-          <span class="fw-medium me-2">{{ selected.length }} selected</span>
+          <span class="fw-medium me-2">{{ $t('orders.bulk.selected', { count: selected.length }) }}</span>
           <button v-if="can.export" class="btn btn-sm btn-soft-secondary" @click="exportSelected">
-            <i class="ri-download-2-line align-bottom me-1"></i> Export
+            <i class="ri-download-2-line align-bottom me-1"></i> {{ $t('orders.bulk.export') }}
           </button>
           <button v-if="can.print" class="btn btn-sm btn-soft-secondary" @click="printSelected">
-            <i class="ri-printer-line align-bottom me-1"></i> Print Labels
+            <i class="ri-printer-line align-bottom me-1"></i> {{ $t('orders.bulk.print_labels') }}
           </button>
         </div>
       </BCardBody>
@@ -280,24 +283,24 @@ onMounted(() => {
                   <input class="form-check-input" type="checkbox" :checked="allChecked" @change="toggleAll" />
                 </th>
                 <th role="button" @click="sortBy('tracking_number')">
-                  Tracking # <i :class="sortIcon('tracking_number')"></i>
+                  {{ $t('orders.table.tracking_number') }} <i :class="sortIcon('tracking_number')"></i>
                 </th>
-                <th>Customer</th>
-                <th>City</th>
-                <th>Payment</th>
+                <th>{{ $t('orders.table.customer') }}</th>
+                <th>{{ $t('orders.filters.city') }}</th>
+                <th>{{ $t('orders.table.payment') }}</th>
                 <th role="button" class="text-end" @click="sortBy('order_amount')">
-                  To Collect <i :class="sortIcon('order_amount')"></i>
+                  {{ $t('orders.table.to_collect') }} <i :class="sortIcon('order_amount')"></i>
                 </th>
                 <th role="button" class="text-end" @click="sortBy('order_value')">
-                  Order Value <i :class="sortIcon('order_value')"></i>
+                  {{ $t('orders.table.order_value') }} <i :class="sortIcon('order_value')"></i>
                 </th>
                 <th role="button" class="text-end" @click="sortBy('delivery_price')">
-                  Delivery <i :class="sortIcon('delivery_price')"></i>
+                  {{ $t('orders.table.delivery') }} <i :class="sortIcon('delivery_price')"></i>
                 </th>
-                <th class="text-end">Total</th>
-                <th role="button" @click="sortBy('status')">Status <i :class="sortIcon('status')"></i></th>
-                <th role="button" @click="sortBy('created_at')">Created <i :class="sortIcon('created_at')"></i></th>
-                <th class="text-end">Actions</th>
+                <th class="text-end">{{ $t('orders.table.total') }}</th>
+                <th role="button" @click="sortBy('status')">{{ $t('common.status') }} <i :class="sortIcon('status')"></i></th>
+                <th role="button" @click="sortBy('created_at')">{{ $t('orders.table.created') }} <i :class="sortIcon('created_at')"></i></th>
+                <th class="text-end">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -308,8 +311,8 @@ onMounted(() => {
                 <td>
                   <Link :href="route('orders.show', order.id)" class="fw-semibold">{{ order.tracking_number }}</Link>
                   <div v-if="order.is_fragile || order.can_be_opened" class="mt-1">
-                    <span v-if="order.is_fragile" class="badge bg-danger-subtle text-danger me-1">Fragile</span>
-                    <span v-if="order.can_be_opened" class="badge bg-info-subtle text-info">Openable</span>
+                    <span v-if="order.is_fragile" class="badge bg-danger-subtle text-danger me-1">{{ $t('orders.badges.fragile') }}</span>
+                    <span v-if="order.can_be_opened" class="badge bg-info-subtle text-info">{{ $t('orders.badges.openable') }}</span>
                   </div>
                 </td>
                 <td>
@@ -339,20 +342,20 @@ onMounted(() => {
                 <td class="text-muted fs-13">{{ new Date(order.created_at).toLocaleDateString() }}</td>
                 <td class="text-end">
                   <ul class="list-inline hstack gap-2 mb-0 justify-content-end">
-                    <li class="list-inline-item" title="View">
+                    <li class="list-inline-item" :title="$t('common.view')">
                       <Link :href="route('orders.show', order.id)" class="text-primary"><i class="ri-eye-fill fs-16"></i></Link>
                     </li>
-                    <li v-if="can.print" class="list-inline-item" title="Print Label">
+                    <li v-if="can.print" class="list-inline-item" :title="$t('orders.actions.print_label')">
                       <BLink class="text-secondary" @click="openPdf(order)"><i class="ri-printer-line fs-16"></i></BLink>
                     </li>
-                    <li class="list-inline-item" title="Edit">
+                    <li class="list-inline-item" :title="$t('common.edit')">
                       <Link :href="route('orders.edit', order.id)" class="text-warning"><i class="ri-pencil-fill fs-16"></i></Link>
                     </li>
                   </ul>
                 </td>
               </tr>
               <tr v-if="rows.length === 0">
-                <td colspan="12" class="text-center text-muted py-4">No orders found.</td>
+                <td colspan="12" class="text-center text-muted py-4">{{ $t('orders.empty') }}</td>
               </tr>
             </tbody>
           </table>
@@ -362,12 +365,12 @@ onMounted(() => {
         <BRow class="align-items-center mt-3 g-3">
           <BCol sm="auto">
             <div class="d-flex align-items-center gap-2">
-              <span class="text-muted">Rows per page</span>
+              <span class="text-muted">{{ $t('common.rows_per_page') }}</span>
               <select v-model="perPage" class="form-select form-select-sm" style="width: auto">
                 <option v-for="size in filterOptions.pageSizes" :key="size" :value="size">{{ size }}</option>
               </select>
               <span class="text-muted">
-                {{ meta.from ?? 0 }}–{{ meta.to ?? 0 }} of {{ meta.total ?? 0 }}
+                {{ $t('common.pagination_range', { from: meta.from ?? 0, to: meta.to ?? 0, total: meta.total ?? 0 }) }}
               </span>
             </div>
           </BCol>

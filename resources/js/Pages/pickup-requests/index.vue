@@ -1,11 +1,14 @@
 <script setup>
 import { reactive, ref, computed, watch, onMounted } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import CreatePickupModal from "./Partials/CreatePickupModal.vue";
 import QrScanner from "./Partials/QrScanner.vue";
 import Swal from "sweetalert2";
+
+const { t } = useI18n();
 
 const props = defineProps({
   pickups: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
@@ -13,7 +16,6 @@ const props = defineProps({
   filterOptions: { type: Object, default: () => ({}) },
   eligibleOrders: { type: Array, default: () => [] },
   pickupAddresses: { type: Array, default: () => [] },
-  pageTitle: { type: String, default: "Pickup Requests" },
   can: { type: Object, default: () => ({}) },
 });
 
@@ -37,7 +39,7 @@ const money = (value) =>
     Number(value || 0)
   );
 
-const formatDate = (value) => (value ? new Date(value).toLocaleString() : "—");
+const formatDate = (value) => (value ? new Date(value).toLocaleString() : t("common.empty_value"));
 
 const query = () => {
   const params = { per_page: perPage.value };
@@ -87,21 +89,21 @@ onMounted(() => {
 
 <template>
   <Layout>
-    <PageHeader :title="pageTitle" pageTitle="Pickup Management" />
+    <PageHeader :title="$t('pickups.title')" :pageTitle="$t('pickups.page_title')" />
 
     <BCard no-body>
       <BCardHeader class="border-bottom-dashed">
         <BRow class="g-3 align-items-center">
           <BCol sm>
-            <h5 class="card-title mb-0">{{ pageTitle }}</h5>
+            <h5 class="card-title mb-0">{{ $t('pickups.title') }}</h5>
           </BCol>
           <BCol sm="auto">
             <div class="hstack gap-2">
               <button v-if="can.scan" type="button" class="btn btn-soft-primary" @click="showQrScanner = true">
-                <i class="ri-qr-scan-2-line align-bottom me-1"></i> QR Scan
+                <i class="ri-qr-scan-2-line align-bottom me-1"></i> {{ $t('pickups.qr_scan') }}
               </button>
               <button v-if="can.create" type="button" class="btn btn-success" @click="showCreateModal = true">
-                <i class="ri-add-line align-bottom me-1"></i> Create Pickup Request
+                <i class="ri-add-line align-bottom me-1"></i> {{ $t('pickups.create') }}
               </button>
             </div>
           </BCol>
@@ -111,36 +113,38 @@ onMounted(() => {
       <BCardBody class="border-bottom-dashed">
         <BRow class="g-3">
           <BCol md="3">
-            <label class="form-label">Reference</label>
-            <input v-model="filters.search" type="text" class="form-control" placeholder="PU-2026-000001" @keyup.enter="applyFilters" />
+            <label class="form-label">{{ $t('pickups.filters.reference') }}</label>
+            <input v-model="filters.search" type="text" class="form-control" :placeholder="$t('pickups.filters.reference_placeholder')" @keyup.enter="applyFilters" />
           </BCol>
           <BCol md="3">
-            <label class="form-label">Status</label>
+            <label class="form-label">{{ $t('common.status') }}</label>
             <select v-model="filters.status" class="form-select">
-              <option value="">All statuses</option>
+              <option value="">{{ $t('common.all_statuses') }}</option>
               <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
             </select>
           </BCol>
           <BCol v-if="can.read_all" md="3">
-            <label class="form-label">Seller</label>
+            <label class="form-label">{{ $t('pickups.filters.seller') }}</label>
             <select v-model="filters.seller_id" class="form-select">
-              <option value="">All sellers</option>
+              <option value="">{{ $t('pickups.filters.all_sellers') }}</option>
               <option v-for="seller in filterOptions.sellers" :key="seller.id" :value="seller.id">{{ seller.name }}</option>
             </select>
           </BCol>
           <BCol md="3">
-            <label class="form-label">Created from</label>
+            <label class="form-label">{{ $t('pickups.filters.created_from') }}</label>
             <input v-model="filters.created_from" type="date" class="form-control" />
           </BCol>
           <BCol md="3">
-            <label class="form-label">Created to</label>
+            <label class="form-label">{{ $t('pickups.filters.created_to') }}</label>
             <input v-model="filters.created_to" type="date" class="form-control" />
           </BCol>
-          <BCol md="3" class="d-flex align-items-end gap-2">
-            <button type="button" class="btn btn-primary" @click="applyFilters">
-              <i class="ri-search-line align-bottom me-1"></i> Apply Filters
-            </button>
-            <button type="button" class="btn btn-light" @click="resetFilters">Reset</button>
+          <BCol cols="12">
+            <div class="hstack gap-2 justify-content-end">
+              <button type="button" class="btn btn-light text-nowrap" @click="resetFilters">{{ $t('common.reset') }}</button>
+              <button type="button" class="btn btn-primary text-nowrap" @click="applyFilters">
+                <i class="ri-search-line align-bottom me-1"></i> {{ $t('common.apply_filters') }}
+              </button>
+            </div>
           </BCol>
         </BRow>
       </BCardBody>
@@ -150,15 +154,15 @@ onMounted(() => {
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
               <tr>
-                <th>Reference</th>
-                <th v-if="can.read_all">Seller</th>
-                <th>Address</th>
-                <th class="text-center">Packages</th>
-                <th class="text-end">Total Amount</th>
-                <th>Driver</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th class="text-end">Actions</th>
+                <th>{{ $t('pickups.filters.reference') }}</th>
+                <th v-if="can.read_all">{{ $t('pickups.filters.seller') }}</th>
+                <th>{{ $t('pickups.table.address') }}</th>
+                <th class="text-center">{{ $t('pickups.table.packages') }}</th>
+                <th class="text-end">{{ $t('pickups.table.total_amount') }}</th>
+                <th>{{ $t('pickups.table.driver') }}</th>
+                <th>{{ $t('common.status') }}</th>
+                <th>{{ $t('pickups.table.created') }}</th>
+                <th class="text-end">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -166,15 +170,15 @@ onMounted(() => {
                 <td>
                   <Link :href="route('pickup-requests.show', pickup.id)" class="fw-semibold">{{ pickup.reference }}</Link>
                 </td>
-                <td v-if="can.read_all">{{ pickup.creator?.name ?? "—" }}</td>
+                <td v-if="can.read_all">{{ pickup.creator?.name ?? $t('common.empty_value') }}</td>
                 <td>
                   <span class="text-truncate d-inline-block" style="max-width: 220px" :title="pickup.pickup_address">
                     {{ pickup.pickup_address }}
                   </span>
                 </td>
                 <td class="text-center">{{ pickup.number_of_packages }}</td>
-                <td class="text-end fw-semibold">{{ money(pickup.total_orders_amount) }} MAD</td>
-                <td>{{ pickup.assignee?.name ?? "—" }}</td>
+                <td class="text-end fw-semibold">{{ money(pickup.total_orders_amount) }} {{ $t('common.currency_mad') }}</td>
+                <td>{{ pickup.assignee?.name ?? $t('common.empty_value') }}</td>
                 <td>
                   <span class="badge" :class="`bg-${pickup.status_color}-subtle text-${pickup.status_color}`">
                     {{ pickup.status_label }}
@@ -188,7 +192,7 @@ onMounted(() => {
                 </td>
               </tr>
               <tr v-if="rows.length === 0">
-                <td :colspan="can.read_all ? 9 : 8" class="text-center text-muted py-4">No pickup requests found.</td>
+                <td :colspan="can.read_all ? 9 : 8" class="text-center text-muted py-4">{{ $t('pickups.empty') }}</td>
               </tr>
             </tbody>
           </table>
@@ -197,11 +201,11 @@ onMounted(() => {
         <BRow class="align-items-center mt-3 g-3">
           <BCol sm="auto">
             <div class="d-flex align-items-center gap-2">
-              <span class="text-muted">Rows per page</span>
+              <span class="text-muted">{{ $t('common.rows_per_page') }}</span>
               <select v-model="perPage" class="form-select form-select-sm" style="width: auto">
                 <option v-for="size in filterOptions.pageSizes" :key="size" :value="size">{{ size }}</option>
               </select>
-              <span class="text-muted">{{ meta.from ?? 0 }}–{{ meta.to ?? 0 }} of {{ meta.total ?? 0 }}</span>
+              <span class="text-muted">{{ $t('common.pagination_range', { from: meta.from ?? 0, to: meta.to ?? 0, total: meta.total ?? 0 }) }}</span>
             </div>
           </BCol>
           <BCol sm class="d-flex justify-content-sm-end">

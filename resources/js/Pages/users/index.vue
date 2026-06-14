@@ -5,11 +5,7 @@ import PageHeader from "@/Components/page-header.vue";
 import Swal from "sweetalert2";
 
 export default {
-  components: {
-    Layout,
-    PageHeader,
-    Link,
-  },
+  components: { Layout, PageHeader, Link },
   props: {
     users: { type: Object, required: true },
     roles: { type: Array, default: () => [] },
@@ -46,6 +42,11 @@ export default {
     this.flashMessage();
   },
   methods: {
+    roleLabel(name) {
+      const key = `roles.${name}`;
+      const translated = this.$t(key);
+      return translated !== key ? translated : name;
+    },
     applyFilters() {
       router.get(
         route("users.index"),
@@ -59,8 +60,8 @@ export default {
       return (first + last).toUpperCase();
     },
     formatDate(value) {
-      if (!value) return "-";
-      return new Date(value).toLocaleDateString("en-GB", {
+      if (!value) return this.$t("common.empty_value_short");
+      return new Date(value).toLocaleDateString(this.$page.props.locale === "en" ? "en-GB" : "fr-FR", {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -68,18 +69,17 @@ export default {
     },
     confirmDelete(user) {
       Swal.fire({
-        title: "Are you sure?",
-        text: `Delete user "${user.full_name}"? This cannot be undone.`,
+        title: this.$t("common.confirm_title"),
+        text: this.$t("users.delete_confirm_text", { name: user.full_name }),
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#f06548",
         cancelButtonColor: "#878a99",
-        confirmButtonText: "Yes, delete it!",
+        confirmButtonText: this.$t("common.confirm_delete"),
+        cancelButtonText: this.$t("common.cancel"),
       }).then((result) => {
         if (result.isConfirmed) {
-          router.delete(route("users.destroy", user.id), {
-            preserveScroll: true,
-          });
+          router.delete(route("users.destroy", user.id), { preserveScroll: true });
         }
       });
     },
@@ -103,18 +103,18 @@ export default {
 
 <template>
   <Layout>
-    <PageHeader title="Users" pageTitle="User Management" />
+    <PageHeader :title="$t('users.title')" :pageTitle="$t('users.page_title')" />
     <BRow>
       <BCol lg="12">
         <BCard no-body id="usersList">
           <BCardHeader class="border-bottom-dashed">
             <BRow class="g-4 align-items-center">
               <BCol sm>
-                <h5 class="card-title mb-0">User List</h5>
+                <h5 class="card-title mb-0">{{ $t('users.list_title') }}</h5>
               </BCol>
               <BCol sm="auto">
                 <Link :href="route('users.create')" class="btn btn-success add-btn">
-                  <i class="ri-add-line align-bottom me-1"></i> Create User
+                  <i class="ri-add-line align-bottom me-1"></i> {{ $t('users.create') }}
                 </Link>
               </BCol>
             </BRow>
@@ -127,7 +127,7 @@ export default {
                   <input
                     type="text"
                     class="form-control search"
-                    placeholder="Search by name, email, phone, CIN..."
+                    :placeholder="$t('users.filters.search_placeholder')"
                     v-model="search"
                   />
                   <i class="ri-search-line search-icon"></i>
@@ -135,8 +135,8 @@ export default {
               </BCol>
               <BCol xl="3">
                 <select class="form-select" v-model="role">
-                  <option value="">All Roles</option>
-                  <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.name }}</option>
+                  <option value="">{{ $t('users.filters.all_roles') }}</option>
+                  <option v-for="r in roles" :key="r.id" :value="r.id">{{ roleLabel(r.name) }}</option>
                 </select>
               </BCol>
             </BRow>
@@ -147,16 +147,16 @@ export default {
               <table class="table align-middle">
                 <thead class="table-light text-muted">
                   <tr>
-                    <th scope="col">Photo</th>
-                    <th scope="col">Full Name</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Phone</th>
-                    <th scope="col">City</th>
-                    <th scope="col">CIN</th>
-                    <th scope="col">ICE</th>
-                    <th scope="col">Role</th>
-                    <th scope="col">Created</th>
-                    <th scope="col">Action</th>
+                    <th scope="col">{{ $t('users.table.photo') }}</th>
+                    <th scope="col">{{ $t('users.table.full_name') }}</th>
+                    <th scope="col">{{ $t('users.table.email') }}</th>
+                    <th scope="col">{{ $t('users.table.phone') }}</th>
+                    <th scope="col">{{ $t('sidebar.cities') }}</th>
+                    <th scope="col">{{ $t('users.table.cin') }}</th>
+                    <th scope="col">{{ $t('users.table.ice') }}</th>
+                    <th scope="col">{{ $t('users.table.role') }}</th>
+                    <th scope="col">{{ $t('orders.table.created') }}</th>
+                    <th scope="col">{{ $t('common.action') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -181,34 +181,34 @@ export default {
                       </Link>
                     </td>
                     <td>{{ user.email }}</td>
-                    <td>{{ user.phone_number || "-" }}</td>
-                    <td>{{ user.city || "-" }}</td>
-                    <td>{{ user.cin || "-" }}</td>
-                    <td>{{ user.ice_number || "-" }}</td>
+                    <td>{{ user.phone_number || $t('common.empty_value_short') }}</td>
+                    <td>{{ user.city || $t('common.empty_value_short') }}</td>
+                    <td>{{ user.cin || $t('common.empty_value_short') }}</td>
+                    <td>{{ user.ice_number || $t('common.empty_value_short') }}</td>
                     <td>
                       <span
                         v-if="user.role"
                         class="badge"
                         :class="roleBadgeClasses[user.role.name] || 'bg-secondary-subtle text-secondary'"
                       >
-                        {{ user.role.name }}
+                        {{ roleLabel(user.role.name) }}
                       </span>
-                      <span v-else class="text-muted">-</span>
+                      <span v-else class="text-muted">{{ $t('common.empty_value_short') }}</span>
                     </td>
                     <td>{{ formatDate(user.created_at) }}</td>
                     <td>
                       <ul class="list-inline hstack gap-2 mb-0">
-                        <li class="list-inline-item" title="View">
+                        <li class="list-inline-item" :title="$t('common.view')">
                           <Link :href="route('users.show', user.id)" class="text-primary d-inline-block">
                             <i class="ri-eye-fill fs-16"></i>
                           </Link>
                         </li>
-                        <li class="list-inline-item" title="Edit">
+                        <li class="list-inline-item" :title="$t('common.edit')">
                           <Link :href="route('users.edit', user.id)" class="text-warning d-inline-block">
                             <i class="ri-pencil-fill fs-16"></i>
                           </Link>
                         </li>
-                        <li class="list-inline-item" title="Delete">
+                        <li class="list-inline-item" :title="$t('common.delete')">
                           <BLink class="text-danger d-inline-block" @click="confirmDelete(user)">
                             <i class="ri-delete-bin-5-fill fs-16"></i>
                           </BLink>
@@ -217,9 +217,7 @@ export default {
                     </td>
                   </tr>
                   <tr v-if="users.data.length === 0">
-                    <td colspan="10" class="text-center text-muted py-4">
-                      No users found.
-                    </td>
+                    <td colspan="10" class="text-center text-muted py-4">{{ $t('users.empty') }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -234,13 +232,7 @@ export default {
                     class="page-item"
                     :class="{ active: link.active, disabled: !link.url }"
                   >
-                    <Link
-                      v-if="link.url"
-                      class="page-link"
-                      :href="link.url"
-                      preserve-scroll
-                      v-html="link.label"
-                    />
+                    <Link v-if="link.url" class="page-link" :href="link.url" preserve-scroll v-html="link.label" />
                     <span v-else class="page-link" v-html="link.label"></span>
                   </li>
                 </ul>

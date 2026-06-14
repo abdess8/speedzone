@@ -1,8 +1,11 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { router } from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import Swal from "sweetalert2";
+
+const { t } = useI18n();
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -25,13 +28,11 @@ let lastScannedValue = "";
 let lastScannedAt = 0;
 
 const validBatch = computed(() => batch.value.filter((item) => item.valid));
-const updateButtonLabel = computed(() => {
-  if (props.scanTargetStatus === "IN_DEPOT") {
-    return "Mark as In Depot";
-  }
-
-  return "Mark as Picked Up";
-});
+const updateButtonLabel = computed(() =>
+  props.scanTargetStatus === "IN_DEPOT"
+    ? t("pickups.scanner.mark_in_depot")
+    : t("pickups.scanner.mark_picked_up")
+);
 
 const statusLabel = (status) => {
   const labels = {
@@ -70,7 +71,7 @@ const scanOrder = async (tracking) => {
 const addToBatch = async (rawValue = manualInput.value) => {
   const tracking = parseTrackingNumber(rawValue);
   if (!tracking) {
-    Swal.fire({ icon: "warning", title: "Invalid tracking", text: "Enter a tracking number or order URL." });
+    Swal.fire({ icon: "warning", title: t("pickups.scanner.invalid_tracking"), text: t("pickups.scanner.invalid_tracking_text") });
     return;
   }
 
@@ -89,7 +90,7 @@ const addToBatch = async (rawValue = manualInput.value) => {
       city: result.order?.city ?? "—",
       status: result.order?.status ?? "—",
       valid: Boolean(result.success && result.valid),
-      validation_message: result.success ? "Valid" : result.message,
+      validation_message: result.success ? t("pickups.scanner.valid") : result.message,
       scanned_at: new Date().toISOString(),
     });
 
@@ -98,13 +99,13 @@ const addToBatch = async (rawValue = manualInput.value) => {
         toast: true,
         position: "top-end",
         icon: "error",
-        title: result.message || "Scan rejected",
+        title: result.message || t("pickups.scanner.scan_rejected"),
         timer: 2500,
         showConfirmButton: false,
       });
     }
   } catch (error) {
-    const message = error.response?.data?.message || "Unable to validate this order.";
+    const message = error.response?.data?.message || t("pickups.scanner.unable_validate");
     batch.value.push({
       tracking_number: tracking,
       customer: "—",
@@ -150,7 +151,7 @@ const startCamera = async () => {
   stopCamera();
 
   if (!("BarcodeDetector" in window)) {
-    cameraError.value = "Camera QR scanning is not supported in this browser. Use manual entry below.";
+    cameraError.value = t("pickups.scanner.camera_unsupported");
     return;
   }
 
@@ -187,7 +188,7 @@ const startCamera = async () => {
       }
     }, 500);
   } catch {
-    cameraError.value = "Unable to access camera. Check permissions or use manual entry.";
+    cameraError.value = t("pickups.scanner.camera_error");
   }
 };
 
@@ -195,10 +196,11 @@ const submitBatch = () => {
   if (validBatch.value.length === 0) return;
 
   Swal.fire({
-    title: `${updateButtonLabel.value} for ${validBatch.value.length} package(s)?`,
+    title: t("pickups.scanner.bulk_confirm", { action: updateButtonLabel.value, count: validBatch.value.length }),
     icon: "question",
     showCancelButton: true,
-    confirmButtonText: "Update Status",
+    confirmButtonText: t("pickups.scanner.update_status"),
+    cancelButtonText: t("common.cancel"),
     confirmButtonColor: "#0ab39c",
   }).then(async (result) => {
     if (!result.isConfirmed) return;
@@ -213,8 +215,8 @@ const submitBatch = () => {
 
       await Swal.fire({
         icon: "success",
-        title: "Status updated",
-        text: `${data.updated} order(s) updated successfully.`,
+        title: t("pickups.scanner.status_updated"),
+        text: t("pickups.scanner.status_updated_text", { count: data.updated }),
         timer: 2200,
         showConfirmButton: false,
       });
@@ -226,9 +228,9 @@ const submitBatch = () => {
       const message =
         error.response?.data?.errors?.orders?.[0]
         || error.response?.data?.message
-        || "Bulk status update failed.";
+        || t("pickups.scanner.bulk_failed");
 
-      Swal.fire({ icon: "error", title: "Update failed", text: message });
+      Swal.fire({ icon: "error", title: t("pickups.scanner.update_failed"), text: message });
     } finally {
       submitting.value = false;
     }
@@ -259,7 +261,7 @@ onBeforeUnmount(stopCamera);
 <template>
   <BModal
     :model-value="show"
-    title="QR Bulk Pickup Scan"
+    :title="$t('pickups.scanner.title')"
     size="xl"
     hide-footer
     scrollable
@@ -271,53 +273,53 @@ onBeforeUnmount(stopCamera);
           <video v-show="scanning" ref="videoRef" class="w-100 h-100 object-fit-cover" playsinline muted></video>
           <div v-if="!scanning" class="text-center text-muted p-3">
             <i class="ri-qr-scan-2-line fs-1 d-block mb-2"></i>
-            Camera preview
+            {{ $t('pickups.scanner.camera_preview') }}
           </div>
         </div>
         <div v-if="cameraError" class="alert alert-warning mt-2 mb-0 py-2">{{ cameraError }}</div>
         <button v-if="!scanning && !cameraError" type="button" class="btn btn-sm btn-soft-primary mt-2" @click="startCamera">
-          <i class="ri-camera-line me-1"></i> Start camera
+          <i class="ri-camera-line me-1"></i> {{ $t('pickups.scanner.start_camera') }}
         </button>
       </BCol>
 
       <BCol lg="7">
-        <label class="form-label">Scan or paste tracking URL / number</label>
+        <label class="form-label">{{ $t('pickups.scanner.scan_manual_label') }}</label>
         <div class="input-group mb-3">
           <input
             v-model="manualInput"
             type="text"
             class="form-control"
-            placeholder="SPD-2026-000001 or /orders/SPD-2026-000001"
+            :placeholder="$t('pickups.scanner.scan_placeholder')"
             :disabled="validating"
             @keyup.enter="addToBatch()"
           />
           <button type="button" class="btn btn-primary" :disabled="validating" @click="addToBatch()">
             <span v-if="validating" class="spinner-border spinner-border-sm"></span>
-            <span v-else>Add</span>
+            <span v-else>{{ $t('pickups.scanner.add') }}</span>
           </button>
         </div>
 
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h6 class="mb-0">
-            Scanned ({{ batch.length }})
-            <span class="text-muted fw-normal">· {{ validBatch.length }} valid</span>
+            {{ $t('pickups.scanner.scanned', { count: batch.length }) }}
+            <span class="text-muted fw-normal">· {{ $t('pickups.scanner.valid_count', { count: validBatch.length }) }}</span>
           </h6>
           <button v-if="batch.length" type="button" class="btn btn-link btn-sm text-danger p-0" @click="batch = []">
-            Clear all
+            {{ $t('pickups.scanner.clear_all') }}
           </button>
         </div>
 
         <div class="border rounded" style="max-height: 320px; overflow-y: auto">
-          <div v-if="batch.length === 0" class="text-muted text-center py-4">No packages scanned yet.</div>
+          <div v-if="batch.length === 0" class="text-muted text-center py-4">{{ $t('pickups.scanner.no_packages_scanned') }}</div>
           <div v-else class="table-responsive">
             <table class="table table-sm table-hover align-middle mb-0">
               <thead class="table-light sticky-top">
                 <tr>
-                  <th>Tracking Number</th>
-                  <th>Customer</th>
-                  <th>City</th>
-                  <th>Current Status</th>
-                  <th>Validation</th>
+                  <th>{{ $t('pickups.scanner.tracking_number') }}</th>
+                  <th>{{ $t('pickups.scanner.customer') }}</th>
+                  <th>{{ $t('pickups.scanner.city') }}</th>
+                  <th>{{ $t('pickups.scanner.current_status') }}</th>
+                  <th>{{ $t('pickups.scanner.validation') }}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -328,9 +330,9 @@ onBeforeUnmount(stopCamera);
                   <td>{{ item.city }}</td>
                   <td>{{ statusLabel(item.status) }}</td>
                   <td>
-                    <span v-if="item.valid" class="badge bg-success-subtle text-success">Valid</span>
+                    <span v-if="item.valid" class="badge bg-success-subtle text-success">{{ $t('pickups.scanner.valid') }}</span>
                     <span v-else class="badge bg-danger-subtle text-danger" :title="item.validation_message">
-                      Rejected
+                      {{ $t('pickups.scanner.rejected') }}
                     </span>
                   </td>
                   <td class="text-end">
@@ -347,7 +349,7 @@ onBeforeUnmount(stopCamera);
     </div>
 
     <div class="d-flex justify-content-end gap-2 mt-4">
-      <button type="button" class="btn btn-light" @click="close">Close</button>
+      <button type="button" class="btn btn-light" @click="close">{{ $t('pickups.scanner.close') }}</button>
       <button
         type="button"
         class="btn btn-success"
@@ -356,7 +358,7 @@ onBeforeUnmount(stopCamera);
       >
         <span v-if="submitting" class="spinner-border spinner-border-sm me-1"></span>
         <i v-else class="ri-refresh-line me-1"></i>
-        Update Status ({{ validBatch.length }})
+        {{ $t('pickups.scanner.update_status_count', { count: validBatch.length }) }}
       </button>
     </div>
   </BModal>

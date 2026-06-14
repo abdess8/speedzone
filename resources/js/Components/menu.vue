@@ -1,54 +1,80 @@
 <script>
-import { Link, router } from '@inertiajs/vue3';
-import { layoutComputed } from "@/state/helpers";
-import simplebar from "simplebar-vue";
+import { Link } from '@inertiajs/vue3';
 
 export default {
-  components: {
-    simplebar,
-    Link
-  },
-  data() {
-    return {
-      settings: {
-        minScrollbarLength: 60,
-      },
-    };
-  },
+  components: { Link },
   computed: {
-    ...layoutComputed,
-    layoutType: {
-      get() {
-        return this.$store ? this.$store.state.layout.layoutType : {} || {};
-      },
+    auth() {
+      return {
+        permissions: this.$page.props.permissions ?? [],
+        isSuperAdmin: this.$page.props.isSuperAdmin ?? false,
+      };
+    },
+    showDeliveryZones() {
+      return this.canViewSectors() || this.canViewDriverZones();
     },
   },
   mounted() {
     this.initActiveMenu();
     this.onRoutechange();
-    if (document.querySelectorAll(".navbar-nav .collapse")) {
-      let collapses = document.querySelectorAll(".navbar-nav .collapse");
+    this.bindCollapseHandlers();
+  },
+  methods: {
+    hasPermission(permission) {
+      if (this.auth.isSuperAdmin) {
+        return true;
+      }
 
-      collapses.forEach((collapse) => {
-        // Hide sibling collapses on `show.bs.collapse`
-        collapse.addEventListener("show.bs.collapse", (e) => {
+      return (this.auth.permissions ?? []).includes(permission);
+    },
+    canViewOrders() {
+      return this.hasPermission('orders.read.all') || this.hasPermission('orders.read.own');
+    },
+    canViewPickups() {
+      return (
+        this.hasPermission('pickup_requests.read.all') ||
+        this.hasPermission('pickup_requests.read.own') ||
+        this.hasPermission('pickup_requests.read.assigned')
+      );
+    },
+    canViewSectors() {
+      return this.hasPermission('sectors.read');
+    },
+    canViewDriverZones() {
+      return this.hasPermission('driver_zones.read');
+    },
+    canViewUsers() {
+      return this.hasPermission('roles.read');
+    },
+    canViewRoles() {
+      return this.hasPermission('roles.read');
+    },
+    canViewCities() {
+      return this.hasPermission('cities.read');
+    },
+    canViewApiIntegrations() {
+      return this.hasPermission('permissions.read') || this.hasPermission('roles.read');
+    },
+    bindCollapseHandlers() {
+      if (!document.querySelectorAll('.navbar-nav .collapse')) {
+        return;
+      }
+
+      document.querySelectorAll('.navbar-nav .collapse').forEach((collapse) => {
+        collapse.addEventListener('show.bs.collapse', (e) => {
           e.stopPropagation();
-          let closestCollapse = collapse.parentElement.closest(".collapse");
+          const closestCollapse = collapse.parentElement.closest('.collapse');
           if (closestCollapse) {
-            let siblingCollapses =
-              closestCollapse.querySelectorAll(".collapse");
-            siblingCollapses.forEach((siblingCollapse) => {
-              if (siblingCollapse.classList.contains("show")) {
-                siblingCollapse.classList.remove("show");
-                siblingCollapse.parentElement.firstChild.setAttribute("aria-expanded", "false");
+            closestCollapse.querySelectorAll('.collapse').forEach((siblingCollapse) => {
+              if (siblingCollapse.classList.contains('show')) {
+                siblingCollapse.classList.remove('show');
+                siblingCollapse.parentElement.firstChild.setAttribute('aria-expanded', 'false');
               }
             });
           } else {
-            let getSiblings = (elem) => {
-              // Setup siblings array and get the first sibling
-              let siblings = [];
+            const getSiblings = (elem) => {
+              const siblings = [];
               let sibling = elem.parentNode.firstChild;
-              // Loop through each sibling and push to the array
               while (sibling) {
                 if (sibling.nodeType === 1 && sibling !== elem) {
                   siblings.push(sibling);
@@ -57,82 +83,80 @@ export default {
               }
               return siblings;
             };
-            let siblings = getSiblings(collapse.parentElement);
-            siblings.forEach((item) => {
+            getSiblings(collapse.parentElement).forEach((item) => {
               if (item.childNodes.length > 2) {
-                item.firstElementChild.setAttribute("aria-expanded", "false");
-                item.firstElementChild.classList.remove("active");
+                item.firstElementChild.setAttribute('aria-expanded', 'false');
+                item.firstElementChild.classList.remove('active');
               }
-              let ids = item.querySelectorAll("*[id]");
-              ids.forEach((item1) => {
-                item1.classList.remove("show");
-                item1.parentElement.firstChild.setAttribute("aria-expanded", "false");
-                item1.parentElement.firstChild.classList.remove("active");
-                if (item1.childNodes.length > 2) {
-                  let val = item1.querySelectorAll("ul li a");
-
-                  val.forEach((subitem) => {
-                    if (subitem.hasAttribute("aria-expanded"))
-                      subitem.setAttribute("aria-expanded", "false");
-                  });
-                }
+              item.querySelectorAll('*[id]').forEach((item1) => {
+                item1.classList.remove('show');
+                item1.parentElement.firstChild.setAttribute('aria-expanded', 'false');
+                item1.parentElement.firstChild.classList.remove('active');
               });
             });
           }
         });
 
-        // Hide nested collapses on `hide.bs.collapse`
-        collapse.addEventListener("hide.bs.collapse", (e) => {
+        collapse.addEventListener('hide.bs.collapse', (e) => {
           e.stopPropagation();
-          let childCollapses = collapse.querySelectorAll(".collapse");
-          childCollapses.forEach((childCollapse) => {
-            let childCollapseInstance = childCollapse;
-            childCollapseInstance.classList.remove("show");
-            childCollapseInstance.parentElement.firstChild.setAttribute("aria-expanded", "false");
+          collapse.querySelectorAll('.collapse').forEach((childCollapse) => {
+            childCollapse.classList.remove('show');
+            childCollapse.parentElement.firstChild.setAttribute('aria-expanded', 'false');
           });
         });
       });
-    }
-  },
-
-  methods: {
+    },
     onRoutechange() {
-      // this.initActiveMenu();
       setTimeout(() => {
-        var currentPath = window.location.pathname;
-        if (document.querySelector("#navbar-nav")) {
-          let currentPosition = document.querySelector("#navbar-nav").querySelector('[href="' + currentPath + '"]')?.offsetTop;
-          if (currentPosition > document.documentElement.clientHeight) {
-            document.querySelector("#scrollbar .simplebar-content-wrapper") ? document.querySelector("#scrollbar .simplebar-content-wrapper").scrollTop = currentPosition + 300 : '';
-          }
+        const currentPath = window.location.pathname + window.location.search;
+        const pathOnly = window.location.pathname;
+        const nav = document.querySelector('#navbar-nav');
+        if (!nav) {
+          return;
+        }
+
+        let link = nav.querySelector(`[href="${currentPath}"]`) ?? nav.querySelector(`[href="${pathOnly}"]`);
+        if (!link && pathOnly === '/') {
+          link = nav.querySelector('[href="/"]');
+        }
+
+        const offsetTop = link?.offsetTop ?? 0;
+        const wrapper = document.querySelector('#scrollbar .simplebar-content-wrapper');
+        if (offsetTop > document.documentElement.clientHeight && wrapper) {
+          wrapper.scrollTop = offsetTop + 300;
         }
       }, 500);
     },
-
     initActiveMenu() {
       setTimeout(() => {
-        var currentPath = window.location.pathname;
-        if (document.querySelector("#navbar-nav")) {
-          let a = document.querySelector("#navbar-nav").querySelector('[href="' + currentPath + '"]');
-          if (a) {
-            a.classList.add("active");
-            let parentCollapseDiv = a.closest(".collapse.menu-dropdown");
-            if (parentCollapseDiv) {
-              parentCollapseDiv.classList.add("show");
-              parentCollapseDiv.parentElement.children[0].classList.add("active");
-              parentCollapseDiv.parentElement.children[0].setAttribute("aria-expanded", "true");
-              if (parentCollapseDiv.parentElement.closest(".collapse.menu-dropdown")) {
-                parentCollapseDiv.parentElement.closest(".collapse").classList.add("show");
-                if (parentCollapseDiv.parentElement.closest(".collapse").previousElementSibling)
-                  parentCollapseDiv.parentElement.closest(".collapse").previousElementSibling.classList.add("active");
-                const grandparent = parentCollapseDiv.parentElement.closest(".collapse").previousElementSibling.parentElement.closest(".collapse");
-                if (grandparent && grandparent && grandparent.previousElementSibling) {
-                  grandparent.previousElementSibling.classList.add("active");
-                  grandparent.classList.add("show");
-                }
-              }
-            }
+        const currentPath = window.location.pathname;
+        const nav = document.querySelector('#navbar-nav');
+        if (!nav) {
+          return;
+        }
+
+        let link = nav.querySelector(`[href="${currentPath}"]`);
+        if (!link && window.location.search) {
+          link = nav.querySelector(`[href="${currentPath}${window.location.search}"]`);
+        }
+        if (!link && currentPath === '/') {
+          link = nav.querySelector('[href="/"]');
+        }
+
+        if (!link) {
+          return;
+        }
+
+        link.classList.add('active');
+        let parentCollapseDiv = link.closest('.collapse.menu-dropdown');
+        while (parentCollapseDiv) {
+          parentCollapseDiv.classList.add('show');
+          const trigger = parentCollapseDiv.parentElement?.children?.[0];
+          if (trigger) {
+            trigger.classList.add('active');
+            trigger.setAttribute('aria-expanded', 'true');
           }
+          parentCollapseDiv = parentCollapseDiv.parentElement?.closest('.collapse.menu-dropdown');
         }
       }, 0);
     },
@@ -142,104 +166,94 @@ export default {
 
 <template>
   <BContainer fluid>
-    <div id="two-column-menu"></div>
+    <ul class="navbar-nav h-100 d-flex flex-column" id="navbar-nav">
+      <li class="menu-title">
+        <span>{{ $t('sidebar.menu') }}</span>
+      </li>
 
-    <template v-if="layoutType === 'vertical' || layoutType === 'semibox'">
-      <ul class="navbar-nav h-100" id="navbar-nav">
-        <li class="menu-title">
-          <span data-key="t-menu"> {{ $t("t-menu") }}</span>
-        </li>
-        <li class="nav-item">
-          <Link href="/" class="nav-link menu-link">
-            <i class="ri-dashboard-2-line" ></i>
-            <span>Dashboard</span>
-          </Link>
-        </li>
-        <li class="nav-item">
-          <Link href="/orders" class="nav-link menu-link">
-            <i class="ri-shopping-basket-2-line"></i>
-            <span>Gestion de Colis</span>
-          </Link>
-        </li>
+      <li class="nav-item">
+        <Link href="/" class="nav-link menu-link">
+          <i class="ri-dashboard-2-line"></i>
+          <span>{{ $t('sidebar.dashboard') }}</span>
+        </Link>
+      </li>
 
-        <li class="nav-item">
-          <Link href="/pickup-requests" class="nav-link menu-link">
-            <i class="ri-truck-line"></i>
-            <span>Ramassages</span>
-          </Link>
-        </li>
+      <li v-if="canViewOrders()" class="nav-item">
+        <Link href="/orders" class="nav-link menu-link">
+          <i class="ri-shopping-basket-2-line"></i>
+          <span>{{ $t('sidebar.orders') }}</span>
+        </Link>
+      </li>
 
-        <li class="nav-item">
-          <a class="nav-link menu-link" href="#sidebarZones" data-bs-toggle="collapse" role="button" aria-expanded="false"
-            aria-controls="sidebarZones">
-            <i class="ri-map-pin-line"></i>
-            <span>Zones de livraison</span>
-          </a>
-          <div class="collapse menu-dropdown" id="sidebarZones">
-            <ul class="nav nav-sm flex-column">
-              <li class="nav-item">
-                <Link href="/cities" class="nav-link">Villes</Link>
-              </li>
-              <li class="nav-item">
-                <Link href="/sectors" class="nav-link">Secteurs</Link>
-              </li>
-              <li class="nav-item">
-                <Link href="/driver-zones" class="nav-link">Affectation des livreurs</Link>
-              </li>
-            </ul>
-          </div>
-        </li>
+      <li v-if="canViewPickups()" class="nav-item">
+        <Link href="/pickup-requests" class="nav-link menu-link">
+          <i class="ri-truck-line"></i>
+          <span>{{ $t('sidebar.pickups') }}</span>
+        </Link>
+      </li>
 
-        <li class="nav-item">
-          <Link href="/invoices" class="nav-link menu-link">
-            <i class="ri-file-list-3-line"></i>
-            <span>Gestion des factures</span>
-          </Link>
-        </li>
+      <li v-if="showDeliveryZones" class="nav-item">
+        <a
+          class="nav-link menu-link"
+          href="#sidebarZones"
+          data-bs-toggle="collapse"
+          role="button"
+          aria-expanded="false"
+          aria-controls="sidebarZones"
+        >
+          <i class="ri-map-pin-line"></i>
+          <span>{{ $t('sidebar.delivery_zones') }}</span>
+        </a>
+        <div class="collapse menu-dropdown" id="sidebarZones">
+          <ul class="nav nav-sm flex-column">
+            <li v-if="canViewSectors()" class="nav-item">
+              <Link href="/sectors" class="nav-link">{{ $t('sidebar.sectors') }}</Link>
+            </li>
+            <li v-if="canViewDriverZones()" class="nav-item">
+              <Link href="/driver-zones" class="nav-link">{{ $t('sidebar.driver_zones') }}</Link>
+            </li>
+          </ul>
+        </div>
+      </li>
 
-        <li class="nav-item">
-          <a class="nav-link menu-link" href="#sidebarUsers" data-bs-toggle="collapse" role="button" aria-expanded="false"
-            aria-controls="sidebarUsers">
-            <i class="ri-account-circle-line"></i>
-            <span>Gestion des Users</span>
-          </a>
-          <div class="collapse menu-dropdown" id="sidebarUsers">
-            <ul class="nav nav-sm flex-column">
-              <li class="nav-item">
-                <Link href="/users" class="nav-link">Liste des utilisateurs</Link>
-              </li>
-              <li class="nav-item">
-                <Link href="/users/create" class="nav-link">Créer un utilisateur</Link>
-              </li>
-            </ul>
-          </div>
-        </li>
+      <li class="menu-title mt-auto">
+        <span>{{ $t('sidebar.settings') }}</span>
+      </li>
 
-        <li class="nav-item">
-          <a class="nav-link menu-link" href="#sidebarRoles" data-bs-toggle="collapse" role="button" aria-expanded="false"
-            aria-controls="sidebarRoles">
-            <i class="ri-shield-keyhole-line"></i>
-            <span>Gestion des rôles</span>
-          </a>
-          <div class="collapse menu-dropdown" id="sidebarRoles">
-            <ul class="nav nav-sm flex-column">
-              <li class="nav-item">
-                <Link href="/roles" class="nav-link">Liste des rôles</Link>
-              </li>
-              <li class="nav-item">
-                <Link href="/roles/create" class="nav-link">Créer un rôle</Link>
-              </li>
-            </ul>
-          </div>
-        </li>
+      <li class="nav-item">
+        <Link :href="route('profile.show')" class="nav-link menu-link">
+          <i class="ri-user-settings-line"></i>
+          <span>{{ $t('sidebar.profile') }}</span>
+        </Link>
+      </li>
 
-        <li class="nav-item">
-          <Link href="/api-integration" class="nav-link menu-link">
-            <i class="ri-plug-2-line"></i>
-            <span>API integration</span>
-          </Link>
-        </li>
-      </ul>
-    </template>
+      <li v-if="canViewUsers()" class="nav-item">
+        <Link href="/users" class="nav-link menu-link">
+          <i class="ri-account-circle-line"></i>
+          <span>{{ $t('sidebar.users') }}</span>
+        </Link>
+      </li>
+
+      <li v-if="canViewRoles()" class="nav-item">
+        <Link href="/roles" class="nav-link menu-link">
+          <i class="ri-shield-keyhole-line"></i>
+          <span>{{ $t('sidebar.roles_permissions') }}</span>
+        </Link>
+      </li>
+
+      <li v-if="canViewCities()" class="nav-item">
+        <Link href="/cities" class="nav-link menu-link">
+          <i class="ri-map-pin-line"></i>
+          <span>{{ $t('sidebar.cities') }}</span>
+        </Link>
+      </li>
+
+      <li v-if="canViewApiIntegrations()" class="nav-item">
+        <Link :href="route('api-integrations.index')" class="nav-link menu-link">
+          <i class="ri-plug-2-line"></i>
+          <span>{{ $t('sidebar.api_integrations') }}</span>
+        </Link>
+      </li>
+    </ul>
   </BContainer>
 </template>

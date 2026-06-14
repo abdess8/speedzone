@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\ApiIntegrationController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\DriverZoneController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PickupRequestController;
 use App\Http\Controllers\RoleController;
@@ -22,6 +24,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',])->group(function () {
+
+    Route::post('locale', [LocaleController::class, 'update'])->name('locale.update');
 
     // User management
     Route::resource('users', UserController::class);
@@ -76,6 +80,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::resource('pickup-requests', PickupRequestController::class)
         ->only(['index', 'store', 'show'])
         ->whereNumber('pickupRequest');
+
+    Route::get('api-integrations', [ApiIntegrationController::class, 'index'])->name('api-integrations.index');
 
     Route::controller(VelzonRoutesController::class)->group(function () {
 

@@ -29,19 +29,7 @@ enum OrderStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
-            self::CREATED => 'Created',
-            self::PICKUP_REQUESTED => 'Pickup Requested',
-            self::WAITING_PICKUP => 'Waiting for Pickup',
-            self::PICKED_UP => 'Picked Up',
-            self::IN_DEPOT => 'In Depot',
-            self::IN_TRANSIT => 'In Transit',
-            self::IN_DELIVERY_CITY => 'In Delivery City',
-            self::OUT_FOR_DELIVERY => 'Out for Delivery',
-            self::DELIVERED => 'Delivered',
-            self::FAILED => 'Failed',
-            self::RETURNED => 'Returned',
-        };
+        return __('order_statuses.'.$this->value);
     }
 
     /**

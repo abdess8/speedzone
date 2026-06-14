@@ -150,25 +150,15 @@ export default {
           <span data-key="t-menu"> {{ $t("t-menu") }}</span>
         </li>
         <li class="nav-item">
-          <a class="nav-link menu-link" href="#sidebarDashboards" data-bs-toggle="collapse" role="button"
-            aria-expanded="false" aria-controls="sidebarDashboards">
-            <i class="ri-dashboard-2-line"></i>
-            <span data-key="t-dashboards"> {{ $t("t-dashboards") }}</span>
-          </a>
-          <div class="collapse menu-dropdown" id="sidebarDashboards">
-            <ul class="nav nav-sm flex-column">
-              <li class="nav-item">
-                <Link href="/" class="nav-link" data-key="t-ecommerce">
-                {{ $t("t-ecommerce") }}
-                </Link>
-              </li>
-            </ul>
-          </div>
+          <Link href="/" class="nav-link menu-link">
+            <i class="ri-dashboard-2-line" ></i>
+            <span>Dashboard</span>
+          </Link>
         </li>
         <li class="nav-item">
           <Link href="/orders" class="nav-link menu-link">
             <i class="ri-shopping-basket-2-line"></i>
-            <span>Gestion de commande</span>
+            <span>Gestion de Colis</span>
           </Link>
         </li>
 
@@ -204,7 +194,7 @@ export default {
           <a class="nav-link menu-link" href="#sidebarUsers" data-bs-toggle="collapse" role="button" aria-expanded="false"
             aria-controls="sidebarUsers">
             <i class="ri-account-circle-line"></i>
-            <span>Gestion des utlisateurs</span>
+            <span>Gestion des Users</span>
           </a>
           <div class="collapse menu-dropdown" id="sidebarUsers">
             <ul class="nav nav-sm flex-column">

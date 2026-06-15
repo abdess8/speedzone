@@ -62,6 +62,8 @@ class RolePermissionSeeder extends Seeder
                 'returns.manage',
                 'returns.update_status',
                 'returns.edit_customer_data',
+                'invoices.read.all',
+                'invoices.print',
             ])->values()->all()
         );
 
@@ -96,6 +98,8 @@ class RolePermissionSeeder extends Seeder
                 'sectors.read',
                 'returns.create_request',
                 'returns.read.own',
+                'invoices.read.own',
+                'invoices.print',
             ])->values()->all()
         );
 

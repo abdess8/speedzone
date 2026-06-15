@@ -14,6 +14,8 @@ const props = defineProps({
   user: { type: Object, required: true },
   roles: { type: Array, default: () => [] },
   cities: { type: Array, default: () => [] },
+  billingFrequencies: { type: Array, default: () => [] },
+  paymentMethods: { type: Array, default: () => [] },
 });
 
 const form = useForm({
@@ -34,7 +36,20 @@ const form = useForm({
   photo: null,
   attached_files: [],
   removed_files: [],
+  billing_enabled: !!props.user.billing_enabled,
+  billing_frequency: props.user.billing_frequency || "monthly",
+  next_billing_date: props.user.next_billing_date ? String(props.user.next_billing_date).slice(0, 10) : "",
+  payment_method: props.user.payment_method || "",
+  bank_name: props.user.bank_name || "",
+  rib: props.user.rib || "",
+  rib_attachment: null,
+  cin_front_attachment: null,
+  cin_back_attachment: null,
 });
+
+const onBillingFileChange = (field, event) => {
+  form[field] = event.target.files[0] || null;
+};
 
 const photoPreview = ref(null);
 
@@ -174,6 +189,76 @@ const submit = () => {
                   <label class="form-label">{{ $t('users.form.pickup_address_2') }}</label>
                   <textarea class="form-control" rows="2" v-model="form.pickup_address_2" :class="{ 'is-invalid': form.errors.pickup_address_2 }"></textarea>
                   <InputError :message="form.errors.pickup_address_2" />
+                </BCol>
+              </BRow>
+            </BCardBody>
+          </BCard>
+
+          <BCard no-body>
+            <BCardHeader>
+              <h5 class="card-title mb-0">{{ $t('users.form.billing_info') }}</h5>
+            </BCardHeader>
+            <BCardBody>
+              <BRow class="g-3">
+                <BCol md="12">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="billing_enabled" v-model="form.billing_enabled" />
+                    <label class="form-check-label" for="billing_enabled">{{ $t('users.form.billing_enabled') }}</label>
+                  </div>
+                </BCol>
+                <BCol md="4">
+                  <label class="form-label">{{ $t('users.form.billing_frequency') }}</label>
+                  <select class="form-select" v-model="form.billing_frequency" :class="{ 'is-invalid': form.errors.billing_frequency }">
+                    <option v-for="f in billingFrequencies" :key="f.value" :value="f.value">{{ f.label }}</option>
+                  </select>
+                  <InputError :message="form.errors.billing_frequency" />
+                </BCol>
+                <BCol md="4">
+                  <label class="form-label">{{ $t('users.form.next_billing_date') }}</label>
+                  <input type="date" class="form-control" v-model="form.next_billing_date" :class="{ 'is-invalid': form.errors.next_billing_date }" />
+                  <InputError :message="form.errors.next_billing_date" />
+                </BCol>
+                <BCol md="4">
+                  <label class="form-label">{{ $t('users.form.payment_method') }}</label>
+                  <select class="form-select" v-model="form.payment_method" :class="{ 'is-invalid': form.errors.payment_method }">
+                    <option value="">{{ $t('users.form.select_payment_method') }}</option>
+                    <option v-for="m in paymentMethods" :key="m.value" :value="m.value">{{ m.label }}</option>
+                  </select>
+                  <InputError :message="form.errors.payment_method" />
+                </BCol>
+                <BCol md="6">
+                  <label class="form-label">{{ $t('users.form.bank_name') }}</label>
+                  <input type="text" class="form-control" v-model="form.bank_name" :class="{ 'is-invalid': form.errors.bank_name }" />
+                  <InputError :message="form.errors.bank_name" />
+                </BCol>
+                <BCol md="6">
+                  <label class="form-label">{{ $t('users.form.rib') }}</label>
+                  <input type="text" class="form-control" v-model="form.rib" :class="{ 'is-invalid': form.errors.rib }" />
+                  <InputError :message="form.errors.rib" />
+                </BCol>
+                <BCol md="4">
+                  <label class="form-label">{{ $t('users.form.rib_attachment') }}</label>
+                  <a v-if="user.rib_attachment_url" :href="user.rib_attachment_url" target="_blank" class="d-block fs-12 mb-1 text-truncate">
+                    <i class="ri-file-line align-middle me-1"></i>{{ $t('users.form.current_file') }}
+                  </a>
+                  <input type="file" class="form-control" accept=".pdf,image/*" @change="onBillingFileChange('rib_attachment', $event)" :class="{ 'is-invalid': form.errors.rib_attachment }" />
+                  <InputError :message="form.errors.rib_attachment" />
+                </BCol>
+                <BCol md="4">
+                  <label class="form-label">{{ $t('users.form.cin_front_attachment') }}</label>
+                  <a v-if="user.cin_front_attachment_url" :href="user.cin_front_attachment_url" target="_blank" class="d-block fs-12 mb-1 text-truncate">
+                    <i class="ri-file-line align-middle me-1"></i>{{ $t('users.form.current_file') }}
+                  </a>
+                  <input type="file" class="form-control" accept=".pdf,image/*" @change="onBillingFileChange('cin_front_attachment', $event)" :class="{ 'is-invalid': form.errors.cin_front_attachment }" />
+                  <InputError :message="form.errors.cin_front_attachment" />
+                </BCol>
+                <BCol md="4">
+                  <label class="form-label">{{ $t('users.form.cin_back_attachment') }}</label>
+                  <a v-if="user.cin_back_attachment_url" :href="user.cin_back_attachment_url" target="_blank" class="d-block fs-12 mb-1 text-truncate">
+                    <i class="ri-file-line align-middle me-1"></i>{{ $t('users.form.current_file') }}
+                  </a>
+                  <input type="file" class="form-control" accept=".pdf,image/*" @change="onBillingFileChange('cin_back_attachment', $event)" :class="{ 'is-invalid': form.errors.cin_back_attachment }" />
+                  <InputError :message="form.errors.cin_back_attachment" />
                 </BCol>
               </BRow>
             </BCardBody>

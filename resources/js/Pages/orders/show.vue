@@ -195,6 +195,7 @@ onMounted(() => {
               :pickup-request="order.pickup_request"
               :active-transfer="order.active_transfer"
               :active-return="order.active_return"
+              :invoice="order.invoice"
             />
           </BCardBody>
         </BCard>

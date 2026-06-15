@@ -13,6 +13,7 @@ const form = useForm({
   city_id: props.defaultCityId,
   name: "",
   delivery_price: "",
+  return_price: "",
   is_active: true,
 });
 

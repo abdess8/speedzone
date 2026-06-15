@@ -35,6 +35,7 @@ class StoreSectorRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'delivery_price' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
+            'return_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'is_active' => ['boolean'],
         ];
     }

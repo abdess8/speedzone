@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\BillingFrequency;
+use App\Enums\SellerPaymentMethod;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -45,6 +47,15 @@ class User extends Authenticatable implements MustVerifyEmail
         'photo',
         'profile_photo_path',
         'attached_files',
+        'billing_frequency',
+        'next_billing_date',
+        'billing_enabled',
+        'payment_method',
+        'bank_name',
+        'rib',
+        'rib_attachment',
+        'cin_front_attachment',
+        'cin_back_attachment',
     ];
 
     /**
@@ -67,6 +78,10 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
         'attached_files' => 'array',
+        'billing_frequency' => BillingFrequency::class,
+        'payment_method' => SellerPaymentMethod::class,
+        'next_billing_date' => 'date',
+        'billing_enabled' => 'boolean',
     ];
 
     /**
@@ -79,6 +94,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'photo_url',
         'attached_files_urls',
         'full_name',
+        'rib_attachment_url',
+        'cin_front_attachment_url',
+        'cin_back_attachment_url',
     ];
 
     /**
@@ -107,6 +125,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class, 'seller_id');
+    }
+
+    /**
+     * Invoices issued to this user acting as the seller.
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class, 'seller_id');
     }
 
     public function pickupRequestsCreated(): HasMany
@@ -394,5 +420,40 @@ class User extends Authenticatable implements MustVerifyEmail
             ])
             ->values()
             ->all();
+    }
+
+    public function getRibAttachmentUrlAttribute(): ?string
+    {
+        return $this->rib_attachment ? self::publicStorageUrl($this->rib_attachment) : null;
+    }
+
+    public function getCinFrontAttachmentUrlAttribute(): ?string
+    {
+        return $this->cin_front_attachment ? self::publicStorageUrl($this->cin_front_attachment) : null;
+    }
+
+    public function getCinBackAttachmentUrlAttribute(): ?string
+    {
+        return $this->cin_back_attachment ? self::publicStorageUrl($this->cin_back_attachment) : null;
+    }
+
+    /**
+     * Whether automatic billing is enabled and currently due for this seller.
+     */
+    public function isBillingDue(?\Carbon\CarbonInterface $asOf = null): bool
+    {
+        if (! $this->billing_enabled || ! $this->next_billing_date) {
+            return false;
+        }
+
+        $frequency = $this->billing_frequency instanceof BillingFrequency
+            ? $this->billing_frequency
+            : ($this->billing_frequency ? BillingFrequency::from($this->billing_frequency) : null);
+
+        if (! $frequency || ! $frequency->isAutomatic()) {
+            return false;
+        }
+
+        return $this->next_billing_date->lte($asOf ?? now());
     }
 }

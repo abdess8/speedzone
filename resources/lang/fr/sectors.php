@@ -16,6 +16,7 @@ return [
     'table' => [
         'sector' => 'Secteur',
         'delivery_price' => 'Prix de livraison',
+        'return_price' => 'Prix de retour',
         'orders' => 'Commandes',
         'drivers' => 'Livreurs',
     ],
@@ -26,6 +27,7 @@ return [
         'sector_name' => 'Nom du secteur',
         'sector_name_placeholder' => 'ex. Maarif',
         'delivery_price' => 'Prix de livraison',
+        'return_price' => 'Prix de retour',
     ],
     'delete_confirm_title' => 'Supprimer ce secteur ?',
     'delete_confirm_text' => ':name sera supprimé.',

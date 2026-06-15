@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\BillingFrequency;
+use App\Enums\SellerPaymentMethod;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\City;
@@ -56,6 +58,8 @@ class UserController extends Controller
         return Inertia::render('users/create', [
             'roles' => Role::orderBy('name')->get(['id', 'name']),
             'cities' => City::query()->active()->orderBy('name')->get(['id', 'name', 'code']),
+            'billingFrequencies' => BillingFrequency::options(),
+            'paymentMethods' => SellerPaymentMethod::options(),
         ]);
     }
 
@@ -76,6 +80,10 @@ class UserController extends Controller
         }
 
         $data['attached_files'] = $this->storeAttachedFiles($request);
+
+        $data['billing_enabled'] = $request->boolean('billing_enabled');
+        $data = $this->normaliseBillingDate($data);
+        $data = $this->storeBillingAttachments($request, $data);
 
         $user = User::create($data);
         if (! empty($data['role_id'])) {
@@ -109,6 +117,8 @@ class UserController extends Controller
             'user' => $user,
             'roles' => Role::orderBy('name')->get(['id', 'name']),
             'cities' => City::query()->active()->orderBy('name')->get(['id', 'name', 'code']),
+            'billingFrequencies' => BillingFrequency::options(),
+            'paymentMethods' => SellerPaymentMethod::options(),
         ]);
     }
 
@@ -140,6 +150,10 @@ class UserController extends Controller
 
         unset($data['removed_files']);
 
+        $data['billing_enabled'] = $request->boolean('billing_enabled');
+        $data = $this->normaliseBillingDate($data);
+        $data = $this->storeBillingAttachments($request, $data, $user);
+
         $user->update($data);
         if (array_key_exists('role_id', $data) && ! empty($data['role_id'])) {
             $user->roles()->sync([$data['role_id']]);
@@ -162,10 +176,56 @@ class UserController extends Controller
             }
         }
 
+        foreach (['rib_attachment', 'cin_front_attachment', 'cin_back_attachment'] as $field) {
+            if ($user->{$field}) {
+                Storage::disk('public')->delete($user->{$field});
+            }
+        }
+
         $user->delete();
 
         return redirect()->route('users.index')
             ->with('success', 'User deleted successfully.');
+    }
+
+    /**
+     * Persist single-file billing attachments (RIB, CIN front/back). On update,
+     * a newly uploaded file replaces (and deletes) the previous one; absent
+     * fields keep the existing value untouched.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function storeBillingAttachments(Request $request, array $data, ?User $user = null): array
+    {
+        foreach (['rib_attachment', 'cin_front_attachment', 'cin_back_attachment'] as $field) {
+            if ($request->hasFile($field)) {
+                if ($user && $user->{$field}) {
+                    Storage::disk('public')->delete($user->{$field});
+                }
+                $data[$field] = $request->file($field)->store('users/billing', 'public');
+            } else {
+                // Don't overwrite an existing path with null.
+                unset($data[$field]);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Turn empty billing dates into null.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function normaliseBillingDate(array $data): array
+    {
+        if (array_key_exists('next_billing_date', $data) && empty($data['next_billing_date'])) {
+            $data['next_billing_date'] = null;
+        }
+
+        return $data;
     }
 
     /**

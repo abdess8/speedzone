@@ -112,6 +112,7 @@ class OrderController extends Controller
         $order->load([
             'city',
             'sector',
+            'invoice',
             'seller.roles',
             'seller.city',
             'pickupRequest.createdBy.roles',

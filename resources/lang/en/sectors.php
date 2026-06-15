@@ -16,6 +16,7 @@ return [
     'table' => [
         'sector' => 'Sector',
         'delivery_price' => 'Delivery Price',
+        'return_price' => 'Return Price',
         'orders' => 'Orders',
         'drivers' => 'Drivers',
     ],
@@ -26,6 +27,7 @@ return [
         'sector_name' => 'Sector Name',
         'sector_name_placeholder' => 'e.g. Maarif',
         'delivery_price' => 'Delivery Price',
+        'return_price' => 'Return Price',
     ],
     'delete_confirm_title' => 'Delete this sector?',
     'delete_confirm_text' => ':name will be removed.',

@@ -15,6 +15,7 @@ class PermissionCatalog
             self::pickupRequestPermissions(),
             self::transferPermissions(),
             self::returnPermissions(),
+            self::invoicePermissions(),
             self::cityPermissions(),
             self::sectorPermissions(),
             self::driverZonePermissions()
@@ -113,6 +114,22 @@ class PermissionCatalog
             self::make('returns.manage', 'returns', 'manage', null, 'resource'),
             self::make('returns.update_status', 'returns', 'update_status', null, 'resource'),
             self::make('returns.edit_customer_data', 'returns', 'edit_customer_data', null, 'resource'),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, string|null>>
+     */
+    public static function invoicePermissions(): array
+    {
+        return [
+            self::make('invoices.read.own', 'invoices', 'read', 'own', 'resource'),
+            self::make('invoices.read.all', 'invoices', 'read', 'all', 'resource'),
+            self::make('invoices.generate', 'invoices', 'generate', null, 'resource'),
+            self::make('invoices.pay', 'invoices', 'pay', null, 'resource'),
+            self::make('invoices.cancel', 'invoices', 'cancel', null, 'resource'),
+            self::make('invoices.delete', 'invoices', 'delete', null, 'resource'),
+            self::make('invoices.print', 'invoices', 'print', null, 'resource'),
         ];
     }
 

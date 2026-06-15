@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\BillingFrequency;
+use App\Enums\SellerPaymentMethod;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -43,6 +45,17 @@ class UpdateUserRequest extends FormRequest
             'attached_files.*' => ['file', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,webp', 'max:5120'],
             'removed_files' => ['nullable', 'array'],
             'removed_files.*' => ['string'],
+
+            // Seller billing profile.
+            'billing_enabled' => ['nullable', 'boolean'],
+            'billing_frequency' => ['nullable', Rule::in(BillingFrequency::values())],
+            'next_billing_date' => ['nullable', 'date'],
+            'payment_method' => ['nullable', Rule::in(SellerPaymentMethod::values())],
+            'bank_name' => ['nullable', 'string', 'max:255'],
+            'rib' => ['nullable', 'string', 'max:64'],
+            'rib_attachment' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
+            'cin_front_attachment' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
+            'cin_back_attachment' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
         ];
     }
 }

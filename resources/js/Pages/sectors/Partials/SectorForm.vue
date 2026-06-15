@@ -38,7 +38,7 @@ const cityOptions = computed(() =>
               />
               <InputError :message="form.errors.city_id" />
             </BCol>
-            <BCol md="8">
+            <BCol md="12">
               <label class="form-label">{{ $t('sectors.form.sector_name') }} <span class="text-danger">*</span></label>
               <input
                 type="text"
@@ -49,7 +49,7 @@ const cityOptions = computed(() =>
               />
               <InputError :message="form.errors.name" />
             </BCol>
-            <BCol md="4">
+            <BCol md="6">
               <label class="form-label">{{ $t('sectors.form.delivery_price') }} <span class="text-danger">*</span></label>
               <div class="input-group">
                 <input
@@ -63,6 +63,21 @@ const cityOptions = computed(() =>
                 <span class="input-group-text">{{ $t('common.currency_mad') }}</span>
               </div>
               <InputError :message="form.errors.delivery_price" />
+            </BCol>
+            <BCol md="6">
+              <label class="form-label">{{ $t('sectors.form.return_price') }}</label>
+              <div class="input-group">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  class="form-control"
+                  v-model="form.return_price"
+                  :class="{ 'is-invalid': form.errors.return_price }"
+                />
+                <span class="input-group-text">{{ $t('common.currency_mad') }}</span>
+              </div>
+              <InputError :message="form.errors.return_price" />
             </BCol>
             <BCol md="12">
               <div class="form-check form-switch fs-15 mt-2">

@@ -182,6 +182,7 @@ const confirmDeleteSector = (sector) => {
                   <tr>
                     <th>{{ $t('sectors.table.sector') }}</th>
                     <th class="text-end">{{ $t('sectors.table.delivery_price') }}</th>
+                    <th class="text-end">{{ $t('sectors.table.return_price') }}</th>
                     <th class="text-center">{{ $t('sectors.table.orders') }}</th>
                     <th>{{ $t('common.status') }}</th>
                     <th class="text-end">{{ $t('common.actions') }}</th>
@@ -191,6 +192,7 @@ const confirmDeleteSector = (sector) => {
                   <tr v-for="sector in sectorsList" :key="sector.id">
                     <td class="fw-medium">{{ sector.name }}</td>
                     <td class="text-end">{{ money(sector.delivery_price) }} {{ $t('common.currency_mad') }}</td>
+                    <td class="text-end">{{ money(sector.return_price) }} {{ $t('common.currency_mad') }}</td>
                     <td class="text-center">{{ sector.orders_count ?? 0 }}</td>
                     <td>
                       <span
@@ -216,7 +218,7 @@ const confirmDeleteSector = (sector) => {
                     </td>
                   </tr>
                   <tr v-if="sectorsList.length === 0">
-                    <td colspan="5" class="text-center text-muted py-4">
+                    <td colspan="6" class="text-center text-muted py-4">
                       {{ $t('cities.show.no_sectors') }}
                       <Link v-if="can.sectors_create" :href="createSectorUrl" class="ms-1">{{ $t('cities.show.add_first_sector') }}</Link>
                     </td>

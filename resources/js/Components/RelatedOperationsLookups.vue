@@ -5,6 +5,7 @@ defineProps({
   pickupRequest: { type: Object, default: null },
   activeTransfer: { type: Object, default: null },
   activeReturn: { type: Object, default: null },
+  invoice: { type: Object, default: null },
 });
 </script>
 
@@ -25,7 +26,12 @@ defineProps({
       type="return"
       :entity="activeReturn"
     />
-    <div v-if="!pickupRequest && !activeTransfer && !activeReturn" class="text-muted fs-13">
+    <EntityLink
+      v-if="invoice"
+      type="invoice"
+      :entity="invoice"
+    />
+    <div v-if="!pickupRequest && !activeTransfer && !activeReturn && !invoice" class="text-muted fs-13">
       {{ $t("orders.lookups.empty") }}
     </div>
   </div>

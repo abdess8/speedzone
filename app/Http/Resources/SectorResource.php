@@ -21,6 +21,7 @@ class SectorResource extends JsonResource
             'city_id' => $this->city_id,
             'name' => $this->name,
             'delivery_price' => (float) $this->delivery_price,
+            'return_price' => (float) $this->return_price,
             'is_active' => (bool) $this->is_active,
             'city' => $this->whenLoaded('city', fn () => $this->city ? [
                 'id' => $this->city->id,

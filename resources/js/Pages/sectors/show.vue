@@ -64,6 +64,7 @@ onMounted(() => {
                 </div>
               </BCol>
               <BCol md="6"><div class="text-muted fs-13">Delivery Price</div><div class="fw-bold fs-18 text-primary">{{ money(sector.delivery_price) }} MAD</div></BCol>
+              <BCol md="6"><div class="text-muted fs-13">Return Price</div><div class="fw-bold fs-18 text-danger">{{ money(sector.return_price) }} MAD</div></BCol>
               <BCol md="6"><div class="text-muted fs-13">Orders</div><div class="fw-semibold">{{ sector.orders_count ?? 0 }}</div></BCol>
               <BCol md="6"><div class="text-muted fs-13">Assigned Drivers</div><div class="fw-semibold">{{ sector.drivers_count ?? 0 }}</div></BCol>
             </BRow>

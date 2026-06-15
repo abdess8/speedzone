@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             DriverSectorSeeder::class,
             DemoDataSeeder::class,
             TransferSeeder::class,
+            FakeMoroccanDataSeeder::class,
         ]);
     }
 }

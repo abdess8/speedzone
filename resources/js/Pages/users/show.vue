@@ -35,6 +35,11 @@ const roleLabel = (name) => {
   return translated !== key ? translated : name;
 };
 
+const isSeller = computed(() =>
+  ["Seller", "Vendeur"].includes(props.user.role?.name) ||
+  (props.user.roles ?? []).some((r) => ["Seller", "Vendeur"].includes(r))
+);
+
 const formatDate = (value) => {
   if (!value) return t("common.empty_value_short");
   return new Date(value).toLocaleString(locale.value === "en" ? "en-GB" : "fr-FR", {
@@ -44,6 +49,22 @@ const formatDate = (value) => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+const formatDateOnly = (value) => {
+  if (!value) return t("common.empty_value_short");
+  return new Date(value).toLocaleDateString(locale.value === "en" ? "en-GB" : "fr-FR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const labelFrom = (group, value) => {
+  if (!value) return t("common.empty_value_short");
+  const key = `${group}.${value}`;
+  const translated = t(key);
+  return translated !== key ? translated : value;
 };
 </script>
 
@@ -114,6 +135,14 @@ const formatDate = (value) => {
                     <th class="ps-0" scope="row">{{ $t('users.show.address') }}</th>
                     <td class="text-muted">{{ user.address || $t('common.empty_value_short') }}</td>
                   </tr>
+                  <tr v-if="isSeller">
+                    <th class="ps-0" scope="row">{{ $t('users.show.pickup_address_1') }}</th>
+                    <td class="text-muted">{{ user.pickup_address_1 || $t('common.empty_value_short') }}</td>
+                  </tr>
+                  <tr v-if="isSeller">
+                    <th class="ps-0" scope="row">{{ $t('users.show.pickup_address_2') }}</th>
+                    <td class="text-muted">{{ user.pickup_address_2 || $t('common.empty_value_short') }}</td>
+                  </tr>
                   <tr>
                     <th class="ps-0" scope="row">{{ $t('users.show.cin') }}</th>
                     <td class="text-muted">{{ user.cin || $t('common.empty_value_short') }}</td>
@@ -137,6 +166,69 @@ const formatDate = (value) => {
                 </tbody>
               </table>
             </div>
+          </BCardBody>
+        </BCard>
+
+        <BCard v-if="isSeller" no-body>
+          <BCardHeader>
+            <h5 class="card-title mb-0">{{ $t('users.show.billing_info') }}</h5>
+          </BCardHeader>
+          <BCardBody>
+            <div class="table-responsive">
+              <table class="table table-borderless mb-0">
+                <tbody>
+                  <tr>
+                    <th class="ps-0" scope="row" style="width: 35%">{{ $t('users.show.billing_status') }}</th>
+                    <td>
+                      <span class="badge" :class="user.billing_enabled ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
+                        {{ user.billing_enabled ? $t('users.show.billing_enabled') : $t('users.show.billing_disabled') }}
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th class="ps-0" scope="row">{{ $t('users.show.billing_frequency') }}</th>
+                    <td class="text-muted">{{ labelFrom('billing_frequencies', user.billing_frequency) }}</td>
+                  </tr>
+                  <tr>
+                    <th class="ps-0" scope="row">{{ $t('users.show.next_billing_date') }}</th>
+                    <td class="text-muted">{{ formatDateOnly(user.next_billing_date) }}</td>
+                  </tr>
+                  <tr>
+                    <th class="ps-0" scope="row">{{ $t('users.show.payment_method') }}</th>
+                    <td class="text-muted">{{ labelFrom('seller_payment_methods', user.payment_method) }}</td>
+                  </tr>
+                  <tr>
+                    <th class="ps-0" scope="row">{{ $t('users.show.bank_name') }}</th>
+                    <td class="text-muted">{{ user.bank_name || $t('common.empty_value_short') }}</td>
+                  </tr>
+                  <tr>
+                    <th class="ps-0" scope="row">{{ $t('users.show.rib') }}</th>
+                    <td class="text-muted">{{ user.rib || $t('common.empty_value_short') }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <BRow class="g-3 mt-1">
+              <BCol md="4" v-if="user.rib_attachment_url">
+                <div class="text-muted fs-13 mb-1">{{ $t('users.show.rib_attachment') }}</div>
+                <a :href="user.rib_attachment_url" target="_blank" class="btn btn-sm btn-soft-primary w-100">
+                  <i class="ri-file-text-line align-bottom me-1"></i> {{ $t('users.show.view_document') }}
+                </a>
+              </BCol>
+              <BCol md="4" v-if="user.cin_front_attachment_url">
+                <div class="text-muted fs-13 mb-1">{{ $t('users.show.cin_front_attachment') }}</div>
+                <a :href="user.cin_front_attachment_url" target="_blank" class="btn btn-sm btn-soft-primary w-100">
+                  <i class="ri-id-card-line align-bottom me-1"></i> {{ $t('users.show.view_document') }}
+                </a>
+              </BCol>
+              <BCol md="4" v-if="user.cin_back_attachment_url">
+                <div class="text-muted fs-13 mb-1">{{ $t('users.show.cin_back_attachment') }}</div>
+                <a :href="user.cin_back_attachment_url" target="_blank" class="btn btn-sm btn-soft-primary w-100">
+                  <i class="ri-id-card-line align-bottom me-1"></i> {{ $t('users.show.view_document') }}
+                </a>
+              </BCol>
+            </BRow>
           </BCardBody>
         </BCard>
 

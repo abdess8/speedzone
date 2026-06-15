@@ -23,6 +23,8 @@ class Order extends Model
         'seller_id',
         'pickup_request_id',
         'return_id',
+        'invoice_id',
+        'invoice_status',
         'customer_first_name',
         'customer_last_name',
         'customer_phone',
@@ -96,6 +98,11 @@ class Order extends Model
     public function orderReturn(): BelongsTo
     {
         return $this->belongsTo(OrderReturn::class, 'return_id');
+    }
+
+    public function invoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class);
     }
 
     /**
@@ -212,6 +219,17 @@ class Order extends Model
     public function scopeOwnedBy(Builder $query, int $userId): Builder
     {
         return $query->where('seller_id', $userId);
+    }
+
+    /**
+     * Orders eligible to be settled on an invoice: delivered or returned and
+     * not yet attached to any invoice.
+     */
+    public function scopeBillable(Builder $query): Builder
+    {
+        return $query
+            ->whereNull('invoice_id')
+            ->whereIn('status', [OrderStatus::DELIVERED->value, OrderStatus::RETURNED->value]);
     }
 
     public function scopeEligibleForPickup(Builder $query, int $sellerId): Builder

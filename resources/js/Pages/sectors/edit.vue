@@ -13,6 +13,7 @@ const form = useForm({
   city_id: props.sector.city_id,
   name: props.sector.name,
   delivery_price: props.sector.delivery_price,
+  return_price: props.sector.return_price ?? "",
   is_active: props.sector.is_active,
 });
 

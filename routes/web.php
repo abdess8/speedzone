@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApiIntegrationController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\DriverZoneController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PickupRequestController;
@@ -136,6 +137,21 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::resource('returns', ReturnController::class)
         ->only(['index', 'store', 'show'])
         ->whereNumber('return');
+
+    // Invoicing / seller billing — custom routes registered before the resource
+    Route::get('invoices/pending', [InvoiceController::class, 'pending'])->name('invoices.pending');
+    Route::post('invoices/preview', [InvoiceController::class, 'preview'])->name('invoices.preview');
+    Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])
+        ->whereNumber('invoice')->name('invoices.pdf');
+    Route::post('invoices/{invoice}/pay', [InvoiceController::class, 'pay'])
+        ->whereNumber('invoice')->name('invoices.pay');
+    Route::post('invoices/{invoice}/send', [InvoiceController::class, 'send'])
+        ->whereNumber('invoice')->name('invoices.send');
+    Route::post('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])
+        ->whereNumber('invoice')->name('invoices.cancel');
+    Route::resource('invoices', InvoiceController::class)
+        ->only(['index', 'create', 'store', 'show', 'destroy'])
+        ->whereNumber('invoice');
 
     Route::get('api-integrations', [ApiIntegrationController::class, 'index'])->name('api-integrations.index');
 

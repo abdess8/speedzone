@@ -41,6 +41,7 @@ class UpdateSectorRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'delivery_price' => ['sometimes', 'required', 'numeric', 'min:0', 'max:99999999.99'],
+            'return_price' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

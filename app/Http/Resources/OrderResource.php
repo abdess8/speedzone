@@ -96,6 +96,26 @@ class OrderResource extends JsonResource
                 ];
             }),
 
+            'invoice' => $this->whenLoaded('invoice', function () {
+                if (! $this->invoice) {
+                    return null;
+                }
+
+                $status = $this->invoice->status instanceof \App\Enums\InvoiceStatus
+                    ? $this->invoice->status
+                    : \App\Enums\InvoiceStatus::from($this->invoice->status);
+
+                return [
+                    'id' => $this->invoice->id,
+                    'invoice_number' => $this->invoice->invoice_number,
+                    'reference' => $this->invoice->invoice_number,
+                    'status' => $status->value,
+                    'status_label' => $status->label(),
+                    'status_color' => $status->color(),
+                ];
+            }),
+            'invoice_id' => $this->invoice_id,
+
             'is_returned' => (bool) $this->is_returned,
 
             'active_return' => $this->whenLoaded('orderReturn', function () use ($request) {

@@ -19,11 +19,13 @@ class Sector extends Model
         'city_id',
         'name',
         'delivery_price',
+        'return_price',
         'is_active',
     ];
 
     protected $casts = [
         'delivery_price' => 'decimal:2',
+        'return_price' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 

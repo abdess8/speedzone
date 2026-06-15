@@ -7,6 +7,8 @@ return [
     'pickups' => 'Pickups',
     'transfers' => 'Transfers',
     'returns' => 'Returns',
+    'invoices' => 'Invoices',
+    'pending_billing' => 'Pending Billing',
     'delivery_zones' => 'Delivery Zones',
     'sectors' => 'Sectors',
     'driver_zones' => 'Driver Assignment',

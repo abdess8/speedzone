@@ -128,7 +128,8 @@ return [
         'pickup' => 'Ramassage',
         'transfer' => 'Transfert',
         'return' => 'Retour',
-        'empty' => 'Aucune opération de ramassage, transfert ou retour liée.',
+        'invoice' => 'Facture',
+        'empty' => 'Aucune opération de ramassage, transfert, retour ou facture liée.',
     ],
     'history' => [
         'empty' => 'Aucune modification enregistrée.',

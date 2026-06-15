@@ -128,7 +128,8 @@ return [
         'pickup' => 'Pickup',
         'transfer' => 'Transfer',
         'return' => 'Return',
-        'empty' => 'No related pickup, transfer, or return operations.',
+        'invoice' => 'Invoice',
+        'empty' => 'No related pickup, transfer, return, or invoice operations.',
     ],
     'history' => [
         'empty' => 'No modifications recorded yet.',

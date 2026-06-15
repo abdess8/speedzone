@@ -68,6 +68,12 @@ export default {
         this.hasPermission('returns.manage')
       );
     },
+    canViewInvoices() {
+      return this.hasPermission('invoices.read.all') || this.hasPermission('invoices.read.own');
+    },
+    canManageInvoices() {
+      return this.hasPermission('invoices.read.all');
+    },
     canViewSectors() {
       return this.hasPermission('sectors.read');
     },
@@ -235,6 +241,30 @@ export default {
           <i class="ri-arrow-go-back-line"></i>
           <span>{{ $t('sidebar.returns') }}</span>
         </Link>
+      </li>
+
+      <li v-if="canViewInvoices()" class="nav-item">
+        <a
+          class="nav-link menu-link"
+          href="#sidebarBilling"
+          data-bs-toggle="collapse"
+          role="button"
+          aria-expanded="false"
+          aria-controls="sidebarBilling"
+        >
+          <i class="ri-bill-line"></i>
+          <span>{{ $t('sidebar.invoices') }}</span>
+        </a>
+        <div class="collapse menu-dropdown" id="sidebarBilling">
+          <ul class="nav nav-sm flex-column">
+            <li class="nav-item">
+              <Link href="/invoices" class="nav-link">{{ $t('sidebar.invoices') }}</Link>
+            </li>
+            <li class="nav-item">
+              <Link href="/invoices/pending" class="nav-link">{{ $t('sidebar.pending_billing') }}</Link>
+            </li>
+          </ul>
+        </div>
       </li>
 
       <li v-if="showDeliveryZones" class="nav-item">

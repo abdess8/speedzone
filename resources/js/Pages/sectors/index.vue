@@ -135,6 +135,7 @@ onMounted(() => {
                 <th>{{ $t('sectors.table.sector') }}</th>
                 <th>{{ $t('sectors.filters.city') }}</th>
                 <th class="text-end">{{ $t('sectors.table.delivery_price') }}</th>
+                <th class="text-end">{{ $t('sectors.table.return_price') }}</th>
                 <th class="text-center">{{ $t('sectors.table.orders') }}</th>
                 <th class="text-center">{{ $t('sectors.table.drivers') }}</th>
                 <th>{{ $t('common.status') }}</th>
@@ -146,6 +147,7 @@ onMounted(() => {
                 <td><Link :href="route('sectors.show', sector.id)" class="fw-semibold">{{ sector.name }}</Link></td>
                 <td>{{ sector.city?.name ?? $t('common.empty_value') }}</td>
                 <td class="text-end fw-medium">{{ money(sector.delivery_price) }} {{ $t('common.currency_mad') }}</td>
+                <td class="text-end fw-medium">{{ money(sector.return_price) }} {{ $t('common.currency_mad') }}</td>
                 <td class="text-center">{{ sector.orders_count ?? 0 }}</td>
                 <td class="text-center">{{ sector.drivers_count ?? 0 }}</td>
                 <td>
@@ -162,7 +164,7 @@ onMounted(() => {
                 </td>
               </tr>
               <tr v-if="rows.length === 0">
-                <td colspan="7" class="text-center text-muted py-4">{{ $t('sectors.empty') }}</td>
+                <td colspan="8" class="text-center text-muted py-4">{{ $t('sectors.empty') }}</td>
               </tr>
             </tbody>
           </table>

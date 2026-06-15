@@ -1,0 +1,159 @@
+<?php
+
+namespace App\Services;
+
+use App\Enums\OrderStatus;
+use App\Models\Order;
+use App\Models\User;
+use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
+
+/**
+ * Pure financial logic for billing: which orders are billable, and how much each
+ * one contributes to a seller invoice. No persistence happens here — this keeps
+ * the math testable and reusable by both the preview and the generator.
+ *
+ * Money rules (confirmed with product):
+ *  - Delivered order  -> seller is PAID:    final = order_amount - delivery_fee
+ *  - Returned order   -> seller is CHARGED: final = -return_fee
+ *  - delivery_fee comes from the order snapshot (order.delivery_price)
+ *  - return_fee  comes from the order's sector (sector.return_price), snapshotted now
+ *  - net = delivered_amount - delivery_fees_total - return_fees_total
+ */
+class BillingService
+{
+    /**
+     * Build the query of orders that can be settled for a seller.
+     *
+     * When a period is provided, only orders whose DELIVERED/RETURNED status was
+     * recorded inside the window are included (based on the status history). The
+     * automatic flow passes no period and bills everything still outstanding.
+     */
+    public function billableOrdersQuery(User $seller, ?CarbonInterface $start = null, ?CarbonInterface $end = null): Builder
+    {
+        $query = Order::query()
+            ->ownedBy($seller->id)
+            ->billable();
+
+        if ($start || $end) {
+            $query->whereHas('statusHistories', function (Builder $sub) use ($start, $end) {
+                $sub->whereIn('status', [OrderStatus::DELIVERED->value, OrderStatus::RETURNED->value]);
+                if ($start) {
+                    $sub->whereDate('created_at', '>=', $start->toDateString());
+                }
+                if ($end) {
+                    $sub->whereDate('created_at', '<=', $end->toDateString());
+                }
+            });
+        }
+
+        return $query;
+    }
+
+    /**
+     * Compute the snapshot line for a single order.
+     *
+     * @return array{order_amount: float, delivery_fee: float, return_fee: float, final_amount: float, status: string}
+     */
+    public function computeLine(Order $order): array
+    {
+        $status = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from($order->status);
+        $orderAmount = round((float) $order->order_amount, 2);
+
+        if ($status === OrderStatus::RETURNED) {
+            $returnFee = round((float) ($order->sector?->return_price ?? 0), 2);
+
+            return [
+                'order_amount' => $orderAmount,
+                'delivery_fee' => 0.0,
+                'return_fee' => $returnFee,
+                'final_amount' => round(-$returnFee, 2),
+                'status' => $status->value,
+            ];
+        }
+
+        // Delivered (the only other billable status).
+        $deliveryFee = round((float) $order->delivery_price, 2);
+
+        return [
+            'order_amount' => $orderAmount,
+            'delivery_fee' => $deliveryFee,
+            'return_fee' => 0.0,
+            'final_amount' => round($orderAmount - $deliveryFee, 2),
+            'status' => $status->value,
+        ];
+    }
+
+    /**
+     * Aggregate snapshot totals for a collection of orders.
+     *
+     * @param  Collection<int, Order>  $orders
+     * @return array<string, float|int>
+     */
+    public function summarize(Collection $orders): array
+    {
+        $deliveredAmount = 0.0;
+        $returnedAmount = 0.0;
+        $deliveryFees = 0.0;
+        $returnFees = 0.0;
+
+        foreach ($orders as $order) {
+            $line = $this->computeLine($order);
+            $status = $line['status'];
+
+            if ($status === OrderStatus::RETURNED->value) {
+                $returnedAmount += $line['order_amount'];
+                $returnFees += $line['return_fee'];
+            } else {
+                $deliveredAmount += $line['order_amount'];
+                $deliveryFees += $line['delivery_fee'];
+            }
+        }
+
+        $gross = round($deliveredAmount, 2);
+        $net = round($deliveredAmount - $deliveryFees - $returnFees, 2);
+
+        return [
+            'total_orders_count' => $orders->count(),
+            'delivered_amount' => $gross,
+            'returned_amount' => round($returnedAmount, 2),
+            'delivery_fees_total' => round($deliveryFees, 2),
+            'return_fees_total' => round($returnFees, 2),
+            'gross_amount' => $gross,
+            'net_amount' => $net,
+        ];
+    }
+
+    /**
+     * Produce a non-persisted preview (summary + per-order lines) used before
+     * confirming a manual generation, or to show a seller their pending orders.
+     *
+     * @return array{summary: array<string, float|int>, lines: array<int, array<string, mixed>>}
+     */
+    public function preview(User $seller, ?CarbonInterface $start = null, ?CarbonInterface $end = null): array
+    {
+        $orders = $this->billableOrdersQuery($seller, $start, $end)
+            ->with(['city', 'sector'])
+            ->orderBy('id')
+            ->get();
+
+        $lines = $orders->map(function (Order $order) {
+            $line = $this->computeLine($order);
+
+            return array_merge($line, [
+                'id' => $order->id,
+                'tracking_number' => $order->tracking_number,
+                'customer_full_name' => $order->customer_full_name,
+                'city' => $order->city?->name,
+                'sector' => $order->sector?->name,
+                'created_at' => $order->created_at?->toIso8601String(),
+            ]);
+        })->all();
+
+        return [
+            'summary' => $this->summarize($orders),
+            'lines' => $lines,
+        ];
+    }
+}

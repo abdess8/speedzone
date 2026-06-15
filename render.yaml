@@ -1,0 +1,49 @@
+# Blueprint Render — Stratégie A (Laravel + Vue sur Render)
+# Déploiement : Dashboard Render → New → Blueprint → connecter ce repo
+
+databases:
+  - name: speedzone-db
+    plan: free
+    databaseName: speedzone
+    user: speedzone
+
+services:
+  - type: web
+    name: speedzone-corporate
+    runtime: docker
+    plan: free
+    branch: deployment/phase1
+    healthCheckPath: /up
+    envVars:
+      - key: APP_NAME
+        value: SpeedZone Express
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        sync: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        fromDatabase:
+          name: speedzone-db
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_LIFETIME
+        value: 120
+      - key: CACHE_DRIVER
+        value: database
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: MAIL_MAILER
+        value: log

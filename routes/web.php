@@ -25,6 +25,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/up', fn () => response('OK', 200));
+
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',])->group(function () {
 
     Route::post('locale', [LocaleController::class, 'update'])->name('locale.update');

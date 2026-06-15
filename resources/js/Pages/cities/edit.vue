@@ -22,16 +22,16 @@ const submit = () => {
 
 <template>
   <Layout>
-    <PageHeader :title="`Edit ${city.name}`" pageTitle="Cities" />
+    <PageHeader :title="$t('cities.edit_title', { name: city.name })" :pageTitle="$t('cities.title')" />
     <form @submit.prevent="submit">
       <CityForm :form="form" />
 
       <BRow>
         <BCol xl="8" class="mx-auto">
           <div class="hstack gap-2 justify-content-end mb-4">
-            <Link :href="route('cities.show', city.id)" class="btn btn-light">Cancel</Link>
+            <Link :href="route('cities.show', city.id)" class="btn btn-light">{{ $t('common.cancel') }}</Link>
             <BButton type="submit" variant="primary" :disabled="form.processing">
-              <i class="ri-save-line align-bottom me-1"></i> Save Changes
+              <i class="ri-save-line align-bottom me-1"></i> {{ $t('common.save_changes') }}
             </BButton>
           </div>
         </BCol>

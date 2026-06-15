@@ -22,35 +22,35 @@ const cityOptions = computed(() =>
     <BCol xl="8" class="mx-auto">
       <BCard no-body>
         <BCardHeader>
-          <h5 class="card-title mb-0">Sector Information</h5>
+          <h5 class="card-title mb-0">{{ $t('sectors.form.info') }}</h5>
         </BCardHeader>
         <BCardBody>
           <BRow class="g-3">
             <BCol md="12">
-              <label class="form-label">City <span class="text-danger">*</span></label>
+              <label class="form-label">{{ $t('sectors.form.city') }} <span class="text-danger">*</span></label>
               <Multiselect
                 v-model="form.city_id"
                 :options="cityOptions"
                 :searchable="true"
                 :close-on-select="true"
-                placeholder="Search and select a city…"
+                :placeholder="$t('sectors.form.search_city')"
                 :class="{ 'is-invalid': form.errors.city_id }"
               />
               <InputError :message="form.errors.city_id" />
             </BCol>
             <BCol md="8">
-              <label class="form-label">Sector Name <span class="text-danger">*</span></label>
+              <label class="form-label">{{ $t('sectors.form.sector_name') }} <span class="text-danger">*</span></label>
               <input
                 type="text"
                 class="form-control"
                 v-model="form.name"
                 :class="{ 'is-invalid': form.errors.name }"
-                placeholder="e.g. Maarif"
+                :placeholder="$t('sectors.form.sector_name_placeholder')"
               />
               <InputError :message="form.errors.name" />
             </BCol>
             <BCol md="4">
-              <label class="form-label">Delivery Price <span class="text-danger">*</span></label>
+              <label class="form-label">{{ $t('sectors.form.delivery_price') }} <span class="text-danger">*</span></label>
               <div class="input-group">
                 <input
                   type="number"
@@ -60,14 +60,14 @@ const cityOptions = computed(() =>
                   v-model="form.delivery_price"
                   :class="{ 'is-invalid': form.errors.delivery_price }"
                 />
-                <span class="input-group-text">MAD</span>
+                <span class="input-group-text">{{ $t('common.currency_mad') }}</span>
               </div>
               <InputError :message="form.errors.delivery_price" />
             </BCol>
             <BCol md="12">
               <div class="form-check form-switch fs-15 mt-2">
                 <input class="form-check-input" type="checkbox" role="switch" id="sectorActive" v-model="form.is_active" />
-                <label class="form-check-label" for="sectorActive">{{ form.is_active ? "Active" : "Inactive" }}</label>
+                <label class="form-check-label" for="sectorActive">{{ form.is_active ? $t('common.active') : $t('common.inactive') }}</label>
               </div>
             </BCol>
           </BRow>

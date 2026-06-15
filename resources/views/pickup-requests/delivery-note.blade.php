@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <title>Delivery Note — {{ $pickup->reference }}</title>
+    <title>{{ __('pickups.delivery_note_pdf.title') }} — {{ $pickup->reference }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #111; }
         .header { width: 100%; margin-bottom: 20px; border-bottom: 2px solid #0D4A9D; padding-bottom: 10px; }
@@ -30,42 +30,42 @@
                 @endif
             </td>
             <td style="text-align: right;">
-                <p class="title">Delivery Note / Bon de Ramassage</p>
-                <div class="meta"><strong>Reference:</strong> {{ $pickup->reference }}</div>
-                <div class="meta"><strong>Date:</strong> {{ $pickup->created_at?->format('d/m/Y H:i') }}</div>
+                <p class="title">{{ __('pickups.delivery_note_pdf.title') }}</p>
+                <div class="meta"><strong>{{ __('pickups.delivery_note_pdf.reference') }}:</strong> {{ $pickup->reference }}</div>
+                <div class="meta"><strong>{{ __('pickups.delivery_note_pdf.date') }}:</strong> {{ $pickup->created_at?->format('d/m/Y H:i') }}</div>
             </td>
         </tr>
     </table>
 
     <div class="section">
-        <div class="section-title">Pickup Information</div>
-        <strong>Address:</strong> {{ $pickup->pickup_address }}<br>
-        <strong>Packages:</strong> {{ $pickup->number_of_packages }} &nbsp;|&nbsp;
-        <strong>Total Amount:</strong> {{ number_format((float) $pickup->total_orders_amount, 2) }} MAD
+        <div class="section-title">{{ __('pickups.delivery_note_pdf.pickup_info') }}</div>
+        <strong>{{ __('pickups.delivery_note_pdf.address') }}:</strong> {{ $pickup->pickup_address }}<br>
+        <strong>{{ __('pickups.delivery_note_pdf.packages') }}:</strong> {{ $pickup->number_of_packages }} &nbsp;|&nbsp;
+        <strong>{{ __('pickups.delivery_note_pdf.total_amount') }}:</strong> {{ number_format((float) $pickup->total_orders_amount, 2) }} MAD
     </div>
 
     <div class="section">
-        <div class="section-title">Seller</div>
+        <div class="section-title">{{ __('pickups.delivery_note_pdf.seller') }}</div>
         {{ $pickup->creator?->full_name ?? '—' }}<br>
         {{ $pickup->creator?->email ?? '' }} &nbsp; {{ $pickup->creator?->phone_number ?? '' }}
     </div>
 
     <div class="section">
-        <div class="section-title">Driver</div>
-        {{ $pickup->assignee?->full_name ?? 'Not assigned yet' }}<br>
+        <div class="section-title">{{ __('pickups.delivery_note_pdf.driver') }}</div>
+        {{ $pickup->assignee?->full_name ?? __('pickups.delivery_note_pdf.not_assigned') }}<br>
         {{ $pickup->assignee?->phone_number ?? '' }}
     </div>
 
     <div class="section">
-        <div class="section-title">Orders</div>
+        <div class="section-title">{{ __('pickups.delivery_note_pdf.orders') }}</div>
         <table>
             <thead>
                 <tr>
-                    <th>Tracking #</th>
-                    <th>Customer</th>
-                    <th>City</th>
-                    <th>Sector</th>
-                    <th style="text-align:right;">Amount (MAD)</th>
+                    <th>{{ __('pickups.delivery_note_pdf.tracking_number') }}</th>
+                    <th>{{ __('pickups.delivery_note_pdf.customer') }}</th>
+                    <th>{{ __('pickups.delivery_note_pdf.city') }}</th>
+                    <th>{{ __('pickups.delivery_note_pdf.sector') }}</th>
+                    <th style="text-align:right;">{{ __('pickups.delivery_note_pdf.amount') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -84,7 +84,7 @@
 
     @if ($pickup->notes)
         <div class="section">
-            <div class="section-title">Notes</div>
+            <div class="section-title">{{ __('pickups.delivery_note_pdf.notes') }}</div>
             {{ $pickup->notes }}
         </div>
     @endif
@@ -92,10 +92,10 @@
     <table class="signatures">
         <tr>
             <td>
-                <div class="sign-box">Driver Signature</div>
+                <div class="sign-box">{{ __('pickups.delivery_note_pdf.driver_signature') }}</div>
             </td>
             <td>
-                <div class="sign-box">Seller Signature</div>
+                <div class="sign-box">{{ __('pickups.delivery_note_pdf.seller_signature') }}</div>
             </td>
         </tr>
     </table>

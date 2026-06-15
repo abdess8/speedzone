@@ -73,19 +73,16 @@ const clearPhotoFileInput = () => {
 </script>
 
 <template>
-    <FormSection @submitted="updateProfileInformation" title="Profile Information" description="Update your account's profile information and email address.">
+    <FormSection @submitted="updateProfileInformation" :title="$t('profile.profile_information.title')" :description="$t('profile.profile_information.description')">
 
         <template #form>
-            <!-- Profile Photo -->
             <div v-if="$page.props.jetstream.managesProfilePhotos" class="mb-3">
-                <!-- Profile Photo File Input -->
                 <div class="mb-2">
                     <input ref="photoInput" type="file" class="d-none form-control" @change="updatePhotoPreview">
-                    <InputLabel for="photo" value="Photo" />
+                    <InputLabel for="photo" :value="$t('profile.profile_information.photo')" />
                 </div>
 
                 <div class="mb-2">
-                    <!-- Current Profile Photo -->
                     <div v-show="!photoPreview">
                         <img
                             :src="user.profile_photo_url"
@@ -96,7 +93,6 @@ const clearPhotoFileInput = () => {
                         >
                     </div>
 
-                    <!-- New Profile Photo Preview -->
                     <div v-show="photoPreview">
                         <img
                             :src="photoPreview"
@@ -108,46 +104,44 @@ const clearPhotoFileInput = () => {
                     </div>
                 </div>
 
-                <BButton variant="primary" class="me-2 btn-sm" type="button" @click.prevent="selectNewPhoto">Select A New Photo</BButton>
-                <BButton v-if="user.profile_photo_path || user.photo" variant="danger" type="button" class="btn-sm" @click.prevent="deletePhoto">Remove Photo</BButton>
+                <BButton variant="primary" class="me-2 btn-sm" type="button" @click.prevent="selectNewPhoto">{{ $t('profile.profile_information.select_new_photo') }}</BButton>
+                <BButton v-if="user.profile_photo_path || user.photo" variant="danger" type="button" class="btn-sm" @click.prevent="deletePhoto">{{ $t('profile.profile_information.remove_photo') }}</BButton>
 
                 <div class="text-danger mt-2">
                     <span>{{ form.errors.photo }}</span>
                 </div>
             </div>
 
-            <!-- Name -->
             <div class="mb-3">
-                <InputLabel for="name" value="Name" />
+                <InputLabel for="name" :value="$t('profile.profile_information.name')" />
                 <TextInput id="name" v-model="form.name" type="text" required autocomplete="name" :class="{ 'is-invalid': form.errors.name }" />
                 <InputError :message="form.errors.name" class="mt-2" />
             </div>
 
-            <!-- Email -->
             <div class="mb-3">
-                <InputLabel for="email" value="Email" />
+                <InputLabel for="email" :value="$t('profile.profile_information.email')" />
                 <TextInput id="email" v-model="form.email" type="email" required autocomplete="username" :class="{ 'is-invalid': form.errors.email }" />
                 <InputError :message="form.errors.email" class="mt-2" />
 
                 <div v-if="$page.props.jetstream.hasEmailVerification && user.email_verified_at === null">
                     <p class="text-sm mt-2 text-muted">
-                        Your email address is unverified.
+                        {{ $t('profile.profile_information.unverified') }}
 
                         <Link :href="route('verification.send')" method="post" as="button" class="btn btn-sm btn-warning" @click.prevent="sendEmailVerification">
-                        Click here to re-send the verification email.
+                        {{ $t('profile.profile_information.resend_verification') }}
                         </Link>
                     </p>
 
                     <div v-show="verificationLinkSent" class="alert alert-success text-success">
-                        A new verification link has been sent to your email address.
+                        {{ $t('profile.profile_information.verification_sent') }}
                     </div>
                 </div>
             </div>
         </template>
 
         <template #actions>
-            <BButton variant="primary w-100" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Save</BButton>
-            <p v-if="form.recentlySuccessful" class="alert alert-info mt-3">Profile Saved.</p>
+            <BButton variant="primary w-100" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">{{ $t('common.save') }}</BButton>
+            <p v-if="form.recentlySuccessful" class="alert alert-info mt-3">{{ $t('profile.profile_information.saved') }}</p>
         </template>
     </FormSection>
 </template>

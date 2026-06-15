@@ -71,18 +71,18 @@ const badgeClass = (permission) => {
     <BCol lg="12">
       <BCard no-body>
         <BCardHeader>
-          <h5 class="card-title mb-0">Role Details</h5>
+          <h5 class="card-title mb-0">{{ $t('roles.form.details') }}</h5>
         </BCardHeader>
         <BCardBody>
           <BRow class="g-3">
             <BCol md="6">
               <label class="form-label">
-                Role Name <span class="text-danger">*</span>
+                {{ $t('roles.form.role_name') }} <span class="text-danger">*</span>
               </label>
               <input
                 type="text"
                 class="form-control"
-                placeholder="e.g. Dispatcher"
+                :placeholder="$t('roles.form.role_name_placeholder')"
                 v-model="form.name"
                 :class="{ 'is-invalid': form.errors.name }"
               />
@@ -96,10 +96,9 @@ const badgeClass = (permission) => {
         <BCardHeader class="border-bottom-dashed">
           <BRow class="g-3 align-items-center">
             <BCol sm>
-              <h5 class="card-title mb-1">Permissions</h5>
+              <h5 class="card-title mb-1">{{ $t('roles.form.permissions') }}</h5>
               <p class="text-muted mb-0">
-                <span class="fw-medium text-body">{{ selectedCount }}</span>
-                of {{ totalPermissions }} permissions selected
+                {{ $t('roles.form.permissions_selected', { selected: selectedCount, total: totalPermissions }) }}
               </p>
             </BCol>
             <BCol sm="auto">
@@ -113,7 +112,7 @@ const badgeClass = (permission) => {
                   @change="toggleAll"
                 />
                 <label class="form-check-label" for="toggleAllPermissions">
-                  Select all
+                  {{ $t('roles.form.select_all') }}
                 </label>
               </div>
             </BCol>
@@ -123,7 +122,7 @@ const badgeClass = (permission) => {
 
         <BCardBody>
           <div v-if="permissionGroups.length === 0" class="text-center text-muted py-4">
-            No permissions available. Run the permission seeder first.
+            {{ $t('roles.form.no_permissions') }}
           </div>
 
           <BRow class="g-3">

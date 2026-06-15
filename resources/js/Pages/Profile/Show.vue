@@ -13,10 +13,10 @@ defineProps({
 </script>
 
 <template>
-    <Layout title="Profile">
+    <Layout :title="$t('profile.title')">
         <template #header>
             <h2 class="fw-semibold">
-                Profile
+                {{ $t('profile.title') }}
             </h2>
         </template>
 

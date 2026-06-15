@@ -53,6 +53,7 @@ class HandleInertiaRequests extends Middleware
                 'cities' => trans('cities'),
                 'sectors' => trans('sectors'),
                 'driver_zones' => trans('driver_zones'),
+                'profile' => trans('profile'),
             ],
         ]);
     }

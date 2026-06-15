@@ -1,8 +1,11 @@
 <script setup>
 import { computed } from "vue";
 import { Link } from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+
+const { t, locale } = useI18n();
 
 const props = defineProps({
   user: { type: Object, required: true },
@@ -25,9 +28,16 @@ const roleBadge = computed(() => {
   return map[props.user.role?.name] || "bg-secondary-subtle text-secondary";
 });
 
+const roleLabel = (name) => {
+  if (!name) return t("common.empty_value_short");
+  const key = `roles.${name}`;
+  const translated = t(key);
+  return translated !== key ? translated : name;
+};
+
 const formatDate = (value) => {
-  if (!value) return "-";
-  return new Date(value).toLocaleString("en-GB", {
+  if (!value) return t("common.empty_value_short");
+  return new Date(value).toLocaleString(locale.value === "en" ? "en-GB" : "fr-FR", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -39,7 +49,7 @@ const formatDate = (value) => {
 
 <template>
   <Layout>
-    <PageHeader title="User Details" pageTitle="User Management" />
+    <PageHeader :title="$t('users.show_title')" :pageTitle="$t('users.page_title')" />
     <BRow>
       <BCol lg="4">
         <BCard no-body>
@@ -58,14 +68,14 @@ const formatDate = (value) => {
             </div>
             <h5 class="mt-3 mb-1">{{ user.full_name }}</h5>
             <p class="text-muted mb-2">{{ user.email }}</p>
-            <span class="badge" :class="roleBadge" v-if="user.role">{{ user.role.name }}</span>
+            <span class="badge" :class="roleBadge" v-if="user.role">{{ roleLabel(user.role.name) }}</span>
           </BCardBody>
           <BCardBody class="border-top">
             <div class="d-flex gap-2">
               <Link :href="route('users.edit', user.id)" class="btn btn-warning w-100">
-                <i class="ri-pencil-fill align-bottom me-1"></i> Edit
+                <i class="ri-pencil-fill align-bottom me-1"></i> {{ $t('common.edit') }}
               </Link>
-              <Link :href="route('users.index')" class="btn btn-light w-100">Back</Link>
+              <Link :href="route('users.index')" class="btn btn-light w-100">{{ $t('common.back') }}</Link>
             </div>
           </BCardBody>
         </BCard>
@@ -74,54 +84,54 @@ const formatDate = (value) => {
       <BCol lg="8">
         <BCard no-body>
           <BCardHeader>
-            <h5 class="card-title mb-0">Information</h5>
+            <h5 class="card-title mb-0">{{ $t('users.show.info') }}</h5>
           </BCardHeader>
           <BCardBody>
             <div class="table-responsive">
               <table class="table table-borderless mb-0">
                 <tbody>
                   <tr>
-                    <th class="ps-0" scope="row" style="width: 35%">First Name</th>
-                    <td class="text-muted">{{ user.first_name || "-" }}</td>
+                    <th class="ps-0" scope="row" style="width: 35%">{{ $t('users.show.first_name') }}</th>
+                    <td class="text-muted">{{ user.first_name || $t('common.empty_value_short') }}</td>
                   </tr>
                   <tr>
-                    <th class="ps-0" scope="row">Last Name</th>
-                    <td class="text-muted">{{ user.last_name || "-" }}</td>
+                    <th class="ps-0" scope="row">{{ $t('users.show.last_name') }}</th>
+                    <td class="text-muted">{{ user.last_name || $t('common.empty_value_short') }}</td>
                   </tr>
                   <tr>
-                    <th class="ps-0" scope="row">Email</th>
+                    <th class="ps-0" scope="row">{{ $t('users.show.email') }}</th>
                     <td class="text-muted">{{ user.email }}</td>
                   </tr>
                   <tr>
-                    <th class="ps-0" scope="row">Phone Number</th>
-                    <td class="text-muted">{{ user.phone_number || "-" }}</td>
+                    <th class="ps-0" scope="row">{{ $t('users.show.phone') }}</th>
+                    <td class="text-muted">{{ user.phone_number || $t('common.empty_value_short') }}</td>
                   </tr>
                   <tr>
-                    <th class="ps-0" scope="row">City</th>
-                    <td class="text-muted">{{ user.city?.name ?? user.city_name ?? "-" }}</td>
+                    <th class="ps-0" scope="row">{{ $t('users.show.city') }}</th>
+                    <td class="text-muted">{{ user.city?.name ?? user.city_name ?? $t('common.empty_value_short') }}</td>
                   </tr>
                   <tr>
-                    <th class="ps-0" scope="row">Address</th>
-                    <td class="text-muted">{{ user.address || "-" }}</td>
+                    <th class="ps-0" scope="row">{{ $t('users.show.address') }}</th>
+                    <td class="text-muted">{{ user.address || $t('common.empty_value_short') }}</td>
                   </tr>
                   <tr>
-                    <th class="ps-0" scope="row">CIN</th>
-                    <td class="text-muted">{{ user.cin || "-" }}</td>
+                    <th class="ps-0" scope="row">{{ $t('users.show.cin') }}</th>
+                    <td class="text-muted">{{ user.cin || $t('common.empty_value_short') }}</td>
                   </tr>
                   <tr>
-                    <th class="ps-0" scope="row">ICE Number</th>
-                    <td class="text-muted">{{ user.ice_number || "-" }}</td>
+                    <th class="ps-0" scope="row">{{ $t('users.show.ice') }}</th>
+                    <td class="text-muted">{{ user.ice_number || $t('common.empty_value_short') }}</td>
                   </tr>
                   <tr>
-                    <th class="ps-0" scope="row">Role</th>
-                    <td class="text-muted">{{ user.role?.name || "-" }}</td>
+                    <th class="ps-0" scope="row">{{ $t('users.show.role') }}</th>
+                    <td class="text-muted">{{ user.role ? roleLabel(user.role.name) : $t('common.empty_value_short') }}</td>
                   </tr>
                   <tr>
-                    <th class="ps-0" scope="row">Created At</th>
+                    <th class="ps-0" scope="row">{{ $t('users.show.created_at') }}</th>
                     <td class="text-muted">{{ formatDate(user.created_at) }}</td>
                   </tr>
                   <tr>
-                    <th class="ps-0" scope="row">Last Updated</th>
+                    <th class="ps-0" scope="row">{{ $t('users.show.updated_at') }}</th>
                     <td class="text-muted">{{ formatDate(user.updated_at) }}</td>
                   </tr>
                 </tbody>
@@ -132,7 +142,7 @@ const formatDate = (value) => {
 
         <BCard no-body>
           <BCardHeader>
-            <h5 class="card-title mb-0">Attached Documents</h5>
+            <h5 class="card-title mb-0">{{ $t('users.show.attached_documents') }}</h5>
           </BCardHeader>
           <BCardBody>
             <div v-if="user.attached_files_urls && user.attached_files_urls.length">
@@ -150,7 +160,7 @@ const formatDate = (value) => {
                 </BCol>
               </BRow>
             </div>
-            <p class="text-muted mb-0" v-else>No documents attached.</p>
+            <p class="text-muted mb-0" v-else>{{ $t('users.show.no_documents') }}</p>
           </BCardBody>
         </BCard>
       </BCol>

@@ -1,11 +1,14 @@
 <script setup>
 import { ref, computed } from "vue";
 import { Link, useForm } from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import InputError from "@/Components/InputError.vue";
 import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
+
+const { t } = useI18n();
 
 const props = defineProps({
   roles: { type: Array, default: () => [] },
@@ -36,6 +39,12 @@ const cityOptions = computed(() =>
   (props.cities ?? []).map((c) => ({ value: c.id, label: c.name }))
 );
 
+const roleLabel = (name) => {
+  const key = `roles.${name}`;
+  const translated = t(key);
+  return translated !== key ? translated : name;
+};
+
 const onPhotoChange = (event) => {
   const file = event.target.files[0];
   form.photo = file || null;
@@ -61,46 +70,46 @@ const submit = () => {
 
 <template>
   <Layout>
-    <PageHeader title="Create User" pageTitle="User Management" />
+    <PageHeader :title="$t('users.create_title')" :pageTitle="$t('users.page_title')" />
     <form @submit.prevent="submit">
       <BRow>
         <BCol lg="8">
           <BCard no-body>
             <BCardHeader>
-              <h5 class="card-title mb-0">Account Information</h5>
+              <h5 class="card-title mb-0">{{ $t('users.form.account_info') }}</h5>
             </BCardHeader>
             <BCardBody>
               <BRow class="g-3">
                 <BCol md="6">
-                  <label class="form-label">First Name <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ $t('users.form.first_name') }} <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" v-model="form.first_name" :class="{ 'is-invalid': form.errors.first_name }" />
                   <InputError :message="form.errors.first_name" />
                 </BCol>
                 <BCol md="6">
-                  <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ $t('users.form.last_name') }} <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" v-model="form.last_name" :class="{ 'is-invalid': form.errors.last_name }" />
                   <InputError :message="form.errors.last_name" />
                 </BCol>
                 <BCol md="6">
-                  <label class="form-label">Email <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ $t('users.form.email') }} <span class="text-danger">*</span></label>
                   <input type="email" class="form-control" v-model="form.email" :class="{ 'is-invalid': form.errors.email }" />
                   <InputError :message="form.errors.email" />
                 </BCol>
                 <BCol md="6">
-                  <label class="form-label">Role <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ $t('users.form.role') }} <span class="text-danger">*</span></label>
                   <select class="form-select" v-model="form.role_id" :class="{ 'is-invalid': form.errors.role_id }">
-                    <option value="" disabled>Select a role</option>
-                    <option v-for="r in roles" :key="r.id" :value="r.id">{{ r.name }}</option>
+                    <option value="" disabled>{{ $t('users.form.select_role') }}</option>
+                    <option v-for="r in roles" :key="r.id" :value="r.id">{{ roleLabel(r.name) }}</option>
                   </select>
                   <InputError :message="form.errors.role_id" />
                 </BCol>
                 <BCol md="6">
-                  <label class="form-label">Password <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ $t('users.form.password') }} <span class="text-danger">*</span></label>
                   <input type="password" class="form-control" v-model="form.password" :class="{ 'is-invalid': form.errors.password }" />
                   <InputError :message="form.errors.password" />
                 </BCol>
                 <BCol md="6">
-                  <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ $t('users.form.confirm_password') }} <span class="text-danger">*</span></label>
                   <input type="password" class="form-control" v-model="form.password_confirmation" />
                 </BCol>
               </BRow>
@@ -109,49 +118,49 @@ const submit = () => {
 
           <BCard no-body>
             <BCardHeader>
-              <h5 class="card-title mb-0">Personal Information</h5>
+              <h5 class="card-title mb-0">{{ $t('users.form.personal_info') }}</h5>
             </BCardHeader>
             <BCardBody>
               <BRow class="g-3">
                 <BCol md="6">
-                  <label class="form-label">Phone Number</label>
+                  <label class="form-label">{{ $t('users.form.phone') }}</label>
                   <input type="text" class="form-control" v-model="form.phone_number" :class="{ 'is-invalid': form.errors.phone_number }" />
                   <InputError :message="form.errors.phone_number" />
                 </BCol>
                 <BCol md="6">
-                  <label class="form-label">City <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ $t('users.form.city') }} <span class="text-danger">*</span></label>
                   <Multiselect
                     v-model="form.city_id"
                     :options="cityOptions"
                     :searchable="true"
                     :close-on-select="true"
-                    placeholder="Select a city…"
+                    :placeholder="$t('users.form.select_city')"
                     :class="{ 'is-invalid': form.errors.city_id }"
                   />
                   <InputError :message="form.errors.city_id" />
                 </BCol>
                 <BCol md="6">
-                  <label class="form-label">CIN</label>
+                  <label class="form-label">{{ $t('users.form.cin') }}</label>
                   <input type="text" class="form-control" v-model="form.cin" :class="{ 'is-invalid': form.errors.cin }" />
                   <InputError :message="form.errors.cin" />
                 </BCol>
                 <BCol md="6">
-                  <label class="form-label">ICE Number</label>
+                  <label class="form-label">{{ $t('users.form.ice') }}</label>
                   <input type="text" class="form-control" v-model="form.ice_number" :class="{ 'is-invalid': form.errors.ice_number }" />
                   <InputError :message="form.errors.ice_number" />
                 </BCol>
                 <BCol md="12">
-                  <label class="form-label">Address</label>
+                  <label class="form-label">{{ $t('users.form.address') }}</label>
                   <textarea class="form-control" rows="3" v-model="form.address" :class="{ 'is-invalid': form.errors.address }"></textarea>
                   <InputError :message="form.errors.address" />
                 </BCol>
                 <BCol md="6">
-                  <label class="form-label">Pickup Address 1</label>
+                  <label class="form-label">{{ $t('users.form.pickup_address_1') }}</label>
                   <textarea class="form-control" rows="2" v-model="form.pickup_address_1" :class="{ 'is-invalid': form.errors.pickup_address_1 }"></textarea>
                   <InputError :message="form.errors.pickup_address_1" />
                 </BCol>
                 <BCol md="6">
-                  <label class="form-label">Pickup Address 2</label>
+                  <label class="form-label">{{ $t('users.form.pickup_address_2') }}</label>
                   <textarea class="form-control" rows="2" v-model="form.pickup_address_2" :class="{ 'is-invalid': form.errors.pickup_address_2 }"></textarea>
                   <InputError :message="form.errors.pickup_address_2" />
                 </BCol>
@@ -163,7 +172,7 @@ const submit = () => {
         <BCol lg="4">
           <BCard no-body>
             <BCardHeader>
-              <h5 class="card-title mb-0">Profile Photo</h5>
+              <h5 class="card-title mb-0">{{ $t('users.form.profile_photo') }}</h5>
             </BCardHeader>
             <BCardBody class="text-center">
               <div class="mb-3">
@@ -187,7 +196,7 @@ const submit = () => {
 
           <BCard no-body>
             <BCardHeader>
-              <h5 class="card-title mb-0">Attached Files</h5>
+              <h5 class="card-title mb-0">{{ $t('users.form.attached_files') }}</h5>
             </BCardHeader>
             <BCardBody>
               <input type="file" class="form-control" multiple @change="onFilesChange" :class="{ 'is-invalid': form.errors.attached_files }" />
@@ -201,9 +210,9 @@ const submit = () => {
           </BCard>
 
           <div class="hstack gap-2 justify-content-end">
-            <Link :href="route('users.index')" class="btn btn-light">Cancel</Link>
+            <Link :href="route('users.index')" class="btn btn-light">{{ $t('common.cancel') }}</Link>
             <BButton type="submit" variant="success" :disabled="form.processing">
-              <i class="ri-save-line align-bottom me-1"></i> Create User
+              <i class="ri-save-line align-bottom me-1"></i> {{ $t('users.create') }}
             </BButton>
           </div>
         </BCol>

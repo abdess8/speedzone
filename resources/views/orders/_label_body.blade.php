@@ -21,10 +21,10 @@
         <tr>
             <td class="qr">
                 <img src="{{ $qrCode }}" alt="QR">
-                <div class="meta">Scan to track</div>
+                <div class="meta">{{ __('orders.label_pdf.scan_to_track') }}</div>
             </td>
             <td>
-                <div class="section-title">Deliver To</div>
+                <div class="section-title">{{ __('orders.label_pdf.deliver_to') }}</div>
                 <div class="name">{{ $order->customer_full_name }}</div>
                 <div class="phone">{{ $order->customer_phone }}</div>
                 <div class="address">{{ $order->customer_address }}</div>
@@ -35,58 +35,58 @@
 
     @if ($order->payment_method->requiresCashCollection())
         <div class="collection cash-required">
-            <div class="collection-title">💵 PAYMENT REQUIRED</div>
-            <div class="collection-row">Cash Collection: <strong>YES</strong></div>
+            <div class="collection-title">{{ __('orders.label_pdf.payment_required') }}</div>
+            <div class="collection-row">{{ __('orders.label_pdf.cash_collection') }}: <strong>{{ __('orders.label_pdf.yes') }}</strong></div>
             <div class="collection-amount">
-                Amount to collect:
+                {{ __('orders.label_pdf.amount_to_collect') }}:
                 <strong>{{ number_format((float) $order->order_amount, 2) }} MAD</strong>
             </div>
         </div>
     @else
         <div class="collection card-paid">
-            <div class="collection-title">💳 ALREADY PAID BY CARD</div>
-            <div class="collection-row">Cash Collection: <strong>NO</strong></div>
+            <div class="collection-title">{{ __('orders.label_pdf.already_paid') }}</div>
+            <div class="collection-row">{{ __('orders.label_pdf.cash_collection') }}: <strong>{{ __('orders.label_pdf.no') }}</strong></div>
         </div>
     @endif
 
     <table class="amounts">
         <tr>
-            <td>Payment Method</td>
+            <td>{{ __('orders.label_pdf.payment_method') }}</td>
             <td style="text-align:right;">
                 <span class="pay">{{ $order->payment_method->displayLabel() }}</span>
             </td>
         </tr>
         @if ($order->order_value !== null)
             <tr>
-                <td>Order value</td>
+                <td>{{ __('orders.label_pdf.order_value') }}</td>
                 <td style="text-align:right;">{{ number_format((float) $order->order_value, 2) }}</td>
             </tr>
         @endif
         <tr>
-            <td>Delivery price</td>
+            <td>{{ __('orders.label_pdf.delivery_price') }}</td>
             <td style="text-align:right;">{{ number_format((float) $order->delivery_price, 2) }}</td>
         </tr>
         <tr>
-            <td class="total">TOTAL</td>
+            <td class="total">{{ __('orders.label_pdf.total') }}</td>
             <td class="total" style="text-align:right;">{{ number_format((float) $order->total_amount, 2) }}</td>
         </tr>
     </table>
 
     <div class="flags">
         <span class="flag {{ $order->is_fragile ? 'on' : '' }}">
-            {{ $order->is_fragile ? 'FRAGILE' : 'NOT FRAGILE' }}
+            {{ $order->is_fragile ? __('orders.label_pdf.fragile') : __('orders.label_pdf.not_fragile') }}
         </span>
         <span class="flag {{ $order->can_be_opened ? 'on' : '' }}">
-            {{ $order->can_be_opened ? 'OPENABLE' : 'DO NOT OPEN' }}
+            {{ $order->can_be_opened ? __('orders.label_pdf.openable') : __('orders.label_pdf.do_not_open') }}
         </span>
     </div>
 
     @if ($order->notes)
-        <div class="section-title" style="margin-top:6px;">Notes</div>
+        <div class="section-title" style="margin-top:6px;">{{ __('orders.label_pdf.notes') }}</div>
         <div class="notes">{{ $order->notes }}</div>
     @endif
 
     <div class="foot">
-        Seller: {{ $order->seller?->full_name }} &middot; {{ $order->trackingUrl() }}
+        {{ __('orders.label_pdf.seller') }}: {{ $order->seller?->full_name }} &middot; {{ $order->trackingUrl() }}
     </div>
 </div>

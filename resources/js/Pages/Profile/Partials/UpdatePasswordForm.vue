@@ -37,10 +37,10 @@ const updatePassword = () => {
 
 <template>
 
-    <FormSection @submitted="updatePassword" title="Update Password" description="Ensure your account is using a long, random password to stay secure.">
+    <FormSection @submitted="updatePassword" :title="$t('profile.password.title')" :description="$t('profile.password.description')">
         <template #form>
             <div class="mb-3">
-                <InputLabel for="current_password" value="Current Password" />
+                <InputLabel for="current_password" :value="$t('profile.password.current')" />
                 <TextInput
                     id="current_password"
                     ref="currentPasswordInput"
@@ -54,7 +54,7 @@ const updatePassword = () => {
             </div>
 
             <div class="mb-3">
-                <InputLabel for="password" value="New Password" />
+                <InputLabel for="password" :value="$t('profile.password.new')" />
                 <TextInput
                     id="password"
                     ref="passwordInput"
@@ -68,7 +68,7 @@ const updatePassword = () => {
             </div>
 
             <div class="mb-3">
-                <InputLabel for="password_confirmation" value="Confirm Password" />
+                <InputLabel for="password_confirmation" :value="$t('profile.password.confirm')" />
                 <TextInput
                     id="password_confirmation"
                     v-model="form.password_confirmation"
@@ -82,8 +82,8 @@ const updatePassword = () => {
         </template>
 
         <template #actions>
-            <BButton variant="primary w-100" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Save</BButton>
-            <p v-if="form.recentlySuccessful" class="alert alert-success mt-3">Password Updated.</p>
+            <BButton variant="primary w-100" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">{{ $t('common.save') }}</BButton>
+            <p v-if="form.recentlySuccessful" class="alert alert-success mt-3">{{ $t('profile.password.updated') }}</p>
         </template>
     </FormSection>
 </template>

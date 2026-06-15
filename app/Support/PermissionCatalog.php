@@ -13,6 +13,7 @@ class PermissionCatalog
             self::adminPermissions(),
             self::orderPermissions(),
             self::pickupRequestPermissions(),
+            self::transferPermissions(),
             self::cityPermissions(),
             self::sectorPermissions(),
             self::driverZonePermissions()
@@ -56,7 +57,9 @@ class PermissionCatalog
             self::make('orders.transition.to_waiting_pickup', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_picked_up', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_in_depot', 'orders', 'transition', null, 'workflow_transition'),
+            self::make('orders.transition.to_transfer_created', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_in_transit', 'orders', 'transition', null, 'workflow_transition'),
+            self::make('orders.transition.to_received_in_destination', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_in_delivery_city', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_out_for_delivery', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_delivered', 'orders', 'transition', null, 'workflow_transition'),
@@ -78,6 +81,21 @@ class PermissionCatalog
             self::make('pickup_requests.assign', 'pickup_requests', 'assign', null, 'resource'),
             self::make('pickup_requests.change_status', 'pickup_requests', 'change_status', null, 'resource'),
             self::make('pickup_requests.pickup', 'pickup_requests', 'pickup', null, 'resource'),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, string|null>>
+     */
+    public static function transferPermissions(): array
+    {
+        return [
+            self::make('transfers.create', 'transfers', 'create', null, 'resource'),
+            self::make('transfers.read', 'transfers', 'read', null, 'resource'),
+            self::make('transfers.read.assigned', 'transfers', 'read', 'assigned', 'resource'),
+            self::make('transfers.update', 'transfers', 'update', null, 'resource'),
+            self::make('transfers.dispatch', 'transfers', 'dispatch', null, 'resource'),
+            self::make('transfers.receive', 'transfers', 'receive', null, 'resource'),
         ];
     }
 

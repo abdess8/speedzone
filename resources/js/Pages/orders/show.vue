@@ -139,6 +139,7 @@ onMounted(() => {
                 <div v-else class="fw-semibold">{{ empty() }}</div>
               </BCol>
               <BCol md="4"><div class="text-muted fs-13">{{ $t('orders.show.seller_phone') }}</div><div class="fw-semibold">{{ order.seller?.phone ?? empty() }}</div></BCol>
+              <BCol md="4"><div class="text-muted fs-13">{{ $t('orders.show.pickup_city') }}</div><div class="fw-semibold">{{ order.pickup_city?.name ?? order.seller?.city?.name ?? empty() }}</div></BCol>
             </BRow>
           </BCardBody>
         </BCard>

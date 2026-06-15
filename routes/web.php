@@ -8,6 +8,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PickupRequestController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SectorController;
+use App\Http\Controllers\TransferController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VelzonRoutesController;
 use Illuminate\Support\Facades\Route;
@@ -80,6 +81,34 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::resource('pickup-requests', PickupRequestController::class)
         ->only(['index', 'store', 'show'])
         ->whereNumber('pickupRequest');
+
+    // Inter-city transfers — QR scan URL must be registered before numeric {transfer} routes
+    Route::get('transfers/eligible-orders', [TransferController::class, 'eligibleOrders'])
+        ->name('transfers.eligible-orders');
+    Route::get('transfers/{reference}', [TransferController::class, 'track'])
+        ->where('reference', 'TRF-[0-9]{4}-[0-9]+')
+        ->name('transfers.track');
+    Route::post('transfers/{transfer}/dispatch', [TransferController::class, 'dispatch'])
+        ->whereNumber('transfer')
+        ->name('transfers.dispatch');
+    Route::post('transfers/{transfer}/receive', [TransferController::class, 'receive'])
+        ->whereNumber('transfer')
+        ->name('transfers.receive');
+    Route::post('transfers/{transfer}/change-status', [TransferController::class, 'changeStatus'])
+        ->whereNumber('transfer')
+        ->name('transfers.change-status');
+    Route::post('transfers/{transfer}/scan', [TransferController::class, 'scan'])
+        ->whereNumber('transfer')
+        ->name('transfers.scan');
+    Route::post('transfers/{transfer}/bulk-receive', [TransferController::class, 'bulkReceive'])
+        ->whereNumber('transfer')
+        ->name('transfers.bulk-receive');
+    Route::get('transfers/{transfer}/qr', [TransferController::class, 'qr'])
+        ->whereNumber('transfer')
+        ->name('transfers.qr');
+    Route::resource('transfers', TransferController::class)
+        ->only(['index', 'store', 'show', 'update'])
+        ->whereNumber('transfer');
 
     Route::get('api-integrations', [ApiIntegrationController::class, 'index'])->name('api-integrations.index');
 

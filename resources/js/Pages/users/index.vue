@@ -59,6 +59,10 @@ export default {
       const last = (user.last_name || "").charAt(0);
       return (first + last).toUpperCase();
     },
+    cityName(user) {
+      if (!user.city) return this.$t("common.empty_value_short");
+      return typeof user.city === "object" ? user.city.name : user.city;
+    },
     formatDate(value) {
       if (!value) return this.$t("common.empty_value_short");
       return new Date(value).toLocaleDateString(this.$page.props.locale === "en" ? "en-GB" : "fr-FR", {
@@ -182,7 +186,7 @@ export default {
                     </td>
                     <td>{{ user.email }}</td>
                     <td>{{ user.phone_number || $t('common.empty_value_short') }}</td>
-                    <td>{{ user.city || $t('common.empty_value_short') }}</td>
+                    <td>{{ cityName(user) }}</td>
                     <td>{{ user.cin || $t('common.empty_value_short') }}</td>
                     <td>{{ user.ice_number || $t('common.empty_value_short') }}</td>
                     <td>

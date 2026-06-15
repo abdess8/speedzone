@@ -9,7 +9,9 @@ enum OrderStatus: string
     case WAITING_PICKUP = 'WAITING_PICKUP';
     case PICKED_UP = 'PICKED_UP';
     case IN_DEPOT = 'IN_DEPOT';
+    case TRANSFER_CREATED = 'TRANSFER_CREATED';
     case IN_TRANSIT = 'IN_TRANSIT';
+    case RECEIVED_IN_DESTINATION = 'RECEIVED_IN_DESTINATION';
     case IN_DELIVERY_CITY = 'IN_DELIVERY_CITY';
     case OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY';
     case DELIVERED = 'DELIVERED';
@@ -40,7 +42,7 @@ enum OrderStatus: string
         return match ($this) {
             self::CREATED => 'secondary',
             self::PICKUP_REQUESTED, self::WAITING_PICKUP => 'info',
-            self::PICKED_UP, self::IN_DEPOT, self::IN_TRANSIT, self::IN_DELIVERY_CITY => 'primary',
+            self::PICKED_UP, self::IN_DEPOT, self::TRANSFER_CREATED, self::IN_TRANSIT, self::RECEIVED_IN_DESTINATION, self::IN_DELIVERY_CITY => 'primary',
             self::OUT_FOR_DELIVERY => 'warning',
             self::DELIVERED => 'success',
             self::FAILED => 'danger',
@@ -59,7 +61,9 @@ enum OrderStatus: string
             self::WAITING_PICKUP => 'ri-time-line',
             self::PICKED_UP => 'ri-hand-coin-line',
             self::IN_DEPOT => 'ri-building-line',
+            self::TRANSFER_CREATED => 'ri-archive-line',
             self::IN_TRANSIT => 'ri-truck-line',
+            self::RECEIVED_IN_DESTINATION => 'ri-map-pin-user-line',
             self::IN_DELIVERY_CITY => 'ri-map-pin-line',
             self::OUT_FOR_DELIVERY => 'ri-e-bike-2-line',
             self::DELIVERED => 'ri-checkbox-circle-line',

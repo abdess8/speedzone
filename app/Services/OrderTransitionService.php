@@ -19,8 +19,10 @@ class OrderTransitionService
         OrderStatus::PICKUP_REQUESTED->value => [OrderStatus::WAITING_PICKUP->value],
         OrderStatus::WAITING_PICKUP->value => [OrderStatus::PICKED_UP->value],
         OrderStatus::PICKED_UP->value => [OrderStatus::IN_DEPOT->value],
-        OrderStatus::IN_DEPOT->value => [OrderStatus::IN_TRANSIT->value],
-        OrderStatus::IN_TRANSIT->value => [OrderStatus::IN_DELIVERY_CITY->value],
+        OrderStatus::IN_DEPOT->value => [OrderStatus::TRANSFER_CREATED->value],
+        OrderStatus::TRANSFER_CREATED->value => [OrderStatus::IN_TRANSIT->value],
+        OrderStatus::IN_TRANSIT->value => [OrderStatus::RECEIVED_IN_DESTINATION->value],
+        OrderStatus::RECEIVED_IN_DESTINATION->value => [OrderStatus::OUT_FOR_DELIVERY->value],
         OrderStatus::IN_DELIVERY_CITY->value => [OrderStatus::OUT_FOR_DELIVERY->value],
         OrderStatus::OUT_FOR_DELIVERY->value => [
             OrderStatus::DELIVERED->value,

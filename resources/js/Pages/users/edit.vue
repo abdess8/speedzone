@@ -1,13 +1,16 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { Link, useForm } from "@inertiajs/vue3";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import InputError from "@/Components/InputError.vue";
+import Multiselect from "@vueform/multiselect";
+import "@vueform/multiselect/themes/default.css";
 
 const props = defineProps({
   user: { type: Object, required: true },
   roles: { type: Array, default: () => [] },
+  cities: { type: Array, default: () => [] },
 });
 
 const form = useForm({
@@ -18,7 +21,7 @@ const form = useForm({
   password: "",
   password_confirmation: "",
   role_id: props.user.role_id || "",
-  city: props.user.city || "",
+  city_id: props.user.city_id || "",
   address: props.user.address || "",
   pickup_address_1: props.user.pickup_address_1 || "",
   pickup_address_2: props.user.pickup_address_2 || "",
@@ -31,6 +34,10 @@ const form = useForm({
 });
 
 const photoPreview = ref(null);
+
+const cityOptions = computed(() =>
+  props.cities.map((c) => ({ value: c.id, label: c.name }))
+);
 
 const onPhotoChange = (event) => {
   const file = event.target.files[0];
@@ -123,9 +130,16 @@ const submit = () => {
                   <InputError :message="form.errors.phone_number" />
                 </BCol>
                 <BCol md="6">
-                  <label class="form-label">City</label>
-                  <input type="text" class="form-control" v-model="form.city" :class="{ 'is-invalid': form.errors.city }" />
-                  <InputError :message="form.errors.city" />
+                  <label class="form-label">City <span class="text-danger">*</span></label>
+                  <Multiselect
+                    v-model="form.city_id"
+                    :options="cityOptions"
+                    :searchable="true"
+                    :close-on-select="true"
+                    placeholder="Select a city…"
+                    :class="{ 'is-invalid': form.errors.city_id }"
+                  />
+                  <InputError :message="form.errors.city_id" />
                 </BCol>
                 <BCol md="6">
                   <label class="form-label">CIN</label>

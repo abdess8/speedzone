@@ -35,7 +35,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'locale',
         'password',
-        'city',
+        'city_id',
         'address',
         'pickup_address_1',
         'pickup_address_2',
@@ -91,6 +91,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Role::class);
     }
 
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
+    }
+
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class)->withTimestamps();
@@ -112,6 +117,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function pickupRequestsAssigned(): HasMany
     {
         return $this->hasMany(PickupRequest::class, 'assigned_to');
+    }
+
+    public function transfersCreated(): HasMany
+    {
+        return $this->hasMany(Transfer::class, 'created_by');
+    }
+
+    public function transfersAssigned(): HasMany
+    {
+        return $this->hasMany(Transfer::class, 'assigned_to');
     }
 
     /**
@@ -166,6 +181,10 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function hasPermission(string $permission): bool
     {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
         if (! $this->relationLoaded('roles')) {
             $this->load('roles.permissions');
         } elseif (! $this->roles->every(fn (Role $role) => $role->relationLoaded('permissions'))) {
@@ -212,6 +231,22 @@ class User extends Authenticatable implements MustVerifyEmail
 
         if (! $pickup && $action === 'read' && $this->hasPermission('pickup_requests.read.own')) {
             return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Scope-aware permission check for transfer access controls.
+     */
+    public function hasTransferScopePermission(string $action, ?Transfer $transfer = null): bool
+    {
+        if ($this->hasPermission('transfers.read')) {
+            return true;
+        }
+
+        if ($transfer && $transfer->assigned_to === $this->id && $this->hasPermission('transfers.read.assigned')) {
+            return in_array($action, ['read', 'receive', 'scan'], true);
         }
 
         return false;

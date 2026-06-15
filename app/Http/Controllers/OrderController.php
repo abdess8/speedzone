@@ -112,6 +112,7 @@ class OrderController extends Controller
             'city',
             'sector',
             'seller',
+            'seller.city',
             'pickupRequest.createdBy',
             'pickupRequest.assignedDriver',
             'statusHistories.user',
@@ -133,7 +134,7 @@ class OrderController extends Controller
     {
         $this->authorize('update', $order);
 
-        $order->load(['city', 'sector', 'seller']);
+        $order->load(['city', 'sector', 'seller', 'seller.city']);
 
         return Inertia::render('orders/edit', [
             'order' => OrderResource::make($order)->resolve($request),

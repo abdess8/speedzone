@@ -5,6 +5,7 @@ return [
     'dashboard' => 'Dashboard',
     'orders' => 'Orders',
     'pickups' => 'Pickups',
+    'transfers' => 'Transfers',
     'delivery_zones' => 'Delivery Zones',
     'sectors' => 'Sectors',
     'driver_zones' => 'Driver Assignment',

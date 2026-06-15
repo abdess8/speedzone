@@ -74,6 +74,7 @@ return [
         'created_by' => 'Créé par',
         'assigned_driver' => 'Livreur assigné',
         'pickup_address' => 'Adresse de ramassage',
+        'pickup_city' => 'Ville de ramassage',
         'first_name' => 'Prénom',
         'last_name' => 'Nom',
         'phone' => 'Téléphone',

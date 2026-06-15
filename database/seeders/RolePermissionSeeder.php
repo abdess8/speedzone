@@ -41,8 +41,15 @@ class RolePermissionSeeder extends Seeder
                 'orders.transition.to_waiting_pickup',
                 'orders.transition.to_picked_up',
                 'orders.transition.to_in_depot',
+                'orders.transition.to_transfer_created',
                 'orders.transition.to_in_transit',
+                'orders.transition.to_received_in_destination',
                 'orders.transition.to_in_delivery_city',
+                'transfers.create',
+                'transfers.read',
+                'transfers.update',
+                'transfers.dispatch',
+                'transfers.receive',
             ])->values()->all()
         );
 
@@ -53,6 +60,8 @@ class RolePermissionSeeder extends Seeder
                 'orders.print',
                 'pickup_requests.read.assigned',
                 'pickup_requests.pickup',
+                'transfers.read.assigned',
+                'transfers.receive',
                 'orders.transition.to_out_for_delivery',
                 'orders.transition.to_delivered',
                 'orders.transition.to_failed',

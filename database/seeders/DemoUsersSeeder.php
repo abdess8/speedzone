@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\City;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -16,6 +17,8 @@ class DemoUsersSeeder extends Seeder
     {
         $password = Hash::make(self::DEMO_PASSWORD);
 
+        $casablancaId = City::query()->where('name', 'Casablanca')->value('id');
+
         $adminRole = Role::query()->where('name', Role::ADMIN)->firstOrFail();
         $driverRole = Role::query()->where('name', Role::DRIVER)->firstOrFail();
         $sellerRole = Role::query()->where('name', Role::SELLER)->firstOrFail();
@@ -29,6 +32,7 @@ class DemoUsersSeeder extends Seeder
                 'password' => $password,
                 'email_verified_at' => now(),
                 'role_id' => $adminRole->id,
+                'city_id' => $casablancaId,
                 'phone_number' => '0600000001',
                 'pickup_address_1' => 'SpeedZone HQ, Casablanca',
             ]
@@ -48,6 +52,7 @@ class DemoUsersSeeder extends Seeder
                 'password' => $password,
                 'email_verified_at' => now(),
                 'role_id' => $driverRole->id,
+                'city_id' => $casablancaId,
                 'phone_number' => '0600000002',
             ]
         );
@@ -71,6 +76,7 @@ class DemoUsersSeeder extends Seeder
                     'password' => $password,
                     'email_verified_at' => now(),
                     'role_id' => $sellerRole->id,
+                    'city_id' => $casablancaId,
                     'phone_number' => $phone,
                     'pickup_address_1' => "{$first} Store, Casablanca",
                     'pickup_address_2' => "{$first} Warehouse, Mohammedia",

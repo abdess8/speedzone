@@ -37,6 +37,9 @@ export default {
         this.hasPermission('pickup_requests.read.assigned')
       );
     },
+    canViewTransfers() {
+      return this.hasPermission('transfers.read') || this.hasPermission('transfers.read.assigned');
+    },
     canViewSectors() {
       return this.hasPermission('sectors.read');
     },
@@ -189,6 +192,13 @@ export default {
         <Link href="/pickup-requests" class="nav-link menu-link">
           <i class="ri-truck-line"></i>
           <span>{{ $t('sidebar.pickups') }}</span>
+        </Link>
+      </li>
+
+      <li v-if="canViewTransfers()" class="nav-item">
+        <Link href="/transfers" class="nav-link menu-link">
+          <i class="ri-route-line"></i>
+          <span>{{ $t('sidebar.transfers') }}</span>
         </Link>
       </li>
 

@@ -5,6 +5,7 @@ return [
     'dashboard' => 'Tableau de bord',
     'orders' => 'Commandes',
     'pickups' => 'Ramassages',
+    'transfers' => 'Transferts',
     'delivery_zones' => 'Zones de livraison',
     'sectors' => 'Secteurs',
     'driver_zones' => 'Affectation des livreurs',

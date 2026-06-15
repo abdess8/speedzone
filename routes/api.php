@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderTransitionController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\PickupRequestController;
+use App\Http\Controllers\Api\TransferController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SectorController;
 use App\Http\Controllers\Api\UserRoleController;
@@ -98,4 +99,26 @@ Route::middleware('auth:sanctum')->group(function () {
         ->whereNumber('pickupRequest')
         ->except(['destroy'])
         ->names('api.pickup-requests');
+
+    // Inter-city transfers
+    Route::get('transfers/eligible-orders', [TransferController::class, 'eligibleOrders'])
+        ->name('api.transfers.eligible-orders');
+    Route::post('transfers/{transfer}/dispatch', [TransferController::class, 'dispatch'])
+        ->whereNumber('transfer')
+        ->name('api.transfers.dispatch');
+    Route::post('transfers/{transfer}/receive', [TransferController::class, 'receive'])
+        ->whereNumber('transfer')
+        ->name('api.transfers.receive');
+    Route::post('transfers/{transfer}/change-status', [TransferController::class, 'changeStatus'])
+        ->whereNumber('transfer')
+        ->name('api.transfers.change-status');
+    Route::post('transfers/{transfer}/scan', [TransferController::class, 'scan'])
+        ->whereNumber('transfer')
+        ->name('api.transfers.scan');
+    Route::post('transfers/{transfer}/bulk-receive', [TransferController::class, 'bulkReceive'])
+        ->whereNumber('transfer')
+        ->name('api.transfers.bulk-receive');
+    Route::apiResource('transfers', TransferController::class)
+        ->whereNumber('transfer')
+        ->names('api.transfers');
 });

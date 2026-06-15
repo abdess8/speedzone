@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Models\City;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +22,7 @@ class UserController extends Controller
     public function index(Request $request): Response
     {
         $users = User::query()
-            ->with('role')
+            ->with(['role', 'city'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->string('search');
                 $query->where(function ($q) use ($search) {
@@ -54,6 +55,7 @@ class UserController extends Controller
     {
         return Inertia::render('users/create', [
             'roles' => Role::orderBy('name')->get(['id', 'name']),
+            'cities' => City::query()->active()->orderBy('name')->get(['id', 'name', 'code']),
         ]);
     }
 
@@ -89,7 +91,7 @@ class UserController extends Controller
      */
     public function show(User $user): Response
     {
-        $user->load('role');
+        $user->load(['role', 'city']);
 
         return Inertia::render('users/show', [
             'user' => $user,
@@ -101,11 +103,12 @@ class UserController extends Controller
      */
     public function edit(User $user): Response
     {
-        $user->load('role');
+        $user->load(['role', 'city']);
 
         return Inertia::render('users/edit', [
             'user' => $user,
             'roles' => Role::orderBy('name')->get(['id', 'name']),
+            'cities' => City::query()->active()->orderBy('name')->get(['id', 'name', 'code']),
         ]);
     }
 

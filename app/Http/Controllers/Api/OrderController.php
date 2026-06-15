@@ -53,6 +53,7 @@ class OrderController extends Controller
             'city',
             'sector',
             'seller',
+            'seller.city',
             'pickupRequest.createdBy',
             'pickupRequest.assignedDriver',
             'statusHistories.user',

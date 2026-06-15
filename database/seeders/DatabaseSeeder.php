@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             DemoUsersSeeder::class,
             DriverSectorSeeder::class,
             DemoDataSeeder::class,
+            TransferSeeder::class,
         ]);
     }
 }

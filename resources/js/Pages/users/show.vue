@@ -98,7 +98,7 @@ const formatDate = (value) => {
                   </tr>
                   <tr>
                     <th class="ps-0" scope="row">City</th>
-                    <td class="text-muted">{{ user.city || "-" }}</td>
+                    <td class="text-muted">{{ user.city?.name ?? user.city_name ?? "-" }}</td>
                   </tr>
                   <tr>
                     <th class="ps-0" scope="row">Address</th>

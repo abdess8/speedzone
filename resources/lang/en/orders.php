@@ -74,6 +74,7 @@ return [
         'created_by' => 'Created By',
         'assigned_driver' => 'Assigned Driver',
         'pickup_address' => 'Pickup Address',
+        'pickup_city' => 'Pickup City',
         'first_name' => 'First Name',
         'last_name' => 'Last Name',
         'phone' => 'Phone',

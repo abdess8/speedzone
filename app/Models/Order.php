@@ -5,10 +5,12 @@ namespace App\Models;
 use App\Casts\PaymentMethodCast;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\TransferStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -86,6 +88,22 @@ class Order extends Model
     public function pickupRequest(): BelongsTo
     {
         return $this->belongsTo(PickupRequest::class);
+    }
+
+    public function transfers(): BelongsToMany
+    {
+        return $this->belongsToMany(Transfer::class, 'transfer_orders')
+            ->withPivot('created_at');
+    }
+
+    /**
+     * Active transfer this order belongs to (if any).
+     */
+    public function activeTransfer(): ?Transfer
+    {
+        return $this->transfers()
+            ->whereNotIn('transfers.status', [TransferStatus::CANCELLED->value])
+            ->first();
     }
 
     public function city(): BelongsTo
@@ -166,6 +184,31 @@ class Order extends Model
             ->where('seller_id', $sellerId)
             ->where('status', OrderStatus::CREATED)
             ->whereNull('pickup_request_id');
+    }
+
+    /**
+     * Orders ready to be grouped into an inter-city transfer.
+     * Pickup city = seller's city (from_city). Delivery city = order.city_id (to_city).
+     */
+    public function scopeEligibleForTransfer(Builder $query, ?int $fromCityId = null, ?int $toCityId = null): Builder
+    {
+        $query->where('status', OrderStatus::IN_DEPOT)
+            ->whereDoesntHave('transfers', fn (Builder $q) => $q->where(
+                'transfers.status',
+                '!=',
+                TransferStatus::CANCELLED->value
+            ))
+            ->whereHas('seller', fn (Builder $q) => $q->whereNotNull('city_id'));
+
+        if ($fromCityId) {
+            $query->whereHas('seller', fn (Builder $q) => $q->where('city_id', $fromCityId));
+        }
+
+        if ($toCityId) {
+            $query->where('city_id', $toCityId);
+        }
+
+        return $query;
     }
 
     public function getRouteKeyName(): string

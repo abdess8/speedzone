@@ -49,6 +49,14 @@ class OrderResource extends JsonResource
             ] : null),
             'city_id' => $this->city_id,
 
+            'pickup_city' => $this->when(
+                $this->relationLoaded('seller') && $this->seller?->relationLoaded('city'),
+                fn () => $this->seller?->city ? [
+                    'id' => $this->seller->city->id,
+                    'name' => $this->seller->city->name,
+                ] : null
+            ),
+
             'sector' => $this->whenLoaded('sector', fn () => $this->sector ? [
                 'id' => $this->sector->id,
                 'name' => $this->sector->name,
@@ -63,6 +71,11 @@ class OrderResource extends JsonResource
                 'profile_photo_url' => $this->seller->profile_photo_url,
                 'photo_url' => $this->seller->photo_url,
                 'has_profile_photo' => $this->seller->hasProfilePhoto(),
+                'city_id' => $this->seller->city_id,
+                'city' => $this->seller->relationLoaded('city') && $this->seller->city ? [
+                    'id' => $this->seller->city->id,
+                    'name' => $this->seller->city->name,
+                ] : null,
             ] : null),
             'seller_id' => $this->seller_id,
 

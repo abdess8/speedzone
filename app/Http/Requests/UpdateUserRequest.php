@@ -31,7 +31,7 @@ class UpdateUserRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'role_id' => ['required', 'integer', 'exists:roles,id'],
-            'city' => ['nullable', 'string', 'max:255'],
+            'city_id' => ['required', 'integer', 'exists:cities,id'],
             'address' => ['nullable', 'string', 'max:1000'],
             'pickup_address_1' => ['nullable', 'string', 'max:1000'],
             'pickup_address_2' => ['nullable', 'string', 'max:1000'],

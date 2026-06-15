@@ -6,6 +6,8 @@ import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import PickupTimeline from "./Partials/PickupTimeline.vue";
 import QrScanner from "./Partials/QrScanner.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
+import EntityLink from "@/Components/EntityLink.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -113,9 +115,17 @@ onMounted(() => {
           <BCardHeader><h5 class="card-title mb-0">{{ $t('pickups.show.info') }}</h5></BCardHeader>
           <BCardBody>
             <BRow class="g-3">
-              <BCol md="4"><div class="text-muted fs-13">{{ $t('pickups.show.reference') }}</div><div class="fw-semibold">{{ pickup.reference }}</div></BCol>
-              <BCol md="4"><div class="text-muted fs-13">{{ $t('pickups.show.created_by') }}</div><div class="fw-semibold">{{ pickup.creator?.name ?? empty() }}</div></BCol>
-              <BCol md="4"><div class="text-muted fs-13">{{ $t('pickups.show.assigned_driver') }}</div><div class="fw-semibold">{{ pickup.assignee?.name ?? empty() }}</div></BCol>
+              <BCol md="4"><div class="text-muted fs-13">{{ $t('pickups.show.reference') }}</div><EntityLink type="pickup" :entity="pickup" :show-status="false" size="sm" /></BCol>
+              <BCol md="4">
+                <div class="text-muted fs-13">{{ $t('pickups.show.created_by') }}</div>
+                <UserAvatar v-if="pickup.creator" :user="pickup.creator" :size="28" clickable show-name show-role />
+                <div v-else class="fw-semibold">{{ empty() }}</div>
+              </BCol>
+              <BCol md="4">
+                <div class="text-muted fs-13">{{ $t('pickups.show.assigned_driver') }}</div>
+                <UserAvatar v-if="pickup.assignee" :user="pickup.assignee" :size="28" clickable show-name show-role />
+                <div v-else class="fw-semibold">{{ empty() }}</div>
+              </BCol>
               <BCol md="4"><div class="text-muted fs-13">{{ $t('common.status') }}</div><span class="badge" :class="`bg-${pickup.status_color}-subtle text-${pickup.status_color}`">{{ pickup.status_label }}</span></BCol>
               <BCol md="4"><div class="text-muted fs-13">{{ $t('pickups.show.creation_date') }}</div><div class="fw-semibold">{{ formatDate(pickup.created_at) }}</div></BCol>
               <BCol md="12"><div class="text-muted fs-13">{{ $t('pickups.show.pickup_address') }}</div><div class="fw-semibold">{{ pickup.pickup_address }}</div></BCol>
@@ -164,7 +174,7 @@ onMounted(() => {
                 <tbody>
                   <tr v-for="order in pickup.orders ?? []" :key="order.id">
                     <td>
-                      <Link :href="route('orders.show', order.id)" class="fw-semibold">{{ order.tracking_number }}</Link>
+                      <EntityLink type="order" :entity="order" :show-status="false" size="sm" />
                     </td>
                     <td>{{ order.customer?.full_name ?? empty() }}</td>
                     <td>{{ order.city?.name ?? empty() }}</td>

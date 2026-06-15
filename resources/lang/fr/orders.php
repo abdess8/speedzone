@@ -67,6 +67,7 @@ return [
         'financial' => 'Informations financières',
         'modification_history' => 'Historique des modifications',
         'tracking_timeline' => 'Suivi de livraison',
+        'related_operations' => 'Opérations liées (Lookups)',
         'open_full_view' => 'Vue complète',
         'seller_phone' => 'Téléphone vendeur',
         'reference' => 'Référence',
@@ -121,6 +122,12 @@ return [
     'timeline' => [
         'empty' => 'Aucun historique de suivi.',
         'by' => 'par :name',
+        'system' => 'SYSTÈME (Mise à jour automatique)',
+    ],
+    'lookups' => [
+        'pickup' => 'Ramassage',
+        'transfer' => 'Transfert',
+        'empty' => 'Aucune opération de ramassage ou transfert liée.',
     ],
     'history' => [
         'empty' => 'Aucune modification enregistrée.',

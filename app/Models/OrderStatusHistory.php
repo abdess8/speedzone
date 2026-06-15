@@ -15,11 +15,15 @@ class OrderStatusHistory extends Model
         'order_id',
         'status',
         'user_id',
+        'is_system',
         'comment',
+        'pickup_request_id',
+        'transfer_id',
     ];
 
     protected $casts = [
         'status' => OrderStatus::class,
+        'is_system' => 'boolean',
     ];
 
     public function order(): BelongsTo
@@ -30,5 +34,15 @@ class OrderStatusHistory extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function pickupRequest(): BelongsTo
+    {
+        return $this->belongsTo(PickupRequest::class);
+    }
+
+    public function transfer(): BelongsTo
+    {
+        return $this->belongsTo(Transfer::class);
     }
 }

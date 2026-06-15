@@ -4,10 +4,12 @@ import { Link, router, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
-import OrderTimeline from "./Partials/OrderTimeline.vue";
+import StatusTimeline from "@/Components/StatusTimeline.vue";
 import OrderModificationHistory from "./Partials/OrderModificationHistory.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
+import RelatedOperationsLookups from "@/Components/RelatedOperationsLookups.vue";
+import EntityLink from "@/Components/EntityLink.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -135,12 +137,22 @@ onMounted(() => {
               <BCol md="4"><div class="text-muted fs-13">{{ $t('orders.table.created') }}</div><div class="fw-semibold">{{ formatDate(order.created_at) }}</div></BCol>
               <BCol md="4">
                 <div class="text-muted fs-13">{{ $t('orders.filters.seller') }}</div>
-                <UserAvatar v-if="order.seller" :user="order.seller" :size="36" clickable show-name />
+                <UserAvatar v-if="order.seller" :user="order.seller" :size="36" clickable show-name show-role />
                 <div v-else class="fw-semibold">{{ empty() }}</div>
               </BCol>
               <BCol md="4"><div class="text-muted fs-13">{{ $t('orders.show.seller_phone') }}</div><div class="fw-semibold">{{ order.seller?.phone ?? empty() }}</div></BCol>
               <BCol md="4"><div class="text-muted fs-13">{{ $t('orders.show.pickup_city') }}</div><div class="fw-semibold">{{ order.pickup_city?.name ?? order.seller?.city?.name ?? empty() }}</div></BCol>
             </BRow>
+          </BCardBody>
+        </BCard>
+
+        <BCard no-body>
+          <BCardHeader><h5 class="card-title mb-0">{{ $t('orders.show.related_operations') }}</h5></BCardHeader>
+          <BCardBody>
+            <RelatedOperationsLookups
+              :pickup-request="order.pickup_request"
+              :active-transfer="order.active_transfer"
+            />
           </BCardBody>
         </BCard>
 
@@ -150,9 +162,7 @@ onMounted(() => {
             <BRow class="g-3">
               <BCol md="4">
                 <div class="text-muted fs-13">{{ $t('orders.show.reference') }}</div>
-                <Link :href="route('pickup-requests.show', order.pickup_request.id)" class="fw-semibold text-primary text-decoration-none">
-                  {{ order.pickup_request.reference }}
-                </Link>
+                <EntityLink type="pickup" :entity="order.pickup_request" :show-status="false" size="sm" />
               </BCol>
               <BCol md="4">
                 <div class="text-muted fs-13">{{ $t('common.status') }}</div>
@@ -166,11 +176,27 @@ onMounted(() => {
               </BCol>
               <BCol md="4">
                 <div class="text-muted fs-13">{{ $t('orders.show.created_by') }}</div>
-                <div class="fw-semibold">{{ order.pickup_request.created_by?.name ?? empty() }}</div>
+                <UserAvatar
+                  v-if="order.pickup_request.created_by"
+                  :user="order.pickup_request.created_by"
+                  :size="28"
+                  clickable
+                  show-name
+                  show-role
+                />
+                <div v-else class="fw-semibold">{{ empty() }}</div>
               </BCol>
               <BCol md="4">
                 <div class="text-muted fs-13">{{ $t('orders.show.assigned_driver') }}</div>
-                <div class="fw-semibold">{{ order.pickup_request.assigned_driver?.name ?? empty() }}</div>
+                <UserAvatar
+                  v-if="order.pickup_request.assigned_driver"
+                  :user="order.pickup_request.assigned_driver"
+                  :size="28"
+                  clickable
+                  show-name
+                  show-role
+                />
+                <div v-else class="fw-semibold">{{ empty() }}</div>
               </BCol>
               <BCol md="12">
                 <div class="text-muted fs-13">{{ $t('orders.show.pickup_address') }}</div>
@@ -258,7 +284,7 @@ onMounted(() => {
             <Link :href="route('orders.track', order.tracking_number)" class="btn btn-sm btn-link p-0">{{ $t('orders.show.open_full_view') }}</Link>
           </BCardHeader>
           <BCardBody>
-            <OrderTimeline :history="order.status_history ?? []" />
+            <StatusTimeline :history="order.status_history ?? []" />
           </BCardBody>
         </BCard>
       </BCol>

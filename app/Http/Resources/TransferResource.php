@@ -43,16 +43,12 @@ class TransferResource extends JsonResource
                 'name' => $this->toCity->name,
                 'code' => $this->toCity->code,
             ] : null),
-            'creator' => $this->whenLoaded('creator', fn () => $this->creator ? [
-                'id' => $this->creator->id,
-                'name' => $this->creator->full_name,
-                'email' => $this->creator->email,
-            ] : null),
-            'assignee' => $this->whenLoaded('assignee', fn () => $this->assignee ? [
-                'id' => $this->assignee->id,
-                'name' => $this->assignee->full_name,
-                'phone' => $this->assignee->phone_number,
-            ] : null),
+            'creator' => $this->whenLoaded('creator', fn () => $this->creator
+                ? UserSummaryResource::make($this->creator)->resolve($request)
+                : null),
+            'assignee' => $this->whenLoaded('assignee', fn () => $this->assignee
+                ? UserSummaryResource::make($this->assignee)->resolve($request)
+                : null),
             'orders_count' => $this->whenCounted('orders'),
             'orders' => $this->whenLoaded(
                 'orders',

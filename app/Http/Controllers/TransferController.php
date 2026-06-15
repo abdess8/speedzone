@@ -111,12 +111,13 @@ class TransferController extends Controller
         $transfer->load([
             'fromCity',
             'toCity',
-            'creator',
-            'assignee',
+            'creator.roles',
+            'assignee.roles',
             'orders.city',
             'orders.sector',
+            'orders.seller.roles',
             'orders.seller.city',
-            'statusHistories.changedBy',
+            'statusHistories.changedBy.roles',
         ]);
 
         return Inertia::render('transfers/show', [

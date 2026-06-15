@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PickupRequestStatus;
+use App\Enums\TransferStatus;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -64,22 +65,12 @@ class OrderResource extends JsonResource
             ] : null),
             'sector_id' => $this->sector_id,
 
-            'seller' => $this->whenLoaded('seller', fn () => $this->seller ? [
-                'id' => $this->seller->id,
-                'name' => $this->seller->full_name,
-                'phone' => $this->seller->phone_number,
-                'profile_photo_url' => $this->seller->profile_photo_url,
-                'photo_url' => $this->seller->photo_url,
-                'has_profile_photo' => $this->seller->hasProfilePhoto(),
-                'city_id' => $this->seller->city_id,
-                'city' => $this->seller->relationLoaded('city') && $this->seller->city ? [
-                    'id' => $this->seller->city->id,
-                    'name' => $this->seller->city->name,
-                ] : null,
-            ] : null),
+            'seller' => $this->whenLoaded('seller', fn () => $this->seller
+                ? UserSummaryResource::make($this->seller)->resolve($request)
+                : null),
             'seller_id' => $this->seller_id,
 
-            'pickup_request' => $this->whenLoaded('pickupRequest', function () {
+            'pickup_request' => $this->whenLoaded('pickupRequest', function () use ($request) {
                 if (! $this->pickupRequest) {
                     return null;
                 }
@@ -97,17 +88,32 @@ class OrderResource extends JsonResource
                     'pickup_address' => $this->pickupRequest->pickup_address,
                     'created_at' => $this->pickupRequest->created_at?->toIso8601String(),
                     'created_by' => $this->pickupRequest->relationLoaded('createdBy') && $this->pickupRequest->createdBy
-                        ? [
-                            'id' => $this->pickupRequest->createdBy->id,
-                            'name' => $this->pickupRequest->createdBy->full_name,
-                        ]
+                        ? UserSummaryResource::make($this->pickupRequest->createdBy)->resolve($request)
                         : null,
                     'assigned_driver' => $this->pickupRequest->relationLoaded('assignedDriver') && $this->pickupRequest->assignedDriver
-                        ? [
-                            'id' => $this->pickupRequest->assignedDriver->id,
-                            'name' => $this->pickupRequest->assignedDriver->full_name,
-                        ]
+                        ? UserSummaryResource::make($this->pickupRequest->assignedDriver)->resolve($request)
                         : null,
+                ];
+            }),
+
+            'active_transfer' => $this->whenLoaded('transfers', function () {
+                $transfer = $this->transfers
+                    ->first(fn ($t) => ($t->status instanceof TransferStatus ? $t->status : TransferStatus::from($t->status)) !== TransferStatus::CANCELLED);
+
+                if (! $transfer) {
+                    return null;
+                }
+
+                $status = $transfer->status instanceof TransferStatus
+                    ? $transfer->status
+                    : TransferStatus::from($transfer->status);
+
+                return [
+                    'id' => $transfer->id,
+                    'reference' => $transfer->reference,
+                    'status' => $status->value,
+                    'status_label' => $status->label(),
+                    'status_color' => $status->color(),
                 ];
             }),
 

@@ -64,11 +64,12 @@ class PickupRequestController extends Controller
         $this->authorize('view', $pickupRequest);
 
         $pickupRequest->load([
-            'creator',
-            'assignee',
+            'creator.roles',
+            'assignee.roles',
             'orders.city',
             'orders.sector',
-            'statusHistories.changedBy',
+            'orders.seller.roles',
+            'statusHistories.changedBy.roles',
         ]);
 
         return PickupRequestResource::make($pickupRequest);

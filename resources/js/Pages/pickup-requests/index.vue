@@ -6,6 +6,8 @@ import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import CreatePickupModal from "./Partials/CreatePickupModal.vue";
 import QrScanner from "./Partials/QrScanner.vue";
+import EntityLink from "@/Components/EntityLink.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -168,9 +170,12 @@ onMounted(() => {
             <tbody>
               <tr v-for="pickup in rows" :key="pickup.id">
                 <td>
-                  <Link :href="route('pickup-requests.show', pickup.id)" class="fw-semibold">{{ pickup.reference }}</Link>
+                  <EntityLink type="pickup" :entity="pickup" :show-status="false" size="sm" />
                 </td>
-                <td v-if="can.read_all">{{ pickup.creator?.name ?? $t('common.empty_value') }}</td>
+                <td v-if="can.read_all">
+                  <UserAvatar v-if="pickup.creator" :user="pickup.creator" :size="24" clickable show-name />
+                  <span v-else>{{ $t('common.empty_value') }}</span>
+                </td>
                 <td>
                   <span class="text-truncate d-inline-block" style="max-width: 220px" :title="pickup.pickup_address">
                     {{ pickup.pickup_address }}
@@ -178,7 +183,10 @@ onMounted(() => {
                 </td>
                 <td class="text-center">{{ pickup.number_of_packages }}</td>
                 <td class="text-end fw-semibold">{{ money(pickup.total_orders_amount) }} {{ $t('common.currency_mad') }}</td>
-                <td>{{ pickup.assignee?.name ?? $t('common.empty_value') }}</td>
+                <td>
+                  <UserAvatar v-if="pickup.assignee" :user="pickup.assignee" :size="24" clickable show-name show-role />
+                  <span v-else>{{ $t('common.empty_value') }}</span>
+                </td>
                 <td>
                   <span class="badge" :class="`bg-${pickup.status_color}-subtle text-${pickup.status_color}`">
                     {{ pickup.status_label }}

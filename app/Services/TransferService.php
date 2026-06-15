@@ -15,7 +15,10 @@ use Illuminate\Validation\ValidationException;
 
 class TransferService
 {
-    public function __construct(private readonly TransferReferenceGenerator $references) {}
+    public function __construct(
+        private readonly TransferReferenceGenerator $references,
+        private readonly OrderStatusService $orderStatus,
+    ) {}
 
     /**
      * @param  array<int, int>  $orderIds
@@ -256,7 +259,8 @@ class TransferService
             $order->recordStatus(
                 $orderStatus,
                 $actor,
-                "Assigned to transfer {$transfer->reference}."
+                "Assigned to transfer {$transfer->reference}.",
+                transferId: $transfer->id,
             );
         }
     }
@@ -280,7 +284,8 @@ class TransferService
             $order->recordStatus(
                 $orderStatus,
                 $actor,
-                $comment ?? "Transfer {$transfer->reference} status: {$transfer->status->label()}."
+                $comment ?? "Transfer {$transfer->reference} status: {$transfer->status->label()}.",
+                transferId: $transfer->id,
             );
         }
     }
@@ -292,7 +297,13 @@ class TransferService
     {
         foreach ($orders as $order) {
             $order->update(['status' => OrderStatus::IN_DEPOT->value]);
-            $order->recordStatus(OrderStatus::IN_DEPOT, $actor, $comment ?? 'Transfer cancelled — order returned to depot.');
+            $order->recordStatus(
+                OrderStatus::IN_DEPOT,
+                $actor,
+                $comment ?? 'Transfer cancelled — order returned to depot.',
+                pickupRequestId: $order->pickup_request_id,
+            );
+            $this->orderStatus->handleAutoCityDeliveryTransition($order);
         }
     }
 

@@ -11,6 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 class OrderTransitionService
 {
+    public function __construct(private readonly OrderStatusService $orderStatus) {}
     /**
      * @var array<string, array<int, string>>
      */
@@ -19,7 +20,10 @@ class OrderTransitionService
         OrderStatus::PICKUP_REQUESTED->value => [OrderStatus::WAITING_PICKUP->value],
         OrderStatus::WAITING_PICKUP->value => [OrderStatus::PICKED_UP->value],
         OrderStatus::PICKED_UP->value => [OrderStatus::IN_DEPOT->value],
-        OrderStatus::IN_DEPOT->value => [OrderStatus::TRANSFER_CREATED->value],
+        OrderStatus::IN_DEPOT->value => [
+            OrderStatus::TRANSFER_CREATED->value,
+            OrderStatus::IN_DELIVERY_CITY->value,
+        ],
         OrderStatus::TRANSFER_CREATED->value => [OrderStatus::IN_TRANSIT->value],
         OrderStatus::IN_TRANSIT->value => [OrderStatus::RECEIVED_IN_DESTINATION->value],
         OrderStatus::RECEIVED_IN_DESTINATION->value => [OrderStatus::OUT_FOR_DELIVERY->value],
@@ -58,6 +62,10 @@ class OrderTransitionService
         return DB::transaction(function () use ($order, $toStatus, $actor, $comment): Order {
             $order->update(['status' => $toStatus]);
             $order->recordStatus($toStatus, $actor, $comment);
+
+            if ($toStatus === OrderStatus::IN_DEPOT->value) {
+                $this->orderStatus->handleAutoCityDeliveryTransition($order);
+            }
 
             return $order->refresh();
         });

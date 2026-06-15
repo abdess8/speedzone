@@ -35,10 +35,9 @@ class TransferStatusHistoryResource extends JsonResource
             'status_color' => $newStatus->color(),
             'status_icon' => $newStatus->icon(),
             'comment' => $this->comment,
-            'user' => $this->whenLoaded('changedBy', fn () => $this->changedBy ? [
-                'id' => $this->changedBy->id,
-                'name' => $this->changedBy->full_name,
-            ] : null),
+            'user' => $this->whenLoaded('changedBy', fn () => $this->changedBy
+                ? UserSummaryResource::make($this->changedBy)->resolve($request)
+                : null),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

@@ -10,6 +10,7 @@ const props = defineProps({
   href: { type: String, default: null },
   clickable: { type: Boolean, default: false },
   showName: { type: Boolean, default: false },
+  showRole: { type: Boolean, default: false },
 });
 
 const displayName = computed(
@@ -29,6 +30,8 @@ const linkHref = computed(() => {
   if (props.clickable && props.user?.id) return route("users.show", props.user.id);
   return null;
 });
+
+const roleLabel = computed(() => props.user?.role_label || props.user?.role || "");
 
 const sizeStyle = computed(() => ({
   width: `${props.size}px`,
@@ -57,7 +60,14 @@ const sizeStyle = computed(() => ({
     >
       <i class="ri-user-3-line" :style="{ fontSize: `${Number(size) * 0.45}px` }"></i>
     </span>
-    <span v-if="showName && displayName" class="fw-semibold">{{ displayName }}</span>
+    <span v-if="showName && displayName" class="d-inline-flex align-items-center gap-1 flex-wrap">
+      <span class="fw-semibold">{{ displayName }}</span>
+      <span
+        v-if="showRole && roleLabel"
+        class="badge bg-light text-muted fw-normal"
+        style="font-size: 0.7em"
+      >{{ roleLabel }}</span>
+    </span>
     <slot />
   </component>
 </template>

@@ -67,6 +67,7 @@ return [
         'financial' => 'Financial Information',
         'modification_history' => 'Modification History',
         'tracking_timeline' => 'Tracking Timeline',
+        'related_operations' => 'Related Operations (Lookups)',
         'open_full_view' => 'Open full view',
         'seller_phone' => 'Seller Phone',
         'reference' => 'Reference',
@@ -121,6 +122,12 @@ return [
     'timeline' => [
         'empty' => 'No tracking history yet.',
         'by' => 'by :name',
+        'system' => 'SYSTEM (Automatic Update)',
+    ],
+    'lookups' => [
+        'pickup' => 'Pickup',
+        'transfer' => 'Transfer',
+        'empty' => 'No related pickup or transfer operations.',
     ],
     'history' => [
         'empty' => 'No modifications recorded yet.',

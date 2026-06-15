@@ -1,5 +1,6 @@
 <script setup>
 import { useI18n } from "vue-i18n";
+import UserAvatar from "@/Components/UserAvatar.vue";
 
 const { t } = useI18n();
 
@@ -44,7 +45,9 @@ const formatDate = (value) => (value ? new Date(value).toLocaleString() : "");
           <small class="text-muted">{{ formatDate(entry.created_at) }}</small>
         </div>
         <p class="text-muted mb-0 mt-1" v-if="entry.comment">{{ entry.comment }}</p>
-        <small class="text-muted" v-if="entry.user">{{ $t('pickups.timeline.by', { name: entry.user.name }) }}</small>
+        <div class="mt-2" v-if="entry.user">
+          <UserAvatar :user="entry.user" :size="24" clickable show-name show-role />
+        </div>
       </div>
     </div>
   </div>

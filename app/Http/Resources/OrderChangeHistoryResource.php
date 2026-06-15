@@ -24,10 +24,9 @@ class OrderChangeHistoryResource extends JsonResource
             'old_value' => $this->old_value,
             'new_value' => $this->new_value,
             'created_at' => $this->created_at?->toIso8601String(),
-            'changed_by' => $this->whenLoaded('changedByUser', fn () => $this->changedByUser ? [
-                'id' => $this->changedByUser->id,
-                'name' => $this->changedByUser->full_name,
-            ] : null),
+            'changed_by' => $this->whenLoaded('changedByUser', fn () => $this->changedByUser
+                ? UserSummaryResource::make($this->changedByUser)->resolve($request)
+                : null),
         ];
     }
 }

@@ -19,6 +19,8 @@ class PickupScanService
 
     public const MODE_ADMIN = 'admin';
 
+    public function __construct(private readonly OrderStatusService $orderStatus) {}
+
     public function resolveScannerMode(User $actor): string
     {
         $canPickup = $actor->hasPermission('pickup_requests.pickup');
@@ -239,7 +241,16 @@ class PickupScanService
         $from = $order->status instanceof OrderStatus ? $order->status->value : (string) $order->status;
 
         $order->update(['status' => $toStatus->value]);
-        $order->recordStatus($toStatus, $actor, "Pickup scan: {$from} → {$toStatus->value}.");
+        $order->recordStatus(
+            $toStatus,
+            $actor,
+            "Pickup scan: {$from} → {$toStatus->value}.",
+            pickupRequestId: $order->pickup_request_id,
+        );
+
+        if ($toStatus === OrderStatus::IN_DEPOT) {
+            $this->orderStatus->handleAutoCityDeliveryTransition($order);
+        }
     }
 
     private function syncPickupStatusIfComplete(PickupRequest $pickup, PickupRequestStatus $targetStatus, User $actor): void

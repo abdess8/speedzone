@@ -16,7 +16,7 @@ class PickupRequestQueryService
     public function build(Request $request, User $user): Builder
     {
         $query = PickupRequest::query()
-            ->with(['creator', 'assignee'])
+            ->with(['creator.roles', 'assignee.roles'])
             ->withCount('orders');
 
         if ($user->hasPermission('pickup_requests.read.all')) {

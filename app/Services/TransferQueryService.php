@@ -16,7 +16,7 @@ class TransferQueryService
     public function build(Request $request, User $user): Builder
     {
         $query = Transfer::query()
-            ->with(['fromCity', 'toCity', 'creator', 'assignee'])
+            ->with(['fromCity', 'toCity', 'creator.roles', 'assignee.roles'])
             ->withCount('orders');
 
         if ($user->hasPermission('transfers.read')) {

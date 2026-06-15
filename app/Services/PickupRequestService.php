@@ -15,7 +15,10 @@ use Illuminate\Validation\ValidationException;
 
 class PickupRequestService
 {
-    public function __construct(private readonly PickupReferenceGenerator $references) {}
+    public function __construct(
+        private readonly PickupReferenceGenerator $references,
+        private readonly OrderStatusService $orderStatus,
+    ) {}
 
     /**
      * Create a pickup request grouping multiple CREATED orders.
@@ -168,7 +171,16 @@ class PickupRequestService
             ]);
 
             if ($orderStatus) {
-                $order->recordStatus($orderStatus, $actor, $comment ?? "Pickup {$pickup->reference} status: {$pickupStatus->label()}.");
+                $order->recordStatus(
+                    $orderStatus,
+                    $actor,
+                    $comment ?? "Pickup {$pickup->reference} status: {$pickupStatus->label()}.",
+                    pickupRequestId: $pickup->id,
+                );
+            }
+
+            if ($orderStatus === OrderStatus::IN_DEPOT) {
+                $this->orderStatus->handleAutoCityDeliveryTransition($order);
             }
         }
     }

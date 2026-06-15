@@ -140,12 +140,21 @@ class Order extends Model
     /**
      * Record a status change in the order history.
      */
-    public function recordStatus(OrderStatus|string $status, ?User $actor = null, ?string $comment = null): OrderStatusHistory
-    {
+    public function recordStatus(
+        OrderStatus|string $status,
+        ?User $actor = null,
+        ?string $comment = null,
+        bool $isSystem = false,
+        ?int $pickupRequestId = null,
+        ?int $transferId = null,
+    ): OrderStatusHistory {
         return $this->statusHistories()->create([
             'status' => $status instanceof OrderStatus ? $status->value : $status,
-            'user_id' => $actor?->id,
+            'user_id' => $isSystem ? null : $actor?->id,
+            'is_system' => $isSystem,
             'comment' => $comment,
+            'pickup_request_id' => $pickupRequestId,
+            'transfer_id' => $transferId,
         ]);
     }
 

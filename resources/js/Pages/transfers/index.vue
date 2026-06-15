@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import CreateTransferModal from "./Partials/CreateTransferModal.vue";
+import EntityLink from "@/Components/EntityLink.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -165,7 +166,7 @@ onMounted(() => {
             <tbody>
               <tr v-for="transfer in rows" :key="transfer.id">
                 <td>
-                  <Link :href="route('transfers.show', transfer.id)" class="fw-semibold">{{ transfer.reference }}</Link>
+                  <EntityLink type="transfer" :entity="transfer" :show-status="false" size="sm" />
                 </td>
                 <td>{{ transfer.from_city?.name ?? $t('common.empty_value') }}</td>
                 <td>{{ transfer.to_city?.name ?? $t('common.empty_value') }}</td>

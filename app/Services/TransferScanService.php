@@ -105,7 +105,8 @@ class TransferScanService
                 $order->recordStatus(
                     OrderStatus::RECEIVED_IN_DESTINATION,
                     $actor,
-                    "Received via scan on transfer {$transfer->reference}."
+                    "Received via scan on transfer {$transfer->reference}.",
+                    transferId: $transfer->id,
                 );
 
                 $updated++;

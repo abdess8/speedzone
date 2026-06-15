@@ -85,11 +85,13 @@ class TransferController extends Controller
         $transfer->load([
             'fromCity',
             'toCity',
-            'creator',
-            'assignee',
+            'creator.roles',
+            'assignee.roles',
             'orders.city',
             'orders.sector',
-            'statusHistories.changedBy',
+            'orders.seller.roles',
+            'orders.seller.city',
+            'statusHistories.changedBy.roles',
         ]);
 
         return TransferResource::make($transfer);

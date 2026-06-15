@@ -1,6 +1,7 @@
 <script setup>
 import { useI18n } from "vue-i18n";
 import { usePage } from "@inertiajs/vue3";
+import UserAvatar from "@/Components/UserAvatar.vue";
 
 const { t } = useI18n();
 const page = usePage();
@@ -45,7 +46,17 @@ const displayValue = (value) => (value != null && value !== "" ? value : t("comm
           <td class="fw-medium">{{ entry.field_label }}</td>
           <td class="text-muted">{{ displayValue(entry.old_value) }}</td>
           <td class="fw-semibold">{{ displayValue(entry.new_value) }}</td>
-          <td>{{ entry.changed_by?.name ?? $t('common.empty_value') }}</td>
+          <td>
+            <UserAvatar
+              v-if="entry.changed_by"
+              :user="entry.changed_by"
+              :size="24"
+              clickable
+              show-name
+              show-role
+            />
+            <span v-else>{{ $t('common.empty_value') }}</span>
+          </td>
           <td class="text-muted text-nowrap">{{ formatDate(entry.created_at) }}</td>
         </tr>
       </tbody>

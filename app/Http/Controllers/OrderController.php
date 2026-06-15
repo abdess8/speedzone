@@ -111,12 +111,15 @@ class OrderController extends Controller
         $order->load([
             'city',
             'sector',
-            'seller',
+            'seller.roles',
             'seller.city',
-            'pickupRequest.createdBy',
-            'pickupRequest.assignedDriver',
-            'statusHistories.user',
-            'changeHistories.changedByUser',
+            'pickupRequest.createdBy.roles',
+            'pickupRequest.assignedDriver.roles',
+            'transfers' => fn ($q) => $q->where('transfers.status', '!=', \App\Enums\TransferStatus::CANCELLED->value),
+            'statusHistories.user.roles',
+            'statusHistories.pickupRequest',
+            'statusHistories.transfer',
+            'changeHistories.changedByUser.roles',
         ]);
 
         return Inertia::render('orders/show', [
@@ -173,7 +176,13 @@ class OrderController extends Controller
     {
         $order = Order::query()
             ->where('tracking_number', $trackingNumber)
-            ->with(['city', 'sector', 'statusHistories.user'])
+            ->with([
+                'city',
+                'sector',
+                'statusHistories.user.roles',
+                'statusHistories.pickupRequest',
+                'statusHistories.transfer',
+            ])
             ->firstOrFail();
 
         $this->authorize('view', $order);

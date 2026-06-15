@@ -6,6 +6,8 @@ import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import TransferTimeline from "./Partials/TransferTimeline.vue";
 import TransferQrScanner from "./Partials/TransferQrScanner.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
+import EntityLink from "@/Components/EntityLink.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -152,11 +154,19 @@ onMounted(() => {
           <BCardHeader><h5 class="card-title mb-0">{{ $t('transfers.show.info') }}</h5></BCardHeader>
           <BCardBody>
             <BRow class="g-3">
-              <BCol md="4"><div class="text-muted fs-13">{{ $t('transfers.show.reference') }}</div><div class="fw-semibold">{{ transfer.reference }}</div></BCol>
+              <BCol md="4"><div class="text-muted fs-13">{{ $t('transfers.show.reference') }}</div><EntityLink type="transfer" :entity="transfer" :show-status="false" size="sm" /></BCol>
               <BCol md="4"><div class="text-muted fs-13">{{ $t('transfers.show.from_city') }}</div><div class="fw-semibold">{{ transfer.from_city?.name ?? empty() }}</div></BCol>
               <BCol md="4"><div class="text-muted fs-13">{{ $t('transfers.show.to_city') }}</div><div class="fw-semibold">{{ transfer.to_city?.name ?? empty() }}</div></BCol>
-              <BCol md="4"><div class="text-muted fs-13">{{ $t('transfers.show.created_by') }}</div><div class="fw-semibold">{{ transfer.creator?.name ?? empty() }}</div></BCol>
-              <BCol md="4"><div class="text-muted fs-13">{{ $t('transfers.show.assigned_to') }}</div><div class="fw-semibold">{{ transfer.assignee?.name ?? empty() }}</div></BCol>
+              <BCol md="4">
+                <div class="text-muted fs-13">{{ $t('transfers.show.created_by') }}</div>
+                <UserAvatar v-if="transfer.creator" :user="transfer.creator" :size="28" clickable show-name show-role />
+                <div v-else class="fw-semibold">{{ empty() }}</div>
+              </BCol>
+              <BCol md="4">
+                <div class="text-muted fs-13">{{ $t('transfers.show.assigned_to') }}</div>
+                <UserAvatar v-if="transfer.assignee" :user="transfer.assignee" :size="28" clickable show-name show-role />
+                <div v-else class="fw-semibold">{{ empty() }}</div>
+              </BCol>
               <BCol md="4"><div class="text-muted fs-13">{{ $t('transfers.show.creation_date') }}</div><div class="fw-semibold">{{ formatDate(transfer.created_at) }}</div></BCol>
               <BCol md="12" v-if="transfer.notes"><div class="text-muted fs-13">{{ $t('transfers.show.notes') }}</div><div>{{ transfer.notes }}</div></BCol>
             </BRow>
@@ -203,7 +213,7 @@ onMounted(() => {
                 <tbody>
                   <tr v-for="order in transfer.orders ?? []" :key="order.id">
                     <td>
-                      <Link :href="route('orders.show', order.id)" class="fw-semibold">{{ order.tracking_number }}</Link>
+                      <EntityLink type="order" :entity="order" :show-status="false" size="sm" />
                     </td>
                     <td>{{ order.customer?.full_name ?? empty() }}</td>
                     <td>{{ order.pickup_city?.name ?? order.seller?.city?.name ?? empty() }}</td>

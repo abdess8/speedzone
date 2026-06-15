@@ -2,7 +2,7 @@
 import { Link } from "@inertiajs/vue3";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
-import OrderTimeline from "./Partials/OrderTimeline.vue";
+import StatusTimeline from "@/Components/StatusTimeline.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
 
 const props = defineProps({
@@ -68,7 +68,7 @@ const displayMoney = (value) => (value != null && value !== "" ? `${money(value)
 
           <BCardBody>
             <h5 class="card-title mb-4">Tracking History</h5>
-            <OrderTimeline :history="order.status_history ?? []" />
+            <StatusTimeline :history="order.status_history ?? []" />
           </BCardBody>
         </BCard>
       </BCol>

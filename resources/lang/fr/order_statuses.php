@@ -13,5 +13,7 @@ return [
     'OUT_FOR_DELIVERY' => 'En cours de livraison',
     'DELIVERED' => 'Livré',
     'FAILED' => 'Échec',
+    'RETURN_REQUESTED' => 'Retour demandé',
+    'RETURN_IN_PROGRESS' => 'Retour en cours',
     'RETURNED' => 'Retourné',
 ];

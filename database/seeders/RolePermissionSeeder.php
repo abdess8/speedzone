@@ -11,6 +11,8 @@ class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(PermissionSeeder::class);
+
         $roles = Role::query()->get()->keyBy('name');
         $permissions = Permission::query()->pluck('id', 'name');
 
@@ -21,7 +23,13 @@ class RolePermissionSeeder extends Seeder
 
         $allPermissionIds = $permissions->values()->all();
 
-        $adminRole?->permissions()->sync($allPermissionIds);
+        $sellerOnlyPermissions = [
+            'returns.create_request',
+        ];
+
+        $adminPermissionIds = $permissions->except($sellerOnlyPermissions)->values()->all();
+
+        $adminRole?->permissions()->sync($adminPermissionIds);
 
         $dispatcherRole?->permissions()->sync(
             $permissions->only([
@@ -50,6 +58,10 @@ class RolePermissionSeeder extends Seeder
                 'transfers.update',
                 'transfers.dispatch',
                 'transfers.receive',
+                'returns.read.all',
+                'returns.manage',
+                'returns.update_status',
+                'returns.edit_customer_data',
             ])->values()->all()
         );
 
@@ -65,7 +77,8 @@ class RolePermissionSeeder extends Seeder
                 'orders.transition.to_out_for_delivery',
                 'orders.transition.to_delivered',
                 'orders.transition.to_failed',
-                'orders.transition.to_returned',
+                'returns.create',
+                'returns.update_status',
             ])->values()->all()
         );
 
@@ -81,6 +94,8 @@ class RolePermissionSeeder extends Seeder
                 'pickup_requests.read.own',
                 'cities.read',
                 'sectors.read',
+                'returns.create_request',
+                'returns.read.own',
             ])->values()->all()
         );
 

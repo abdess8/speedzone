@@ -6,7 +6,9 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderTransitionController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\PickupRequestController;
+use App\Http\Controllers\Api\ReturnController;
 use App\Http\Controllers\Api\TransferController;
+use App\Http\Controllers\ReturnController as WebReturnController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SectorController;
 use App\Http\Controllers\Api\UserRoleController;
@@ -121,4 +123,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('transfers', TransferController::class)
         ->whereNumber('transfer')
         ->names('api.transfers');
+
+    // Returns (reverse logistics)
+    Route::get('returns/eligible-orders', [WebReturnController::class, 'eligibleOrders'])
+        ->name('api.returns.eligible-orders');
+    Route::post('returns/scan', [ReturnController::class, 'scan'])
+        ->name('api.returns.scan');
+    Route::post('returns/process-scan', [ReturnController::class, 'processScan'])
+        ->name('api.returns.process-scan');
+    Route::post('returns/{return}/change-status', [ReturnController::class, 'changeStatus'])
+        ->whereNumber('return')
+        ->name('api.returns.change-status');
+    Route::post('returns/{return}/move-to-depot', [ReturnController::class, 'moveToDepot'])
+        ->whereNumber('return')
+        ->name('api.returns.move-to-depot');
+    Route::put('returns/{return}/customer-data', [ReturnController::class, 'updateCustomerData'])
+        ->whereNumber('return')
+        ->name('api.returns.update-customer-data');
+    Route::apiResource('returns', ReturnController::class)
+        ->whereNumber('return')
+        ->only(['index', 'store', 'show'])
+        ->names('api.returns');
 });

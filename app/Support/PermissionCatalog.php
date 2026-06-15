@@ -14,6 +14,7 @@ class PermissionCatalog
             self::orderPermissions(),
             self::pickupRequestPermissions(),
             self::transferPermissions(),
+            self::returnPermissions(),
             self::cityPermissions(),
             self::sectorPermissions(),
             self::driverZonePermissions()
@@ -96,6 +97,22 @@ class PermissionCatalog
             self::make('transfers.update', 'transfers', 'update', null, 'resource'),
             self::make('transfers.dispatch', 'transfers', 'dispatch', null, 'resource'),
             self::make('transfers.receive', 'transfers', 'receive', null, 'resource'),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, string|null>>
+     */
+    public static function returnPermissions(): array
+    {
+        return [
+            self::make('returns.create_request', 'returns', 'create_request', null, 'resource'),
+            self::make('returns.read.own', 'returns', 'read', 'own', 'resource'),
+            self::make('returns.read.all', 'returns', 'read', 'all', 'resource'),
+            self::make('returns.create', 'returns', 'create', null, 'resource'),
+            self::make('returns.manage', 'returns', 'manage', null, 'resource'),
+            self::make('returns.update_status', 'returns', 'update_status', null, 'resource'),
+            self::make('returns.edit_customer_data', 'returns', 'edit_customer_data', null, 'resource'),
         ];
     }
 

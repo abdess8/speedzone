@@ -127,7 +127,8 @@ return [
     'lookups' => [
         'pickup' => 'Pickup',
         'transfer' => 'Transfer',
-        'empty' => 'No related pickup or transfer operations.',
+        'return' => 'Return',
+        'empty' => 'No related pickup, transfer, or return operations.',
     ],
     'history' => [
         'empty' => 'No modifications recorded yet.',

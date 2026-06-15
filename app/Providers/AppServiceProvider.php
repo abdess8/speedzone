@@ -75,6 +75,9 @@ class AppServiceProvider extends ServiceProvider
             'role_label' => $primaryRole
                 ? trans('roles.'.$primaryRole, [], app()->getLocale())
                 : null,
+            'is_seller' => $user->isSeller(),
+            'can_view_returns' => $user->canAccessReturnsModule(),
+            'can_create_return_request' => $user->canCreateReturnRequest(),
             'two_factor_enabled' => Features::enabled(Features::twoFactorAuthentication())
                 && ! is_null($user->two_factor_secret),
         ]);

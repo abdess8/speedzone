@@ -39,8 +39,12 @@ class DemoUsersSeeder extends Seeder
         );
         $superAdmin->roles()->sync([$adminRole->id]);
 
-        // Ensure super admin holds every permission (Admin role already syncs all in RolePermissionSeeder).
-        $allPermissionIds = Permission::query()->pluck('id')->all();
+        // Ensure super admin holds every permission except seller-only grants.
+        $sellerOnlyPermissions = ['returns.create_request'];
+        $allPermissionIds = Permission::query()
+            ->whereNotIn('name', $sellerOnlyPermissions)
+            ->pluck('id')
+            ->all();
         $adminRole->permissions()->sync($allPermissionIds);
 
         $driver = User::updateOrCreate(

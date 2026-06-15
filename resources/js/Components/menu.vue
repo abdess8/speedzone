@@ -40,6 +40,34 @@ export default {
     canViewTransfers() {
       return this.hasPermission('transfers.read') || this.hasPermission('transfers.read.assigned');
     },
+    isSeller() {
+      const user = this.$page.props.auth?.user;
+      if (!user) {
+        return false;
+      }
+
+      if (user.is_seller === true) {
+        return true;
+      }
+
+      return (user.roles ?? []).includes('Seller');
+    },
+    canViewReturns() {
+      const user = this.$page.props.auth?.user;
+      if (user?.can_view_returns === true) {
+        return true;
+      }
+
+      return (
+        this.isSeller() ||
+        this.hasPermission('returns.read.all') ||
+        this.hasPermission('returns.read.own') ||
+        this.hasPermission('returns.create_request') ||
+        this.hasPermission('returns.update_status') ||
+        this.hasPermission('returns.create') ||
+        this.hasPermission('returns.manage')
+      );
+    },
     canViewSectors() {
       return this.hasPermission('sectors.read');
     },
@@ -199,6 +227,13 @@ export default {
         <Link href="/transfers" class="nav-link menu-link">
           <i class="ri-route-line"></i>
           <span>{{ $t('sidebar.transfers') }}</span>
+        </Link>
+      </li>
+
+      <li v-if="canViewReturns()" class="nav-item">
+        <Link href="/returns" class="nav-link menu-link">
+          <i class="ri-arrow-go-back-line"></i>
+          <span>{{ $t('sidebar.returns') }}</span>
         </Link>
       </li>
 

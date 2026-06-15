@@ -22,6 +22,7 @@ class Order extends Model
         'tracking_number',
         'seller_id',
         'pickup_request_id',
+        'return_id',
         'customer_first_name',
         'customer_last_name',
         'customer_phone',
@@ -37,6 +38,7 @@ class Order extends Model
         'is_fragile',
         'can_be_opened',
         'status',
+        'is_returned',
     ];
 
     protected $casts = [
@@ -48,6 +50,7 @@ class Order extends Model
         'total_amount' => 'decimal:2',
         'is_fragile' => 'boolean',
         'can_be_opened' => 'boolean',
+        'is_returned' => 'boolean',
     ];
 
     protected $appends = [
@@ -88,6 +91,28 @@ class Order extends Model
     public function pickupRequest(): BelongsTo
     {
         return $this->belongsTo(PickupRequest::class);
+    }
+
+    public function orderReturn(): BelongsTo
+    {
+        return $this->belongsTo(OrderReturn::class, 'return_id');
+    }
+
+    /**
+     * Active return for this order (if any).
+     */
+    public function activeReturn(): ?OrderReturn
+    {
+        if ($this->relationLoaded('orderReturn')) {
+            $return = $this->orderReturn;
+
+            return $return && ! $return->isTerminal() ? $return : null;
+        }
+
+        return OrderReturn::query()
+            ->where('order_id', $this->id)
+            ->active()
+            ->first();
     }
 
     public function transfers(): BelongsToMany
@@ -147,6 +172,7 @@ class Order extends Model
         bool $isSystem = false,
         ?int $pickupRequestId = null,
         ?int $transferId = null,
+        ?int $returnId = null,
     ): OrderStatusHistory {
         return $this->statusHistories()->create([
             'status' => $status instanceof OrderStatus ? $status->value : $status,
@@ -155,6 +181,7 @@ class Order extends Model
             'comment' => $comment,
             'pickup_request_id' => $pickupRequestId,
             'transfer_id' => $transferId,
+            'return_id' => $returnId,
         ]);
     }
 

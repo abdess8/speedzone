@@ -96,6 +96,24 @@ class OrderResource extends JsonResource
                 ];
             }),
 
+            'is_returned' => (bool) $this->is_returned,
+
+            'active_return' => $this->whenLoaded('orderReturn', function () use ($request) {
+                if (! $this->orderReturn) {
+                    return null;
+                }
+
+                $status = $this->orderReturn->status instanceof \App\Enums\ReturnStatus
+                    ? $this->orderReturn->status
+                    : \App\Enums\ReturnStatus::from($this->orderReturn->status);
+
+                if ($status === \App\Enums\ReturnStatus::CANCELLED) {
+                    return null;
+                }
+
+                return OrderReturnResource::make($this->orderReturn)->resolve($request);
+            }),
+
             'active_transfer' => $this->whenLoaded('transfers', function () {
                 $transfer = $this->transfers
                     ->first(fn ($t) => ($t->status instanceof TransferStatus ? $t->status : TransferStatus::from($t->status)) !== TransferStatus::CANCELLED);

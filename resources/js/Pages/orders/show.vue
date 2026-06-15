@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
@@ -10,6 +10,7 @@ import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import RelatedOperationsLookups from "@/Components/RelatedOperationsLookups.vue";
 import EntityLink from "@/Components/EntityLink.vue";
+import CreateReturnModal from "../returns/Partials/CreateReturnModal.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -18,7 +19,36 @@ const props = defineProps({
   order: { type: Object, required: true },
   allowedTransitions: { type: Array, default: () => [] },
   can: { type: Object, default: () => ({}) },
+  returnFilterOptions: { type: Object, default: () => ({ reasons: [] }) },
 });
+
+const showReturnModal = ref(false);
+
+const initiateFailedReturn = () => {
+  const driverReasons = ["CUSTOMER_REFUSED", "CUSTOMER_UNREACHABLE", "DELIVERY_FAILED", "CUSTOMER_REQUESTED_RETURN"];
+  const inputOptions = {};
+  props.returnFilterOptions.reasons
+    ?.filter((r) => driverReasons.includes(r.value))
+    .forEach((r) => {
+      inputOptions[r.value] = r.label;
+    });
+
+  Swal.fire({
+    title: t("returns.actions.failed_delivery"),
+    input: "select",
+    inputOptions,
+    inputPlaceholder: t("returns.form.select_reason"),
+    showCancelButton: true,
+    confirmButtonText: t("returns.swal.confirm"),
+    cancelButtonText: t("common.cancel"),
+  }).then((result) => {
+    if (!result.isConfirmed || !result.value) return;
+    router.post(route("returns.store"), {
+      order_id: props.order.id,
+      reason: result.value,
+    });
+  });
+};
 
 const money = (value) =>
   new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
@@ -106,6 +136,18 @@ onMounted(() => {
           </ul>
         </div>
 
+        <button v-if="can.create_failed_return" class="btn btn-sm btn-soft-danger" @click="initiateFailedReturn">
+          <i class="ri-arrow-go-back-line align-bottom me-1"></i> {{ $t('returns.actions.failed_delivery') }}
+        </button>
+
+        <button v-if="can.request_return" class="btn btn-sm btn-soft-warning" @click="showReturnModal = true">
+          <i class="ri-arrow-go-back-line align-bottom me-1"></i> {{ $t('returns.actions.request_return') }}
+        </button>
+
+        <Link v-if="order.active_return" :href="route('returns.show', order.active_return.id)" class="btn btn-sm btn-soft-info">
+          <i class="ri-eye-line align-bottom me-1"></i> {{ $t('returns.actions.view_return') }}
+        </Link>
+
         <div class="ms-auto hstack gap-2">
           <Link v-if="can.create" :href="route('orders.create', { clone: order.id })" class="btn btn-sm btn-soft-info">
             <i class="ri-file-copy-line align-bottom me-1"></i> {{ $t('orders.actions.clone') }}
@@ -152,6 +194,7 @@ onMounted(() => {
             <RelatedOperationsLookups
               :pickup-request="order.pickup_request"
               :active-transfer="order.active_transfer"
+              :active-return="order.active_return"
             />
           </BCardBody>
         </BCard>
@@ -289,5 +332,13 @@ onMounted(() => {
         </BCard>
       </BCol>
     </BRow>
+
+    <CreateReturnModal
+      v-if="can.request_return"
+      :show="showReturnModal"
+      :filter-options="returnFilterOptions"
+      :preselected-order-id="order.id"
+      @close="showReturnModal = false"
+    />
   </Layout>
 </template>

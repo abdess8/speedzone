@@ -19,6 +19,7 @@ class OrderStatusHistory extends Model
         'comment',
         'pickup_request_id',
         'transfer_id',
+        'return_id',
     ];
 
     protected $casts = [
@@ -44,5 +45,10 @@ class OrderStatusHistory extends Model
     public function transfer(): BelongsTo
     {
         return $this->belongsTo(Transfer::class);
+    }
+
+    public function orderReturn(): BelongsTo
+    {
+        return $this->belongsTo(OrderReturn::class, 'return_id');
     }
 }

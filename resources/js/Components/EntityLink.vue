@@ -6,7 +6,7 @@ const props = defineProps({
   type: {
     type: String,
     required: true,
-    validator: (v) => ["order", "pickup", "transfer"].includes(v),
+    validator: (v) => ["order", "pickup", "transfer", "return"].includes(v),
   },
   entity: { type: Object, required: true },
   showStatus: { type: Boolean, default: true },
@@ -32,6 +32,12 @@ const config = computed(() => {
       route: "transfers.show",
       labelKey: "orders.lookups.transfer",
       prefix: "TRF",
+    },
+    return: {
+      icon: "ri-arrow-go-back-line",
+      route: "returns.show",
+      labelKey: "orders.lookups.return",
+      prefix: "RTN",
     },
   };
   return map[props.type];

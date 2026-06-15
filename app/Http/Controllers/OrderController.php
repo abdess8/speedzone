@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\ReturnReason;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
@@ -119,16 +120,21 @@ class OrderController extends Controller
             'statusHistories.user.roles',
             'statusHistories.pickupRequest',
             'statusHistories.transfer',
+            'statusHistories.orderReturn',
+            'orderReturn.statusHistories',
             'changeHistories.changedByUser.roles',
         ]);
 
         return Inertia::render('orders/show', [
             'order' => OrderResource::make($order)->resolve($request),
             'allowedTransitions' => $this->transitionOptions($order),
+            'returnFilterOptions' => ['reasons' => ReturnReason::options()],
             'can' => array_merge($this->abilities($request), [
                 'update' => $request->user()->can('update', $order),
                 'delete' => $request->user()->can('delete', $order),
                 'print' => $request->user()->can('print', $order),
+                'request_return' => $this->canRequestReturn($request->user(), $order),
+                'create_failed_return' => $this->canCreateFailedReturn($request->user(), $order),
             ]),
         ]);
     }
@@ -421,5 +427,35 @@ class OrderController extends Controller
             'export' => $user->hasPermission('orders.export'),
             'print' => $user->hasPermission('orders.print'),
         ];
+    }
+
+    private function canRequestReturn($user, Order $order): bool
+    {
+        if (! $user->canCreateReturnRequest() || $order->activeReturn()) {
+            return false;
+        }
+
+        if ($order->seller_id !== $user->id) {
+            return false;
+        }
+
+        $status = $order->status instanceof OrderStatus ? $order->status->value : $order->status;
+
+        return in_array($status, \App\Services\ReturnService::eligibleOrderStatuses(
+            \App\Enums\ReturnInitiatedByRole::SELLER
+        ), true);
+    }
+
+    private function canCreateFailedReturn($user, Order $order): bool
+    {
+        if (! $user->canCreateDriverReturn() || $order->activeReturn()) {
+            return false;
+        }
+
+        $status = $order->status instanceof OrderStatus ? $order->status->value : $order->status;
+
+        return in_array($status, \App\Services\ReturnService::eligibleOrderStatuses(
+            \App\Enums\ReturnInitiatedByRole::DRIVER
+        ), true);
     }
 }

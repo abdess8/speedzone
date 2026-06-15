@@ -6,6 +6,7 @@ return [
     'orders' => 'Orders',
     'pickups' => 'Pickups',
     'transfers' => 'Transfers',
+    'returns' => 'Returns',
     'delivery_zones' => 'Delivery Zones',
     'sectors' => 'Sectors',
     'driver_zones' => 'Driver Assignment',

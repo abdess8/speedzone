@@ -13,5 +13,7 @@ return [
     'OUT_FOR_DELIVERY' => 'Out for Delivery',
     'DELIVERED' => 'Delivered',
     'FAILED' => 'Failed',
+    'RETURN_REQUESTED' => 'Return Requested',
+    'RETURN_IN_PROGRESS' => 'Return In Progress',
     'RETURNED' => 'Returned',
 ];

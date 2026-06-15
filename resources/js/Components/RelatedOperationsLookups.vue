@@ -4,6 +4,7 @@ import EntityLink from "@/Components/EntityLink.vue";
 defineProps({
   pickupRequest: { type: Object, default: null },
   activeTransfer: { type: Object, default: null },
+  activeReturn: { type: Object, default: null },
 });
 </script>
 
@@ -19,7 +20,12 @@ defineProps({
       type="transfer"
       :entity="activeTransfer"
     />
-    <div v-if="!pickupRequest && !activeTransfer" class="text-muted fs-13">
+    <EntityLink
+      v-if="activeReturn"
+      type="return"
+      :entity="activeReturn"
+    />
+    <div v-if="!pickupRequest && !activeTransfer && !activeReturn" class="text-muted fs-13">
       {{ $t("orders.lookups.empty") }}
     </div>
   </div>

@@ -4,12 +4,14 @@ namespace App\Providers;
 
 use App\Models\City;
 use App\Models\Order;
+use App\Models\OrderReturn;
 use App\Models\PickupRequest;
 use App\Models\Sector;
 use App\Models\Transfer;
 use App\Models\User;
 use App\Policies\CityPolicy;
 use App\Policies\OrderPolicy;
+use App\Policies\OrderReturnPolicy;
 use App\Policies\PickupRequestPolicy;
 use App\Policies\SectorPolicy;
 use App\Policies\TransferPolicy;
@@ -29,6 +31,7 @@ class AuthServiceProvider extends ServiceProvider
         Sector::class => SectorPolicy::class,
         PickupRequest::class => PickupRequestPolicy::class,
         Transfer::class => TransferPolicy::class,
+        OrderReturn::class => OrderReturnPolicy::class,
     ];
 
     /**

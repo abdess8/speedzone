@@ -127,7 +127,8 @@ return [
     'lookups' => [
         'pickup' => 'Ramassage',
         'transfer' => 'Transfert',
-        'empty' => 'Aucune opération de ramassage ou transfert liée.',
+        'return' => 'Retour',
+        'empty' => 'Aucune opération de ramassage, transfert ou retour liée.',
     ],
     'history' => [
         'empty' => 'Aucune modification enregistrée.',

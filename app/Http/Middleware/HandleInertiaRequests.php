@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
                 'orders' => trans('orders'),
                 'pickups' => trans('pickups'),
                 'transfers' => trans('transfers'),
+                'returns' => trans('returns'),
                 'users' => trans('users'),
                 'cities' => trans('cities'),
                 'sectors' => trans('sectors'),

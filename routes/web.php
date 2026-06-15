@@ -6,6 +6,7 @@ use App\Http\Controllers\DriverZoneController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PickupRequestController;
+use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\TransferController;
@@ -109,6 +110,32 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::resource('transfers', TransferController::class)
         ->only(['index', 'store', 'show', 'update'])
         ->whereNumber('transfer');
+
+    // Returns (reverse logistics)
+    Route::get('returns/eligible-orders', [ReturnController::class, 'eligibleOrders'])
+        ->name('returns.eligible-orders');
+    Route::get('returns/{reference}', [ReturnController::class, 'track'])
+        ->where('reference', 'RTN-[0-9]{4}-[0-9]+')
+        ->name('returns.track');
+    Route::post('returns/scan', [ReturnController::class, 'scan'])
+        ->name('returns.scan');
+    Route::post('returns/process-scan', [ReturnController::class, 'processScan'])
+        ->name('returns.process-scan');
+    Route::post('returns/{return}/change-status', [ReturnController::class, 'changeStatus'])
+        ->whereNumber('return')
+        ->name('returns.change-status');
+    Route::post('returns/{return}/move-to-depot', [ReturnController::class, 'moveToDepot'])
+        ->whereNumber('return')
+        ->name('returns.move-to-depot');
+    Route::put('returns/{return}/customer-data', [ReturnController::class, 'updateCustomerData'])
+        ->whereNumber('return')
+        ->name('returns.update-customer-data');
+    Route::get('returns/{return}/qr', [ReturnController::class, 'qr'])
+        ->whereNumber('return')
+        ->name('returns.qr');
+    Route::resource('returns', ReturnController::class)
+        ->only(['index', 'store', 'show'])
+        ->whereNumber('return');
 
     Route::get('api-integrations', [ApiIntegrationController::class, 'index'])->name('api-integrations.index');
 

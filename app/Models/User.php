@@ -185,6 +185,14 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
+        return $this->hasRolePermission($permission);
+    }
+
+    /**
+     * Check a permission as assigned on roles, without super-admin bypass.
+     */
+    public function hasRolePermission(string $permission): bool
+    {
         if (! $this->relationLoaded('roles')) {
             $this->load('roles.permissions');
         } elseif (! $this->roles->every(fn (Role $role) => $role->relationLoaded('permissions'))) {
@@ -194,6 +202,39 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->roles
             ->flatMap(fn (Role $role) => $role->permissions)
             ->contains(fn (Permission $item) => $item->name === $permission);
+    }
+
+    /**
+     * Whether the user may request a return as a seller (seller role only).
+     */
+    public function canCreateReturnRequest(): bool
+    {
+        return $this->isSeller() && $this->hasRolePermission('returns.create_request');
+    }
+
+    /**
+     * Whether the user may initiate a failed-delivery return as a driver.
+     */
+    public function canCreateDriverReturn(): bool
+    {
+        return $this->isDriver() && $this->hasRolePermission('returns.create');
+    }
+
+    /**
+     * Whether the returns module should appear in navigation.
+     */
+    public function canAccessReturnsModule(): bool
+    {
+        if ($this->isSeller()) {
+            return true;
+        }
+
+        return $this->hasRolePermission('returns.read.all')
+            || $this->hasRolePermission('returns.read.own')
+            || $this->hasRolePermission('returns.create_request')
+            || $this->hasRolePermission('returns.update_status')
+            || $this->hasRolePermission('returns.create')
+            || $this->hasRolePermission('returns.manage');
     }
 
     /**
@@ -247,6 +288,34 @@ class User extends Authenticatable implements MustVerifyEmail
 
         if ($transfer && $transfer->assigned_to === $this->id && $this->hasPermission('transfers.read.assigned')) {
             return in_array($action, ['read', 'receive', 'scan'], true);
+        }
+
+        return false;
+    }
+
+    /**
+     * Scope-aware permission check for return access controls.
+     */
+    public function hasReturnScopePermission(string $action, ?OrderReturn $return = null): bool
+    {
+        if ($this->hasPermission('returns.read.all') || $this->hasPermission('returns.manage')) {
+            return true;
+        }
+
+        if ($return && $return->order?->seller_id === $this->id && $this->hasPermission('returns.read.own')) {
+            return $action === 'read' || ($action === 'edit_customer_data' && $this->canCreateReturnRequest());
+        }
+
+        if ($return && $return->created_by === $this->id && $this->hasPermission('returns.create')) {
+            return in_array($action, ['read', 'update_status', 'scan'], true);
+        }
+
+        if ($this->hasPermission('returns.update_status') || $this->hasPermission('returns.create')) {
+            return in_array($action, ['read', 'update_status', 'scan'], true);
+        }
+
+        if (! $return && $this->hasPermission('returns.read.own')) {
+            return $action === 'read';
         }
 
         return false;

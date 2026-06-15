@@ -31,10 +31,11 @@ class OrderTransitionService
         OrderStatus::OUT_FOR_DELIVERY->value => [
             OrderStatus::DELIVERED->value,
             OrderStatus::FAILED->value,
-            OrderStatus::RETURNED->value,
         ],
         OrderStatus::DELIVERED->value => [],
-        OrderStatus::FAILED->value => [OrderStatus::RETURNED->value],
+        OrderStatus::FAILED->value => [],
+        OrderStatus::RETURN_REQUESTED->value => [],
+        OrderStatus::RETURN_IN_PROGRESS->value => [],
         OrderStatus::RETURNED->value => [],
     ];
 

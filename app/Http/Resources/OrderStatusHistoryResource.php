@@ -66,6 +66,19 @@ class OrderStatusHistoryResource extends JsonResource
                     'status_color' => $transferStatus->color(),
                 ];
             }),
+            'return' => $this->whenLoaded('orderReturn', function () {
+                if (! $this->orderReturn) {
+                    return null;
+                }
+
+                return [
+                    'id' => $this->orderReturn->id,
+                    'reference' => $this->orderReturn->reference,
+                    'status_label' => ($this->orderReturn->status instanceof \App\Enums\ReturnStatus
+                        ? $this->orderReturn->status
+                        : \App\Enums\ReturnStatus::from($this->orderReturn->status))->label(),
+                ];
+            }),
         ];
     }
 }

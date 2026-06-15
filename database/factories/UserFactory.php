@@ -36,7 +36,7 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
             'profile_photo_path' => null,
             'current_team_id' => null,
-            'city' => $this->faker->city(),
+            'city_id' => null,
             'address' => $this->faker->address(),
             'phone_number' => $this->faker->phoneNumber(),
             'cin' => strtoupper($this->faker->bothify('??######')),

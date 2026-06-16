@@ -9,6 +9,7 @@ import OrderModificationHistory from "./Partials/OrderModificationHistory.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import RelatedOperationsLookups from "@/Components/RelatedOperationsLookups.vue";
+import SupportTicketsPanel from "@/Components/SupportTicketsPanel.vue";
 import EntityLink from "@/Components/EntityLink.vue";
 import CreateReturnModal from "../returns/Partials/CreateReturnModal.vue";
 import Swal from "sweetalert2";
@@ -241,6 +242,8 @@ onMounted(() => {
             />
           </BCardBody>
         </BCard>
+
+        <SupportTicketsPanel object-type="ORDER" :object-id="order.id" />
 
         <BCard v-if="order.pickup_request" no-body>
           <BCardHeader><h5 class="card-title mb-0">{{ $t('orders.show.pickup_request') }}</h5></BCardHeader>

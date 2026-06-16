@@ -174,7 +174,10 @@ const badgeClass = (permission) => {
                       {{ permission.scope }}
                     </span>
                   </label>
-                  <div class="text-muted fs-11">
+                  <div v-if="permission.description" class="text-muted fs-11 ms-4 mb-1">
+                    {{ permission.description }}
+                  </div>
+                  <div class="text-muted fs-11 ms-4">
                     <code>{{ permission.name }}</code>
                   </div>
                 </div>

@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import InputError from "@/Components/InputError.vue";
+import SupportTicketsPanel from "@/Components/SupportTicketsPanel.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -211,6 +212,8 @@ onMounted(() => {
             </ul>
           </BCardBody>
         </BCard>
+
+        <SupportTicketsPanel object-type="INVOICE" :object-id="inv.id" />
       </BCol>
 
       <BCol lg="4">

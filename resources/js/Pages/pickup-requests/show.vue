@@ -8,6 +8,7 @@ import PickupTimeline from "./Partials/PickupTimeline.vue";
 import QrScanner from "./Partials/QrScanner.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import EntityLink from "@/Components/EntityLink.vue";
+import SupportTicketsPanel from "@/Components/SupportTicketsPanel.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -193,6 +194,8 @@ onMounted(() => {
             </div>
           </BCardBody>
         </BCard>
+
+        <SupportTicketsPanel object-type="PICKUP_REQUEST" :object-id="pickup.id" />
       </BCol>
 
       <BCol xl="4">

@@ -63,6 +63,11 @@ class HandleInertiaRequests extends Middleware
                 'sectors' => trans('sectors'),
                 'driver_zones' => trans('driver_zones'),
                 'profile' => trans('profile'),
+                'support_tickets' => trans('support_tickets'),
+                'support_ticket_statuses' => trans('support_ticket_statuses'),
+                'support_ticket_categories' => trans('support_ticket_categories'),
+                'support_object_types' => trans('support_object_types'),
+                'permissions' => trans('permissions'),
             ],
         ]);
     }

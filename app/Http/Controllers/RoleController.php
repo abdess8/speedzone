@@ -6,8 +6,8 @@ use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Support\PermissionLabels;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -111,39 +111,19 @@ class RoleController extends Controller
             ->map(function ($permissions, $resource) {
                 return [
                     'resource' => $resource,
-                    'label' => Str::headline($resource),
+                    'label' => PermissionLabels::resourceLabel((string) $resource),
                     'permissions' => $permissions->map(fn (Permission $permission) => [
                         'id' => $permission->id,
                         'name' => $permission->name,
                         'action' => $permission->action,
                         'scope' => $permission->scope,
                         'type' => $permission->type,
-                        'label' => $this->permissionLabel($permission),
-                        'description' => $permission->description,
+                        'label' => PermissionLabels::permissionLabel($permission),
+                        'description' => PermissionLabels::permissionDescription($permission),
                     ])->values(),
                 ];
             })
             ->values()
             ->all();
-    }
-
-    /**
-     * Produce a human-friendly label for a permission.
-     */
-    private function permissionLabel(Permission $permission): string
-    {
-        if ($permission->type === 'workflow_transition') {
-            $target = Str::of($permission->name)->afterLast('to_')->replace('_', ' ')->title();
-
-            return 'Transition → ' . $target;
-        }
-
-        $label = Str::headline($permission->action);
-
-        if ($permission->scope) {
-            $label .= ' (' . Str::title($permission->scope) . ')';
-        }
-
-        return $label;
     }
 }

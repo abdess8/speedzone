@@ -5,7 +5,9 @@ namespace Database\Seeders;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\SupportPermissions;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection as SupportCollection;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -14,14 +16,13 @@ class RolePermissionSeeder extends Seeder
         $this->call(PermissionSeeder::class);
 
         $roles = Role::query()->get()->keyBy('name');
+        /** @var SupportCollection<string, int> $permissions */
         $permissions = Permission::query()->pluck('id', 'name');
 
         $adminRole = $roles->get(Role::ADMIN);
         $dispatcherRole = $roles->get(Role::DISPATCHER);
         $driverRole = $roles->get(Role::DRIVER);
         $sellerRole = $roles->get(Role::SELLER);
-
-        $allPermissionIds = $permissions->values()->all();
 
         $sellerOnlyPermissions = [
             'returns.create_request',
@@ -67,6 +68,7 @@ class RolePermissionSeeder extends Seeder
                 'driver_invoices.read.all',
                 'driver_invoices.print',
                 'driver_invoices.assign_driver',
+                ...SupportPermissions::staffDefaults(),
             ])->values()->all()
         );
 
@@ -105,8 +107,14 @@ class RolePermissionSeeder extends Seeder
                 'returns.read.own',
                 'invoices.read.own',
                 'invoices.print',
+                ...SupportPermissions::sellerDefaults(),
             ])->values()->all()
         );
+
+        // Non-destructive: attach support permissions when new ones are added to the catalog
+        // without resetting custom role assignments made via Settings → Roles & Permissions.
+        $this->ensurePermissions($sellerRole, SupportPermissions::sellerDefaults(), $permissions);
+        $this->ensurePermissions($dispatcherRole, SupportPermissions::staffDefaults(), $permissions);
 
         $firstUser = User::query()->orderBy('id')->first();
         if ($firstUser && $adminRole) {
@@ -114,6 +122,24 @@ class RolePermissionSeeder extends Seeder
             if (! $firstUser->role_id) {
                 $firstUser->update(['role_id' => $adminRole->id]);
             }
+        }
+    }
+
+    /**
+     * Attach permissions to a role without removing existing assignments.
+     *
+     * @param  SupportCollection<string, int>  $permissions
+     */
+    private function ensurePermissions(?Role $role, array $permissionNames, SupportCollection $permissions): void
+    {
+        if (! $role) {
+            return;
+        }
+
+        $ids = $permissions->only($permissionNames)->values()->all();
+
+        if ($ids !== []) {
+            $role->permissions()->syncWithoutDetaching($ids);
         }
     }
 }

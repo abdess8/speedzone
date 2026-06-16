@@ -14,6 +14,8 @@ return [
     'driver_pending_billing' => 'Pending Driver Billing',
     'driver_payments' => 'Driver Payments',
     'driver_finance' => 'My Earnings',
+    'support' => 'Support',
+    'support_center' => 'Support Center',
     'delivery_zones' => 'Delivery Zones',
     'sectors' => 'Sectors',
     'driver_zones' => 'Driver Assignment',

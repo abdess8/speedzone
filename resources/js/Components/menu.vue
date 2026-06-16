@@ -101,6 +101,13 @@ export default {
     canViewApiIntegrations() {
       return this.hasPermission('permissions.read') || this.hasPermission('roles.read');
     },
+    canViewSupport() {
+      return (
+        this.hasPermission('support.read.all') ||
+        this.hasPermission('support.read.own') ||
+        this.hasPermission('support.manage')
+      );
+    },
     bindCollapseHandlers() {
       if (!document.querySelectorAll('.navbar-nav .collapse')) {
         return;
@@ -307,6 +314,13 @@ export default {
         <Link href="/driver-finance" class="nav-link menu-link">
           <i class="ri-wallet-3-line"></i>
           <span>{{ $t('sidebar.driver_finance') }}</span>
+        </Link>
+      </li>
+
+      <li v-if="canViewSupport()" class="nav-item">
+        <Link href="/support-tickets" class="nav-link menu-link">
+          <i class="ri-customer-service-2-line"></i>
+          <span>{{ $t('sidebar.support') }}</span>
         </Link>
       </li>
 

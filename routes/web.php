@@ -12,6 +12,7 @@ use App\Http\Controllers\PickupRequestController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SectorController;
+use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VelzonRoutesController;
@@ -173,6 +174,24 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->only(['index', 'create', 'store', 'show', 'destroy'])
         ->whereNumber('driverInvoice')
         ->parameters(['driver-invoices' => 'driverInvoice']);
+
+    // Seller support / ticket management — custom routes registered before the resource
+    Route::get('support-tickets/related', [SupportTicketController::class, 'relatedObjects'])
+        ->name('support-tickets.related');
+    Route::get('support-tickets/for-object', [SupportTicketController::class, 'forObject'])
+        ->name('support-tickets.for-object');
+    Route::post('support-tickets/{supportTicket}/messages', [SupportTicketController::class, 'storeMessage'])
+        ->whereNumber('supportTicket')->name('support-tickets.messages.store');
+    Route::post('support-tickets/{supportTicket}/assign', [SupportTicketController::class, 'assign'])
+        ->whereNumber('supportTicket')->name('support-tickets.assign');
+    Route::post('support-tickets/{supportTicket}/status', [SupportTicketController::class, 'updateStatus'])
+        ->whereNumber('supportTicket')->name('support-tickets.status');
+    Route::post('support-tickets/{supportTicket}/close', [SupportTicketController::class, 'close'])
+        ->whereNumber('supportTicket')->name('support-tickets.close');
+    Route::resource('support-tickets', SupportTicketController::class)
+        ->only(['index', 'create', 'store', 'show'])
+        ->whereNumber('supportTicket')
+        ->parameters(['support-tickets' => 'supportTicket']);
 
     Route::get('api-integrations', [ApiIntegrationController::class, 'index'])->name('api-integrations.index');
 

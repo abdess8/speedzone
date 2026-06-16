@@ -17,6 +17,7 @@ class PermissionCatalog
             self::returnPermissions(),
             self::invoicePermissions(),
             self::driverInvoicePermissions(),
+            self::supportPermissions(),
             self::cityPermissions(),
             self::sectorPermissions(),
             self::driverZonePermissions()
@@ -149,6 +150,23 @@ class PermissionCatalog
             self::make('driver_invoices.print', 'driver_invoices', 'print', null, 'resource'),
             self::make('driver_invoices.assign_driver', 'driver_invoices', 'assign_driver', null, 'resource'),
             self::make('driver_invoices.adjust', 'driver_invoices', 'adjust', null, 'resource'),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, string|null>>
+     */
+    public static function supportPermissions(): array
+    {
+        return [
+            self::make(SupportPermissions::CREATE, 'support', 'create', null, 'resource'),
+            self::make(SupportPermissions::READ_OWN, 'support', 'read', 'own', 'resource'),
+            self::make(SupportPermissions::READ_ALL, 'support', 'read', 'all', 'resource'),
+            self::make(SupportPermissions::REPLY, 'support', 'reply', null, 'resource'),
+            self::make(SupportPermissions::ASSIGN, 'support', 'assign', null, 'resource'),
+            self::make(SupportPermissions::UPDATE_STATUS, 'support', 'update_status', null, 'resource'),
+            self::make(SupportPermissions::CLOSE, 'support', 'close', null, 'resource'),
+            self::make(SupportPermissions::MANAGE, 'support', 'manage', null, 'resource'),
         ];
     }
 

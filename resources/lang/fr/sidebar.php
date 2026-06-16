@@ -14,6 +14,8 @@ return [
     'driver_pending_billing' => 'Facturation livreur en attente',
     'driver_payments' => 'Paiements livreurs',
     'driver_finance' => 'Mes gains',
+    'support' => 'Support',
+    'support_center' => 'Centre de support',
     'delivery_zones' => 'Zones de livraison',
     'sectors' => 'Secteurs',
     'driver_zones' => 'Affectation des livreurs',

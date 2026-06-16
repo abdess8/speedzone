@@ -1,4 +1,5 @@
 <script setup>
+import NotificationBell from '@/Components/Notifications/NotificationBell.vue';
 import { layoutMethods } from '@/state/helpers';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -234,78 +235,7 @@ export default {
             <i class="bx bx-message-rounded-dots fs-22"></i>
           </Link>
 
-          <BDropdown
-            variant="ghost-dark"
-            dropstart
-            class="ms-1 dropdown"
-            :offset="{ alignmentAxis: 57, crossAxis: 0, mainAxis: -42 }"
-            toggle-class="btn-icon btn-topbar rounded-circle arrow-none"
-            id="page-header-notifications-dropdown"
-            menu-class="dropdown-menu-lg dropdown-menu-end p-0"
-            auto-close="outside"
-          >
-            <template #button-content>
-              <i class="bx bx-bell fs-22"></i>
-              <span class="position-absolute topbar-badge fs-10 translate-middle badge rounded-pill bg-danger">
-                <span class="notification-badge">3</span>
-                <span class="visually-hidden">{{ $t('common.unread_messages') }}</span>
-              </span>
-            </template>
-            <div class="dropdown-head bg-primary bg-pattern rounded-top dropdown-menu-lg">
-              <div class="p-3">
-                <BRow class="align-items-center">
-                  <BCol>
-                    <h6 class="m-0 fs-16 fw-semibold text-white">{{ $t('common.notifications') }}</h6>
-                  </BCol>
-                  <BCol cols="auto" class="dropdown-tabs">
-                    <BBadge variant="light-subtle" class="bg-light-subtle text-body fs-13">
-                      {{ $t('common.new_count', { count: 4 }) }}
-                    </BBadge>
-                  </BCol>
-                </BRow>
-              </div>
-            </div>
-            <BTabs nav-class="dropdown-tabs nav-tab-custom bg-primary px-2 pt-2">
-              <BTab :title="$t('common.all_notifications', { count: 4 })" class="tab-pane fade py-2 ps-2 show">
-                <simplebar data-simplebar style="max-height: 300px" class="pe-2">
-                  <div class="text-center py-4 text-muted">
-                    <i class="bx bx-bell fs-1 d-block mb-2"></i>
-                    <p class="mb-0">{{ $t('common.no_notifications') }}</p>
-                  </div>
-                  <div class="my-3 text-center">
-                    <BButton type="button" variant="soft-success">
-                      {{ $t('common.view_all_notifications') }}
-                      <i class="ri-arrow-right-line align-middle"></i>
-                    </BButton>
-                  </div>
-                </simplebar>
-              </BTab>
-              <BTab :title="$t('common.messages')" class="tab-pane fade py-2 ps-2">
-                <simplebar data-simplebar style="max-height: 300px" class="pe-2">
-                  <div class="text-center py-4 text-muted">
-                    <i class="bx bx-message-rounded-dots fs-1 d-block mb-2"></i>
-                    <p class="mb-0">{{ $t('common.no_notifications') }}</p>
-                  </div>
-                  <div class="my-3 text-center">
-                    <Link href="/chat" class="btn btn-soft-success btn-sm">
-                      {{ $t('common.view_all_messages') }}
-                      <i class="ri-arrow-right-line align-middle"></i>
-                    </Link>
-                  </div>
-                </simplebar>
-              </BTab>
-              <BTab :title="$t('common.alerts')" class="p-4">
-                <simplebar data-simplebar style="max-height: 300px" class="pe-2">
-                  <div class="w-25 w-sm-50 pt-3 mx-auto">
-                    <img src="@assets/images/svg/bell.svg" class="img-fluid" alt="" />
-                  </div>
-                  <div class="text-center pb-5 mt-2">
-                    <h6 class="fs-18 fw-semibold lh-base">{{ $t('common.no_notifications') }}</h6>
-                  </div>
-                </simplebar>
-              </BTab>
-            </BTabs>
-          </BDropdown>
+          <NotificationBell />
 
           <BDropdown
             variant="link"

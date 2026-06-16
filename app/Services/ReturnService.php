@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\ReturnInitiatedByRole;
 use App\Enums\ReturnReason;
 use App\Enums\ReturnStatus;
+use App\Events\ReturnRequested;
 use App\Models\Order;
 use App\Models\OrderReturn;
 use App\Models\User;
@@ -114,6 +115,8 @@ class ReturnService
                 "Return {$return->reference} created — {$this->reasonLabel($reason)}.",
                 returnId: $return->id,
             );
+
+            event(new ReturnRequested($return, $order, $actor, $role));
 
             return $return->load([
                 'order.seller.city',

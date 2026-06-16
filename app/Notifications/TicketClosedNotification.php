@@ -5,13 +5,13 @@ namespace App\Notifications;
 use App\Enums\NotificationType;
 use App\Models\SupportTicket;
 
-class SupportTicketAssignedNotification extends AppNotification
+class TicketClosedNotification extends AppNotification
 {
     public function __construct(public readonly SupportTicket $ticket) {}
 
     public function notificationType(): NotificationType
     {
-        return NotificationType::System;
+        return NotificationType::TicketClosed;
     }
 
     /**
@@ -20,8 +20,8 @@ class SupportTicketAssignedNotification extends AppNotification
     public function toArray(object $notifiable): array
     {
         return $this->buildPayload([
-            'title' => trans('notifications.titles.ticket_assigned'),
-            'message' => trans('notifications.messages.ticket_assigned', [
+            'title' => trans('notifications.titles.ticket_closed'),
+            'message' => trans('notifications.messages.ticket_closed', [
                 'reference' => $this->ticket->reference,
             ]),
             'reference' => $this->ticket->reference,

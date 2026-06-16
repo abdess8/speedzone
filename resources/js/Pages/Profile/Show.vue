@@ -1,4 +1,5 @@
 <script setup>
+import NotificationSettings from '@/Components/Notifications/NotificationSettings.vue';
 import Layout from "@/Layouts/main.vue";
 import DeleteUserForm from '@/Pages/Profile/Partials/DeleteUserForm.vue';
 import LogoutOtherBrowserSessionsForm from '@/Pages/Profile/Partials/LogoutOtherBrowserSessionsForm.vue';
@@ -30,6 +31,8 @@ defineProps({
                     <div v-if="$page.props.jetstream.canUpdatePassword">
                         <UpdatePasswordForm />
                     </div>
+
+                    <NotificationSettings />
 
                     <div v-if="$page.props.jetstream.canManageTwoFactorAuthentication">
                         <TwoFactorAuthenticationForm :requires-confirmation="confirmsTwoFactorAuthentication" />

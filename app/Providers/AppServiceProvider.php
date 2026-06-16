@@ -30,6 +30,9 @@ class AppServiceProvider extends ServiceProvider
             'auth' => [
                 'user' => fn () => $this->resolveAuthUser(),
             ],
+            'notifications' => [
+                'unread_count' => fn () => (int) (request()->user()?->unreadNotifications()->count() ?? 0),
+            ],
         ]);
     }
 

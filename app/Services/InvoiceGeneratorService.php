@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\InvoiceStatus;
+use App\Events\InvoiceGenerated;
 use App\Models\Invoice;
 use App\Models\InvoiceLog;
 use App\Models\Order;
@@ -98,6 +99,8 @@ class InvoiceGeneratorService
         if ($invoice) {
             // PDF generation is outside the DB transaction (filesystem side effect).
             $this->pdf->store($invoice);
+
+            event(new InvoiceGenerated($invoice->fresh(), $createdBy));
         }
 
         return $invoice?->fresh();

@@ -8,17 +8,17 @@ use App\Enums\SupportTicketStatus;
 use App\Models\SupportMessage;
 use App\Models\SupportTicket;
 use App\Models\User;
-use App\Support\SupportPermissions;
-use App\Notifications\NewSupportReplyNotification;
-use App\Notifications\NewSupportTicketNotification;
+use App\Events\TicketClosed;
+use App\Events\TicketCreated;
+use App\Events\TicketMessageCreated;
 use App\Notifications\SupportTicketAssignedNotification;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 
 class SupportTicketService
 {
+    public function __construct(private readonly NotificationDispatcher $dispatcher) {}
+
     private const ATTACHMENT_DISK = 'public';
 
     private const ATTACHMENT_FOLDER = 'support-tickets';
@@ -52,7 +52,7 @@ class SupportTicketService
                 $this->storeTicketAttachment($ticket, $author, $attachment);
             }
 
-            $this->notifyStaffOfNewTicket($ticket);
+            event(new TicketCreated($ticket));
 
             return $ticket;
         });
@@ -92,7 +92,7 @@ class SupportTicketService
 
             $ticket->save();
 
-            $this->notifyOfReply($ticket, $message, $sender);
+            event(new TicketMessageCreated($ticket, $message, $sender));
 
             return $message;
         });
@@ -112,7 +112,7 @@ class SupportTicketService
         $ticket->save();
 
         if ($agent) {
-            $this->safeNotify($agent, new SupportTicketAssignedNotification($ticket->refresh()));
+            $this->dispatcher->send($agent, new SupportTicketAssignedNotification($ticket->refresh()));
         }
 
         return $ticket;
@@ -138,6 +138,8 @@ class SupportTicketService
             'closed_by' => $actor->id,
         ])->save();
 
+        event(new TicketClosed($ticket->fresh(), $actor));
+
         return $ticket;
     }
 
@@ -157,44 +159,4 @@ class SupportTicketService
         return sprintf('SUP-%d-%05d', ($ticket->created_at ?? now())->year, $ticket->id);
     }
 
-    private function notifyStaffOfNewTicket(SupportTicket $ticket): void
-    {
-        $staff = User::query()
-            ->whereHas('roles.permissions', fn ($q) => $q->whereIn('name', SupportPermissions::staffAccess()))
-            ->get();
-
-        if ($staff->isNotEmpty()) {
-            $this->safeNotify($staff, new NewSupportTicketNotification($ticket));
-        }
-    }
-
-    private function notifyOfReply(SupportTicket $ticket, SupportMessage $message, User $sender): void
-    {
-        $recipients = collect();
-
-        // Notify the seller when staff replies, and vice-versa.
-        if ($ticket->created_by !== $sender->id && $ticket->creator) {
-            $recipients->push($ticket->creator);
-        }
-
-        if ($ticket->assigned_to && $ticket->assigned_to !== $sender->id && $ticket->assignee) {
-            $recipients->push($ticket->assignee);
-        }
-
-        if ($recipients->isNotEmpty()) {
-            $this->safeNotify($recipients->unique('id'), new NewSupportReplyNotification($ticket, $message));
-        }
-    }
-
-    /**
-     * Dispatch notifications without letting a delivery failure break the request.
-     */
-    private function safeNotify(mixed $notifiables, object $notification): void
-    {
-        try {
-            Notification::send($notifiables, $notification);
-        } catch (\Throwable $e) {
-            Log::warning('Support notification failed: '.$e->getMessage());
-        }
-    }
 }

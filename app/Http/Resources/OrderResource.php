@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PickupRequestStatus;
 use App\Enums\TransferStatus;
+use App\Enums\DriverInvoiceStatus;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -70,6 +71,13 @@ class OrderResource extends JsonResource
                 : null),
             'seller_id' => $this->seller_id,
 
+            'driver' => $this->whenLoaded('driver', fn () => $this->driver
+                ? UserSummaryResource::make($this->driver)->resolve($request)
+                : null),
+            'driver_id' => $this->driver_id,
+            'assigned_at' => $this->assigned_at?->toIso8601String(),
+            'delivered_at' => $this->delivered_at?->toIso8601String(),
+
             'pickup_request' => $this->whenLoaded('pickupRequest', function () use ($request) {
                 if (! $this->pickupRequest) {
                     return null;
@@ -115,6 +123,29 @@ class OrderResource extends JsonResource
                 ];
             }),
             'invoice_id' => $this->invoice_id,
+
+            'driver_invoice' => $this->whenLoaded('driverTransactions', function () {
+                $transaction = $this->driverTransactions
+                    ->first(fn ($tx) => $tx->driver_invoice_id !== null && $tx->relationLoaded('driverInvoice') && $tx->driverInvoice);
+
+                if (! $transaction?->driverInvoice) {
+                    return null;
+                }
+
+                $invoice = $transaction->driverInvoice;
+                $status = $invoice->status instanceof DriverInvoiceStatus
+                    ? $invoice->status
+                    : DriverInvoiceStatus::from($invoice->status);
+
+                return [
+                    'id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'reference' => $invoice->invoice_number,
+                    'status' => $status->value,
+                    'status_label' => $status->label(),
+                    'status_color' => $status->color(),
+                ];
+            }),
 
             'is_returned' => (bool) $this->is_returned,
 

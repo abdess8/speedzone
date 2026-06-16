@@ -34,8 +34,7 @@ const showCreateModal = ref(false);
 const rows = computed(() => props.transfers.data ?? []);
 const meta = computed(() => props.transfers.meta ?? {});
 
-const money = (value) =>
-  new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const formatDate = (value) => (value ? new Date(value).toLocaleString() : t("common.empty_value"));
 
@@ -171,7 +170,7 @@ onMounted(() => {
                 <td>{{ transfer.from_city?.name ?? $t('common.empty_value') }}</td>
                 <td>{{ transfer.to_city?.name ?? $t('common.empty_value') }}</td>
                 <td class="text-center">{{ transfer.number_of_packages }}</td>
-                <td class="text-end fw-semibold">{{ money(transfer.total_amount) }} {{ $t('common.currency_mad') }}</td>
+                <td class="text-end fw-semibold">{{ money(transfer.total_amount) }}</td>
                 <td>
                   <span class="badge" :class="`bg-${transfer.status_color}-subtle text-${transfer.status_color}`">
                     {{ transfer.status_label }}

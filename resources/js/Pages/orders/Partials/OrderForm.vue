@@ -15,8 +15,7 @@ const props = defineProps({
   paymentMethods: { type: Array, default: () => [] },
 });
 
-const money = (value) =>
-  new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const isCashPayment = computed(() => props.form.payment_method === "CASH");
 
@@ -145,7 +144,7 @@ watch(
             </BCol>
             <BCol md="6" v-if="selectedSector">
               <label class="form-label">{{ $t('orders.form.sector_delivery_price') }}</label>
-              <div class="form-control bg-light fw-semibold text-primary">{{ money(selectedSector.delivery_price) }} MAD</div>
+              <div class="form-control bg-light fw-semibold text-primary">{{ money(selectedSector.delivery_price) }}</div>
             </BCol>
             <BCol md="12">
               <label class="form-label">{{ $t('orders.form.address') }} <span class="text-danger">*</span></label>
@@ -221,7 +220,7 @@ watch(
             <label class="form-label">{{ $t('orders.form.order_amount') }} <span class="text-danger">*</span></label>
             <div class="input-group">
               <input type="number" step="0.01" min="0" class="form-control" v-model="form.order_amount" :class="{ 'is-invalid': form.errors.order_amount }" />
-              <span class="input-group-text">MAD</span>
+              <span class="input-group-text">{{ $t('common.currency_mad') }}</span>
             </div>
             <InputError :message="form.errors.order_amount" />
           </div>
@@ -233,7 +232,7 @@ watch(
             </label>
             <div class="input-group">
               <input type="number" step="0.01" min="0" class="form-control" v-model="form.order_value" :class="{ 'is-invalid': form.errors.order_value }" :placeholder="$t('orders.form.order_value_placeholder')" />
-              <span class="input-group-text">MAD</span>
+              <span class="input-group-text">{{ $t('common.currency_mad') }}</span>
             </div>
             <InputError :message="form.errors.order_value" />
           </div>
@@ -245,14 +244,14 @@ watch(
             </label>
             <div class="input-group">
               <input type="number" step="0.01" min="0" class="form-control" v-model="form.delivery_price" :class="{ 'is-invalid': form.errors.delivery_price }" />
-              <span class="input-group-text">MAD</span>
+              <span class="input-group-text">{{ $t('common.currency_mad') }}</span>
             </div>
             <InputError :message="form.errors.delivery_price" />
           </div>
 
           <div class="d-flex justify-content-between align-items-center border-top pt-3">
             <span class="fs-15 fw-medium">{{ $t('orders.form.total_amount') }}</span>
-            <span class="fs-18 fw-bold text-primary">{{ money(totalAmount) }} MAD</span>
+            <span class="fs-18 fw-bold text-primary">{{ money(totalAmount) }}</span>
           </div>
         </BCardBody>
       </BCard>

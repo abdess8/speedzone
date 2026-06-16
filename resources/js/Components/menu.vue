@@ -13,6 +13,9 @@ export default {
     showDeliveryZones() {
       return this.canViewSectors() || this.canViewDriverZones();
     },
+    showSettings() {
+      return true;
+    },
   },
   mounted() {
     this.initActiveMenu();
@@ -73,6 +76,12 @@ export default {
     },
     canManageInvoices() {
       return this.hasPermission('invoices.read.all');
+    },
+    canManageDriverInvoices() {
+      return this.hasPermission('driver_invoices.read.all');
+    },
+    canViewDriverFinance() {
+      return this.hasPermission('driver_invoices.read.own') && !this.hasPermission('driver_invoices.read.all');
     },
     canViewSectors() {
       return this.hasPermission('sectors.read');
@@ -267,6 +276,40 @@ export default {
         </div>
       </li>
 
+      <li v-if="canManageDriverInvoices" class="nav-item">
+        <a
+          class="nav-link menu-link"
+          href="#sidebarDriverBilling"
+          data-bs-toggle="collapse"
+          role="button"
+          aria-expanded="false"
+          aria-controls="sidebarDriverBilling"
+        >
+          <i class="ri-e-bike-2-line"></i>
+          <span>{{ $t('sidebar.driver_billing') }}</span>
+        </a>
+        <div class="collapse menu-dropdown" id="sidebarDriverBilling">
+          <ul class="nav nav-sm flex-column">
+            <li class="nav-item">
+              <Link href="/driver-invoices" class="nav-link">{{ $t('sidebar.driver_invoices') }}</Link>
+            </li>
+            <li class="nav-item">
+              <Link href="/driver-invoices/pending" class="nav-link">{{ $t('sidebar.driver_pending_billing') }}</Link>
+            </li>
+            <li class="nav-item">
+              <Link href="/driver-invoices/payments" class="nav-link">{{ $t('sidebar.driver_payments') }}</Link>
+            </li>
+          </ul>
+        </div>
+      </li>
+
+      <li v-if="canViewDriverFinance" class="nav-item">
+        <Link href="/driver-finance" class="nav-link menu-link">
+          <i class="ri-wallet-3-line"></i>
+          <span>{{ $t('sidebar.driver_finance') }}</span>
+        </Link>
+      </li>
+
       <li v-if="showDeliveryZones" class="nav-item">
         <a
           class="nav-link menu-link"
@@ -291,43 +334,37 @@ export default {
         </div>
       </li>
 
-      <li class="menu-title mt-auto">
-        <span>{{ $t('sidebar.settings') }}</span>
-      </li>
-
-      <li class="nav-item">
-        <Link :href="route('profile.show')" class="nav-link menu-link">
-          <i class="ri-user-settings-line"></i>
-          <span>{{ $t('sidebar.profile') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewUsers()" class="nav-item">
-        <Link href="/users" class="nav-link menu-link">
-          <i class="ri-account-circle-line"></i>
-          <span>{{ $t('sidebar.users') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewRoles()" class="nav-item">
-        <Link href="/roles" class="nav-link menu-link">
-          <i class="ri-shield-keyhole-line"></i>
-          <span>{{ $t('sidebar.roles_permissions') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewCities()" class="nav-item">
-        <Link href="/cities" class="nav-link menu-link">
-          <i class="ri-map-pin-line"></i>
-          <span>{{ $t('sidebar.cities') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewApiIntegrations()" class="nav-item">
-        <Link :href="route('api-integrations.index')" class="nav-link menu-link">
-          <i class="ri-plug-2-line"></i>
-          <span>{{ $t('sidebar.api_integrations') }}</span>
-        </Link>
+      <li v-if="showSettings" class="nav-item mt-auto">
+        <a
+          class="nav-link menu-link"
+          href="#sidebarSettings"
+          data-bs-toggle="collapse"
+          role="button"
+          aria-expanded="false"
+          aria-controls="sidebarSettings"
+        >
+          <i class="ri-settings-3-line"></i>
+          <span>{{ $t('sidebar.settings.title') }}</span>
+        </a>
+        <div class="collapse menu-dropdown" id="sidebarSettings">
+          <ul class="nav nav-sm flex-column">
+            <li class="nav-item">
+              <Link :href="route('profile.show')" class="nav-link">{{ $t('sidebar.settings.profile') }}</Link>
+            </li>
+            <li v-if="canViewUsers()" class="nav-item">
+              <Link href="/users" class="nav-link">{{ $t('sidebar.settings.users') }}</Link>
+            </li>
+            <li v-if="canViewRoles()" class="nav-item">
+              <Link href="/roles" class="nav-link">{{ $t('sidebar.settings.roles_permissions') }}</Link>
+            </li>
+            <li v-if="canViewCities()" class="nav-item">
+              <Link href="/cities" class="nav-link">{{ $t('sidebar.settings.cities') }}</Link>
+            </li>
+            <li v-if="canViewApiIntegrations()" class="nav-item">
+              <Link :href="route('api-integrations.index')" class="nav-link">{{ $t('sidebar.settings.api_integrations') }}</Link>
+            </li>
+          </ul>
+        </div>
       </li>
     </ul>
   </BContainer>

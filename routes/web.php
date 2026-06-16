@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ApiIntegrationController;
 use App\Http\Controllers\CityController;
+use App\Http\Controllers\DriverFinanceController;
+use App\Http\Controllers\DriverInvoiceController;
 use App\Http\Controllers\DriverZoneController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LocaleController;
@@ -58,6 +60,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('orders/{order}/pdf', [OrderController::class, 'pdf'])
         ->whereNumber('order')
         ->name('orders.pdf');
+    Route::post('orders/{order}/assign-driver', [OrderController::class, 'assignDriver'])
+        ->whereNumber('order')
+        ->name('orders.assign-driver');
     Route::resource('orders', OrderController::class)->whereNumber('order');
     // QR code target: /orders/SPD-2026-583920 → public tracking timeline.
     Route::get('orders/{trackingNumber}', [OrderController::class, 'track'])
@@ -152,6 +157,22 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::resource('invoices', InvoiceController::class)
         ->only(['index', 'create', 'store', 'show', 'destroy'])
         ->whereNumber('invoice');
+
+    // Driver finance & billing — custom routes registered before the resource
+    Route::get('driver-finance', [DriverFinanceController::class, 'dashboard'])->name('driver-finance.dashboard');
+    Route::get('driver-invoices/pending', [DriverInvoiceController::class, 'pending'])->name('driver-invoices.pending');
+    Route::get('driver-invoices/payments', [DriverInvoiceController::class, 'payments'])->name('driver-invoices.payments');
+    Route::post('driver-invoices/preview', [DriverInvoiceController::class, 'preview'])->name('driver-invoices.preview');
+    Route::get('driver-invoices/{driverInvoice}/pdf', [DriverInvoiceController::class, 'pdf'])
+        ->whereNumber('driverInvoice')->name('driver-invoices.pdf');
+    Route::post('driver-invoices/{driverInvoice}/pay', [DriverInvoiceController::class, 'pay'])
+        ->whereNumber('driverInvoice')->name('driver-invoices.pay');
+    Route::post('driver-invoices/{driverInvoice}/cancel', [DriverInvoiceController::class, 'cancel'])
+        ->whereNumber('driverInvoice')->name('driver-invoices.cancel');
+    Route::resource('driver-invoices', DriverInvoiceController::class)
+        ->only(['index', 'create', 'store', 'show', 'destroy'])
+        ->whereNumber('driverInvoice')
+        ->parameters(['driver-invoices' => 'driverInvoice']);
 
     Route::get('api-integrations', [ApiIntegrationController::class, 'index'])->name('api-integrations.index');
 

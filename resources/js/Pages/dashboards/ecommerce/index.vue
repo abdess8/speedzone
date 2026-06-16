@@ -301,7 +301,7 @@ export default {
                   <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
                       <h4 class="fs-20 fw-semibold ff-secondary mb-4">
-                        $<count-to :startVal='0' :endVal='342' :duration='5000'></count-to>k
+                        <count-to :startVal='0' :endVal='342' :duration='5000'></count-to>k Dhs
                       </h4>
                       <BLink href="" class="text-decoration-underline">Revenue overview</BLink>
                     </div>
@@ -401,7 +401,7 @@ export default {
                             </div>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$29.00</h5>
+                            <h5 class="fs-14 my-1 fw-normal">29.00 Dhs</h5>
                             <span class="text-muted">Price</span>
                           </td>
                           <td>
@@ -413,7 +413,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$1,798</h5>
+                            <h5 class="fs-14 my-1 fw-normal">1,798 Dhs</h5>
                             <span class="text-muted">Amount</span>
                           </td>
                         </tr>
@@ -433,7 +433,7 @@ export default {
                             </div>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$85.20</h5>
+                            <h5 class="fs-14 my-1 fw-normal">85.20 Dhs</h5>
                             <span class="text-muted">Price</span>
                           </td>
                           <td>
@@ -447,7 +447,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$2982</h5>
+                            <h5 class="fs-14 my-1 fw-normal">2982 Dhs</h5>
                             <span class="text-muted">Amount</span>
                           </td>
                         </tr>
@@ -467,7 +467,7 @@ export default {
                             </div>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$14.00</h5>
+                            <h5 class="fs-14 my-1 fw-normal">14.00 Dhs</h5>
                             <span class="text-muted">Price</span>
                           </td>
                           <td>
@@ -479,7 +479,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$1120</h5>
+                            <h5 class="fs-14 my-1 fw-normal">1120 Dhs</h5>
                             <span class="text-muted">Amount</span>
                           </td>
                         </tr>
@@ -499,7 +499,7 @@ export default {
                             </div>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$127.50</h5>
+                            <h5 class="fs-14 my-1 fw-normal">127.50 Dhs</h5>
                             <span class="text-muted">Price</span>
                           </td>
                           <td>
@@ -513,7 +513,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$7140</h5>
+                            <h5 class="fs-14 my-1 fw-normal">7140 Dhs</h5>
                             <span class="text-muted">Amount</span>
                           </td>
                         </tr>
@@ -533,7 +533,7 @@ export default {
                             </div>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$54</h5>
+                            <h5 class="fs-14 my-1 fw-normal">54 Dhs</h5>
                             <span class="text-muted">Price</span>
                           </td>
                           <td>
@@ -545,7 +545,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$3996</h5>
+                            <h5 class="fs-14 my-1 fw-normal">3996 Dhs</h5>
                             <span class="text-muted">Amount</span>
                           </td>
                         </tr>
@@ -629,7 +629,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <span class="text-muted">$541200</span>
+                            <span class="text-muted">541200 Dhs</span>
                           </td>
                           <td>
                             <h5 class="fs-14 mb-0">
@@ -660,7 +660,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <span class="text-muted">$75030</span>
+                            <span class="text-muted">75030 Dhs</span>
                           </td>
                           <td>
                             <h5 class="fs-14 mb-0">
@@ -691,7 +691,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <span class="text-muted">$45600</span>
+                            <span class="text-muted">45600 Dhs</span>
                           </td>
                           <td>
                             <h5 class="fs-14 mb-0">
@@ -722,7 +722,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <span class="text-muted">$29456</span>
+                            <span class="text-muted">29456 Dhs</span>
                           </td>
                           <td>
                             <h5 class="fs-14 mb-0">
@@ -753,7 +753,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <span class="text-muted">$11260</span>
+                            <span class="text-muted">11260 Dhs</span>
                           </td>
                           <td>
                             <h5 class="fs-14 mb-0">
@@ -865,7 +865,7 @@ export default {
                           </td>
                           <td>Clothes</td>
                           <td>
-                            <span class="text-primary">$109.00</span>
+                            <span class="text-primary">109.00 Dhs</span>
                           </td>
                           <td>Zoetic Fashion</td>
                           <td>
@@ -892,7 +892,7 @@ export default {
                           </td>
                           <td>Kitchen Storage</td>
                           <td>
-                            <span class="text-primary">$149.00</span>
+                            <span class="text-primary">149.00 Dhs</span>
                           </td>
                           <td>Micro Design</td>
                           <td>
@@ -919,7 +919,7 @@ export default {
                           </td>
                           <td>Bike Accessories</td>
                           <td>
-                            <span class="text-primary">$215.00</span>
+                            <span class="text-primary">215.00 Dhs</span>
                           </td>
                           <td>Nesta Technologies</td>
                           <td>
@@ -946,7 +946,7 @@ export default {
                           </td>
                           <td>Furniture</td>
                           <td>
-                            <span class="text-primary">$199.00</span>
+                            <span class="text-primary">199.00 Dhs</span>
                           </td>
                           <td>Syntyce Solutions</td>
                           <td>
@@ -973,7 +973,7 @@ export default {
                           </td>
                           <td>Bags and Wallets</td>
                           <td>
-                            <span class="text-primary">$330.00</span>
+                            <span class="text-primary">330.00 Dhs</span>
                           </td>
                           <td>iTest Factory</td>
                           <td>
@@ -1474,7 +1474,7 @@ export default {
                   <div class="mt-4">
                     <h5>Invite New Seller</h5>
                     <p class="text-muted lh-base">
-                      Refer a new seller to us and earn $100 per refer.
+                      Refer a new seller to us and earn 100 Dhs per refer.
                     </p>
                     <BButton type="button" variant="primary" pill class="btn-label">
                       <i class="ri-mail-fill label-icon align-middle rounded-pill fs-16 me-2"></i>

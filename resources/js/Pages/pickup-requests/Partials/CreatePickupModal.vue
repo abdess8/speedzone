@@ -23,8 +23,7 @@ const form = useForm({
   notes: "",
 });
 
-const money = (value) =>
-  new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : t("common.empty_value"));
 const empty = () => t("common.empty_value");
@@ -136,7 +135,7 @@ const submit = () => {
               <td>{{ order.customer?.full_name ?? empty() }}</td>
               <td>{{ order.city?.name ?? empty() }}</td>
               <td>{{ order.sector?.name ?? empty() }}</td>
-              <td class="text-end">{{ money(order.order_amount) }} MAD</td>
+              <td class="text-end">{{ money(order.order_amount) }}</td>
               <td class="text-muted fs-13">{{ formatDate(order.created_at) }}</td>
             </tr>
           </tbody>
@@ -186,7 +185,7 @@ const submit = () => {
           </div>
           <div class="d-flex justify-content-between mb-2">
             <span class="text-muted">{{ $t('pickups.show.total_amount') }}</span>
-            <span class="fw-semibold">{{ money(totalAmount) }} MAD</span>
+            <span class="fw-semibold">{{ money(totalAmount) }}</span>
           </div>
           <div class="border-top pt-2 mt-2">
             <div class="text-muted fs-13">{{ $t('pickups.modal.pickup_address') }}</div>

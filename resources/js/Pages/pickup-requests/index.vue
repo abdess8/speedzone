@@ -36,10 +36,7 @@ const showQrScanner = ref(false);
 const rows = computed(() => props.pickups.data ?? []);
 const meta = computed(() => props.pickups.meta ?? {});
 
-const money = (value) =>
-  new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
-    Number(value || 0)
-  );
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const formatDate = (value) => (value ? new Date(value).toLocaleString() : t("common.empty_value"));
 
@@ -182,7 +179,7 @@ onMounted(() => {
                   </span>
                 </td>
                 <td class="text-center">{{ pickup.number_of_packages }}</td>
-                <td class="text-end fw-semibold">{{ money(pickup.total_orders_amount) }} {{ $t('common.currency_mad') }}</td>
+                <td class="text-end fw-semibold">{{ money(pickup.total_orders_amount) }}</td>
                 <td>
                   <UserAvatar v-if="pickup.assignee" :user="pickup.assignee" :size="24" clickable show-name show-role />
                   <span v-else>{{ $t('common.empty_value') }}</span>

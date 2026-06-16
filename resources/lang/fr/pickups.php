@@ -50,7 +50,7 @@ return [
         'step_pickup_address' => 'Adresse de ramassage',
         'step_notes_confirm' => 'Notes et confirmation',
         'no_eligible_orders' => 'Aucune commande avec le statut CREATED disponible pour le ramassage.',
-        'orders_selected' => ':count commande(s) sélectionnée(s) — Total : :amount MAD',
+        'orders_selected' => ':count commande(s) sélectionnée(s) — Total : :amount Dhs',
         'no_addresses' => 'Configurez vos adresses de ramassage dans votre profil avant de créer un ramassage.',
         'notes_optional' => 'Notes (optionnel)',
         'summary' => 'Récapitulatif',

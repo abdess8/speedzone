@@ -29,10 +29,7 @@ const sellerOptions = computed(() =>
   props.sellers.map((s) => ({ value: s.id, label: `${s.name} (${s.email})` }))
 );
 
-const money = (value) =>
-  new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
-    Number(value || 0)
-  );
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const hasOrders = computed(() => (preview.value?.summary?.total_orders_count ?? 0) > 0);
 

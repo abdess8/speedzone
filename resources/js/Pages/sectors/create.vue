@@ -14,6 +14,7 @@ const form = useForm({
   name: "",
   delivery_price: "",
   return_price: "",
+  delivery_driver_price: "",
   is_active: true,
 });
 

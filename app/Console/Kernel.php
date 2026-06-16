@@ -17,6 +17,12 @@ class Kernel extends ConsoleKernel
         $schedule->command('billing:run-daily')
             ->dailyAt('02:00')
             ->withoutOverlapping();
+
+        // Daily driver billing check: generate settlement invoices for drivers
+        // whose next_billing_date has arrived.
+        $schedule->command('driver-billing:run-daily')
+            ->dailyAt('02:30')
+            ->withoutOverlapping();
     }
 
     /**

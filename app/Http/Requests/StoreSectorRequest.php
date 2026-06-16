@@ -36,6 +36,7 @@ class StoreSectorRequest extends FormRequest
             ],
             'delivery_price' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'return_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'delivery_driver_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'is_active' => ['boolean'],
         ];
     }

@@ -113,6 +113,7 @@ class OrderController extends Controller
             'city',
             'sector',
             'invoice',
+            'driverTransactions.driverInvoice',
             'seller.roles',
             'seller.city',
             'pickupRequest.createdBy.roles',

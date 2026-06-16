@@ -37,8 +37,7 @@ const sectorOptions = computed(() => [
   ...props.sectors.map((s) => ({ value: s.id, label: `${s.city_name} › ${s.name}` })),
 ]);
 
-const money = (value) =>
-  new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const query = () => {
   const params = {};

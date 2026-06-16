@@ -33,8 +33,7 @@ const cityOptions = computed(() => [
   ...props.cities.map((c) => ({ value: c.id, label: c.name })),
 ]);
 
-const money = (value) =>
-  new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const query = () => {
   const params = { per_page: perPage.value };
@@ -146,8 +145,8 @@ onMounted(() => {
               <tr v-for="sector in rows" :key="sector.id">
                 <td><Link :href="route('sectors.show', sector.id)" class="fw-semibold">{{ sector.name }}</Link></td>
                 <td>{{ sector.city?.name ?? $t('common.empty_value') }}</td>
-                <td class="text-end fw-medium">{{ money(sector.delivery_price) }} {{ $t('common.currency_mad') }}</td>
-                <td class="text-end fw-medium">{{ money(sector.return_price) }} {{ $t('common.currency_mad') }}</td>
+                <td class="text-end fw-medium">{{ money(sector.delivery_price) }}</td>
+                <td class="text-end fw-medium">{{ money(sector.return_price) }}</td>
                 <td class="text-center">{{ sector.orders_count ?? 0 }}</td>
                 <td class="text-center">{{ sector.drivers_count ?? 0 }}</td>
                 <td>

@@ -14,10 +14,7 @@ const props = defineProps({
   can: { type: Object, default: () => ({}) },
 });
 
-const money = (value) =>
-  new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
-    Number(value || 0)
-  );
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const formatDateTime = (value) => (value ? new Date(value).toLocaleString() : "—");
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : "—");

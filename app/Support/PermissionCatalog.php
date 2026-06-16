@@ -16,6 +16,7 @@ class PermissionCatalog
             self::transferPermissions(),
             self::returnPermissions(),
             self::invoicePermissions(),
+            self::driverInvoicePermissions(),
             self::cityPermissions(),
             self::sectorPermissions(),
             self::driverZonePermissions()
@@ -130,6 +131,24 @@ class PermissionCatalog
             self::make('invoices.cancel', 'invoices', 'cancel', null, 'resource'),
             self::make('invoices.delete', 'invoices', 'delete', null, 'resource'),
             self::make('invoices.print', 'invoices', 'print', null, 'resource'),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, string|null>>
+     */
+    public static function driverInvoicePermissions(): array
+    {
+        return [
+            self::make('driver_invoices.read.own', 'driver_invoices', 'read', 'own', 'resource'),
+            self::make('driver_invoices.read.all', 'driver_invoices', 'read', 'all', 'resource'),
+            self::make('driver_invoices.generate', 'driver_invoices', 'generate', null, 'resource'),
+            self::make('driver_invoices.pay', 'driver_invoices', 'pay', null, 'resource'),
+            self::make('driver_invoices.cancel', 'driver_invoices', 'cancel', null, 'resource'),
+            self::make('driver_invoices.delete', 'driver_invoices', 'delete', null, 'resource'),
+            self::make('driver_invoices.print', 'driver_invoices', 'print', null, 'resource'),
+            self::make('driver_invoices.assign_driver', 'driver_invoices', 'assign_driver', null, 'resource'),
+            self::make('driver_invoices.adjust', 'driver_invoices', 'adjust', null, 'resource'),
         ];
     }
 

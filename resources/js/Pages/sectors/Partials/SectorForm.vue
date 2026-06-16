@@ -79,6 +79,22 @@ const cityOptions = computed(() =>
               </div>
               <InputError :message="form.errors.return_price" />
             </BCol>
+            <BCol md="6">
+              <label class="form-label">{{ $t('sectors.form.delivery_driver_price') }}</label>
+              <div class="input-group">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  class="form-control"
+                  v-model="form.delivery_driver_price"
+                  :class="{ 'is-invalid': form.errors.delivery_driver_price }"
+                />
+                <span class="input-group-text">{{ $t('common.currency_mad') }}</span>
+              </div>
+              <div class="form-text">{{ $t('sectors.form.delivery_driver_price_hint') }}</div>
+              <InputError :message="form.errors.delivery_driver_price" />
+            </BCol>
             <BCol md="12">
               <div class="form-check form-switch fs-15 mt-2">
                 <input class="form-check-input" type="checkbox" role="switch" id="sectorActive" v-model="form.is_active" />

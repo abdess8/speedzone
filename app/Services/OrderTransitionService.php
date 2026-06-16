@@ -11,7 +11,10 @@ use Illuminate\Validation\ValidationException;
 
 class OrderTransitionService
 {
-    public function __construct(private readonly OrderStatusService $orderStatus) {}
+    public function __construct(
+        private readonly OrderStatusService $orderStatus,
+        private readonly DriverPaymentService $driverPayment,
+    ) {}
     /**
      * @var array<string, array<int, string>>
      */
@@ -61,11 +64,23 @@ class OrderTransitionService
         }
 
         return DB::transaction(function () use ($order, $toStatus, $actor, $comment): Order {
-            $order->update(['status' => $toStatus]);
+            $attributes = ['status' => $toStatus];
+
+            // Stamp the delivery time so the driver payout is dated correctly.
+            if ($toStatus === OrderStatus::DELIVERED->value) {
+                $attributes['delivered_at'] = now();
+            }
+
+            $order->update($attributes);
             $order->recordStatus($toStatus, $actor, $comment);
 
             if ($toStatus === OrderStatus::IN_DEPOT->value) {
                 $this->orderStatus->handleAutoCityDeliveryTransition($order);
+            }
+
+            // A delivered order earns the assigned driver the sector driver price.
+            if ($toStatus === OrderStatus::DELIVERED->value) {
+                $this->driverPayment->recordDeliveryPayment($order->refresh(), $actor);
             }
 
             return $order->refresh();

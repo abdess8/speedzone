@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\City;
+use App\Models\DriverInvoice;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\OrderReturn;
@@ -11,6 +12,7 @@ use App\Models\Sector;
 use App\Models\Transfer;
 use App\Models\User;
 use App\Policies\CityPolicy;
+use App\Policies\DriverInvoicePolicy;
 use App\Policies\InvoicePolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\OrderReturnPolicy;
@@ -35,6 +37,7 @@ class AuthServiceProvider extends ServiceProvider
         Transfer::class => TransferPolicy::class,
         OrderReturn::class => OrderReturnPolicy::class,
         Invoice::class => InvoicePolicy::class,
+        DriverInvoice::class => DriverInvoicePolicy::class,
     ];
 
     /**

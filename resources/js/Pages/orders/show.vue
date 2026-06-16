@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
@@ -20,7 +20,38 @@ const props = defineProps({
   allowedTransitions: { type: Array, default: () => [] },
   can: { type: Object, default: () => ({}) },
   returnFilterOptions: { type: Object, default: () => ({ reasons: [] }) },
+  driverOptions: { type: Array, default: () => [] },
 });
+
+const canAssignDriver = computed(
+  () => props.can.assign_driver && props.order.status === "OUT_FOR_DELIVERY"
+);
+
+const assignDriver = () => {
+  const inputOptions = {};
+  props.driverOptions.forEach((d) => {
+    inputOptions[d.id] = `${d.name}${d.email ? ` (${d.email})` : ""}`;
+  });
+
+  Swal.fire({
+    title: t("driver_invoices.assign.title"),
+    input: "select",
+    inputOptions,
+    inputValue: props.order.driver_id ?? "",
+    inputPlaceholder: t("driver_invoices.assign.select_driver"),
+    showCancelButton: true,
+    confirmButtonText: t("orders.swal.confirm"),
+    cancelButtonText: t("common.cancel"),
+    confirmButtonColor: "#0ab39c",
+  }).then((result) => {
+    if (!result.isConfirmed || !result.value) return;
+    router.post(
+      route("orders.assign-driver", props.order.id),
+      { driver_id: result.value },
+      { preserveScroll: true }
+    );
+  });
+};
 
 const showReturnModal = ref(false);
 
@@ -136,6 +167,11 @@ onMounted(() => {
           </ul>
         </div>
 
+        <button v-if="canAssignDriver" class="btn btn-sm btn-soft-primary" @click="assignDriver">
+          <i class="ri-e-bike-2-line align-bottom me-1"></i>
+          {{ order.driver_id ? $t('driver_invoices.assign.reassign_action') : $t('driver_invoices.assign.assign_action') }}
+        </button>
+
         <button v-if="can.create_failed_return" class="btn btn-sm btn-soft-danger" @click="initiateFailedReturn">
           <i class="ri-arrow-go-back-line align-bottom me-1"></i> {{ $t('returns.actions.failed_delivery') }}
         </button>
@@ -184,6 +220,11 @@ onMounted(() => {
               </BCol>
               <BCol md="4"><div class="text-muted fs-13">{{ $t('orders.show.seller_phone') }}</div><div class="fw-semibold">{{ order.seller?.phone ?? empty() }}</div></BCol>
               <BCol md="4"><div class="text-muted fs-13">{{ $t('orders.show.pickup_city') }}</div><div class="fw-semibold">{{ order.pickup_city?.name ?? order.seller?.city?.name ?? empty() }}</div></BCol>
+              <BCol md="4">
+                <div class="text-muted fs-13">{{ $t('driver_invoices.assign.assigned_driver') }}</div>
+                <UserAvatar v-if="order.driver" :user="order.driver" :size="36" clickable show-name show-role />
+                <div v-else class="fw-semibold">{{ $t('driver_invoices.assign.no_driver') }}</div>
+              </BCol>
             </BRow>
           </BCardBody>
         </BCard>
@@ -196,6 +237,7 @@ onMounted(() => {
               :active-transfer="order.active_transfer"
               :active-return="order.active_return"
               :invoice="order.invoice"
+              :driver-invoice="order.driver_invoice"
             />
           </BCardBody>
         </BCard>

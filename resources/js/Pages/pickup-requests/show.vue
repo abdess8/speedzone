@@ -22,8 +22,7 @@ const props = defineProps({
 const showQrScanner = ref(false);
 const assignForm = useForm({ driver_id: props.pickup.assigned_to ?? "" });
 
-const money = (value) =>
-  new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const formatDate = (value) => (value ? new Date(value).toLocaleString() : t("common.empty_value"));
 const empty = () => t("common.empty_value");
@@ -179,7 +178,7 @@ onMounted(() => {
                     <td>{{ order.customer?.full_name ?? empty() }}</td>
                     <td>{{ order.city?.name ?? empty() }}</td>
                     <td>{{ order.sector?.name ?? empty() }}</td>
-                    <td class="text-end">{{ money(order.order_amount) }} MAD</td>
+                    <td class="text-end">{{ money(order.order_amount) }}</td>
                     <td>
                       <span class="badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
                         {{ order.status_label }}
@@ -206,7 +205,7 @@ onMounted(() => {
             </div>
             <div class="d-flex justify-content-between border-top pt-2 mt-2">
               <span class="fw-semibold">{{ $t('pickups.show.total_amount') }}</span>
-              <span class="fw-bold fs-16 text-primary">{{ money(pickup.total_orders_amount) }} MAD</span>
+              <span class="fw-bold fs-16 text-primary">{{ money(pickup.total_orders_amount) }}</span>
             </div>
           </BCardBody>
         </BCard>

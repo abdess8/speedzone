@@ -30,10 +30,7 @@ const perPage = ref(props.filters.per_page ?? 25);
 const rows = computed(() => props.invoices.data ?? []);
 const meta = computed(() => props.invoices.meta ?? {});
 
-const money = (value) =>
-  new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
-    Number(value || 0)
-  );
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : "—");
 

@@ -53,8 +53,7 @@ const selectedToCityName = computed(() =>
   props.cities.find((c) => String(c.id) === String(form.to_city_id))?.name ?? ""
 );
 
-const money = (value) =>
-  new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const empty = () => t("common.empty_value");
 
@@ -293,7 +292,7 @@ const submit = () => {
               <td>{{ order.customer?.full_name ?? empty() }}</td>
               <td>{{ order.pickup_city?.name ?? order.seller?.city?.name ?? empty() }}</td>
               <td>{{ order.city?.name ?? empty() }}</td>
-              <td class="text-end">{{ money(order.order_amount) }} MAD</td>
+              <td class="text-end">{{ money(order.order_amount) }}</td>
               <td>
                 <span class="badge bg-primary-subtle text-primary">{{ order.status_label }}</span>
               </td>
@@ -302,7 +301,7 @@ const submit = () => {
         </table>
       </div>
       <div v-if="selectedOrderIds.length" class="mt-3 text-muted">
-        {{ $t('transfers.form.selected_count', { count: selectedOrderIds.length }) }} — {{ money(totalAmount) }} MAD
+        {{ $t('transfers.form.selected_count', { count: selectedOrderIds.length }) }} — {{ money(totalAmount) }}
       </div>
     </div>
 
@@ -319,7 +318,7 @@ const submit = () => {
           </div>
           <div class="d-flex justify-content-between mb-2">
             <span class="text-muted">{{ $t('transfers.show.total_amount') }}</span>
-            <span class="fw-semibold">{{ money(totalAmount) }} MAD</span>
+            <span class="fw-semibold">{{ money(totalAmount) }}</span>
           </div>
         </BCardBody>
       </BCard>

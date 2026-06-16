@@ -1,0 +1,170 @@
+<?php
+
+return [
+    'title' => 'Factures livreurs',
+    'page_title' => 'Facturation livreurs',
+    'list_title' => 'Liste des factures livreurs',
+    'generate' => 'Générer une facture',
+    'empty' => 'Aucune facture livreur trouvée.',
+
+    'filters' => [
+        'invoice_number' => 'N° facture',
+        'driver' => 'Livreur',
+        'driver_placeholder' => 'Nom ou ID',
+        'status' => 'Statut',
+        'all_statuses' => 'Tous les statuts',
+        'created_from' => 'Créée à partir du',
+        'created_to' => "Créée jusqu'au",
+    ],
+
+    'table' => [
+        'invoice_number' => 'N° facture',
+        'driver' => 'Livreur',
+        'period' => 'Période',
+        'deliveries' => 'Livraisons',
+        'total' => 'Montant total',
+        'status' => 'Statut',
+        'generated_at' => 'Générée le',
+        'paid_at' => 'Payée le',
+    ],
+
+    'summary' => [
+        'title' => 'Résumé',
+        'deliveries' => 'Livraisons',
+        'transactions' => 'Transactions',
+        'delivery_total' => 'Gains de livraison',
+        'bonus_total' => 'Bonus',
+        'penalty_total' => 'Pénalités',
+        'adjustment_total' => 'Ajustements',
+        'total' => 'Total gagné',
+    ],
+
+    'detail' => [
+        'title' => 'Facture :number',
+        'page_title' => 'Détails de la facture livreur',
+        'driver_info' => 'Informations du livreur',
+        'payment_info' => 'Informations de paiement',
+        'transactions_title' => 'Transactions réglées',
+        'history_title' => "Journal d'audit",
+        'generated_by' => 'Générée par',
+        'paid_by' => 'Payée par',
+        'bank' => 'Banque',
+        'rib' => 'RIB',
+        'payment_method' => 'Mode de paiement',
+        'period' => 'Période',
+        'receipt' => 'Reçu de paiement',
+        'view_receipt' => 'Voir le reçu',
+        'no_transactions' => 'Aucune transaction rattachée à cette facture.',
+        'no_history' => "Aucun historique pour l'instant.",
+    ],
+
+    'columns' => [
+        'order' => 'N° commande',
+        'customer' => 'Client',
+        'city' => 'Ville',
+        'sector' => 'Secteur',
+        'type' => 'Type',
+        'amount' => 'Montant',
+        'note' => 'Note',
+    ],
+
+    'actions' => [
+        'view' => 'Voir',
+        'download_pdf' => 'Télécharger le PDF',
+        'view_pdf' => 'Voir le PDF',
+        'mark_paid' => 'Marquer comme payée',
+        'cancel' => 'Annuler la facture',
+        'delete' => 'Supprimer',
+        'back_to_list' => 'Retour aux factures',
+    ],
+
+    'create' => [
+        'title' => 'Générer une facture livreur',
+        'page_title' => 'Facturation livreur manuelle',
+        'select_driver' => 'Sélectionner un livreur',
+        'driver_placeholder' => 'Choisir un livreur',
+        'period' => 'Période de facturation (optionnel)',
+        'period_hint' => 'Laisser vide pour facturer toutes les transactions en attente.',
+        'period_start' => 'Du',
+        'period_end' => 'Au',
+        'preview' => 'Aperçu',
+        'preview_title' => 'Aperçu',
+        'confirm_generate' => 'Confirmer et générer',
+        'no_transactions' => 'Aucune transaction à facturer pour cette sélection.',
+        'select_driver_first' => 'Sélectionnez un livreur pour prévisualiser la facture.',
+    ],
+
+    'pay' => [
+        'title' => 'Marquer la facture comme payée',
+        'paid_at' => 'Date de paiement',
+        'receipt' => 'Reçu de paiement',
+        'receipt_hint' => "PDF ou image, jusqu'à 5 Mo.",
+        'submit' => 'Confirmer le paiement',
+    ],
+
+    'payments' => [
+        'title' => 'Paiements livreurs',
+        'page_title' => 'Gestion des paiements livreurs',
+        'subtitle' => 'Factures en attente de paiement',
+        'empty' => 'Aucune facture en attente de paiement.',
+    ],
+
+    'pending' => [
+        'title' => 'Facturation livreur en attente',
+        'page_title' => 'Facturation livreur',
+        'orders_title' => 'Transactions en attente de facturation',
+        'next_billing' => 'Prochaine facturation',
+        'next_date' => 'Prochaine date de facturation',
+        'frequency' => 'Fréquence',
+        'auto_enabled' => 'Facturation automatique activée',
+        'auto_disabled' => 'Facturation automatique désactivée',
+        'not_scheduled' => 'Non planifiée',
+        'empty' => 'Aucune transaction en attente de facturation.',
+    ],
+
+    'assign' => [
+        'title' => 'Affecter un livreur',
+        'select_driver' => 'Sélectionner un livreur',
+        'assigned' => 'Livreur affecté avec succès.',
+        'not_out_for_delivery' => "Un livreur ne peut être affecté qu'une fois la commande en cours de livraison.",
+        'assigned_driver' => 'Livreur affecté',
+        'assign_action' => 'Affecter un livreur',
+        'reassign_action' => 'Réaffecter un livreur',
+        'no_driver' => 'Aucun livreur affecté',
+    ],
+
+    'confirms' => [
+        'cancel_title' => 'Annuler cette facture ?',
+        'cancel_text' => 'Les transactions rattachées seront libérées et pourront être refacturées.',
+        'delete_title' => 'Supprimer cette facture ?',
+        'delete_text' => 'Cette action est irréversible.',
+        'confirm' => 'Oui, continuer',
+    ],
+
+    'generated' => 'Facture :number générée avec succès.',
+    'marked_paid' => 'Facture marquée comme payée.',
+    'cancelled' => 'Facture annulée.',
+    'deleted' => 'Facture supprimée.',
+    'no_billable_transactions' => 'Aucune transaction à facturer pour cette sélection.',
+
+    'errors' => [
+        'invalid_status' => 'La facture :number est déjà :status. Cette action n\'est pas autorisée.',
+    ],
+
+    'pdf' => [
+        'title' => 'FACTURE LIVREUR',
+        'driver' => 'Livreur',
+        'payment_details' => 'Détails de paiement',
+        'generated_on' => 'Générée le',
+        'period' => 'Période',
+        'bank' => 'Banque',
+        'order' => 'N° commande',
+        'customer' => 'Client',
+        'city' => 'Ville',
+        'sector' => 'Secteur',
+        'type' => 'Type',
+        'amount' => 'Montant',
+        'deliveries_count' => 'Livraisons',
+        'total_earned' => 'Total gagné',
+    ],
+];

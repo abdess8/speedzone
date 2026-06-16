@@ -15,10 +15,7 @@ const props = defineProps({
 
 const page = usePage();
 
-const money = (value) =>
-  new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
-    Number(value || 0)
-  );
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const formatDate = (value) => {
   if (!value) return t("common.empty_value");
@@ -191,8 +188,8 @@ const confirmDeleteSector = (sector) => {
                 <tbody>
                   <tr v-for="sector in sectorsList" :key="sector.id">
                     <td class="fw-medium">{{ sector.name }}</td>
-                    <td class="text-end">{{ money(sector.delivery_price) }} {{ $t('common.currency_mad') }}</td>
-                    <td class="text-end">{{ money(sector.return_price) }} {{ $t('common.currency_mad') }}</td>
+                    <td class="text-end">{{ money(sector.delivery_price) }}</td>
+                    <td class="text-end">{{ money(sector.return_price) }}</td>
                     <td class="text-center">{{ sector.orders_count ?? 0 }}</td>
                     <td>
                       <span

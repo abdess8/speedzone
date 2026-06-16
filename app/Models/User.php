@@ -135,6 +135,30 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Invoice::class, 'seller_id');
     }
 
+    /**
+     * Orders delivered (or assigned to be delivered) by this driver.
+     */
+    public function deliveredOrders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'driver_id');
+    }
+
+    /**
+     * Financial transactions earned by this user acting as a driver.
+     */
+    public function driverTransactions(): HasMany
+    {
+        return $this->hasMany(DriverTransaction::class, 'driver_id');
+    }
+
+    /**
+     * Settlement invoices issued to this user acting as a driver.
+     */
+    public function driverInvoices(): HasMany
+    {
+        return $this->hasMany(DriverInvoice::class, 'driver_id');
+    }
+
     public function pickupRequestsCreated(): HasMany
     {
         return $this->hasMany(PickupRequest::class, 'created_by');

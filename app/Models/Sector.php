@@ -20,12 +20,14 @@ class Sector extends Model
         'name',
         'delivery_price',
         'return_price',
+        'delivery_driver_price',
         'is_active',
     ];
 
     protected $casts = [
         'delivery_price' => 'decimal:2',
         'return_price' => 'decimal:2',
+        'delivery_driver_price' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 

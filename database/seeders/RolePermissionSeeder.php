@@ -64,6 +64,9 @@ class RolePermissionSeeder extends Seeder
                 'returns.edit_customer_data',
                 'invoices.read.all',
                 'invoices.print',
+                'driver_invoices.read.all',
+                'driver_invoices.print',
+                'driver_invoices.assign_driver',
             ])->values()->all()
         );
 
@@ -81,6 +84,8 @@ class RolePermissionSeeder extends Seeder
                 'orders.transition.to_failed',
                 'returns.create',
                 'returns.update_status',
+                'driver_invoices.read.own',
+                'driver_invoices.print',
             ])->values()->all()
         );
 

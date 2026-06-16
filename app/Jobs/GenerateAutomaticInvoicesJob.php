@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Enums\BillingFrequency;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\InvoiceGeneratorService;
 use Carbon\CarbonImmutable;
@@ -34,6 +35,7 @@ class GenerateAutomaticInvoicesJob implements ShouldQueue
         $asOf = $this->asOf ?? CarbonImmutable::now();
 
         User::query()
+            ->whereHas('roles', fn ($q) => $q->where('name', Role::SELLER))
             ->where('billing_enabled', true)
             ->whereNotNull('next_billing_date')
             ->whereDate('next_billing_date', '<=', $asOf->toDateString())

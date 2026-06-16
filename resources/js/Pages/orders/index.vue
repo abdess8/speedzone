@@ -42,10 +42,7 @@ const bulkStatus = ref("");
 const rows = computed(() => props.orders.data ?? []);
 const meta = computed(() => props.orders.meta ?? {});
 
-const money = (value) =>
-  new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
-    Number(value || 0)
-  );
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const displayMoney = (value) => (value != null && value !== "" ? money(value) : "—");
 

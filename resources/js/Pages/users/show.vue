@@ -40,6 +40,13 @@ const isSeller = computed(() =>
   (props.user.roles ?? []).some((r) => ["Seller", "Vendeur"].includes(r))
 );
 
+const isDriver = computed(() =>
+  ["Driver", "Livreur"].includes(props.user.role?.name) ||
+  (props.user.roles ?? []).some((r) => ["Driver", "Livreur"].includes(r))
+);
+
+const showBilling = computed(() => isSeller.value || isDriver.value);
+
 const formatDate = (value) => {
   if (!value) return t("common.empty_value_short");
   return new Date(value).toLocaleString(locale.value === "en" ? "en-GB" : "fr-FR", {
@@ -169,7 +176,7 @@ const labelFrom = (group, value) => {
           </BCardBody>
         </BCard>
 
-        <BCard v-if="isSeller" no-body>
+        <BCard v-if="showBilling" no-body>
           <BCardHeader>
             <h5 class="card-title mb-0">{{ $t('users.show.billing_info') }}</h5>
           </BCardHeader>

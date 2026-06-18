@@ -25,6 +25,7 @@ class StoreOrderRequest extends FormRequest
             'payment_method' => $this->input('payment_method', PaymentMethod::CASH->value),
             'is_fragile' => $this->boolean('is_fragile'),
             'can_be_opened' => $this->boolean('can_be_opened'),
+            'option_exchange' => $this->boolean('option_exchange'),
         ]);
 
         $this->mergeNormalizedPaymentAmounts();
@@ -65,6 +66,7 @@ class StoreOrderRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_fragile' => ['boolean'],
             'can_be_opened' => ['boolean'],
+            'option_exchange' => ['boolean'],
         ];
     }
 }

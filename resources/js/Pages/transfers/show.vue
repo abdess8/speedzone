@@ -23,7 +23,6 @@ const props = defineProps({
 const showQrScanner = ref(false);
 const assignForm = useForm({
   assigned_to: props.transfer.assigned_to ?? "",
-  notes: props.transfer.notes ?? "",
 });
 
 import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
@@ -37,8 +36,9 @@ const dispatchLabel = () => {
   return t("transfers.show.dispatch");
 };
 
-const updateTransfer = () => {
-  assignForm.put(route("transfers.update", props.transfer.id), {
+const assignStaff = () => {
+  if (!assignForm.assigned_to) return;
+  assignForm.post(route("transfers.assign-staff", props.transfer.id), {
     preserveScroll: true,
     onSuccess: () => {
       Swal.fire({ toast: true, position: "top-end", icon: "success", title: t("transfers.swal.staff_assigned"), timer: 2500, showConfirmButton: false });
@@ -172,21 +172,22 @@ onMounted(() => {
           </BCardBody>
         </BCard>
 
-        <BCard no-body v-if="can.update">
+        <BCard no-body v-if="can.assign">
           <BCardHeader><h5 class="card-title mb-0">{{ $t('transfers.show.assign_staff') }}</h5></BCardHeader>
           <BCardBody>
             <div class="row g-2 align-items-end">
               <div class="col-md-8">
                 <label class="form-label">{{ $t('transfers.show.staff') }}</label>
-                <select v-model="assignForm.assigned_to" class="form-select">
+                <select v-model="assignForm.assigned_to" class="form-select" :class="{ 'is-invalid': assignForm.errors.assigned_to }">
                   <option value="">{{ $t('transfers.show.select_staff') }}</option>
                   <option v-for="member in staff" :key="member.id" :value="member.id">
                     {{ member.name }} {{ member.phone ? `(${member.phone})` : "" }}
                   </option>
                 </select>
+                <div v-if="assignForm.errors.assigned_to" class="invalid-feedback d-block">{{ assignForm.errors.assigned_to }}</div>
               </div>
               <div class="col-md-4">
-                <button type="button" class="btn btn-primary w-100" :disabled="assignForm.processing" @click="updateTransfer">
+                <button type="button" class="btn btn-primary w-100" :disabled="!assignForm.assigned_to || assignForm.processing" @click="assignStaff">
                   {{ $t('transfers.show.assign') }}
                 </button>
               </div>

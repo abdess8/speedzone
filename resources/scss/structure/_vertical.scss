@@ -36,6 +36,7 @@
     box-shadow: var(--#{$prefix}vertical-menu-box-shadow);
     padding: 0 0 calc(#{$header-height} + 25px) 0;
     transition: all .1s ease-out;
+    padding-bottom: 150px;
 
     .navbar-nav {
         .nav-link {

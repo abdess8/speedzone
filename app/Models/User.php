@@ -121,6 +121,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * B2B partners whose deliveries this user is allowed to manage (RBAC).
+     */
+    public function partners(): BelongsToMany
+    {
+        return $this->belongsToMany(Partner::class, 'partner_user')->withTimestamps();
+    }
+
+    /**
      * Orders created by this user acting as the seller.
      */
     public function orders(): HasMany
@@ -238,6 +246,31 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return $this->roles->contains(fn (Role $role) => $role->name === Role::SELLER);
+    }
+
+    /**
+     * Whether the user may manage the given partner's deliveries.
+     *
+     * Super admins always pass; otherwise the user must be linked through the
+     * partner_user pivot.
+     */
+    public function managesPartner(Partner $partner): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->partners()->whereKey($partner->id)->exists();
+    }
+
+    /**
+     * Whether the user may view and manage all partners (bypasses partner_user scoping).
+     *
+     * French permission label: "Voir les partenaires" / gérer tous les partenaires.
+     */
+    public function canManageAllPartners(): bool
+    {
+        return $this->hasPermission('partners.read');
     }
 
     /**

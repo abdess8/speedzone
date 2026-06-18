@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -48,6 +49,14 @@ class City extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    /**
+     * Partners that delegate deliveries to speedZone in this city.
+     */
+    public function partners(): BelongsToMany
+    {
+        return $this->belongsToMany(Partner::class, 'partner_city')->withTimestamps();
     }
 
     /*

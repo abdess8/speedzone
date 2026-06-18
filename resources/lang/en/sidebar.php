@@ -4,6 +4,7 @@ return [
     'menu' => 'Menu',
     'dashboard' => 'Dashboard',
     'orders' => 'Orders',
+    'partner_orders' => 'Partner Orders',
     'pickups' => 'Pickups',
     'transfers' => 'Transfers',
     'returns' => 'Returns',
@@ -25,6 +26,8 @@ return [
         'users' => 'Users',
         'roles_permissions' => 'Roles & Permissions',
         'cities' => 'Cities',
+        'partners' => 'Partners',
+        'partner_assignments' => 'Partner Assignments',
         'api_integrations' => 'API Integrations',
     ],
 ];

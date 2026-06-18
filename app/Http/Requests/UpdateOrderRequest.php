@@ -28,6 +28,10 @@ class UpdateOrderRequest extends FormRequest
             $merge['can_be_opened'] = $this->boolean('can_be_opened');
         }
 
+        if ($this->has('option_exchange')) {
+            $merge['option_exchange'] = $this->boolean('option_exchange');
+        }
+
         if ($merge !== []) {
             $this->merge($merge);
         }
@@ -82,6 +86,7 @@ class UpdateOrderRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_fragile' => ['sometimes', 'boolean'],
             'can_be_opened' => ['sometimes', 'boolean'],
+            'option_exchange' => ['sometimes', 'boolean'],
         ];
     }
 }

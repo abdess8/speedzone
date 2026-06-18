@@ -30,6 +30,7 @@ class OrderAuditService
         'notes' => 'Notes',
         'is_fragile' => 'Fragile Package',
         'can_be_opened' => 'Can Be Opened by Customer',
+        'option_exchange' => 'Exchange Option',
     ];
 
     /**
@@ -100,7 +101,7 @@ class OrderAuditService
             'sector_id' => Sector::query()->find($value)?->name ?? (string) $value,
             'payment_method' => $this->formatPaymentMethod($value),
             'order_amount', 'order_value', 'delivery_price' => number_format((float) $value, 2, '.', '').' MAD',
-            'is_fragile', 'can_be_opened' => $value ? 'Yes' : 'No',
+            'is_fragile', 'can_be_opened', 'option_exchange' => $value ? 'Yes' : 'No',
             default => (string) $value,
         };
     }
@@ -116,7 +117,7 @@ class OrderAuditService
 
     private function valuesAreEqual(string $field, mixed $old, mixed $new): bool
     {
-        if (in_array($field, ['is_fragile', 'can_be_opened'], true)) {
+        if (in_array($field, ['is_fragile', 'can_be_opened', 'option_exchange'], true)) {
             return (bool) $old === (bool) $new;
         }
 

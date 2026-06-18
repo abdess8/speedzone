@@ -60,6 +60,8 @@ class HandleInertiaRequests extends Middleware
                 'seller_payment_methods' => trans('seller_payment_methods'),
                 'users' => trans('users'),
                 'cities' => trans('cities'),
+                'partners' => trans('partners'),
+                'partner_auth_types' => trans('partner_auth_types'),
                 'sectors' => trans('sectors'),
                 'driver_zones' => trans('driver_zones'),
                 'profile' => trans('profile'),

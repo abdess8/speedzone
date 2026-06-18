@@ -166,7 +166,7 @@ watch(
               <textarea class="form-control" rows="2" :placeholder="$t('orders.form.notes_placeholder')" v-model="form.notes" :class="{ 'is-invalid': form.errors.notes }"></textarea>
               <InputError :message="form.errors.notes" />
             </BCol>
-            <BCol md="6">
+            <BCol md="4">
               <div class="form-check card-radio h-100">
                 <input class="form-check-input" type="checkbox" id="isFragile" v-model="form.is_fragile" />
                 <label class="form-check-label w-100 text-center py-3" for="isFragile">
@@ -176,13 +176,23 @@ watch(
                 </label>
               </div>
             </BCol>
-            <BCol md="6">
+            <BCol md="4">
               <div class="form-check card-radio h-100">
                 <input class="form-check-input" type="checkbox" id="canBeOpened" v-model="form.can_be_opened" />
                 <label class="form-check-label w-100 text-center py-3" for="canBeOpened">
                   <span class="fs-24 d-block mb-2">🔓</span>
                   <span class="fs-14 fw-medium d-block">{{ $t('orders.form.can_be_opened') }}</span>
                   <small class="text-muted d-block mt-1">{{ $t('orders.form.can_be_opened_hint') }}</small>
+                </label>
+              </div>
+            </BCol>
+            <BCol md="4">
+              <div class="form-check card-radio h-100">
+                <input class="form-check-input" type="checkbox" id="optionExchange" v-model="form.option_exchange" />
+                <label class="form-check-label w-100 text-center py-3" for="optionExchange">
+                  <span class="fs-24 d-block mb-2">🔄</span>
+                  <span class="fs-14 fw-medium d-block">{{ $t('orders.form.option_exchange') }}</span>
+                  <small class="text-muted d-block mt-1">{{ $t('orders.form.option_exchange_hint') }}</small>
                 </label>
               </div>
             </BCol>

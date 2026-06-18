@@ -28,6 +28,7 @@ const form = useForm({
   notes: props.order.notes,
   is_fragile: props.order.is_fragile,
   can_be_opened: props.order.can_be_opened,
+  option_exchange: props.order.option_exchange,
 });
 
 const submit = () => form.put(route("orders.update", props.order.id));

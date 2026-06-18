@@ -24,9 +24,7 @@ const props = defineProps({
   driverOptions: { type: Array, default: () => [] },
 });
 
-const canAssignDriver = computed(
-  () => props.can.assign_driver && props.order.status === "OUT_FOR_DELIVERY"
-);
+const canAssignDriver = computed(() => props.can.assign_driver);
 
 const assignDriver = () => {
   const inputOptions = {};
@@ -318,6 +316,9 @@ onMounted(() => {
               </span>
               <span class="badge" :class="order.can_be_opened ? 'bg-info-subtle text-info' : 'bg-light text-muted'">
                 <i class="ri-box-3-line me-1"></i>{{ order.can_be_opened ? $t('orders.badges.openable') : $t('orders.badges.do_not_open') }}
+              </span>
+              <span class="badge" :class="order.option_exchange ? 'bg-warning-subtle text-warning' : 'bg-light text-muted'">
+                <i class="ri-exchange-line me-1"></i>{{ order.option_exchange ? $t('orders.badges.exchange') : $t('orders.badges.not_exchange') }}
               </span>
             </div>
             <div class="text-muted fs-13">{{ $t('orders.show.notes') }}</div>

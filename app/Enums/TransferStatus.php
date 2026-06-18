@@ -63,6 +63,11 @@ enum TransferStatus: string
         return in_array($this, [self::CREATED, self::WAITING_DISPATCH], true);
     }
 
+    public function canAssignStaff(): bool
+    {
+        return in_array($this, [self::CREATED, self::WAITING_DISPATCH, self::IN_TRANSIT], true);
+    }
+
     /**
      * @return array<int, array{value: string, label: string, color: string}>
      */

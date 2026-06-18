@@ -4,7 +4,9 @@ namespace App\Policies;
 
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Models\Partner;
 use App\Models\User;
+use App\Services\OrderDriverAssignmentService;
 use App\Services\PickupScanService;
 use Illuminate\Auth\Access\AuthorizationException;
 
@@ -73,5 +75,35 @@ class OrderPolicy
         } catch (AuthorizationException) {
             return false;
         }
+    }
+
+    public function assignDriver(User $user, Order $order): bool
+    {
+        if (! $user->hasPermission('driver_invoices.assign_driver')
+            && ! $user->hasPermission('partners.deliveries.manage')) {
+            return false;
+        }
+
+        if ($order->partner_id) {
+            if (! $user->hasPermission('partners.deliveries.manage')) {
+                return false;
+            }
+
+            $partner = $order->relationLoaded('partner')
+                ? $order->partner
+                : Partner::query()->find($order->partner_id);
+
+            if (! $user->hasPermission('partners.read') && ! ($partner && $user->managesPartner($partner))) {
+                return false;
+            }
+
+            return app(OrderDriverAssignmentService::class)->canAssign($order, $user);
+        }
+
+        if (! $user->hasOrderScopePermission('read', $order)) {
+            return false;
+        }
+
+        return app(OrderDriverAssignmentService::class)->canAssign($order, $user);
     }
 }

@@ -98,6 +98,19 @@ export default {
     canViewCities() {
       return this.hasPermission('cities.read');
     },
+    canViewPartners() {
+      return this.hasPermission('partners.read');
+    },
+    canViewPartnerOrders() {
+      return (
+        this.hasPermission('partners.read') ||
+        this.hasPermission('partners.deliveries.manage') ||
+        (this.$page.props.auth?.user?.roles ?? []).includes('Driver')
+      );
+    },
+    canViewPartnerAssignments() {
+      return this.hasPermission('partners.update');
+    },
     canViewApiIntegrations() {
       return this.hasPermission('permissions.read') || this.hasPermission('roles.read');
     },
@@ -238,6 +251,13 @@ export default {
         </Link>
       </li>
 
+      <li v-if="canViewPartnerOrders()" class="nav-item">
+        <Link href="/partner-orders" class="nav-link menu-link">
+          <i class="ri-links-line"></i>
+          <span>{{ $t('sidebar.partner_orders') }}</span>
+        </Link>
+      </li>
+
       <li v-if="canViewPickups()" class="nav-item">
         <Link href="/pickup-requests" class="nav-link menu-link">
           <i class="ri-truck-line"></i>
@@ -373,6 +393,12 @@ export default {
             </li>
             <li v-if="canViewCities()" class="nav-item">
               <Link href="/cities" class="nav-link">{{ $t('sidebar.settings.cities') }}</Link>
+            </li>
+            <li v-if="canViewPartners()" class="nav-item">
+              <Link href="/partners" class="nav-link">{{ $t('sidebar.settings.partners') }}</Link>
+            </li>
+            <li v-if="canViewPartnerAssignments()" class="nav-item">
+              <Link :href="route('partner-assignments.index')" class="nav-link">{{ $t('sidebar.settings.partner_assignments') }}</Link>
             </li>
             <li v-if="canViewApiIntegrations()" class="nav-item">
               <Link :href="route('api-integrations.index')" class="nav-link">{{ $t('sidebar.settings.api_integrations') }}</Link>

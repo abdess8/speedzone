@@ -71,6 +71,13 @@ class OrderResource extends JsonResource
                 : null),
             'seller_id' => $this->seller_id,
 
+            'partner_id' => $this->partner_id,
+            'external_tracking_code' => $this->external_tracking_code,
+            'partner' => $this->whenLoaded('partner', fn () => $this->partner ? [
+                'id' => $this->partner->id,
+                'name' => $this->partner->name,
+            ] : null),
+
             'driver' => $this->whenLoaded('driver', fn () => $this->driver
                 ? UserSummaryResource::make($this->driver)->resolve($request)
                 : null),
@@ -205,6 +212,7 @@ class OrderResource extends JsonResource
             'notes' => $this->notes,
             'is_fragile' => (bool) $this->is_fragile,
             'can_be_opened' => (bool) $this->can_be_opened,
+            'option_exchange' => (bool) $this->option_exchange,
 
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

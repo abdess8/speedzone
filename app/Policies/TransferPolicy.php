@@ -36,6 +36,19 @@ class TransferPolicy
         return $status->isEditable();
     }
 
+    public function assignStaff(User $user, Transfer $transfer): bool
+    {
+        if (! $user->hasPermission('transfers.update')) {
+            return false;
+        }
+
+        $status = $transfer->status instanceof \App\Enums\TransferStatus
+            ? $transfer->status
+            : \App\Enums\TransferStatus::from($transfer->status);
+
+        return $status->canAssignStaff();
+    }
+
     public function changeStatus(User $user, Transfer $transfer): bool
     {
         return $this->dispatch($user, $transfer)

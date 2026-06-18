@@ -4,6 +4,7 @@ return [
     'menu' => 'Menu',
     'dashboard' => 'Tableau de bord',
     'orders' => 'Commandes',
+    'partner_orders' => 'Commandes partenaires',
     'pickups' => 'Ramassages',
     'transfers' => 'Transferts',
     'returns' => 'Retours',
@@ -25,6 +26,8 @@ return [
         'users' => 'Utilisateurs',
         'roles_permissions' => 'Rôles & Permissions',
         'cities' => 'Villes',
+        'partners' => 'Partenaires',
+        'partner_assignments' => 'Affectation partenaires',
         'api_integrations' => 'Intégrations API',
     ],
 ];

@@ -8,6 +8,7 @@ return [
     'status' => 'Statut',
     'all' => 'Tous',
     'all_statuses' => 'Tous les statuts',
+    'none' => 'Aucune',
     'active' => 'Actif',
     'inactive' => 'Inactif',
     'yes' => 'Oui',

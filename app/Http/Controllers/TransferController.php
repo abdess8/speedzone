@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\TransferStatus;
+use App\Http\Requests\AssignTransferStaffRequest;
 use App\Http\Requests\EligibleTransferOrdersRequest;
 use App\Http\Requests\ChangeTransferStatusRequest;
 use App\Http\Requests\StoreTransferRequest;
@@ -126,7 +127,7 @@ class TransferController extends Controller
             'qrCode' => $request->user()->can('printQr', $transfer)
                 ? $this->qrCodes->dataUri($transfer->reference)
                 : null,
-            'staff' => $request->user()->hasPermission('transfers.update')
+            'staff' => $request->user()->can('assignStaff', $transfer)
                 ? $this->transfers->staffOptions()->map(fn ($u) => [
                     'id' => $u->id,
                     'name' => $u->full_name,
@@ -136,6 +137,7 @@ class TransferController extends Controller
             'can' => array_merge($this->abilities($request), [
                 'view' => true,
                 'update' => $request->user()->can('update', $transfer),
+                'assign' => $request->user()->can('assignStaff', $transfer),
                 'dispatch' => $request->user()->can('dispatch', $transfer),
                 'receive' => $request->user()->can('receive', $transfer),
                 'scan' => $request->user()->can('scan', $transfer),
@@ -150,7 +152,24 @@ class TransferController extends Controller
 
         $this->transfers->update($transfer, $request->user(), $request->validated());
 
-        return back()->with('success', 'Transfer updated successfully.');
+        return redirect()
+            ->route('transfers.show', $transfer)
+            ->with('success', 'Transfer updated successfully.');
+    }
+
+    public function assignStaff(AssignTransferStaffRequest $request, Transfer $transfer): RedirectResponse
+    {
+        $this->authorize('assignStaff', $transfer);
+
+        $this->transfers->assignStaff(
+            $transfer,
+            $request->user(),
+            $request->integer('assigned_to')
+        );
+
+        return redirect()
+            ->route('transfers.show', $transfer)
+            ->with('success', 'Staff assigned successfully.');
     }
 
     public function dispatch(Request $request, Transfer $transfer): RedirectResponse

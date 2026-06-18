@@ -9,9 +9,17 @@ return [
         'driver_invoices' => 'Driver Invoices',
         'returns' => 'Returns',
         'transfers' => 'Transfers',
+        'partners' => 'Partner Integrations',
     ],
 
     'names' => [
+        'partners.create' => 'Create partners',
+        'partners.read' => 'View partners',
+        'partners.update' => 'Update partners',
+        'partners.delete' => 'Delete partners',
+        'partners.sync' => 'Force partner sync',
+        'partners.deliveries.manage' => 'Manage partner deliveries',
+
         'support.create' => 'Create tickets',
         'support.read.own' => 'View own tickets',
         'support.read.all' => 'View all tickets',
@@ -23,6 +31,12 @@ return [
     ],
 
     'descriptions' => [
+        'partners.create' => 'Register a new B2B delivery partner and its API credentials.',
+        'partners.read' => 'View partner configurations, status mappings, and API logs.',
+        'partners.update' => 'Edit partner settings, credentials, cities, and status mappings.',
+        'partners.delete' => 'Remove a partner integration.',
+        'partners.sync' => 'Trigger an on-demand "Force Sync Now" ingestion for a partner.',
+        'partners.deliveries.manage' => 'Update and mass-scan deliveries belonging to assigned partners.',
         'support.create' => 'Allows sellers to open new support tickets linked to orders, invoices, or pickup requests.',
         'support.read.own' => 'View support tickets created by the current user only.',
         'support.read.all' => 'View every support ticket in the Support Center dashboard.',

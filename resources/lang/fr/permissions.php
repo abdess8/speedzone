@@ -9,9 +9,17 @@ return [
         'driver_invoices' => 'Factures livreurs',
         'returns' => 'Retours',
         'transfers' => 'Transferts',
+        'partners' => 'Intégrations partenaires',
     ],
 
     'names' => [
+        'partners.create' => 'Créer des partenaires',
+        'partners.read' => 'Voir les partenaires',
+        'partners.update' => 'Modifier les partenaires',
+        'partners.delete' => 'Supprimer les partenaires',
+        'partners.sync' => 'Forcer la synchronisation',
+        'partners.deliveries.manage' => 'Gérer les livraisons partenaires',
+
         'support.create' => 'Créer des tickets',
         'support.read.own' => 'Voir ses propres tickets',
         'support.read.all' => 'Voir tous les tickets',
@@ -23,6 +31,12 @@ return [
     ],
 
     'descriptions' => [
+        'partners.create' => 'Enregistrer un nouveau partenaire B2B et ses identifiants API.',
+        'partners.read' => 'Consulter les configurations partenaires, correspondances et journaux API.',
+        'partners.update' => 'Modifier les paramètres, identifiants, villes et correspondances du partenaire.',
+        'partners.delete' => 'Supprimer une intégration partenaire.',
+        'partners.sync' => 'Lancer une ingestion « synchroniser maintenant » pour un partenaire.',
+        'partners.deliveries.manage' => 'Mettre à jour et scanner en masse les livraisons des partenaires assignés.',
         'support.create' => 'Permet aux vendeurs d\'ouvrir des tickets liés à leurs commandes, factures ou ramassages.',
         'support.read.own' => 'Consulter uniquement les tickets créés par l\'utilisateur connecté.',
         'support.read.all' => 'Consulter tous les tickets dans le centre de support.',

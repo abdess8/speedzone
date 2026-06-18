@@ -51,6 +51,8 @@ return [
         'not_fragile' => 'Non fragile',
         'openable' => 'Ouverture autorisée',
         'do_not_open' => 'Ne pas ouvrir',
+        'exchange' => 'Échange',
+        'not_exchange' => 'Pas d\'échange',
     ],
     'actions' => [
         'print_label' => 'Imprimer l\'étiquette',
@@ -110,6 +112,8 @@ return [
         'fragile_hint' => 'Manipulation avec précaution',
         'can_be_opened' => 'Ouverture autorisée au client',
         'can_be_opened_hint' => 'Le client peut inspecter le contenu',
+        'option_exchange' => 'Option échange',
+        'option_exchange_hint' => 'Le client peut échanger le produit',
         'payment_method' => 'Mode de paiement',
         'order_amount' => 'Montant commande',
         'order_value' => 'Valeur commande',

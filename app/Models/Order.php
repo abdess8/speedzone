@@ -4,8 +4,10 @@ namespace App\Models;
 
 use App\Casts\PaymentMethodCast;
 use App\Enums\OrderStatus;
+use App\Enums\PartnerOrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\TransferStatus;
+use App\Models\Scopes\PartnerDeliveryVisibilityScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,9 +20,16 @@ class Order extends Model
 {
     use HasFactory;
 
+    /**
+     * When true, outbound partner status sync is skipped (e.g. during inbound API ingestion).
+     */
+    public bool $suppressPartnerStatusSync = false;
+
     protected $fillable = [
         'tracking_number',
+        'external_tracking_code',
         'seller_id',
+        'partner_id',
         'driver_id',
         'assigned_at',
         'delivered_at',
@@ -42,6 +51,7 @@ class Order extends Model
         'notes',
         'is_fragile',
         'can_be_opened',
+        'option_exchange',
         'status',
         'is_returned',
     ];
@@ -55,6 +65,7 @@ class Order extends Model
         'total_amount' => 'decimal:2',
         'is_fragile' => 'boolean',
         'can_be_opened' => 'boolean',
+        'option_exchange' => 'boolean',
         'is_returned' => 'boolean',
         'assigned_at' => 'datetime',
         'delivered_at' => 'datetime',
@@ -93,6 +104,14 @@ class Order extends Model
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id');
+    }
+
+    /**
+     * B2B partner this order was ingested from (null for native orders).
+     */
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class);
     }
 
     /**
@@ -191,6 +210,22 @@ class Order extends Model
     */
 
     /**
+     * Whether this order was ingested from a B2B partner.
+     */
+    public function isPartnerDelivery(): bool
+    {
+        return $this->partner_id !== null;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function partnerDeliveryAllowedStatuses(): array
+    {
+        return PartnerOrderStatus::values();
+    }
+
+    /**
      * Record a status change in the order history.
      */
     public function recordStatus(
@@ -240,6 +275,30 @@ class Order extends Model
     public function scopeOwnedBy(Builder $query, int $userId): Builder
     {
         return $query->where('seller_id', $userId);
+    }
+
+    /**
+     * Restrict the query to orders ingested from the given partner.
+     */
+    public function scopeForPartner(Builder $query, int $partnerId): Builder
+    {
+        return $query->where('partner_id', $partnerId);
+    }
+
+    /**
+     * Partner deliveries visible to the given user (RBAC + driver assignment).
+     */
+    public function scopeVisibleForPartnerDeliveryAccess(Builder $query, \App\Models\User $user): Builder
+    {
+        return PartnerDeliveryVisibilityScope::applyToQuery($query, $user);
+    }
+
+    /**
+     * Apply the global partner-delivery visibility scope for the current request.
+     */
+    public function scopeWithPartnerDeliveryVisibility(Builder $query): Builder
+    {
+        return $query->withGlobalScope('partnerDeliveryVisibility', new PartnerDeliveryVisibilityScope);
     }
 
     /**

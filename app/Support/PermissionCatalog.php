@@ -20,8 +20,26 @@ class PermissionCatalog
             self::supportPermissions(),
             self::cityPermissions(),
             self::sectorPermissions(),
-            self::driverZonePermissions()
+            self::driverZonePermissions(),
+            self::partnerPermissions()
         );
+    }
+
+    /**
+     * B2B partner integration permissions.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    public static function partnerPermissions(): array
+    {
+        return [
+            self::make('partners.create', 'partners', 'create', null, 'admin'),
+            self::make('partners.read', 'partners', 'read', null, 'admin'),
+            self::make('partners.update', 'partners', 'update', null, 'admin'),
+            self::make('partners.delete', 'partners', 'delete', null, 'admin'),
+            self::make('partners.sync', 'partners', 'sync', null, 'resource'),
+            self::make('partners.deliveries.manage', 'partners', 'deliveries.manage', null, 'resource'),
+        ];
     }
 
     /**

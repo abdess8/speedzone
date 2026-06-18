@@ -82,6 +82,7 @@ class OrderService
             'sector_id' => $order->sector_id,
             'is_fragile' => (bool) $order->is_fragile,
             'can_be_opened' => (bool) $order->can_be_opened,
+            'option_exchange' => (bool) $order->option_exchange,
             'notes' => $order->notes,
             'payment_method' => $payment->value,
             'delivery_price' => (float) $order->delivery_price,

@@ -112,6 +112,36 @@ class TransferService
         ]);
     }
 
+    public function assignStaff(Transfer $transfer, User $actor, ?int $assignedTo): Transfer
+    {
+        if (! $actor->hasPermission('transfers.update')) {
+            throw new AuthorizationException('Missing permission: transfers.update');
+        }
+
+        $status = $transfer->status instanceof TransferStatus
+            ? $transfer->status
+            : TransferStatus::from($transfer->status);
+
+        if (! $status->canAssignStaff()) {
+            throw ValidationException::withMessages([
+                'assigned_to' => 'Staff cannot be assigned on a transfer in this status.',
+            ]);
+        }
+
+        $transfer->update(['assigned_to' => $assignedTo]);
+
+        return $transfer->refresh()->load([
+            'fromCity',
+            'toCity',
+            'creator.roles',
+            'assignee.roles',
+            'orders.city',
+            'orders.sector',
+            'orders.seller.city',
+            'statusHistories.changedBy',
+        ]);
+    }
+
     public function applyStatus(
         Transfer $transfer,
         TransferStatus $toStatus,

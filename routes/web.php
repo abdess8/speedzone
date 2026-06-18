@@ -10,6 +10,10 @@ use App\Http\Controllers\DriverZoneController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PartnerController;
+use App\Http\Controllers\PartnerDeliveryController;
+use App\Http\Controllers\PartnerOrderController;
+use App\Http\Controllers\PartnerUserAssignmentController;
 use App\Http\Controllers\PickupRequestController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\RoleController;
@@ -54,6 +58,40 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->name('cities.sectors');
     Route::resource('cities', CityController::class)->whereNumber('city');
     Route::resource('sectors', SectorController::class)->whereNumber('sector');
+
+    // B2B partner integrations
+    Route::post('partners/test-connection', [PartnerController::class, 'testConnectionDraft'])
+        ->name('partners.test-connection.draft');
+    Route::post('partners/{partner}/test-connection', [PartnerController::class, 'testConnectionPreview'])
+        ->whereNumber('partner')
+        ->name('partners.test-connection');
+    Route::post('partners/{partner}/sync', [PartnerController::class, 'sync'])
+        ->whereNumber('partner')
+        ->name('partners.sync');
+    Route::resource('partners', PartnerController::class)->whereNumber('partner');
+
+    Route::get('partner-assignments', [PartnerUserAssignmentController::class, 'index'])
+        ->name('partner-assignments.index');
+    Route::post('partner-assignments/{partner}/users', [PartnerUserAssignmentController::class, 'assign'])
+        ->whereNumber('partner')
+        ->name('partner-assignments.assign');
+    Route::delete('partner-assignments/{partner}/users/{user}', [PartnerUserAssignmentController::class, 'remove'])
+        ->whereNumber('partner')
+        ->whereNumber('user')
+        ->name('partner-assignments.remove');
+
+    Route::get('partner-orders', [PartnerOrderController::class, 'index'])->name('partner-orders.index');
+    Route::post('partner-orders/scan', [PartnerOrderController::class, 'scan'])->name('partner-orders.scan');
+    Route::post('partner-orders/bulk-advance-status', [PartnerOrderController::class, 'bulkAdvanceStatus'])
+        ->name('partner-orders.bulk-advance-status');
+    Route::post('partner-orders/bulk-assign-driver', [PartnerOrderController::class, 'bulkAssignDriver'])
+        ->name('partner-orders.bulk-assign-driver');
+    Route::post('partner-orders/bulk-scan', [PartnerOrderController::class, 'bulkScan'])
+        ->name('partner-orders.bulk-scan');
+
+    Route::patch('partner-deliveries/{order}/status', [PartnerDeliveryController::class, 'updateStatus'])
+        ->whereNumber('order')
+        ->name('partner-deliveries.update-status');
 
     // Driver zone assignment
     Route::get('driver-zones', [DriverZoneController::class, 'index'])->name('driver-zones.index');
@@ -105,6 +143,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('transfers/{reference}', [TransferController::class, 'track'])
         ->where('reference', 'TRF-[0-9]{4}-[0-9]+')
         ->name('transfers.track');
+    Route::post('transfers/{transfer}/assign-staff', [TransferController::class, 'assignStaff'])
+        ->whereNumber('transfer')
+        ->name('transfers.assign-staff');
     Route::post('transfers/{transfer}/dispatch', [TransferController::class, 'dispatch'])
         ->whereNumber('transfer')
         ->name('transfers.dispatch');

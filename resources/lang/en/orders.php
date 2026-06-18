@@ -51,6 +51,8 @@ return [
         'not_fragile' => 'Not fragile',
         'openable' => 'Can be opened',
         'do_not_open' => 'Do not open',
+        'exchange' => 'Exchange',
+        'not_exchange' => 'No exchange',
     ],
     'actions' => [
         'print_label' => 'Print Label',
@@ -110,6 +112,8 @@ return [
         'fragile_hint' => 'Handle with extra care',
         'can_be_opened' => 'Can be opened by customer',
         'can_be_opened_hint' => 'Customer may inspect contents',
+        'option_exchange' => 'Exchange option',
+        'option_exchange_hint' => 'Customer may exchange the product',
         'payment_method' => 'Payment Method',
         'order_amount' => 'Order Amount',
         'order_value' => 'Order Value',

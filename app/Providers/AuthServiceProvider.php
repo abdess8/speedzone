@@ -7,6 +7,7 @@ use App\Models\DriverInvoice;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\OrderReturn;
+use App\Models\Partner;
 use App\Models\PickupRequest;
 use App\Models\Sector;
 use App\Models\SupportTicket;
@@ -17,6 +18,8 @@ use App\Policies\DriverInvoicePolicy;
 use App\Policies\InvoicePolicy;
 use App\Policies\OrderPolicy;
 use App\Policies\OrderReturnPolicy;
+use App\Policies\PartnerDeliveryPolicy;
+use App\Policies\PartnerPolicy;
 use App\Policies\PickupRequestPolicy;
 use App\Policies\SectorPolicy;
 use App\Policies\SupportTicketPolicy;
@@ -41,6 +44,7 @@ class AuthServiceProvider extends ServiceProvider
         Invoice::class => InvoicePolicy::class,
         DriverInvoice::class => DriverInvoicePolicy::class,
         SupportTicket::class => SupportTicketPolicy::class,
+        Partner::class => PartnerPolicy::class,
     ];
 
     /**
@@ -59,5 +63,9 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('driver_zones.read', fn (User $user) => $user->hasPermission('driver_zones.read'));
         Gate::define('driver_zones.assign', fn (User $user) => $user->hasPermission('driver_zones.assign'));
         Gate::define('driver_zones.remove', fn (User $user) => $user->hasPermission('driver_zones.remove'));
+
+        Gate::define('partner-delivery.view', [PartnerDeliveryPolicy::class, 'view']);
+        Gate::define('partner-delivery.update', [PartnerDeliveryPolicy::class, 'update']);
+        Gate::define('partner-users.assign', fn (User $user) => $user->hasPermission('partners.update'));
     }
 }

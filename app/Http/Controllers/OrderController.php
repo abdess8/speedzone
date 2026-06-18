@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\ReturnReason;
+use App\Http\Requests\AssignOrderDriverRequest;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\City;
 use App\Models\Order;
 use App\Models\Sector;
+use App\Models\User;
+use App\Services\OrderDriverAssignmentService;
 use App\Services\OrderLabelPdfService;
 use App\Services\OrderQueryService;
 use App\Services\OrderService;
@@ -29,6 +32,7 @@ class OrderController extends Controller
         private readonly OrderService $orderService,
         private readonly OrderQueryService $orderQuery,
         private readonly OrderTransitionService $transitionService,
+        private readonly OrderDriverAssignmentService $driverAssignment,
     ) {}
 
     public function index(Request $request): Response
@@ -113,6 +117,7 @@ class OrderController extends Controller
             'city',
             'sector',
             'invoice',
+            'driver.roles',
             'driverTransactions.driverInvoice',
             'seller.roles',
             'seller.city',
@@ -135,9 +140,13 @@ class OrderController extends Controller
                 'update' => $request->user()->can('update', $order),
                 'delete' => $request->user()->can('delete', $order),
                 'print' => $request->user()->can('print', $order),
+                'assign_driver' => $request->user()->can('assignDriver', $order),
                 'request_return' => $this->canRequestReturn($request->user(), $order),
                 'create_failed_return' => $this->canCreateFailedReturn($request->user(), $order),
             ]),
+            'driverOptions' => $request->user()->can('assignDriver', $order)
+                ? $this->driverAssignmentOptions()
+                : [],
         ]);
     }
 
@@ -279,6 +288,20 @@ class OrderController extends Controller
     }
 
     /**
+     * Assign (or reassign) a driver to an order that is out for delivery.
+     */
+    public function assignDriver(AssignOrderDriverRequest $request, Order $order): RedirectResponse
+    {
+        $this->authorize('assignDriver', $order);
+
+        $driver = User::query()->findOrFail($request->integer('driver_id'));
+
+        $this->driverAssignment->assign($order, $driver, $request->user());
+
+        return back()->with('success', __('driver_invoices.assign.assigned'));
+    }
+
+    /**
      * Apply a status transition to several orders at once.
      */
     public function bulkStatus(Request $request): RedirectResponse
@@ -321,7 +344,7 @@ class OrderController extends Controller
      */
     private function scopedQuery(Request $request): Builder
     {
-        $query = Order::query();
+        $query = Order::query()->whereNull('partner_id');
 
         if (! $request->user()->hasPermission('orders.read.all')) {
             $query->ownedBy($request->user()->id);
@@ -411,6 +434,24 @@ class OrderController extends Controller
                 'color' => OrderStatus::from($status)->color(),
             ])
             ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<int, array{id: int, name: string, email: string|null}>
+     */
+    private function driverAssignmentOptions(): array
+    {
+        return User::query()
+            ->whereHas('roles', fn ($q) => $q->where('name', \App\Models\Role::DRIVER))
+            ->orderBy('first_name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'first_name', 'last_name', 'email'])
+            ->map(fn (User $driver) => [
+                'id' => $driver->id,
+                'name' => $driver->full_name,
+                'email' => $driver->email,
+            ])
             ->all();
     }
 

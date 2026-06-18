@@ -30,6 +30,9 @@ class OrderQueryService
     {
         $query = Order::query()->with(['city', 'sector', 'seller']);
 
+        // Native orders only — partner-ingested orders live on /partner-orders.
+        $query->whereNull('partner_id');
+
         // Authorization scope: users without read.all only see their own orders.
         if (! $user->hasPermission('orders.read.all')) {
             $query->ownedBy($user->id);

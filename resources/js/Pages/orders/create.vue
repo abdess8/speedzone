@@ -30,6 +30,7 @@ const emptyForm = () => ({
   notes: "",
   is_fragile: false,
   can_be_opened: false,
+  option_exchange: false,
 });
 
 const buildFormState = (data = null) => {
@@ -48,6 +49,7 @@ const buildFormState = (data = null) => {
     notes: data.notes ?? "",
     is_fragile: Boolean(data.is_fragile),
     can_be_opened: Boolean(data.can_be_opened),
+    option_exchange: Boolean(data.option_exchange),
   };
 };
 

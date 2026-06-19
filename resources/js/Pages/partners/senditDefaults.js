@@ -7,6 +7,8 @@ export const SENDIT_STATUS_MAPPINGS = [
   { speedzone_status: "OUT_FOR_DELIVERY", partner_status: "En cours de livraison" },
   { speedzone_status: "DELIVERED", partner_status: "livree" },
   { speedzone_status: "FAILED", partner_status: "en attente de retour" },
+  { speedzone_status: "REJECTED", partner_status: "Rejeté" },
+  { speedzone_status: "CANCELED", partner_status: "Annulé" },
 ];
 
 export const SENDIT_FIELD_MAPPINGS = [
@@ -21,6 +23,15 @@ export const SENDIT_FIELD_MAPPINGS = [
   { speedzone_field: "option_exchange", partner_field: "option_exchange" },
 ];
 
+export const SENDIT_UPDATE_FIELD_MAPPINGS = [
+  { speedzone_field: "external_tracking_code", partner_field: "id" },
+  { speedzone_field: "partner_status", partner_field: "status" },
+  { speedzone_field: "status_comment", partner_field: "message" },
+  { speedzone_field: "proof_image", partner_field: "proof_image" },
+  { speedzone_field: "delivered_at", partner_field: "deliver_by" },
+  { speedzone_field: "is_delivered_partial", partner_field: "isDeliveredPartial" },
+];
+
 export const senditPartnerDefaults = {
   name: "Sendit",
   api_base_url: "https://app.sendit.ma/api/v1",
@@ -31,8 +42,9 @@ export const senditPartnerDefaults = {
   login_token_field: "data.token",
   endpoint_statuses: "/all-status-deliveries",
   endpoint_deliveries: "/deliveries",
+  delivery_lookup_param: "code-delivery",
   endpoint_update: "/update-deliveries",
-  ingestion_partner_status: "En transit",
   status_mappings: SENDIT_STATUS_MAPPINGS,
   field_mappings: SENDIT_FIELD_MAPPINGS,
+  update_field_mappings: SENDIT_UPDATE_FIELD_MAPPINGS,
 };

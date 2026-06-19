@@ -30,14 +30,34 @@ class PartnerApiService
     /**
      * @return array<string, mixed>
      */
-    public function getDeliveries(Partner $partner, int $page = 1, ?string $partnerStatus = null): array
+    public function getDeliveries(Partner $partner, int $page = 1): array
     {
-        $query = array_filter(
-            ['page' => $page, 'status' => $partnerStatus],
-            static fn ($value) => $value !== null && $value !== ''
-        );
+        return $this->request($partner, 'GET', $this->endpoint($partner, 'endpoint_deliveries', '/deliveries'), [
+            'page' => $page,
+        ]);
+    }
 
-        return $this->request($partner, 'GET', $this->endpoint($partner, 'endpoint_deliveries', '/deliveries'), $query);
+    /**
+     * Fetch a single delivery from the partner API using the configured lookup parameter.
+     *
+     * @return array<string, mixed>
+     *
+     * @throws PartnerApiException
+     */
+    public function getDeliveryByCode(Partner $partner, string $code): array
+    {
+        $param = trim((string) $partner->delivery_lookup_param);
+
+        if ($param === '') {
+            throw new PartnerApiException('Single delivery lookup parameter is not configured on this partner.');
+        }
+
+        return $this->request(
+            $partner,
+            'GET',
+            $this->endpoint($partner, 'endpoint_deliveries', '/deliveries'),
+            [$param => $code]
+        );
     }
 
     /**

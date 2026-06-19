@@ -9,6 +9,7 @@ const props = defineProps({
   cities: { type: Array, default: () => [] },
   order_statuses: { type: Array, default: () => [] },
   order_fields: { type: Array, default: () => [] },
+  update_fields: { type: Array, default: () => [] },
   auth_types: { type: Array, default: () => [] },
 });
 
@@ -30,8 +31,8 @@ const form = useForm({
   login_token_field: props.partner.login_token_field ?? "data.token",
   endpoint_statuses: props.partner.endpoint_statuses ?? "/all-status-deliveries",
   endpoint_deliveries: props.partner.endpoint_deliveries ?? "/deliveries",
+  delivery_lookup_param: props.partner.delivery_lookup_param ?? "",
   endpoint_update: props.partner.endpoint_update ?? "/update-deliveries",
-  ingestion_partner_status: props.partner.ingestion_partner_status ?? "",
   sync_frequency_minutes: props.partner.sync_frequency_minutes ?? 30,
   sync_status: props.partner.sync_status ?? false,
   city_ids: [...(props.partner.city_ids ?? [])],
@@ -41,6 +42,10 @@ const form = useForm({
     partner_status: m.partner_status,
   })),
   field_mappings: (props.partner.field_mappings ?? []).map((m) => ({
+    speedzone_field: m.speedzone_field,
+    partner_field: m.partner_field,
+  })),
+  update_field_mappings: (props.partner.update_field_mappings ?? []).map((m) => ({
     speedzone_field: m.speedzone_field,
     partner_field: m.partner_field,
   })),
@@ -62,6 +67,7 @@ const submit = () => {
         :cities="cities"
         :order-statuses="order_statuses"
         :order-fields="order_fields"
+        :update-fields="update_fields"
         :auth-types="auth_types"
         :partner-id="partner.id"
         :is-edit="true"

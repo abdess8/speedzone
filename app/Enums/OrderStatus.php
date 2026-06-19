@@ -16,6 +16,8 @@ enum OrderStatus: string
     case OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY';
     case DELIVERED = 'DELIVERED';
     case FAILED = 'FAILED';
+    case REJECTED = 'REJECTED';
+    case CANCELED = 'CANCELED';
     case RETURN_REQUESTED = 'RETURN_REQUESTED';
     case RETURN_IN_PROGRESS = 'RETURN_IN_PROGRESS';
     case RETURNED = 'RETURNED';
@@ -47,7 +49,8 @@ enum OrderStatus: string
             self::PICKED_UP, self::IN_DEPOT, self::TRANSFER_CREATED, self::IN_TRANSIT, self::RECEIVED_IN_DESTINATION, self::IN_DELIVERY_CITY => 'primary',
             self::OUT_FOR_DELIVERY => 'warning',
             self::DELIVERED => 'success',
-            self::FAILED => 'danger',
+            self::FAILED, self::REJECTED => 'danger',
+            self::CANCELED => 'secondary',
             self::RETURN_REQUESTED => 'warning',
             self::RETURN_IN_PROGRESS => 'info',
             self::RETURNED => 'dark',
@@ -72,6 +75,8 @@ enum OrderStatus: string
             self::OUT_FOR_DELIVERY => 'ri-e-bike-2-line',
             self::DELIVERED => 'ri-checkbox-circle-line',
             self::FAILED => 'ri-close-circle-line',
+            self::REJECTED => 'ri-forbid-line',
+            self::CANCELED => 'ri-stop-circle-line',
             self::RETURN_REQUESTED => 'ri-arrow-go-back-line',
             self::RETURN_IN_PROGRESS => 'ri-truck-line',
             self::RETURNED => 'ri-arrow-go-back-line',

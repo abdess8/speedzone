@@ -86,6 +86,8 @@ class PermissionCatalog
             self::make('orders.transition.to_out_for_delivery', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_delivered', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_failed', 'orders', 'transition', null, 'workflow_transition'),
+            self::make('orders.transition.to_rejected', 'orders', 'transition', null, 'workflow_transition'),
+            self::make('orders.transition.to_canceled', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_returned', 'orders', 'transition', null, 'workflow_transition'),
         ];
     }

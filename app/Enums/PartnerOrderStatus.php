@@ -14,6 +14,8 @@ enum PartnerOrderStatus: string
     case OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY';
     case DELIVERED = 'DELIVERED';
     case FAILED = 'FAILED';
+    case REJECTED = 'REJECTED';
+    case CANCELED = 'CANCELED';
 
     /**
      * Partner-facing French labels used in Sendit and similar integrations.
@@ -26,6 +28,8 @@ enum PartnerOrderStatus: string
             self::OUT_FOR_DELIVERY => 'En cours de livraison',
             self::DELIVERED => 'livree',
             self::FAILED => 'en attente de retour',
+            self::REJECTED => 'Rejeté',
+            self::CANCELED => 'Annulé',
         };
     }
 

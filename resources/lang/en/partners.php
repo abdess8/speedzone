@@ -65,12 +65,12 @@ return [
         'endpoints_section' => 'API Endpoints',
         'endpoint_statuses' => 'GET Statuses endpoint',
         'endpoint_deliveries' => 'GET Deliveries endpoint',
+        'delivery_lookup_param' => 'Single delivery query parameter',
+        'delivery_lookup_param_placeholder' => 'code-delivery',
+        'delivery_lookup_param_hint' => 'Query parameter name used to fetch one delivery by code (e.g. ?code-delivery=ABC123).',
         'endpoint_update' => 'POST Update endpoint',
-        'ingestion_partner_status' => 'Ingestion status (partner)',
         'sync_status' => 'Outbound status sync',
-        'sync_status_hint' => 'When enabled, each local status change is pushed to the partner API.',
-        'ingestion_status_placeholder' => 'e.g. DISTRIBUTED',
-        'ingestion_status_hint' => 'Partner status used when pulling new deliveries (maps to speedZone via status mappings below).',
+        'sync_status_hint' => 'When enabled, each status change is pushed to the partner API first; speedZone status is updated only on success.',
         'status_mapping_section' => 'Status Mapping',
         'status_mapping_hint' => 'Translate speedZone order statuses to the partner\'s vocabulary for ingestion and outbound pushes.',
         'add_mapping' => 'Add mapping',
@@ -87,6 +87,13 @@ return [
         'partner_field' => 'Partner API field',
         'partner_field_placeholder' => 'e.g. code, amount, option_exchange',
         'select_field' => 'Select a field',
+        'update_field_mapping_section' => 'POST update payload mapping',
+        'update_field_mapping_hint' => 'Map speedZone fields to JSON keys sent when pushing a status change (POST update endpoint).',
+        'add_update_field_mapping' => 'Add mapping',
+        'no_update_field_mappings' => 'No mappings configured — a default payload will be used.',
+        'update_payload_preview' => 'POST update payload preview',
+        'partner_api_field' => 'Partner JSON key',
+        'update_field_placeholder' => 'e.g. id, status, message',
     ],
 
     'connection' => [
@@ -159,6 +166,10 @@ return [
         'bulk_assign_result' => ':updated assigned, :skipped skipped.',
         'bulk_scan_result' => ':updated updated via scan, :skipped skipped.',
         'status_updated' => 'Partner delivery status updated.',
+        'sync' => [
+            'no_status_mapping' => 'No partner status mapping configured for :status.',
+            'use_partner_endpoint' => 'Partner orders must be updated through the partner flow (API sync).',
+        ],
         'scanner' => [
             'open' => 'QR bulk scan',
             'title' => 'QR Bulk Status Scan',
@@ -190,8 +201,13 @@ return [
         'done' => 'Sync completed',
         'failed' => 'Sync failed',
         'select_partner' => 'Please select a partner first.',
-        'hint' => 'Click "Sync now" to pull new deliveries from :name.',
+        'hint' => 'Click "Sync now" to pull all deliveries from :name and map them to speedZone statuses.',
         'success' => ':created created, :updated updated, :skipped skipped.',
+        'order_success' => 'Order synchronized with partner.',
+        'order_not_partner' => 'This order is not a partner delivery.',
+        'order_no_reference' => 'This order has no partner reference code.',
+        'order_not_found' => 'Delivery not found on partner API.',
+        'lookup_param_missing' => 'Configure the single delivery query parameter on the partner.',
     ],
 
     'assignments' => [
@@ -206,5 +222,9 @@ return [
         'remove_confirm_title' => 'Remove admin?',
         'remove_confirm_text' => 'Remove :name from this partner?',
         'modal_title' => 'Admins for :name',
+    ],
+
+    'validation' => [
+        'duplicate_mapping_key' => 'The value ":key" is already used in another mapping row.',
     ],
 ];

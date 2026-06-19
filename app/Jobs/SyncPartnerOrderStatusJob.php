@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Push a partner delivery status update to the partner API (e.g. Sendit /update-deliveries).
+ * Retry pushing a partner delivery status update to the partner API.
  */
 class SyncPartnerOrderStatusJob implements ShouldQueue
 {
@@ -28,7 +28,11 @@ class SyncPartnerOrderStatusJob implements ShouldQueue
     /** @var array<int, int> */
     public array $backoff = [30, 120, 300];
 
-    public function __construct(public readonly int $orderId) {}
+    public function __construct(
+        public readonly int $orderId,
+        public readonly ?string $targetStatus = null,
+        public readonly ?string $comment = null,
+    ) {}
 
     public function handle(PartnerOutboundSyncService $sync): void
     {
@@ -40,18 +44,23 @@ class SyncPartnerOrderStatusJob implements ShouldQueue
             return;
         }
 
-        $partner = $order->partner;
+        $targetStatus = $this->targetStatus ?? (
+            $order->status instanceof \App\Enums\OrderStatus
+                ? $order->status->value
+                : (string) $order->status
+        );
 
-        if (! $partner || ! $partner->sync_status) {
+        if (! $sync->shouldSync($order)) {
             return;
         }
 
         try {
-            $sync->pushOrderStatus($order);
+            $sync->pushStatusChange($order, $targetStatus, $this->comment);
+            $sync->clearSyncError($order);
         } catch (PartnerApiException $e) {
             Log::error('Partner outbound status sync failed.', [
                 'order_id' => $order->id,
-                'partner_id' => $partner->id,
+                'partner_id' => $order->partner_id,
                 'error' => $e->getMessage(),
             ]);
 
@@ -59,7 +68,7 @@ class SyncPartnerOrderStatusJob implements ShouldQueue
         } catch (Throwable $e) {
             Log::error('Partner outbound status sync failed.', [
                 'order_id' => $order->id,
-                'partner_id' => $partner->id,
+                'partner_id' => $order->partner_id,
                 'error' => $e->getMessage(),
             ]);
 

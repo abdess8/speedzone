@@ -89,6 +89,17 @@ return [
         'amount_to_collect' => 'Amount to Collect',
         'delivery_price' => 'Delivery Price',
         'total_amount' => 'Total Amount',
+        'partner' => 'Partner',
+        'partner_reference' => 'Partner ref.',
+        'application_status' => 'Application status',
+        'connection_status' => 'Connection status',
+        'partner_connection' => [
+            'connected' => 'Connected',
+            'expired' => 'Token expired',
+            'no_token' => 'No token',
+            'inactive' => 'Partner inactive',
+        ],
+        'partner_sync_error' => 'Partner sync error',
     ],
     'form' => [
         'customer_info' => 'Customer Information',

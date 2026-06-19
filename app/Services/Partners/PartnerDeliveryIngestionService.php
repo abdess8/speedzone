@@ -51,15 +51,11 @@ class PartnerDeliveryIngestionService
             'errors' => [],
         ];
 
-        $partnerStatus = filled($partner->ingestion_partner_status)
-            ? (string) $partner->ingestion_partner_status
-            : null;
-
         $page = 1;
         $lastPage = 1;
 
         do {
-            $response = $this->partnerApi->getDeliveries($partner, $page, $partnerStatus);
+            $response = $this->partnerApi->getDeliveries($partner, $page);
             $pageData = $this->normalizer->extractPage($response);
             $stats['pages']++;
 
@@ -102,9 +98,82 @@ class PartnerDeliveryIngestionService
     }
 
     /**
+     * Pull a single delivery from the partner API and upsert the given order.
+     *
+     * @return array{created: int, updated: int, skipped: int, pages: int, errors: array<int, string>}
+     *
+     * @throws PartnerApiException
+     */
+    public function syncOrder(Order $order, User $actor): array
+    {
+        $order->load('partner.fieldMappings');
+
+        if (! $order->partner_id || ! $order->partner) {
+            throw new PartnerApiException(__('partners.sync.order_not_partner'));
+        }
+
+        $partner = $order->partner;
+
+        if (! $partner->is_active) {
+            throw new PartnerApiException("Partner [{$partner->name}] is inactive.");
+        }
+
+        if (blank($partner->api_base_url) && blank($partner->endpoint_login)) {
+            throw new PartnerApiException('Partner API is not configured.');
+        }
+
+        if (blank($order->external_tracking_code)) {
+            throw new PartnerApiException(__('partners.sync.order_no_reference'));
+        }
+
+        if (blank($partner->delivery_lookup_param)) {
+            throw new PartnerApiException(__('partners.sync.lookup_param_missing'));
+        }
+
+        $response = $this->partnerApi->getDeliveryByCode($partner, (string) $order->external_tracking_code);
+        $items = $this->normalizer->extractItems($response);
+
+        if ($items === []) {
+            throw new PartnerApiException(__('partners.sync.order_not_found'));
+        }
+
+        $sellerId = $order->seller_id ?: $this->resolveSellerId($partner, $actor);
+
+        $stats = [
+            'created' => 0,
+            'updated' => 0,
+            'skipped' => 0,
+            'pages' => 1,
+            'errors' => [],
+        ];
+
+        try {
+            $result = $this->upsertDelivery($partner, $items[0], $sellerId, $order);
+
+            if ($result === 'created') {
+                $stats['created'] = 1;
+            } elseif ($result === 'updated') {
+                $stats['updated'] = 1;
+            } else {
+                $stats['skipped'] = 1;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Partner single delivery ingestion failed.', [
+                'order_id' => $order->id,
+                'partner_id' => $partner->id,
+                'exception' => $e->getMessage(),
+            ]);
+
+            throw new PartnerApiException($e->getMessage());
+        }
+
+        return $stats;
+    }
+
+    /**
      * @param  array<string, mixed>  $rawItem
      */
-    private function upsertDelivery(Partner $partner, array $rawItem, int $sellerId): string
+    private function upsertDelivery(Partner $partner, array $rawItem, int $sellerId, ?Order $targetOrder = null): string
     {
         $normalized = $this->normalizer->normalize($rawItem, $partner);
 
@@ -112,22 +181,27 @@ class PartnerDeliveryIngestionService
             return 'skipped';
         }
 
-        return DB::transaction(function () use ($partner, $normalized, $sellerId): string {
-            $order = Order::query()
-                ->where('partner_id', $partner->id)
-                ->where('external_tracking_code', $normalized['external_tracking_code'])
-                ->lockForUpdate()
-                ->first();
+        return DB::transaction(function () use ($partner, $normalized, $sellerId, $targetOrder): string {
+            if ($targetOrder) {
+                $order = Order::query()->whereKey($targetOrder->id)->lockForUpdate()->firstOrFail();
+                $isNew = false;
+            } else {
+                $order = Order::query()
+                    ->where('partner_id', $partner->id)
+                    ->where('external_tracking_code', $normalized['external_tracking_code'])
+                    ->lockForUpdate()
+                    ->first();
 
-            $isNew = $order === null;
+                $isNew = $order === null;
 
-            if ($isNew) {
-                $order = new Order([
-                    'partner_id' => $partner->id,
-                    'external_tracking_code' => $normalized['external_tracking_code'],
-                    'tracking_number' => $this->trackingNumbers->generate(),
-                    'seller_id' => $sellerId,
-                ]);
+                if ($isNew) {
+                    $order = new Order([
+                        'partner_id' => $partner->id,
+                        'external_tracking_code' => $normalized['external_tracking_code'],
+                        'tracking_number' => $this->trackingNumbers->generate(),
+                        'seller_id' => $sellerId,
+                    ]);
+                }
             }
 
             $cityId = $this->resolveCityId($partner, $normalized);
@@ -154,6 +228,10 @@ class PartnerDeliveryIngestionService
                 'option_exchange' => $normalized['option_exchange'],
                 'status' => $status->value,
             ]);
+
+            if ($targetOrder && blank($order->external_tracking_code)) {
+                $order->external_tracking_code = $normalized['external_tracking_code'];
+            }
 
             $order->suppressPartnerStatusSync = true;
             $order->save();
@@ -259,14 +337,6 @@ class PartnerDeliveryIngestionService
     {
         if ($partnerStatus) {
             $mapped = $this->statusMapper->toSpeedzoneStatus($partner, $partnerStatus);
-
-            if ($mapped) {
-                return $mapped;
-            }
-        }
-
-        if (filled($partner->ingestion_partner_status)) {
-            $mapped = $this->statusMapper->toSpeedzoneStatus($partner, (string) $partner->ingestion_partner_status);
 
             if ($mapped) {
                 return $mapped;

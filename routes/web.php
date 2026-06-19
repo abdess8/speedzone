@@ -111,6 +111,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('orders/{order}/assign-driver', [OrderController::class, 'assignDriver'])
         ->whereNumber('order')
         ->name('orders.assign-driver');
+    Route::post('orders/{order}/sync-partner', [OrderController::class, 'syncPartner'])
+        ->whereNumber('order')
+        ->name('orders.sync-partner');
     Route::resource('orders', OrderController::class)->whereNumber('order');
     // QR code target: /orders/SPD-2026-583920 → public tracking timeline.
     Route::get('orders/{trackingNumber}', [OrderController::class, 'track'])

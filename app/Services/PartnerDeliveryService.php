@@ -6,6 +6,8 @@ use App\Enums\OrderStatus;
 use App\Enums\PartnerOrderStatus;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\Partners\PartnerApiException;
+use App\Services\Partners\PartnerOutboundSyncService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -14,6 +16,7 @@ class PartnerDeliveryService
 {
     public function __construct(
         private readonly OrderTransitionService $transitions,
+        private readonly PartnerOutboundSyncService $outboundSync,
     ) {}
 
     /**
@@ -45,11 +48,15 @@ class PartnerDeliveryService
             return $order;
         }
 
+        $this->syncWithPartner($order, $toStatus, $comment);
+
         return DB::transaction(function () use ($order, $toStatus, $actor, $comment, $fromStatus): Order {
             $allowedNext = $this->transitions->allowedNextStatuses($order);
 
             if (in_array($toStatus, $allowedNext, true)) {
-                return $this->transitions->transition($order, $toStatus, $actor, $comment);
+                return $this->applyLocalStatusChange(
+                    $this->transitions->transitionWithoutPartnerSync($order, $toStatus, $actor, $comment),
+                );
             }
 
             // Partner deliveries may jump between the five allowed operational statuses.
@@ -72,7 +79,32 @@ class PartnerDeliveryService
                 app(DriverPaymentService::class)->recordDeliveryPayment($order->refresh(), $actor);
             }
 
-            return $order->refresh();
+            return $this->applyLocalStatusChange($order->refresh());
         });
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    private function syncWithPartner(Order $order, string $targetStatus, ?string $comment): void
+    {
+        if ($order->suppressPartnerStatusSync || ! $this->outboundSync->shouldSync($order)) {
+            return;
+        }
+
+        $order->loadMissing('partner');
+
+        try {
+            $this->outboundSync->pushStatusChange($order, $targetStatus, $comment);
+        } catch (PartnerApiException $e) {
+            $this->outboundSync->recordFailure($order, $e);
+        }
+    }
+
+    private function applyLocalStatusChange(Order $order): Order
+    {
+        $this->outboundSync->clearSyncError($order);
+
+        return $order->refresh();
     }
 }

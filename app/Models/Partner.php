@@ -27,6 +27,7 @@ class Partner extends Model
         'auth_type',
         'endpoint_statuses',
         'endpoint_deliveries',
+        'delivery_lookup_param',
         'endpoint_update',
         'endpoint_login',
         'api_key_header',
@@ -35,7 +36,6 @@ class Partner extends Model
         'login_token_field',
         'access_token',
         'token_expires_at',
-        'ingestion_partner_status',
         'sync_frequency_minutes',
         'last_synced_at',
         'sync_status',
@@ -108,6 +108,11 @@ class Partner extends Model
     public function fieldMappings(): HasMany
     {
         return $this->hasMany(FieldMapping::class);
+    }
+
+    public function updateFieldMappings(): HasMany
+    {
+        return $this->hasMany(UpdateFieldMapping::class);
     }
 
     public function orders(): HasMany

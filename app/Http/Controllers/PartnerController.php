@@ -66,7 +66,7 @@ class PartnerController extends Controller
         $this->authorize('view', $partner);
 
         $partner->loadCount('orders');
-        $partner->load(['receptionCity', 'cities', 'sectors.city', 'statusMappings', 'fieldMappings', 'users']);
+        $partner->load(['receptionCity', 'cities', 'sectors.city', 'statusMappings', 'fieldMappings', 'updateFieldMappings', 'users']);
 
         $apiLogs = $partner->apiLogs()
             ->latest('created_at')
@@ -84,7 +84,7 @@ class PartnerController extends Controller
     {
         $this->authorize('update', $partner);
 
-        $partner->load(['cities', 'sectors', 'statusMappings', 'fieldMappings']);
+        $partner->load(['cities', 'sectors', 'statusMappings', 'fieldMappings', 'updateFieldMappings']);
 
         return Inertia::render('partners/edit', [
             ...$this->partners->formOptions(),

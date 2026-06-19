@@ -5,6 +5,8 @@ namespace App\Http\Requests;
 use App\Enums\OrderStatus;
 use App\Enums\PartnerAuthType;
 use App\Enums\PartnerOrderField;
+use App\Enums\PartnerUpdateField;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -54,13 +56,13 @@ class StorePartnerRequest extends FormRequest
             'auth_type' => ['nullable', 'string', Rule::in(PartnerAuthType::values())],
             'endpoint_statuses' => ['nullable', 'string', 'max:255'],
             'endpoint_deliveries' => ['nullable', 'string', 'max:255'],
+            'delivery_lookup_param' => ['nullable', 'string', 'max:100'],
             'endpoint_update' => ['nullable', 'string', 'max:255'],
             'endpoint_login' => ['nullable', 'string', 'max:2048'],
             'api_key_header' => ['nullable', 'string', 'max:100'],
             'login_username_field' => ['nullable', 'string', 'max:50'],
             'login_password_field' => ['nullable', 'string', 'max:50'],
             'login_token_field' => ['nullable', 'string', 'max:100'],
-            'ingestion_partner_status' => ['nullable', 'string', 'max:100'],
             'city_ids' => ['array'],
             'city_ids.*' => ['integer', Rule::exists('cities', 'id')],
             'sector_ids' => ['array'],
@@ -71,6 +73,52 @@ class StorePartnerRequest extends FormRequest
             'field_mappings' => ['array'],
             'field_mappings.*.speedzone_field' => ['required', 'string', Rule::in(PartnerOrderField::values())],
             'field_mappings.*.partner_field' => ['required', 'string', 'max:100'],
+            'update_field_mappings' => ['array'],
+            'update_field_mappings.*.speedzone_field' => ['required', 'string', Rule::in(PartnerUpdateField::values())],
+            'update_field_mappings.*.partner_field' => ['required', 'string', 'max:100'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $this->validateUniqueMappingKeys($validator, 'status_mappings', 'speedzone_status');
+            $this->validateUniqueMappingKeys($validator, 'field_mappings', 'speedzone_field');
+            $this->validateUniqueMappingKeys($validator, 'update_field_mappings', 'speedzone_field');
+        });
+    }
+
+    private function validateUniqueMappingKeys(Validator $validator, string $field, string $keyColumn): void
+    {
+        $mappings = $this->input($field, []);
+
+        if (! is_array($mappings)) {
+            return;
+        }
+
+        $seen = [];
+
+        foreach ($mappings as $index => $mapping) {
+            if (! is_array($mapping)) {
+                continue;
+            }
+
+            $key = $mapping[$keyColumn] ?? null;
+
+            if (! $key) {
+                continue;
+            }
+
+            $key = (string) $key;
+
+            if (isset($seen[$key])) {
+                $validator->errors()->add(
+                    "{$field}.{$index}.{$keyColumn}",
+                    __('partners.validation.duplicate_mapping_key', ['key' => $key])
+                );
+            }
+
+            $seen[$key] = true;
+        }
     }
 }

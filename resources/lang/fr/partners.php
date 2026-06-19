@@ -65,12 +65,12 @@ return [
         'endpoints_section' => 'Endpoints API',
         'endpoint_statuses' => 'Endpoint GET statuts',
         'endpoint_deliveries' => 'Endpoint GET livraisons',
+        'delivery_lookup_param' => 'Paramètre GET livraison unique',
+        'delivery_lookup_param_placeholder' => 'code-delivery',
+        'delivery_lookup_param_hint' => 'Nom du paramètre de requête pour récupérer une livraison par son code (ex. ?code-delivery=ABC123).',
         'endpoint_update' => 'Endpoint POST mise à jour',
-        'ingestion_partner_status' => 'Statut d\'ingestion (partenaire)',
         'sync_status' => 'Synchronisation sortante des statuts',
-        'sync_status_hint' => 'Lorsque activé, chaque changement de statut local est poussé vers l\'API partenaire.',
-        'ingestion_status_placeholder' => 'ex. DISTRIBUTED',
-        'ingestion_status_hint' => 'Statut partenaire utilisé lors de la récupération des livraisons (mappé vers speedZone via les correspondances ci-dessous).',
+        'sync_status_hint' => 'Lorsque activé, chaque changement de statut est d\'abord poussé vers l\'API partenaire ; le statut speedZone n\'est mis à jour qu\'en cas de succès.',
         'status_mapping_section' => 'Correspondance des statuts',
         'status_mapping_hint' => 'Traduire les statuts speedZone vers le vocabulaire du partenaire pour l\'ingestion et les mises à jour sortantes.',
         'add_mapping' => 'Ajouter une correspondance',
@@ -87,6 +87,13 @@ return [
         'partner_field' => 'Champ API partenaire',
         'partner_field_placeholder' => 'ex. code, amount, option_exchange',
         'select_field' => 'Sélectionner un champ',
+        'update_field_mapping_section' => 'Correspondance payload POST mise à jour',
+        'update_field_mapping_hint' => 'Associez les champs speedZone aux clés JSON envoyées lors d\'un changement de statut (endpoint POST mise à jour).',
+        'add_update_field_mapping' => 'Ajouter une correspondance',
+        'no_update_field_mappings' => 'Aucune correspondance configurée — un payload par défaut sera utilisé.',
+        'update_payload_preview' => 'Aperçu du payload POST mise à jour',
+        'partner_api_field' => 'Clé JSON partenaire',
+        'update_field_placeholder' => 'ex. id, status, message',
     ],
 
     'connection' => [
@@ -159,6 +166,10 @@ return [
         'bulk_assign_result' => ':updated affectées, :skipped ignorées.',
         'bulk_scan_result' => ':updated mises à jour par scan, :skipped ignorées.',
         'status_updated' => 'Statut de la livraison partenaire mis à jour.',
+        'sync' => [
+            'no_status_mapping' => 'Aucune correspondance de statut partenaire pour :status.',
+            'use_partner_endpoint' => 'Les commandes partenaires doivent être mises à jour via le flux partenaire (synchronisation API).',
+        ],
         'scanner' => [
             'open' => 'Scan QR en masse',
             'title' => 'Scan QR — mise à jour en masse',
@@ -190,8 +201,13 @@ return [
         'done' => 'Synchronisation terminée',
         'failed' => 'Échec de la synchronisation',
         'select_partner' => 'Veuillez sélectionner un partenaire d\'abord.',
-        'hint' => 'Cliquez sur « Synchroniser » pour récupérer les nouvelles livraisons de :name.',
+        'hint' => 'Cliquez sur « Synchroniser » pour récupérer toutes les livraisons de :name et les mapper aux statuts speedZone.',
         'success' => ':created créées, :updated mises à jour, :skipped ignorées.',
+        'order_success' => 'Commande synchronisée avec le partenaire.',
+        'order_not_partner' => 'Cette commande n\'est pas une livraison partenaire.',
+        'order_no_reference' => 'Cette commande n\'a pas de référence partenaire.',
+        'order_not_found' => 'Livraison introuvable sur l\'API partenaire.',
+        'lookup_param_missing' => 'Configurez le paramètre GET livraison unique sur le partenaire.',
     ],
 
     'assignments' => [
@@ -206,5 +222,9 @@ return [
         'remove_confirm_title' => 'Retirer l\'admin ?',
         'remove_confirm_text' => 'Retirer :name de ce partenaire ?',
         'modal_title' => 'Admins pour :name',
+    ],
+
+    'validation' => [
+        'duplicate_mapping_key' => 'La valeur « :key » est déjà utilisée sur une autre ligne de correspondance.',
     ],
 ];

@@ -89,6 +89,17 @@ return [
         'amount_to_collect' => 'Montant à encaisser',
         'delivery_price' => 'Prix de livraison',
         'total_amount' => 'Montant total',
+        'partner' => 'Partenaire',
+        'partner_reference' => 'Réf. partenaire',
+        'application_status' => 'Statut application',
+        'connection_status' => 'État de la connexion',
+        'partner_connection' => [
+            'connected' => 'Connecté',
+            'expired' => 'Token expiré',
+            'no_token' => 'Aucun token',
+            'inactive' => 'Partenaire inactif',
+        ],
+        'partner_sync_error' => 'Erreur de synchronisation partenaire',
     ],
     'form' => [
         'customer_info' => 'Informations client',

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
+import axios from "axios";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import StatusTimeline from "@/Components/StatusTimeline.vue";
@@ -53,6 +54,7 @@ const assignDriver = () => {
 };
 
 const showReturnModal = ref(false);
+const syncing = ref(false);
 
 const initiateFailedReturn = () => {
   const driverReasons = ["CUSTOMER_REFUSED", "CUSTOMER_UNREACHABLE", "DELIVERY_FAILED", "CUSTOMER_REQUESTED_RETURN"];
@@ -89,6 +91,8 @@ const displayMoney = (value) => (value != null && value !== "" ? `${money(value)
 const formatDate = (value) => (value ? new Date(value).toLocaleString() : t("common.empty_value"));
 const empty = () => t("common.empty_value");
 
+const isPartnerDelivery = computed(() => Boolean(props.order.is_partner_delivery || props.order.partner_id));
+
 const openPdf = () => window.open(route("orders.pdf", props.order.id), "_blank");
 const downloadPdf = () => window.open(route("orders.pdf", { order: props.order.id, download: 1 }), "_blank");
 
@@ -103,12 +107,61 @@ const changeStatus = (status) => {
     confirmButtonColor: "#0ab39c",
   }).then((result) => {
     if (!result.isConfirmed) return;
+
+    const payload = {
+      comment: result.value || null,
+    };
+
+    const options = {
+      preserveScroll: true,
+      onError: (errors) => {
+        const message =
+          errors.status ||
+          errors.order ||
+          Object.values(errors).flat()[0] ||
+          t("partners.sync.failed");
+        Swal.fire({ icon: "error", title: t("partners.sync.failed"), text: message });
+      },
+    };
+
+    if (isPartnerDelivery.value && props.can.update_partner_status) {
+      router.patch(
+        route("partner-deliveries.update-status", props.order.id),
+        { status: status.value, ...payload },
+        options
+      );
+      return;
+    }
+
     router.post(
       route("orders.bulk-status"),
-      { ids: [props.order.id], to_status: status.value, comment: result.value },
-      { preserveScroll: true }
+      { ids: [props.order.id], to_status: status.value, ...payload },
+      options
     );
   });
+};
+
+const syncPartner = async () => {
+  if (!props.order.partner?.id) return;
+
+  syncing.value = true;
+
+  try {
+    const { data } = await axios.post(route("orders.sync-partner", props.order.id));
+    Swal.fire({
+      icon: "success",
+      title: t("partners.sync.done"),
+      text: data.message,
+      timer: 4000,
+      showConfirmButton: false,
+    });
+    router.reload({ only: ["order"], preserveScroll: true });
+  } catch (error) {
+    const message = error.response?.data?.message ?? t("partners.sync.failed");
+    Swal.fire({ icon: "error", title: t("partners.sync.failed"), text: message });
+  } finally {
+    syncing.value = false;
+  }
 };
 
 const confirmDelete = () => {
@@ -128,7 +181,10 @@ const confirmDelete = () => {
 };
 
 onMounted(() => {
-  const success = usePage().props?.flash?.success;
+  const page = usePage();
+  const success = page.props?.flash?.success;
+  const error = page.props?.flash?.error;
+
   if (success) {
     Swal.fire({
       toast: true,
@@ -137,6 +193,17 @@ onMounted(() => {
       title: success,
       showConfirmButton: false,
       timer: 3000,
+    });
+  }
+
+  if (error) {
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "error",
+      title: error,
+      showConfirmButton: false,
+      timer: 5000,
     });
   }
 });
@@ -223,6 +290,86 @@ onMounted(() => {
                 <div class="text-muted fs-13">{{ $t('driver_invoices.assign.assigned_driver') }}</div>
                 <UserAvatar v-if="order.driver" :user="order.driver" :size="36" clickable show-name show-role />
                 <div v-else class="fw-semibold">{{ $t('driver_invoices.assign.no_driver') }}</div>
+              </BCol>
+            </BRow>
+          </BCardBody>
+        </BCard>
+
+        <BCard v-if="isPartnerDelivery && order.partner" no-body>
+          <BCardHeader class="d-flex align-items-center justify-content-between">
+            <h5 class="card-title mb-0">{{ $t('orders.show.partner') }}</h5>
+            <button
+              v-if="can.sync"
+              type="button"
+              class="btn btn-sm btn-primary"
+              :disabled="syncing"
+              @click="syncPartner"
+            >
+              <span v-if="syncing" class="spinner-border spinner-border-sm me-1"></span>
+              <i v-else class="ri-refresh-line align-bottom me-1"></i>
+              {{ syncing ? $t('partners.sync.running') : $t('partners.sync.button') }}
+            </button>
+          </BCardHeader>
+          <BCardBody>
+            <BRow class="g-3">
+              <BCol md="6">
+                <div class="text-muted fs-13">{{ $t('partners.table.name') }}</div>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                  <img
+                    v-if="order.partner.logo_url"
+                    :src="order.partner.logo_url"
+                    :alt="order.partner.name"
+                    width="36"
+                    height="36"
+                    class="rounded flex-shrink-0"
+                  />
+                  <span
+                    v-else
+                    class="avatar-xs d-inline-flex align-items-center justify-content-center rounded bg-primary-subtle text-primary flex-shrink-0"
+                  >
+                    <i class="ri-links-line"></i>
+                  </span>
+                  <Link
+                    v-if="can.view_partner"
+                    :href="route('partners.show', order.partner.id)"
+                    class="fw-semibold text-body text-decoration-none"
+                  >
+                    {{ order.partner.name }}
+                    <i class="ri-external-link-line fs-13 ms-1 text-muted"></i>
+                  </Link>
+                  <span v-else class="fw-semibold">{{ order.partner.name }}</span>
+                </div>
+              </BCol>
+              <BCol md="6">
+                <div class="text-muted fs-13">{{ $t('orders.show.partner_reference') }}</div>
+                <div class="fw-semibold">
+                  <code v-if="order.external_tracking_code">{{ order.external_tracking_code }}</code>
+                  <span v-else>{{ empty() }}</span>
+                </div>
+              </BCol>
+              <BCol md="6">
+                <div class="text-muted fs-13">{{ $t('orders.show.application_status') }}</div>
+                <span class="badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
+                  {{ order.status_label }}
+                </span>
+              </BCol>
+              <BCol md="6">
+                <div class="text-muted fs-13">{{ $t('orders.show.connection_status') }}</div>
+                <span
+                  class="badge"
+                  :class="`bg-${order.partner.connection_color}-subtle text-${order.partner.connection_color}`"
+                >
+                  {{ order.partner.connection_label }}
+                </span>
+                <div v-if="order.partner.token_expires_at" class="text-muted fs-12 mt-1">
+                  {{ $t('partners.show.token_expires') }}: {{ formatDate(order.partner.token_expires_at) }}
+                </div>
+              </BCol>
+              <BCol cols="12" v-if="order.partner_sync_error">
+                <div class="alert alert-danger mb-0 py-2">
+                  <div class="fw-semibold fs-13">{{ $t('orders.show.partner_sync_error') }}</div>
+                  <div class="fs-13">{{ order.partner_sync_error }}</div>
+                </div>
               </BCol>
             </BRow>
           </BCardBody>

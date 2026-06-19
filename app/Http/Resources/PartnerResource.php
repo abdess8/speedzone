@@ -33,6 +33,7 @@ class PartnerResource extends JsonResource
                 : null,
             'endpoint_statuses' => $this->endpoint_statuses,
             'endpoint_deliveries' => $this->endpoint_deliveries,
+            'delivery_lookup_param' => $this->delivery_lookup_param,
             'endpoint_update' => $this->endpoint_update,
             'endpoint_login' => $this->endpoint_login,
             'api_key_header' => $this->api_key_header,
@@ -41,7 +42,6 @@ class PartnerResource extends JsonResource
             'login_token_field' => $this->login_token_field,
             'has_access_token' => filled($this->access_token),
             'token_expires_at' => $this->token_expires_at?->toIso8601String(),
-            'ingestion_partner_status' => $this->ingestion_partner_status,
             'sync_frequency_minutes' => (int) $this->sync_frequency_minutes,
             'sync_status' => (bool) $this->sync_status,
             'last_synced_at' => $this->last_synced_at?->toIso8601String(),
@@ -68,6 +68,10 @@ class PartnerResource extends JsonResource
             'field_mappings' => $this->whenLoaded(
                 'fieldMappings',
                 fn () => FieldMappingResource::collection($this->fieldMappings)->resolve($request)
+            ),
+            'update_field_mappings' => $this->whenLoaded(
+                'updateFieldMappings',
+                fn () => UpdateFieldMappingResource::collection($this->updateFieldMappings)->resolve($request)
             ),
             'users' => $this->whenLoaded(
                 'users',

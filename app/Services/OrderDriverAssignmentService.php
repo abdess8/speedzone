@@ -21,6 +21,8 @@ class OrderDriverAssignmentService
     private const TERMINAL_STATUSES = [
         OrderStatus::DELIVERED,
         OrderStatus::FAILED,
+        OrderStatus::REJECTED,
+        OrderStatus::CANCELED,
         OrderStatus::RETURNED,
         OrderStatus::RETURN_REQUESTED,
         OrderStatus::RETURN_IN_PROGRESS,

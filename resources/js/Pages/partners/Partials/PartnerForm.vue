@@ -12,6 +12,7 @@ const props = defineProps({
   cities: { type: Array, default: () => [] },
   orderStatuses: { type: Array, default: () => [] },
   orderFields: { type: Array, default: () => [] },
+  updateFields: { type: Array, default: () => [] },
   authTypes: { type: Array, default: () => [] },
   partnerId: { type: Number, default: null },
   isEdit: { type: Boolean, default: false },
@@ -105,6 +106,45 @@ const addFieldMapping = () => {
 const removeFieldMapping = (index) => {
   props.form.field_mappings.splice(index, 1);
 };
+
+const addUpdateFieldMapping = () => {
+  if (!Array.isArray(props.form.update_field_mappings)) {
+    props.form.update_field_mappings = [];
+  }
+  props.form.update_field_mappings.push({ speedzone_field: "", partner_field: "" });
+};
+
+const removeUpdateFieldMapping = (index) => {
+  props.form.update_field_mappings.splice(index, 1);
+};
+
+const updatePayloadPreview = computed(() => {
+  const mappings = props.form.update_field_mappings ?? [];
+  if (!mappings.length) {
+    return JSON.stringify(
+      {
+        id: "DXXXXXXX",
+        status: "DELIVERED",
+        message: "string",
+        proof_image: "string",
+        deliver_by: "2024-09-20",
+        isDeliveredPartial: 1,
+      },
+      null,
+      2
+    );
+  }
+
+  const preview = {};
+  mappings.forEach((mapping) => {
+    if (!mapping.partner_field) return;
+    preview[mapping.partner_field] = mapping.speedzone_field
+      ? `<${mapping.speedzone_field}>`
+      : "…";
+  });
+
+  return JSON.stringify(preview, null, 2);
+});
 
 watch(
   () => [...(props.form.city_ids ?? [])],
@@ -453,19 +493,20 @@ const testConnection = async () => {
               <InputError :message="form.errors.endpoint_deliveries" />
             </BCol>
             <BCol md="3">
+              <label class="form-label">{{ $t('partners.form.delivery_lookup_param') }}</label>
+              <input
+                type="text"
+                class="form-control"
+                v-model="form.delivery_lookup_param"
+                :placeholder="$t('partners.form.delivery_lookup_param_placeholder')"
+              />
+              <small class="text-muted">{{ $t('partners.form.delivery_lookup_param_hint') }}</small>
+              <InputError :message="form.errors.delivery_lookup_param" />
+            </BCol>
+            <BCol md="3">
               <label class="form-label">{{ $t('partners.form.endpoint_update') }}</label>
               <input type="text" class="form-control" v-model="form.endpoint_update" placeholder="/update-deliveries" />
               <InputError :message="form.errors.endpoint_update" />
-            </BCol>
-            <BCol md="3">
-              <label class="form-label">{{ $t('partners.form.ingestion_partner_status') }}</label>
-              <input
-                type="text"
-                class="form-control text-uppercase"
-                v-model="form.ingestion_partner_status"
-                :placeholder="$t('partners.form.ingestion_status_placeholder')"
-              />
-              <InputError :message="form.errors.ingestion_partner_status" />
             </BCol>
           </BRow>
         </BCardBody>
@@ -566,6 +607,60 @@ const testConnection = async () => {
           </div>
 
           <InputError :message="form.errors['field_mappings']" />
+        </BCardBody>
+      </BCard>
+
+      <!-- Outbound update payload mapping -->
+      <BCard no-body>
+        <BCardHeader class="d-flex align-items-center justify-content-between">
+          <h5 class="card-title mb-0">{{ $t('partners.form.update_field_mapping_section') }}</h5>
+          <button type="button" class="btn btn-sm btn-soft-success" @click="addUpdateFieldMapping">
+            <i class="ri-add-line align-bottom me-1"></i>{{ $t('partners.form.add_update_field_mapping') }}
+          </button>
+        </BCardHeader>
+        <BCardBody>
+          <p class="text-muted fs-13">{{ $t('partners.form.update_field_mapping_hint') }}</p>
+
+          <div class="bg-light border rounded p-3 mb-3">
+            <div class="text-muted fs-12 mb-1">{{ $t('partners.form.update_payload_preview') }}</div>
+            <pre class="mb-0 fs-12 text-body">{{ updatePayloadPreview }}</pre>
+          </div>
+
+          <div v-if="!(form.update_field_mappings ?? []).length" class="text-muted text-center py-3">
+            {{ $t('partners.form.no_update_field_mappings') }}
+          </div>
+
+          <div
+            v-for="(mapping, index) in form.update_field_mappings"
+            :key="index"
+            class="row g-2 align-items-end mb-2"
+          >
+            <BCol md="5">
+              <label class="form-label">{{ $t('partners.form.speedzone_field') }}</label>
+              <select v-model="mapping.speedzone_field" class="form-select">
+                <option value="">{{ $t('partners.form.select_field') }}</option>
+                <option v-for="field in updateFields" :key="field.value" :value="field.value">
+                  {{ field.label }}
+                </option>
+              </select>
+            </BCol>
+            <BCol md="5">
+              <label class="form-label">{{ $t('partners.form.partner_api_field') }}</label>
+              <input
+                type="text"
+                class="form-control"
+                v-model="mapping.partner_field"
+                :placeholder="$t('partners.form.update_field_placeholder')"
+              />
+            </BCol>
+            <BCol md="2">
+              <button type="button" class="btn btn-soft-danger w-100" @click="removeUpdateFieldMapping(index)">
+                <i class="ri-delete-bin-line"></i>
+              </button>
+            </BCol>
+          </div>
+
+          <InputError :message="form.errors['update_field_mappings']" />
         </BCardBody>
       </BCard>
     </BCol>

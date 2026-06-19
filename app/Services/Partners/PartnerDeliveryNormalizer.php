@@ -133,6 +133,51 @@ class PartnerDeliveryNormalizer
     }
 
     /**
+     * Extract delivery records from paginated or single-delivery API responses.
+     *
+     * @param  array<string, mixed>  $response
+     * @return array<int, array<string, mixed>>
+     */
+    public function extractItems(array $response): array
+    {
+        $page = $this->extractPage($response);
+
+        if ($page['items'] !== []) {
+            return array_values(array_filter($page['items'], 'is_array'));
+        }
+
+        if (isset($response['data']) && is_array($response['data'])) {
+            if (array_is_list($response['data'])) {
+                return array_values(array_filter($response['data'], 'is_array'));
+            }
+
+            if (! isset($response['data']['data'], $response['data']['current_page'])) {
+                return [$response['data']];
+            }
+        }
+
+        if ($this->looksLikeDeliveryRecord($response)) {
+            return [$response];
+        }
+
+        return [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $record
+     */
+    private function looksLikeDeliveryRecord(array $record): bool
+    {
+        foreach (['code', 'status', 'name', 'phone', 'amount'] as $key) {
+            if (array_key_exists($key, $record)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @return Collection<string, string>
      */
     private function fieldMappingIndex(?Partner $partner): Collection

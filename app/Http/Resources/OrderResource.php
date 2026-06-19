@@ -73,10 +73,40 @@ class OrderResource extends JsonResource
 
             'partner_id' => $this->partner_id,
             'external_tracking_code' => $this->external_tracking_code,
-            'partner' => $this->whenLoaded('partner', fn () => $this->partner ? [
-                'id' => $this->partner->id,
-                'name' => $this->partner->name,
-            ] : null),
+            'partner_sync_error' => $this->partner_sync_error,
+            'is_partner_delivery' => $this->isPartnerDelivery(),
+            'partner' => $this->whenLoaded('partner', function () {
+                if (! $this->partner) {
+                    return null;
+                }
+
+                $connection = 'connected';
+                if (! $this->partner->is_active) {
+                    $connection = 'inactive';
+                } elseif (! filled($this->partner->access_token)) {
+                    $connection = 'no_token';
+                } elseif ($this->partner->token_expires_at?->isPast()) {
+                    $connection = 'expired';
+                }
+
+                return [
+                    'id' => $this->partner->id,
+                    'name' => $this->partner->name,
+                    'logo_url' => $this->partner->logo_url,
+                    'is_active' => (bool) $this->partner->is_active,
+                    'has_access_token' => filled($this->partner->access_token),
+                    'token_expires_at' => $this->partner->token_expires_at?->toIso8601String(),
+                    'sync_status' => (bool) $this->partner->sync_status,
+                    'connection_status' => $connection,
+                    'connection_label' => __("orders.show.partner_connection.{$connection}"),
+                    'connection_color' => match ($connection) {
+                        'connected' => 'success',
+                        'expired' => 'danger',
+                        'no_token' => 'warning',
+                        default => 'secondary',
+                    },
+                ];
+            }),
 
             'driver' => $this->whenLoaded('driver', fn () => $this->driver
                 ? UserSummaryResource::make($this->driver)->resolve($request)

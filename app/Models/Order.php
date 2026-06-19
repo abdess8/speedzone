@@ -28,6 +28,7 @@ class Order extends Model
     protected $fillable = [
         'tracking_number',
         'external_tracking_code',
+        'partner_sync_error',
         'seller_id',
         'partner_id',
         'driver_id',

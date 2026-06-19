@@ -240,6 +240,10 @@ const syncPartner = async () => {
                 <div class="text-muted fs-13">{{ $t('partners.form.endpoint_deliveries') }}</div>
                 <div class="fw-semibold"><code>{{ partner.endpoint_deliveries || '/deliveries' }}</code></div>
               </BCol>
+              <BCol md="3" v-if="partner.delivery_lookup_param">
+                <div class="text-muted fs-13">{{ $t('partners.form.delivery_lookup_param') }}</div>
+                <div class="fw-semibold"><code>{{ partner.delivery_lookup_param }}</code></div>
+              </BCol>
               <BCol md="3" v-if="partner.endpoint_update">
                 <div class="text-muted fs-13">{{ $t('partners.form.endpoint_update') }}</div>
                 <div class="fw-semibold"><code>{{ partner.endpoint_update }}</code></div>

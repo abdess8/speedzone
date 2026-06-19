@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\OrderStatus;
+use App\Enums\PartnerOrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\ReturnReason;
 use App\Http\Requests\AssignOrderDriverRequest;
@@ -18,7 +19,10 @@ use App\Services\OrderLabelPdfService;
 use App\Services\OrderQueryService;
 use App\Services\OrderService;
 use App\Services\OrderTransitionService;
+use App\Services\Partners\PartnerApiException;
+use App\Services\Partners\PartnerDeliveryIngestionService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -33,6 +37,7 @@ class OrderController extends Controller
         private readonly OrderQueryService $orderQuery,
         private readonly OrderTransitionService $transitionService,
         private readonly OrderDriverAssignmentService $driverAssignment,
+        private readonly PartnerDeliveryIngestionService $partnerIngestion,
     ) {}
 
     public function index(Request $request): Response
@@ -116,6 +121,7 @@ class OrderController extends Controller
         $order->load([
             'city',
             'sector',
+            'partner',
             'invoice',
             'driver.roles',
             'driverTransactions.driverInvoice',
@@ -141,13 +147,53 @@ class OrderController extends Controller
                 'delete' => $request->user()->can('delete', $order),
                 'print' => $request->user()->can('print', $order),
                 'assign_driver' => $request->user()->can('assignDriver', $order),
+                'update_partner_status' => $order->partner_id && $request->user()->can('partner-delivery.update', $order),
                 'request_return' => $this->canRequestReturn($request->user(), $order),
                 'create_failed_return' => $this->canCreateFailedReturn($request->user(), $order),
+                'view_partner' => $order->partner && $request->user()->can('view', $order->partner),
+                'sync' => $order->partner_id && $order->partner && $request->user()->can('sync', $order->partner),
             ]),
             'driverOptions' => $request->user()->can('assignDriver', $order)
                 ? $this->driverAssignmentOptions()
                 : [],
         ]);
+    }
+
+    /**
+     * Pull the partner delivery for this order and refresh local data.
+     */
+    public function syncPartner(Request $request, Order $order): JsonResponse|RedirectResponse
+    {
+        $this->authorize('view', $order);
+
+        if (! $order->partner_id || ! $order->partner) {
+            abort(422, __('partners.sync.order_not_partner'));
+        }
+
+        $this->authorize('sync', $order->partner);
+
+        try {
+            $this->partnerIngestion->syncOrder($order, $request->user());
+            $message = __('partners.sync.order_success');
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                ]);
+            }
+
+            return back()->with('success', $message);
+        } catch (PartnerApiException $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function edit(Request $request, Order $order): Response
@@ -313,6 +359,15 @@ class OrderController extends Controller
             'comment' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        $partnerOrderIds = Order::query()
+            ->whereIn('id', $validated['ids'])
+            ->whereNotNull('partner_id')
+            ->pluck('id');
+
+        if ($partnerOrderIds->isNotEmpty()) {
+            return back()->with('error', __('partners.orders.sync.use_partner_endpoint'));
+        }
+
         $orders = $this->scopedQuery($request)->whereIn('id', $validated['ids'])->get();
 
         $updated = 0;
@@ -425,6 +480,22 @@ class OrderController extends Controller
     private function transitionOptions(Order $order): array
     {
         $user = request()->user();
+
+        if ($order->partner_id) {
+            if (! $user->can('partner-delivery.update', $order)) {
+                return [];
+            }
+
+            return collect($this->transitionService->allowedNextStatuses($order))
+                ->filter(fn (string $status) => PartnerOrderStatus::isAllowed($status))
+                ->map(fn (string $status) => [
+                    'value' => $status,
+                    'label' => OrderStatus::from($status)->label(),
+                    'color' => OrderStatus::from($status)->color(),
+                ])
+                ->values()
+                ->all();
+        }
 
         return collect($this->transitionService->allowedNextStatuses($order))
             ->filter(fn (string $status) => $user->hasPermission('orders.transition.to_'.strtolower($status)))

@@ -13,6 +13,8 @@ return [
     'OUT_FOR_DELIVERY' => 'Out for Delivery',
     'DELIVERED' => 'Delivered',
     'FAILED' => 'Failed',
+    'REJECTED' => 'Rejected',
+    'CANCELED' => 'Canceled',
     'RETURN_REQUESTED' => 'Return Requested',
     'RETURN_IN_PROGRESS' => 'Return In Progress',
     'RETURNED' => 'Returned',

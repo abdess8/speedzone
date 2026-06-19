@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Enums\PartnerAuthType;
 use App\Enums\PartnerOrderField;
+use App\Enums\PartnerUpdateField;
 use App\Models\City;
 use App\Models\Partner;
 use App\Models\Sector;
@@ -58,7 +59,7 @@ class PartnerService
     /**
      * Form dropdown/checkbox data loaded from the database (never hardcoded).
      *
-     * @return array{cities: array<int, array<string, mixed>>, order_statuses: array<int, array<string, mixed>>, order_fields: array<int, array<string, mixed>>}
+     * @return array{cities: array<int, array<string, mixed>>, order_statuses: array<int, array<string, mixed>>, order_fields: array<int, array<string, mixed>>, update_fields: array<int, array<string, mixed>>}
      */
     public function formOptions(): array
     {
@@ -66,6 +67,7 @@ class PartnerService
             'cities' => $this->citiesWithSectors(),
             'order_statuses' => OrderStatus::options(),
             'order_fields' => PartnerOrderField::options(),
+            'update_fields' => PartnerUpdateField::options(),
             'auth_types' => PartnerAuthType::options(),
         ];
     }
@@ -232,6 +234,7 @@ class PartnerService
                 'sector_ids' => Arr::pull($data, 'sector_ids', []),
                 'status_mappings' => Arr::pull($data, 'status_mappings', []),
                 'field_mappings' => Arr::pull($data, 'field_mappings', []),
+                'update_field_mappings' => Arr::pull($data, 'update_field_mappings', []),
             ],
             $data,
         ];
@@ -251,6 +254,7 @@ class PartnerService
         $partner->sectors()->sync($sectorIds);
         $this->syncStatusMappings($partner, $relations['status_mappings'] ?? []);
         $this->syncFieldMappings($partner, $relations['field_mappings'] ?? []);
+        $this->syncUpdateFieldMappings($partner, $relations['update_field_mappings'] ?? []);
     }
 
     /**
@@ -283,14 +287,7 @@ class PartnerService
     {
         $partner->statusMappings()->delete();
 
-        foreach ($mappings as $mapping) {
-            $speedzoneStatus = $mapping['speedzone_status'] ?? null;
-            $partnerStatus = trim((string) ($mapping['partner_status'] ?? ''));
-
-            if (! $speedzoneStatus || $partnerStatus === '') {
-                continue;
-            }
-
+        foreach ($this->dedupeMappings($mappings, 'speedzone_status', 'partner_status') as $speedzoneStatus => $partnerStatus) {
             $partner->statusMappings()->create([
                 'speedzone_status' => $speedzoneStatus,
                 'partner_status' => $partnerStatus,
@@ -305,18 +302,48 @@ class PartnerService
     {
         $partner->fieldMappings()->delete();
 
-        foreach ($mappings as $mapping) {
-            $speedzoneField = $mapping['speedzone_field'] ?? null;
-            $partnerField = trim((string) ($mapping['partner_field'] ?? ''));
-
-            if (! $speedzoneField || $partnerField === '') {
-                continue;
-            }
-
+        foreach ($this->dedupeMappings($mappings, 'speedzone_field', 'partner_field') as $speedzoneField => $partnerField) {
             $partner->fieldMappings()->create([
                 'speedzone_field' => $speedzoneField,
                 'partner_field' => $partnerField,
             ]);
         }
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $mappings
+     */
+    private function syncUpdateFieldMappings(Partner $partner, array $mappings): void
+    {
+        $partner->updateFieldMappings()->delete();
+
+        foreach ($this->dedupeMappings($mappings, 'speedzone_field', 'partner_field') as $speedzoneField => $partnerField) {
+            $partner->updateFieldMappings()->create([
+                'speedzone_field' => $speedzoneField,
+                'partner_field' => $partnerField,
+            ]);
+        }
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $mappings
+     * @return array<string, string>
+     */
+    private function dedupeMappings(array $mappings, string $keyField, string $valueField): array
+    {
+        $deduped = [];
+
+        foreach ($mappings as $mapping) {
+            $key = $mapping[$keyField] ?? null;
+            $value = trim((string) ($mapping[$valueField] ?? ''));
+
+            if (! $key || $value === '') {
+                continue;
+            }
+
+            $deduped[(string) $key] = $value;
+        }
+
+        return $deduped;
     }
 }

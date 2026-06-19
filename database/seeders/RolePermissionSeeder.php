@@ -57,6 +57,8 @@ class RolePermissionSeeder extends Seeder
                 'orders.transition.to_out_for_delivery',
                 'orders.transition.to_delivered',
                 'orders.transition.to_failed',
+                'orders.transition.to_rejected',
+                'orders.transition.to_canceled',
                 'partners.read',
                 'partners.deliveries.manage',
                 'partners.sync',

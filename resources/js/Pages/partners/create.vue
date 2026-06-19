@@ -9,6 +9,7 @@ const props = defineProps({
   cities: { type: Array, default: () => [] },
   order_statuses: { type: Array, default: () => [] },
   order_fields: { type: Array, default: () => [] },
+  update_fields: { type: Array, default: () => [] },
   auth_types: { type: Array, default: () => [] },
 });
 
@@ -43,6 +44,7 @@ const submit = () => {
         :cities="cities"
         :order-statuses="order_statuses"
         :order-fields="order_fields"
+        :update-fields="update_fields"
         :auth-types="auth_types"
       />
 

@@ -47,8 +47,17 @@ const assignDriver = () => {
     if (!result.isConfirmed || !result.value) return;
     router.post(
       route("orders.assign-driver", props.order.id),
-      { driver_id: result.value },
-      { preserveScroll: true }
+      { driver_id: Number(result.value) },
+      {
+        preserveScroll: true,
+        onError: (errors) => {
+          const message =
+            errors.driver_id ||
+            Object.values(errors).flat()[0] ||
+            t("driver_invoices.assign.not_allowed");
+          Swal.fire({ icon: "error", title: t("partners.sync.failed"), text: message });
+        },
+      }
     );
   });
 };

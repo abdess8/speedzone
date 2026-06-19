@@ -79,6 +79,14 @@ class OrderPolicy
 
     public function assignDriver(User $user, Order $order): bool
     {
+        return $this->evaluateAssignDriver($user, $order);
+    }
+
+    /**
+     * Business rules for driver assignment (bypasses Gate super-admin shortcut).
+     */
+    public function evaluateAssignDriver(User $user, Order $order): bool
+    {
         if (! $user->hasPermission('driver_invoices.assign_driver')
             && ! $user->hasPermission('partners.deliveries.manage')) {
             return false;

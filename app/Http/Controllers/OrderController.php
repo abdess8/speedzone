@@ -13,7 +13,9 @@ use App\Http\Resources\OrderResource;
 use App\Models\City;
 use App\Models\Order;
 use App\Models\Sector;
+use App\Models\Partner;
 use App\Models\User;
+use App\Policies\OrderPolicy;
 use App\Services\OrderDriverAssignmentService;
 use App\Services\OrderLabelPdfService;
 use App\Services\OrderQueryService;
@@ -22,6 +24,7 @@ use App\Services\OrderTransitionService;
 use App\Services\Partners\PartnerApiException;
 use App\Services\Partners\PartnerDeliveryIngestionService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -146,14 +149,14 @@ class OrderController extends Controller
                 'update' => $request->user()->can('update', $order),
                 'delete' => $request->user()->can('delete', $order),
                 'print' => $request->user()->can('print', $order),
-                'assign_driver' => $request->user()->can('assignDriver', $order),
+                'assign_driver' => app(OrderPolicy::class)->evaluateAssignDriver($request->user(), $order),
                 'update_partner_status' => $order->partner_id && $request->user()->can('partner-delivery.update', $order),
                 'request_return' => $this->canRequestReturn($request->user(), $order),
                 'create_failed_return' => $this->canCreateFailedReturn($request->user(), $order),
                 'view_partner' => $order->partner && $request->user()->can('view', $order->partner),
                 'sync' => $order->partner_id && $order->partner && $request->user()->can('sync', $order->partner),
             ]),
-            'driverOptions' => $request->user()->can('assignDriver', $order)
+            'driverOptions' => app(OrderPolicy::class)->evaluateAssignDriver($request->user(), $order)
                 ? $this->driverAssignmentOptions()
                 : [],
         ]);
@@ -339,6 +342,12 @@ class OrderController extends Controller
     public function assignDriver(AssignOrderDriverRequest $request, Order $order): RedirectResponse
     {
         $this->authorize('assignDriver', $order);
+
+        if (! $this->driverAssignment->canAssign($order, $request->user())) {
+            throw ValidationException::withMessages([
+                'driver_id' => __('driver_invoices.assign.not_allowed'),
+            ]);
+        }
 
         $driver = User::query()->findOrFail($request->integer('driver_id'));
 

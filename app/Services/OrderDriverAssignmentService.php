@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\OrderStatus;
+use App\Enums\PartnerOrderStatus;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
@@ -157,12 +158,21 @@ class OrderDriverAssignmentService
     private function nextPermittedTransition(Order $order, User $actor): ?string
     {
         foreach ($this->transitions->allowedNextStatuses($order) as $status) {
-            if ($actor->hasPermission('orders.transition.to_'.strtolower($status))) {
+            if ($this->actorCanTransitionTo($order, $actor, $status)) {
                 return $status;
             }
         }
 
         return null;
+    }
+
+    private function actorCanTransitionTo(Order $order, User $actor, string $status): bool
+    {
+        if ($order->partner_id && $actor->hasPermission('partners.deliveries.manage')) {
+            return PartnerOrderStatus::isAllowed($status);
+        }
+
+        return $actor->hasPermission('orders.transition.to_'.strtolower($status));
     }
 
     private function orderStatus(Order $order): OrderStatus

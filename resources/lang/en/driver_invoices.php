@@ -127,6 +127,7 @@ return [
         'select_driver' => 'Select a driver',
         'assigned' => 'Driver assigned successfully.',
         'not_out_for_delivery' => 'A driver can only be assigned once the order is out for delivery.',
+        'not_allowed' => 'This order cannot be assigned to a driver in its current status.',
         'assigned_driver' => 'Assigned Driver',
         'assign_action' => 'Assign Driver',
         'reassign_action' => 'Reassign Driver',

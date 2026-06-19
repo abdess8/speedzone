@@ -127,6 +127,7 @@ return [
         'select_driver' => 'Sélectionner un livreur',
         'assigned' => 'Livreur affecté avec succès.',
         'not_out_for_delivery' => "Un livreur ne peut être affecté qu'une fois la commande en cours de livraison.",
+        'not_allowed' => "Cette commande ne peut pas être affectée à un livreur dans son statut actuel.",
         'assigned_driver' => 'Livreur affecté',
         'assign_action' => 'Affecter un livreur',
         'reassign_action' => 'Réaffecter un livreur',

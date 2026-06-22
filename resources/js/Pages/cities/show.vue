@@ -4,18 +4,33 @@ import { Link, router, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import UserAvatar from "@/Components/UserAvatar.vue";
 import Swal from "sweetalert2";
+import { formatMoney as money } from "@/common/formatMoney";
 
 const { t, locale } = useI18n();
 
 const props = defineProps({
   city: { type: Object, required: true },
+  drivers: { type: [Array, Object], default: () => [] },
   can: { type: Object, default: () => ({}) },
 });
 
 const page = usePage();
 
-import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
+const driversList = computed(() => {
+  const drivers = props.drivers;
+  if (Array.isArray(drivers)) return drivers;
+  if (drivers?.data && Array.isArray(drivers.data)) return drivers.data;
+  return [];
+});
+
+const driverSectors = (driver) => {
+  const sectors = driver?.sectors;
+  if (Array.isArray(sectors)) return sectors;
+  if (sectors?.data && Array.isArray(sectors.data)) return sectors.data;
+  return [];
+};
 
 const formatDate = (value) => {
   if (!value) return t("common.empty_value");
@@ -227,5 +242,48 @@ const confirmDeleteSector = (sector) => {
         </BCard>
       </BCol>
     </BRow>
+
+    <BCard no-body>
+      <BCardHeader>
+        <h5 class="card-title mb-0">{{ $t('cities.show.assigned_drivers', { name: city.name }) }}</h5>
+      </BCardHeader>
+      <BCardBody>
+        <div class="table-responsive table-card">
+          <table class="table align-middle table-nowrap mb-0">
+            <thead class="table-light text-muted">
+              <tr>
+                <th>{{ $t('cities.show.driver') }}</th>
+                <th>{{ $t('cities.show.assigned_sectors') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="driver in driversList" :key="driver.id">
+                <td>
+                  <UserAvatar :user="driver" :size="36" clickable show-name />
+                  <div class="text-muted fs-12 ps-5 ms-1">{{ driver.email }}</div>
+                  <div v-if="driver.phone" class="text-muted fs-12 ps-5 ms-1">{{ driver.phone }}</div>
+                </td>
+                <td>
+                  <div class="d-flex flex-wrap gap-1">
+                    <Link
+                      v-for="sector in driverSectors(driver)"
+                      :key="sector.id"
+                      :href="route('sectors.show', sector.id)"
+                      class="badge bg-light text-body border text-decoration-none"
+                    >
+                      {{ sector.name }}
+                    </Link>
+                    <span v-if="driverSectors(driver).length === 0" class="text-muted fs-13">{{ $t('cities.show.no_sectors_assigned') }}</span>
+                  </div>
+                </td>
+              </tr>
+              <tr v-if="driversList.length === 0">
+                <td colspan="2" class="text-center text-muted py-4">{{ $t('cities.show.no_drivers') }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </BCardBody>
+    </BCard>
   </Layout>
 </template>

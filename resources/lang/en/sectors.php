@@ -35,4 +35,9 @@ return [
     'delete_confirm_title' => 'Delete this sector?',
     'delete_confirm_text' => ':name will be removed.',
     'empty' => 'No sectors found.',
+    'show' => [
+        'info' => 'Sector Information',
+        'assigned_drivers' => 'Drivers assigned to :name',
+        'no_drivers' => 'No drivers assigned to this sector.',
+    ],
 ];

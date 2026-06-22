@@ -68,6 +68,7 @@ class PermissionCatalog
         return [
             self::make('orders.create', 'orders', 'create', null, 'resource'),
             self::make('orders.read.own', 'orders', 'read', 'own', 'resource'),
+            self::make('orders.read.assigned', 'orders', 'read', 'assigned', 'resource'),
             self::make('orders.read.all', 'orders', 'read', 'all', 'resource'),
             self::make('orders.update.own', 'orders', 'update', 'own', 'resource'),
             self::make('orders.update.all', 'orders', 'update', 'all', 'resource'),

@@ -18,6 +18,7 @@ class TransferService
     public function __construct(
         private readonly TransferReferenceGenerator $references,
         private readonly OrderStatusService $orderStatus,
+        private readonly OrderDriverAutoAssignmentService $driverAutoAssignment,
     ) {}
 
     /**
@@ -317,6 +318,10 @@ class TransferService
                 $comment ?? "Transfer {$transfer->reference} status: {$transfer->status->label()}.",
                 transferId: $transfer->id,
             );
+
+            if ($orderStatus === OrderStatus::RECEIVED_IN_DESTINATION) {
+                $this->driverAutoAssignment->assignBySector($order->refresh());
+            }
         }
     }
 

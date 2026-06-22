@@ -410,8 +410,16 @@ class OrderController extends Controller
     {
         $query = Order::query()->whereNull('partner_id');
 
-        if (! $request->user()->hasPermission('orders.read.all')) {
-            $query->ownedBy($request->user()->id);
+        $user = $request->user();
+
+        if ($user->hasPermission('orders.read.all')) {
+            // full access
+        } elseif ($user->hasPermission('orders.read.assigned')) {
+            $query->assignedTo($user->id);
+        } elseif ($user->hasPermission('orders.read.own')) {
+            $query->ownedBy($user->id);
+        } else {
+            $query->whereRaw('1 = 0');
         }
 
         return $query;

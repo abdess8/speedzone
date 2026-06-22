@@ -12,6 +12,7 @@ class OrderDriverAssignmentService
 {
     public function __construct(
         private readonly OrderTransitionService $transitions,
+        private readonly OrderAuditService $auditService,
     ) {}
 
     /**
@@ -52,10 +53,16 @@ class OrderDriverAssignmentService
             }
         }
 
+        $previousDriver = $order->driver_id
+            ? User::query()->find($order->driver_id)
+            : null;
+
         $order->forceFill([
             'driver_id' => $driver->id,
             'assigned_at' => now(),
         ])->save();
+
+        $this->auditService->recordDriverAssignment($order, $previousDriver, $driver, $actor);
 
         return $order->refresh();
     }

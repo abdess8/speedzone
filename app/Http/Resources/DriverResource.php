@@ -24,7 +24,10 @@ class DriverResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone_number,
             'sectors_count' => $this->whenCounted('sectors'),
-            'sectors' => SectorResource::collection($this->whenLoaded('sectors')),
+            'sectors' => $this->whenLoaded(
+                'sectors',
+                fn () => SectorResource::collection($this->sectors)->resolve($request)
+            ),
         ];
     }
 }

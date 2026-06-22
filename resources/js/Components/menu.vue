@@ -31,7 +31,11 @@ export default {
       return (this.auth.permissions ?? []).includes(permission);
     },
     canViewOrders() {
-      return this.hasPermission('orders.read.all') || this.hasPermission('orders.read.own');
+      return (
+        this.hasPermission('orders.read.all')
+        || this.hasPermission('orders.read.own')
+        || this.hasPermission('orders.read.assigned')
+      );
     },
     canViewPickups() {
       return (

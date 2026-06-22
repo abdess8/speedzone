@@ -21,6 +21,7 @@ class OrderChangeHistoryResource extends JsonResource
             'id' => $this->id,
             'field_name' => $this->field_name,
             'field_label' => OrderAuditService::fieldLabel($this->field_name),
+            'is_automatic' => OrderAuditService::isAutomaticChange($this->field_name),
             'old_value' => $this->old_value,
             'new_value' => $this->new_value,
             'created_at' => $this->created_at?->toIso8601String(),

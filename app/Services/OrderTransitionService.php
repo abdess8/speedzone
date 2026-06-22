@@ -17,6 +17,7 @@ class OrderTransitionService
         private readonly OrderStatusService $orderStatus,
         private readonly DriverPaymentService $driverPayment,
         private readonly PartnerOutboundSyncService $outboundSync,
+        private readonly OrderDriverAutoAssignmentService $driverAutoAssignment,
     ) {}
     /**
      * @var array<string, array<int, string>>
@@ -116,6 +117,10 @@ class OrderTransitionService
 
             if ($toStatus === OrderStatus::IN_DEPOT->value) {
                 $this->orderStatus->handleAutoCityDeliveryTransition($order);
+            }
+
+            if ($toStatus === OrderStatus::RECEIVED_IN_DESTINATION->value) {
+                $this->driverAutoAssignment->assignBySector($order->refresh());
             }
 
             // A delivered order earns the assigned driver the sector driver price.

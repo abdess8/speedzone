@@ -11,6 +11,10 @@ use App\Models\User;
 
 class OrderAuditService
 {
+    public const DRIVER_ASSIGNMENT_MANUAL = 'driver_assignment_manual';
+
+    public const DRIVER_ASSIGNMENT_AUTO = 'driver_assignment_auto';
+
     /**
      * Fields tracked for modification history.
      *
@@ -59,6 +63,26 @@ class OrderAuditService
         return $records;
     }
 
+    public function recordDriverAssignment(
+        Order $order,
+        ?User $previousDriver,
+        User $newDriver,
+        ?User $actor = null,
+        bool $automatic = false,
+    ): OrderChangeHistory {
+        return $order->changeHistories()->create([
+            'changed_by' => $actor?->id,
+            'field_name' => $automatic ? self::DRIVER_ASSIGNMENT_AUTO : self::DRIVER_ASSIGNMENT_MANUAL,
+            'old_value' => $this->formatDriverName($previousDriver),
+            'new_value' => $this->formatDriverName($newDriver),
+        ]);
+    }
+
+    public static function isAutomaticChange(string $fieldName): bool
+    {
+        return $fieldName === self::DRIVER_ASSIGNMENT_AUTO;
+    }
+
     /**
      * @param  array<string, mixed>  $data
      * @return array<string, array{old: mixed, new: mixed}>
@@ -87,7 +111,23 @@ class OrderAuditService
 
     public static function fieldLabel(string $fieldName): string
     {
+        $translationKey = "orders.history.fields.{$fieldName}";
+        $translated = __($translationKey);
+
+        if ($translated !== $translationKey) {
+            return $translated;
+        }
+
         return self::FIELD_LABELS[$fieldName] ?? ucfirst(str_replace('_', ' ', $fieldName));
+    }
+
+    private function formatDriverName(?User $driver): ?string
+    {
+        if ($driver === null) {
+            return null;
+        }
+
+        return $driver->full_name;
     }
 
     public function formatValue(string $field, mixed $value): ?string

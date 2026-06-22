@@ -171,7 +171,9 @@ const badgeClass = (permission) => {
                       class="badge"
                       :class="badgeClass(permission)"
                     >
-                      {{ permission.scope }}
+                      {{ $te(`permissions.scopes.${permission.scope}`)
+                        ? $t(`permissions.scopes.${permission.scope}`)
+                        : permission.scope }}
                     </span>
                   </label>
                   <div v-if="permission.description" class="text-muted fs-11 ms-4 mb-1">

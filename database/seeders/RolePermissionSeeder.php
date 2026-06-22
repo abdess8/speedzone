@@ -82,7 +82,7 @@ class RolePermissionSeeder extends Seeder
 
         $driverRole?->permissions()->sync(
             $permissions->only([
-                'orders.read.own',
+                'orders.read.assigned',
                 'orders.update.own',
                 'orders.print',
                 'pickup_requests.read.assigned',

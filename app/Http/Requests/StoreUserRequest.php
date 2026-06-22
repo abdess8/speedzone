@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\BillingFrequency;
 use App\Enums\SellerPaymentMethod;
+use App\Models\Role;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -25,13 +26,17 @@ class StoreUserRequest extends FormRequest
      */
     public function rules(): array
     {
+        $isDriver = $this->isDriverRole();
+
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
             'role_id' => ['required', 'integer', 'exists:roles,id'],
-            'city_id' => ['required', 'integer', 'exists:cities,id'],
+            'city_id' => [$isDriver ? 'nullable' : 'required', 'integer', 'exists:cities,id'],
+            'sector_ids' => [$isDriver ? 'required' : 'nullable', 'array', 'min:1'],
+            'sector_ids.*' => ['integer', 'distinct', Rule::exists('sectors', 'id')->whereNull('deleted_at')],
             'address' => ['nullable', 'string', 'max:1000'],
             'pickup_address_1' => ['nullable', 'string', 'max:1000'],
             'pickup_address_2' => ['nullable', 'string', 'max:1000'],
@@ -53,5 +58,16 @@ class StoreUserRequest extends FormRequest
             'cin_front_attachment' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
             'cin_back_attachment' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
         ];
+    }
+
+    private function isDriverRole(): bool
+    {
+        $roleId = $this->input('role_id');
+
+        if (! $roleId) {
+            return false;
+        }
+
+        return Role::query()->whereKey($roleId)->value('name') === Role::DRIVER;
     }
 }

@@ -10,10 +10,13 @@ import "@vueform/multiselect/themes/default.css";
 
 const { t } = useI18n();
 
+import { formatMoney as money } from "@/common/formatMoney";
+
 const props = defineProps({
   user: { type: Object, required: true },
   roles: { type: Array, default: () => [] },
   cities: { type: Array, default: () => [] },
+  sectors: { type: Array, default: () => [] },
   billingFrequencies: { type: Array, default: () => [] },
   paymentMethods: { type: Array, default: () => [] },
 });
@@ -45,6 +48,22 @@ const form = useForm({
   rib_attachment: null,
   cin_front_attachment: null,
   cin_back_attachment: null,
+  sector_ids: (props.user.sectors ?? []).map((s) => s.id),
+});
+
+const driverRoleId = computed(() => props.roles.find((r) => r.name === "Driver")?.id ?? null);
+const isDriverRole = computed(() => form.role_id === driverRoleId.value);
+
+const groupedSectorOptions = computed(() => {
+  const byCity = {};
+  props.sectors.forEach((s) => {
+    byCity[s.city_name] = byCity[s.city_name] || [];
+    byCity[s.city_name].push({
+      value: s.id,
+      label: t("users.form.sector_option_label", { name: s.name, price: money(s.delivery_price) }),
+    });
+  });
+  return Object.entries(byCity).map(([label, options]) => ({ label, options }));
 });
 
 const onBillingFileChange = (field, event) => {
@@ -88,7 +107,11 @@ const toggleRemoveFile = (path) => {
 };
 
 const submit = () => {
-  form.post(route("users.update", props.user.id), {
+  form.transform((data) => ({
+    ...data,
+    city_id: isDriverRole.value ? null : data.city_id,
+    sector_ids: isDriverRole.value ? data.sector_ids : [],
+  })).post(route("users.update", props.user.id), {
     forceFormData: true,
   });
 };
@@ -153,7 +176,7 @@ const submit = () => {
                   <input type="text" class="form-control" v-model="form.phone_number" :class="{ 'is-invalid': form.errors.phone_number }" />
                   <InputError :message="form.errors.phone_number" />
                 </BCol>
-                <BCol md="6">
+                <BCol md="6" v-if="!isDriverRole">
                   <label class="form-label">{{ $t('users.form.city') }} <span class="text-danger">*</span></label>
                   <Multiselect
                     v-model="form.city_id"
@@ -194,7 +217,28 @@ const submit = () => {
             </BCardBody>
           </BCard>
 
-          <BCard no-body>
+          <BCard v-if="isDriverRole" no-body>
+            <BCardHeader>
+              <h5 class="card-title mb-0">{{ $t('users.form.sectors_info') }}</h5>
+            </BCardHeader>
+            <BCardBody>
+              <p class="text-muted mb-3">{{ $t('users.form.sectors_description') }}</p>
+              <label class="form-label">{{ $t('users.form.sectors') }} <span class="text-danger">*</span></label>
+              <Multiselect
+                v-model="form.sector_ids"
+                mode="tags"
+                :options="groupedSectorOptions"
+                :groups="true"
+                :searchable="true"
+                :close-on-select="false"
+                :placeholder="$t('users.form.sectors_placeholder')"
+                :class="{ 'is-invalid': form.errors.sector_ids }"
+              />
+              <InputError :message="form.errors.sector_ids" />
+            </BCardBody>
+          </BCard>
+
+          <BCard v-if="!isDriverRole" no-body>
             <BCardHeader>
               <h5 class="card-title mb-0">{{ $t('users.form.billing_info') }}</h5>
             </BCardHeader>

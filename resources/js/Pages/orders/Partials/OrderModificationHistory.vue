@@ -47,8 +47,14 @@ const displayValue = (value) => (value != null && value !== "" ? value : t("comm
           <td class="text-muted">{{ displayValue(entry.old_value) }}</td>
           <td class="fw-semibold">{{ displayValue(entry.new_value) }}</td>
           <td>
+            <span
+              v-if="entry.is_automatic"
+              class="badge bg-secondary-subtle text-secondary"
+            >
+              <i class="ri-settings-3-line me-1"></i>{{ $t('orders.timeline.system') }}
+            </span>
             <UserAvatar
-              v-if="entry.changed_by"
+              v-else-if="entry.changed_by"
               :user="entry.changed_by"
               :size="24"
               clickable

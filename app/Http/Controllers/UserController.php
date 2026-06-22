@@ -8,7 +8,9 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\City;
 use App\Models\Role;
+use App\Models\Sector;
 use App\Models\User;
+use App\Services\DriverZoneService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -18,6 +20,8 @@ use Inertia\Response;
 
 class UserController extends Controller
 {
+    public function __construct(private readonly DriverZoneService $driverZones) {}
+
     /**
      * Display a listing of the users.
      */
@@ -58,6 +62,7 @@ class UserController extends Controller
         return Inertia::render('users/create', [
             'roles' => Role::orderBy('name')->get(['id', 'name']),
             'cities' => City::query()->active()->orderBy('name')->get(['id', 'name', 'code']),
+            'sectors' => $this->sectorOptions(),
             'billingFrequencies' => BillingFrequency::options(),
             'paymentMethods' => SellerPaymentMethod::options(),
         ]);
@@ -85,10 +90,14 @@ class UserController extends Controller
         $data = $this->normaliseBillingDate($data);
         $data = $this->storeBillingAttachments($request, $data);
 
+        unset($data['sector_ids']);
+
         $user = User::create($data);
         if (! empty($data['role_id'])) {
             $user->roles()->sync([$data['role_id']]);
         }
+
+        $this->syncDriverSectors($request, $user, $data['role_id'] ?? null);
 
         return redirect()->route('users.index')
             ->with('success', 'User created successfully.');
@@ -101,6 +110,10 @@ class UserController extends Controller
     {
         $user->load(['role', 'city']);
 
+        if ($user->isDriver()) {
+            $user->load(['sectors.city']);
+        }
+
         return Inertia::render('users/show', [
             'user' => $user,
         ]);
@@ -111,12 +124,13 @@ class UserController extends Controller
      */
     public function edit(User $user): Response
     {
-        $user->load(['role', 'city']);
+        $user->load(['role', 'city', 'sectors.city']);
 
         return Inertia::render('users/edit', [
             'user' => $user,
             'roles' => Role::orderBy('name')->get(['id', 'name']),
             'cities' => City::query()->active()->orderBy('name')->get(['id', 'name', 'code']),
+            'sectors' => $this->sectorOptions(),
             'billingFrequencies' => BillingFrequency::options(),
             'paymentMethods' => SellerPaymentMethod::options(),
         ]);
@@ -154,10 +168,14 @@ class UserController extends Controller
         $data = $this->normaliseBillingDate($data);
         $data = $this->storeBillingAttachments($request, $data, $user);
 
+        unset($data['sector_ids']);
+
         $user->update($data);
         if (array_key_exists('role_id', $data) && ! empty($data['role_id'])) {
             $user->roles()->sync([$data['role_id']]);
         }
+
+        $this->syncDriverSectors($request, $user, $data['role_id'] ?? null);
 
         return redirect()->route('users.index')
             ->with('success', 'User updated successfully.');
@@ -284,5 +302,43 @@ class UserController extends Controller
         foreach ($paths as $path) {
             Storage::disk('public')->delete($path);
         }
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function sectorOptions(): array
+    {
+        return Sector::query()
+            ->active()
+            ->with('city:id,name')
+            ->orderBy('name')
+            ->get(['id', 'city_id', 'name', 'delivery_price'])
+            ->map(fn (Sector $sector) => [
+                'id' => $sector->id,
+                'city_id' => $sector->city_id,
+                'city_name' => $sector->city?->name,
+                'name' => $sector->name,
+                'delivery_price' => (float) $sector->delivery_price,
+            ])
+            ->all();
+    }
+
+    private function syncDriverSectors(Request $request, User $user, mixed $roleId): void
+    {
+        $role = $roleId ? Role::query()->find($roleId) : null;
+
+        if ($role?->name === Role::DRIVER) {
+            $sectorIds = array_values(array_unique(array_map(
+                'intval',
+                (array) $request->input('sector_ids', [])
+            )));
+
+            $this->driverZones->assign($user, $sectorIds, replace: true);
+
+            return;
+        }
+
+        $user->sectors()->detach();
     }
 }

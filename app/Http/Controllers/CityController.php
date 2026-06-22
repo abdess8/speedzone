@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCityRequest;
 use App\Http\Requests\UpdateCityRequest;
 use App\Http\Resources\CityResource;
+use App\Http\Resources\DriverResource;
 use App\Http\Resources\SectorResource;
 use App\Models\City;
+use App\Models\Role;
+use App\Models\User;
 use App\Services\CityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -58,8 +61,20 @@ class CityController extends Controller
         $city->loadCount(['sectors', 'activeSectors']);
         $city->load(['sectors' => fn ($q) => $q->withCount('orders')->orderBy('name')]);
 
+        $drivers = User::query()
+            ->whereHas('roles', fn ($q) => $q->where('name', Role::DRIVER))
+            ->whereHas('sectors', fn ($q) => $q->where('city_id', $city->id))
+            ->with(['sectors' => fn ($q) => $q->where('city_id', $city->id)->orderBy('name')])
+            ->withCount(['sectors' => fn ($q) => $q->where('city_id', $city->id)])
+            ->orderBy('first_name')
+            ->orderBy('name')
+            ->get();
+
+        $resolvedDrivers = DriverResource::collection($drivers)->resolve($request);
+
         return Inertia::render('cities/show', [
             'city' => CityResource::make($city)->resolve($request),
+            'drivers' => array_values($resolvedDrivers['data'] ?? $resolvedDrivers),
             'can' => $this->abilities($request, includeSectors: true),
         ]);
     }

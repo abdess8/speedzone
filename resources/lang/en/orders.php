@@ -153,6 +153,10 @@ return [
         'new_value' => 'New Value',
         'modified_by' => 'Modified By',
         'date_time' => 'Date & Time',
+        'fields' => [
+            'driver_assignment_manual' => 'Driver Assignment (Manual)',
+            'driver_assignment_auto' => 'Driver Assignment (Automatic)',
+        ],
     ],
     'swal' => [
         'move_to' => 'Move to ":label"?',

@@ -27,6 +27,11 @@ return [
         'no_sectors' => 'Aucun secteur pour cette ville.',
         'add_first_sector' => 'Ajouter le premier secteur',
         'sectors_count' => ':count secteur|:count secteurs',
+        'assigned_drivers' => 'Livreurs affectés à :name',
+        'driver' => 'Livreur',
+        'assigned_sectors' => 'Secteurs assignés',
+        'no_sectors_assigned' => 'Aucun secteur assigné',
+        'no_drivers' => 'Aucun livreur affecté à cette ville.',
     ],
     'form' => [
         'info' => 'Informations ville',

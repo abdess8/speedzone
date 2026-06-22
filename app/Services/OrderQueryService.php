@@ -33,9 +33,14 @@ class OrderQueryService
         // Native orders only — partner-ingested orders live on /partner-orders.
         $query->whereNull('partner_id');
 
-        // Authorization scope: users without read.all only see their own orders.
-        if (! $user->hasPermission('orders.read.all')) {
+        if ($user->hasPermission('orders.read.all')) {
+            // full access
+        } elseif ($user->hasPermission('orders.read.assigned')) {
+            $query->assignedTo($user->id);
+        } elseif ($user->hasPermission('orders.read.own')) {
             $query->ownedBy($user->id);
+        } else {
+            $query->whereRaw('1 = 0');
         }
 
         $this->applyFilters($query, $request);

@@ -17,6 +17,7 @@ class TransferScanService
     public function __construct(
         private readonly TransferService $transfers,
         private readonly TransferTransitionService $transitions,
+        private readonly OrderDriverAutoAssignmentService $driverAutoAssignment,
     ) {}
 
     /**
@@ -108,6 +109,7 @@ class TransferScanService
                     "Received via scan on transfer {$transfer->reference}.",
                     transferId: $transfer->id,
                 );
+                $this->driverAutoAssignment->assignBySector($order->refresh());
 
                 $updated++;
                 $orders->push($order->refresh());

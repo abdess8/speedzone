@@ -20,6 +20,8 @@ return [
         'partners.sync' => 'Force partner sync',
         'partners.deliveries.manage' => 'Manage partner deliveries',
 
+        'orders.read.assigned' => 'View assigned orders',
+
         'support.create' => 'Create tickets',
         'support.read.own' => 'View own tickets',
         'support.read.all' => 'View all tickets',
@@ -30,6 +32,12 @@ return [
         'support.manage' => 'Manage support (full access)',
     ],
 
+    'scopes' => [
+        'own' => 'own',
+        'all' => 'all',
+        'assigned' => 'affected',
+    ],
+
     'descriptions' => [
         'partners.create' => 'Register a new B2B delivery partner and its API credentials.',
         'partners.read' => 'View partner configurations, status mappings, and API logs.',
@@ -37,6 +45,7 @@ return [
         'partners.delete' => 'Remove a partner integration.',
         'partners.sync' => 'Trigger an on-demand "Force Sync Now" ingestion for a partner.',
         'partners.deliveries.manage' => 'Update and mass-scan deliveries belonging to assigned partners.',
+        'orders.read.assigned' => 'View only orders assigned to the current user (driver).',
         'support.create' => 'Allows sellers to open new support tickets linked to orders, invoices, or pickup requests.',
         'support.read.own' => 'View support tickets created by the current user only.',
         'support.read.all' => 'View every support ticket in the Support Center dashboard.',

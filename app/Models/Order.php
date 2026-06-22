@@ -279,6 +279,14 @@ class Order extends Model
     }
 
     /**
+     * Restrict the query to orders assigned to the given driver.
+     */
+    public function scopeAssignedTo(Builder $query, int $userId): Builder
+    {
+        return $query->where('driver_id', $userId);
+    }
+
+    /**
      * Restrict the query to orders ingested from the given partner.
      */
     public function scopeForPartner(Builder $query, int $partnerId): Builder

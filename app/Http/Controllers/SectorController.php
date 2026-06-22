@@ -58,7 +58,10 @@ class SectorController extends Controller
     {
         $this->authorize('view', $sector);
 
-        $sector->load('city')->loadCount(['orders', 'drivers']);
+        $sector->load([
+            'city',
+            'drivers' => fn ($q) => $q->orderBy('first_name')->orderBy('name'),
+        ])->loadCount(['orders', 'drivers']);
 
         return Inertia::render('sectors/show', [
             'sector' => SectorResource::make($sector)->resolve($request),

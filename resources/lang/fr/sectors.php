@@ -35,4 +35,9 @@ return [
     'delete_confirm_title' => 'Supprimer ce secteur ?',
     'delete_confirm_text' => ':name sera supprimé.',
     'empty' => 'Aucun secteur trouvé.',
+    'show' => [
+        'info' => 'Informations secteur',
+        'assigned_drivers' => 'Livreurs affectés à :name',
+        'no_drivers' => 'Aucun livreur affecté à ce secteur.',
+    ],
 ];

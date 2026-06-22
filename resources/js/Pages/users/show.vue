@@ -45,7 +45,25 @@ const isDriver = computed(() =>
   (props.user.roles ?? []).some((r) => ["Driver", "Livreur"].includes(r))
 );
 
-const showBilling = computed(() => isSeller.value || isDriver.value);
+const showBilling = computed(() => isSeller.value);
+
+const driverCities = computed(() => {
+  const sectors = props.user.sectors ?? [];
+  const cities = new Map();
+
+  sectors.forEach((sector) => {
+    const city = sector.city;
+    if (!city) return;
+
+    if (!cities.has(city.id)) {
+      cities.set(city.id, { id: city.id, name: city.name, sectors: [] });
+    }
+
+    cities.get(city.id).sectors.push(sector);
+  });
+
+  return Array.from(cities.values()).sort((a, b) => a.name.localeCompare(b.name));
+});
 
 const formatDate = (value) => {
   if (!value) return t("common.empty_value_short");
@@ -173,6 +191,35 @@ const labelFrom = (group, value) => {
                 </tbody>
               </table>
             </div>
+          </BCardBody>
+        </BCard>
+
+        <BCard v-if="isDriver" no-body>
+          <BCardHeader>
+            <h5 class="card-title mb-0">{{ $t('users.show.coverage_info') }}</h5>
+          </BCardHeader>
+          <BCardBody>
+            <div v-if="driverCities.length">
+              <div v-for="city in driverCities" :key="city.id" class="mb-4">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <i class="ri-building-2-line text-primary"></i>
+                  <Link :href="route('cities.show', city.id)" class="fw-semibold link-primary">
+                    {{ city.name }}
+                  </Link>
+                </div>
+                <div class="d-flex flex-wrap gap-1 ms-4">
+                  <Link
+                    v-for="sector in city.sectors"
+                    :key="sector.id"
+                    :href="route('sectors.show', sector.id)"
+                    class="badge bg-light text-body border text-decoration-none"
+                  >
+                    {{ sector.name }}
+                  </Link>
+                </div>
+              </div>
+            </div>
+            <p v-else class="text-muted mb-0">{{ $t('users.show.no_coverage') }}</p>
           </BCardBody>
         </BCard>
 

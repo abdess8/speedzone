@@ -363,6 +363,14 @@ class User extends Authenticatable implements MustVerifyEmail
             return $this->hasPermission("orders.{$action}.own");
         }
 
+        if ($order && (int) $order->driver_id === (int) $this->id) {
+            return $action === 'read' && $this->hasPermission('orders.read.assigned');
+        }
+
+        if (! $order && $action === 'read' && $this->hasPermission('orders.read.assigned')) {
+            return true;
+        }
+
         return false;
     }
 

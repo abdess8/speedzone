@@ -31,6 +31,10 @@ class SectorResource extends JsonResource
             ] : null),
             'orders_count' => $this->whenCounted('orders'),
             'drivers_count' => $this->whenCounted('drivers'),
+            'drivers' => $this->whenLoaded(
+                'drivers',
+                fn () => UserSummaryResource::collection($this->drivers)->resolve($request)
+            ),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

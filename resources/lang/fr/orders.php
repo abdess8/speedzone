@@ -153,6 +153,10 @@ return [
         'new_value' => 'Nouvelle valeur',
         'modified_by' => 'Modifié par',
         'date_time' => 'Date et heure',
+        'fields' => [
+            'driver_assignment_manual' => 'Affectation livreur (manuelle)',
+            'driver_assignment_auto' => 'Affectation livreur (automatique)',
+        ],
     ],
     'swal' => [
         'move_to' => 'Passer à « :label » ?',

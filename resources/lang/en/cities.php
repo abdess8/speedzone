@@ -27,6 +27,11 @@ return [
         'no_sectors' => 'No sectors yet for this city.',
         'add_first_sector' => 'Add the first sector',
         'sectors_count' => ':count sector|:count sectors',
+        'assigned_drivers' => 'Drivers assigned to :name',
+        'driver' => 'Driver',
+        'assigned_sectors' => 'Assigned sectors',
+        'no_sectors_assigned' => 'No sectors assigned',
+        'no_drivers' => 'No drivers assigned to this city.',
     ],
     'form' => [
         'info' => 'City Information',

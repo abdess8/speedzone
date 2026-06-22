@@ -20,6 +20,8 @@ return [
         'partners.sync' => 'Forcer la synchronisation',
         'partners.deliveries.manage' => 'Gérer les livraisons partenaires',
 
+        'orders.read.assigned' => 'Voir les commandes qui lui sont affectées',
+
         'support.create' => 'Créer des tickets',
         'support.read.own' => 'Voir ses propres tickets',
         'support.read.all' => 'Voir tous les tickets',
@@ -30,6 +32,12 @@ return [
         'support.manage' => 'Gérer le support (accès complet)',
     ],
 
+    'scopes' => [
+        'own' => 'propre',
+        'all' => 'tous',
+        'assigned' => 'affecté',
+    ],
+
     'descriptions' => [
         'partners.create' => 'Enregistrer un nouveau partenaire B2B et ses identifiants API.',
         'partners.read' => 'Consulter les configurations partenaires, correspondances et journaux API.',
@@ -37,6 +45,7 @@ return [
         'partners.delete' => 'Supprimer une intégration partenaire.',
         'partners.sync' => 'Lancer une ingestion « synchroniser maintenant » pour un partenaire.',
         'partners.deliveries.manage' => 'Mettre à jour et scanner en masse les livraisons des partenaires assignés.',
+        'orders.read.assigned' => 'Consulter uniquement les commandes assignées à l\'utilisateur connecté (livreur).',
         'support.create' => 'Permet aux vendeurs d\'ouvrir des tickets liés à leurs commandes, factures ou ramassages.',
         'support.read.own' => 'Consulter uniquement les tickets créés par l\'utilisateur connecté.',
         'support.read.all' => 'Consulter tous les tickets dans le centre de support.',

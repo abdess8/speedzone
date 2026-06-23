@@ -1,0 +1,33 @@
+<?php
+
+return [
+    'menu' => 'Menu',
+    'dashboard' => 'Tableau de bord',
+    'orders' => 'Commandes',
+    'partner_orders' => 'Commandes partenaires',
+    'pickups' => 'Ramassages',
+    'transfers' => 'Transferts',
+    'returns' => 'Retours',
+    'invoices' => 'Factures',
+    'pending_billing' => 'Facturation en attente',
+    'driver_billing' => 'Facturation livreurs',
+    'driver_invoices' => 'Factures livreurs',
+    'driver_pending_billing' => 'Facturation livreur en attente',
+    'driver_payments' => 'Paiements livreurs',
+    'driver_finance' => 'Mes gains',
+    'support' => 'Support',
+    'support_center' => 'Centre de support',
+    'delivery_zones' => 'Zones de livraison',
+    'sectors' => 'Secteurs',
+    'driver_zones' => 'Affectation des livreurs',
+    'settings' => [
+        'title' => 'Paramètres',
+        'profile' => 'Profil',
+        'users' => 'Utilisateurs',
+        'roles_permissions' => 'Rôles & Permissions',
+        'cities' => 'Villes',
+        'partners' => 'Partenaires',
+        'partner_assignments' => 'Affectation partenaires',
+        'api_integrations' => 'Intégrations API',
+    ],
+];

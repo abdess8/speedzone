@@ -111,9 +111,9 @@ export default {
             <BCol cols="12">
               <div class="d-flex align-items-lg-center flex-lg-row flex-column">
                 <div class="flex-grow-1">
-                  <h4 class="fs-16 mb-1">Good Morning, Anna!</h4>
+                  <h4 class="fs-16 mb-1">Good morning, Operations Team!</h4>
                   <p class="text-muted mb-0">
-                    Here's what's happening with your store today.
+                    Here's what's happening across SpeedZone Express logistics today.
                   </p>
                 </div>
                 <div class="mt-3 mt-lg-0">
@@ -130,9 +130,9 @@ export default {
                         </div>
                       </BCol>
                       <div class="col-auto">
-                        <BButton type="button" variant="soft-secondary">
+                        <BButton type="button" variant="secondary">
                           <i class="ri-add-circle-line align-middle me-1"></i>
-                          Add Product
+                          Create Shipment
                         </BButton>
                       </div>
                       <div class="col-auto">
@@ -150,64 +150,31 @@ export default {
 
           <BRow>
             <BCol xl="3" md="6">
-              <BCard no-body class="card-animate">
+              <BCard no-body class="card-animate dashboard-logistics-card">
                 <BCardBody>
                   <div class="d-flex align-items-center">
                     <div class="flex-grow-1 overflow-hidden">
                       <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
-                        Total Earnings
+                        Total Deliveries
                       </p>
                     </div>
                     <div class="flex-shrink-0">
                       <h5 class="text-success fs-14 mb-0">
                         <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
-                        +16.24 %
+                        +8.45 %
                       </h5>
                     </div>
                   </div>
                   <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
                       <h4 class="fs-20 fw-semibold ff-secondary mb-4">
-                        $<count-to :startVal='0' :endVal='559' :duration='5000'></count-to>k
+                        <count-to :startVal='0' :endVal='12450' :duration='5000'></count-to>
                       </h4>
-                      <BLink href="" class="text-decoration-underline">View net earnings</BLink>
-                    </div>
-                    <div class="avatar-sm flex-shrink-0">
-                      <span class="avatar-title bg-secondary-subtle rounded fs-3">
-                        <i class="bx bx-dollar-circle text-secondary"></i>
-                      </span>
-                    </div>
-                  </div>
-                </BCardBody>
-              </BCard>
-            </BCol>
-
-            <BCol xl="3" md="6">
-              <BCard no-body class="card-animate">
-                <BCardBody>
-                  <div class="d-flex align-items-center">
-                    <div class="flex-grow-1 overflow-hidden">
-                      <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
-                        Orders
-                      </p>
-                    </div>
-                    <div class="flex-shrink-0">
-                      <h5 class="text-danger fs-14 mb-0">
-                        <i class="ri-arrow-right-down-line fs-13 align-middle"></i>
-                        -3.57 %
-                      </h5>
-                    </div>
-                  </div>
-                  <div class="d-flex align-items-end justify-content-between mt-4">
-                    <div>
-                      <h4 class="fs-20 fw-semibold ff-secondary mb-4">
-                        <count-to :startVal='0' :endVal='36894' :duration='5000'></count-to>
-                      </h4>
-                      <BLink href="" class="text-decoration-underline">View all orders</BLink>
+                      <BLink href="" class="text-decoration-underline">View all deliveries</BLink>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
                       <span class="avatar-title bg-primary-subtle rounded fs-3">
-                        <i class="bx bx-shopping-bag text-primary"></i>
+                        <i class="bx bx-package text-primary"></i>
                       </span>
                     </div>
                   </div>
@@ -216,32 +183,31 @@ export default {
             </BCol>
 
             <BCol xl="3" md="6">
-              <BCard no-body class="card-animate">
+              <BCard no-body class="card-animate dashboard-logistics-card">
                 <BCardBody>
                   <div class="d-flex align-items-center">
                     <div class="flex-grow-1 overflow-hidden">
                       <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
-                        Customers
+                        Deliveries In Progress
                       </p>
                     </div>
                     <div class="flex-shrink-0">
-                      <h5 class="text-success fs-14 mb-0">
+                      <h5 class="text-info fs-14 mb-0">
                         <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
-                        +29.08 %
+                        +4.11 %
                       </h5>
                     </div>
                   </div>
                   <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
                       <h4 class="fs-20 fw-semibold ff-secondary mb-4">
-                        <count-to :startVal='0' :endVal='183' :duration='5000'></count-to>M
-
+                        <count-to :startVal='0' :endVal='2431' :duration='5000'></count-to>
                       </h4>
-                      <BLink href="" class="text-decoration-underline">See details</BLink>
+                      <BLink href="" class="text-decoration-underline">Track active routes</BLink>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
-                      <span class="avatar-title bg-success-subtle rounded fs-3">
-                        <i class="bx bx-user-circle text-success"></i>
+                      <span class="avatar-title bg-secondary-subtle rounded fs-3">
+                        <i class="bx bx-loader-circle text-secondary"></i>
                       </span>
                     </div>
                   </div>
@@ -250,28 +216,131 @@ export default {
             </BCol>
 
             <BCol xl="3" md="6">
-              <BCard no-body class="card-animate">
+              <BCard no-body class="card-animate dashboard-logistics-card">
                 <BCardBody>
                   <div class="d-flex align-items-center">
                     <div class="flex-grow-1 overflow-hidden">
                       <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
-                        My Balance
+                        Delivered Packages
                       </p>
                     </div>
                     <div class="flex-shrink-0">
-                      <h5 class="text-muted fs-14 mb-0">+0.00 %</h5>
+                      <h5 class="text-success fs-14 mb-0">
+                        <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                        +13.62 %
+                      </h5>
                     </div>
                   </div>
                   <div class="d-flex align-items-end justify-content-between mt-4">
                     <div>
                       <h4 class="fs-20 fw-semibold ff-secondary mb-4">
-                        $<count-to :startVal='0' :endVal='165' :duration='5000'></count-to>k
+                        <count-to :startVal='0' :endVal='9874' :duration='5000'></count-to>
+
                       </h4>
-                      <BLink href="" class="text-decoration-underline">Withdraw money</BLink>
+                      <BLink href="" class="text-decoration-underline">Review completion rate</BLink>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                      <span class="avatar-title bg-success-subtle rounded fs-3">
+                        <i class="bx bx-check-shield text-success"></i>
+                      </span>
+                    </div>
+                  </div>
+                </BCardBody>
+              </BCard>
+            </BCol>
+
+            <BCol xl="3" md="6">
+              <BCard no-body class="card-animate dashboard-logistics-card">
+                <BCardBody>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                      <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                        Pending Packages
+                      </p>
+                    </div>
+                    <div class="flex-shrink-0">
+                      <h5 class="text-warning fs-14 mb-0">
+                        <i class="ri-time-line fs-13 align-middle"></i>
+                        SLA monitor
+                      </h5>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                      <h4 class="fs-20 fw-semibold ff-secondary mb-4">
+                        <count-to :startVal='0' :endVal='576' :duration='5000'></count-to>
+                      </h4>
+                      <BLink href="" class="text-decoration-underline">View pending queue</BLink>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
                       <span class="avatar-title bg-warning-subtle rounded fs-3">
-                        <i class="bx bx-wallet text-warning"></i>
+                        <i class="bx bx-time-five text-warning"></i>
+                      </span>
+                    </div>
+                  </div>
+                </BCardBody>
+              </BCard>
+            </BCol>
+
+            <BCol xl="3" md="6">
+              <BCard no-body class="card-animate dashboard-logistics-card">
+                <BCardBody>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                      <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                        Revenue
+                      </p>
+                    </div>
+                    <div class="flex-shrink-0">
+                      <h5 class="text-success fs-14 mb-0">
+                        <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                        +9.22 %
+                      </h5>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                      <h4 class="fs-20 fw-semibold ff-secondary mb-4">
+                        <count-to :startVal='0' :endVal='342' :duration='5000'></count-to>k Dhs
+                      </h4>
+                      <BLink href="" class="text-decoration-underline">Revenue overview</BLink>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                      <span class="avatar-title bg-success-subtle rounded fs-3">
+                        <i class="bx bx-dollar-circle text-success"></i>
+                      </span>
+                    </div>
+                  </div>
+                </BCardBody>
+              </BCard>
+            </BCol>
+
+            <BCol xl="3" md="6">
+              <BCard no-body class="card-animate dashboard-logistics-card">
+                <BCardBody>
+                  <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                      <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
+                        Active Drivers
+                      </p>
+                    </div>
+                    <div class="flex-shrink-0">
+                      <h5 class="text-primary fs-14 mb-0">
+                        <i class="ri-user-follow-line fs-13 align-middle"></i>
+                        98% online
+                      </h5>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                      <h4 class="fs-20 fw-semibold ff-secondary mb-4">
+                        <count-to :startVal='0' :endVal='312' :duration='5000'></count-to>
+                      </h4>
+                      <BLink href="" class="text-decoration-underline">View driver activity</BLink>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                      <span class="avatar-title bg-primary-subtle rounded fs-3">
+                        <i class="bx bx-id-card text-primary"></i>
                       </span>
                     </div>
                   </div>
@@ -332,7 +401,7 @@ export default {
                             </div>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$29.00</h5>
+                            <h5 class="fs-14 my-1 fw-normal">29.00 Dhs</h5>
                             <span class="text-muted">Price</span>
                           </td>
                           <td>
@@ -344,7 +413,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$1,798</h5>
+                            <h5 class="fs-14 my-1 fw-normal">1,798 Dhs</h5>
                             <span class="text-muted">Amount</span>
                           </td>
                         </tr>
@@ -364,7 +433,7 @@ export default {
                             </div>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$85.20</h5>
+                            <h5 class="fs-14 my-1 fw-normal">85.20 Dhs</h5>
                             <span class="text-muted">Price</span>
                           </td>
                           <td>
@@ -378,7 +447,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$2982</h5>
+                            <h5 class="fs-14 my-1 fw-normal">2982 Dhs</h5>
                             <span class="text-muted">Amount</span>
                           </td>
                         </tr>
@@ -398,7 +467,7 @@ export default {
                             </div>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$14.00</h5>
+                            <h5 class="fs-14 my-1 fw-normal">14.00 Dhs</h5>
                             <span class="text-muted">Price</span>
                           </td>
                           <td>
@@ -410,7 +479,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$1120</h5>
+                            <h5 class="fs-14 my-1 fw-normal">1120 Dhs</h5>
                             <span class="text-muted">Amount</span>
                           </td>
                         </tr>
@@ -430,7 +499,7 @@ export default {
                             </div>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$127.50</h5>
+                            <h5 class="fs-14 my-1 fw-normal">127.50 Dhs</h5>
                             <span class="text-muted">Price</span>
                           </td>
                           <td>
@@ -444,7 +513,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$7140</h5>
+                            <h5 class="fs-14 my-1 fw-normal">7140 Dhs</h5>
                             <span class="text-muted">Amount</span>
                           </td>
                         </tr>
@@ -464,7 +533,7 @@ export default {
                             </div>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$54</h5>
+                            <h5 class="fs-14 my-1 fw-normal">54 Dhs</h5>
                             <span class="text-muted">Price</span>
                           </td>
                           <td>
@@ -476,7 +545,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <h5 class="fs-14 my-1 fw-normal">$3996</h5>
+                            <h5 class="fs-14 my-1 fw-normal">3996 Dhs</h5>
                             <span class="text-muted">Amount</span>
                           </td>
                         </tr>
@@ -560,7 +629,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <span class="text-muted">$541200</span>
+                            <span class="text-muted">541200 Dhs</span>
                           </td>
                           <td>
                             <h5 class="fs-14 mb-0">
@@ -591,7 +660,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <span class="text-muted">$75030</span>
+                            <span class="text-muted">75030 Dhs</span>
                           </td>
                           <td>
                             <h5 class="fs-14 mb-0">
@@ -622,7 +691,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <span class="text-muted">$45600</span>
+                            <span class="text-muted">45600 Dhs</span>
                           </td>
                           <td>
                             <h5 class="fs-14 mb-0">
@@ -653,7 +722,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <span class="text-muted">$29456</span>
+                            <span class="text-muted">29456 Dhs</span>
                           </td>
                           <td>
                             <h5 class="fs-14 mb-0">
@@ -684,7 +753,7 @@ export default {
                             <span class="text-muted">Stock</span>
                           </td>
                           <td>
-                            <span class="text-muted">$11260</span>
+                            <span class="text-muted">11260 Dhs</span>
                           </td>
                           <td>
                             <h5 class="fs-14 mb-0">
@@ -796,11 +865,11 @@ export default {
                           </td>
                           <td>Clothes</td>
                           <td>
-                            <span class="text-primary">$109.00</span>
+                            <span class="text-primary">109.00 Dhs</span>
                           </td>
                           <td>Zoetic Fashion</td>
                           <td>
-                            <BBadge variant="success-subtle" class="bg-success-subtle text-success">Paid</BBadge>
+                            <span class="status-badge status-badge-delivered">Delivered</span>
                           </td>
                           <td>
                             <h5 class="fs-14 fw-medium mb-0">
@@ -823,11 +892,11 @@ export default {
                           </td>
                           <td>Kitchen Storage</td>
                           <td>
-                            <span class="text-primary">$149.00</span>
+                            <span class="text-primary">149.00 Dhs</span>
                           </td>
                           <td>Micro Design</td>
                           <td>
-                            <BBadge variant="warning-subtle" class="bg-warning-subtle text-warning">Pending</BBadge>
+                            <span class="status-badge status-badge-pending">Pending</span>
                           </td>
                           <td>
                             <h5 class="fs-14 fw-medium mb-0">
@@ -850,11 +919,11 @@ export default {
                           </td>
                           <td>Bike Accessories</td>
                           <td>
-                            <span class="text-primary">$215.00</span>
+                            <span class="text-primary">215.00 Dhs</span>
                           </td>
                           <td>Nesta Technologies</td>
                           <td>
-                            <BBadge variant="success-subtle" class="bg-success-subtle text-success">Paid</BBadge>
+                            <span class="status-badge status-badge-in-transit">In Transit</span>
                           </td>
                           <td>
                             <h5 class="fs-14 fw-medium mb-0">
@@ -877,11 +946,11 @@ export default {
                           </td>
                           <td>Furniture</td>
                           <td>
-                            <span class="text-primary">$199.00</span>
+                            <span class="text-primary">199.00 Dhs</span>
                           </td>
                           <td>Syntyce Solutions</td>
                           <td>
-                            <BBadge variant="danger-subtle" class="bg-danger-subtle text-danger">Unpaid</BBadge>
+                            <span class="status-badge status-badge-cancelled">Cancelled</span>
                           </td>
                           <td>
                             <h5 class="fs-14 fw-medium mb-0">
@@ -904,11 +973,11 @@ export default {
                           </td>
                           <td>Bags and Wallets</td>
                           <td>
-                            <span class="text-primary">$330.00</span>
+                            <span class="text-primary">330.00 Dhs</span>
                           </td>
                           <td>iTest Factory</td>
                           <td>
-                            <BBadge variant="success-subtle" class="bg-success-subtle text-success">Paid</BBadge>
+                            <span class="status-badge status-badge-delivered">Delivered</span>
                           </td>
                           <td>
                             <h5 class="fs-14 fw-medium mb-0">
@@ -1405,7 +1474,7 @@ export default {
                   <div class="mt-4">
                     <h5>Invite New Seller</h5>
                     <p class="text-muted lh-base">
-                      Refer a new seller to us and earn $100 per refer.
+                      Refer a new seller to us and earn 100 Dhs per refer.
                     </p>
                     <BButton type="button" variant="primary" pill class="btn-label">
                       <i class="ri-mail-fill label-icon align-middle rounded-pill fs-16 me-2"></i>

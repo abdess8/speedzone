@@ -1,5 +1,17 @@
 <?php
 
+use App\Http\Controllers\Api\CityController;
+use App\Http\Controllers\Api\DriverZoneController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\OrderTransitionController;
+use App\Http\Controllers\Api\PermissionController;
+use App\Http\Controllers\Api\PickupRequestController;
+use App\Http\Controllers\Api\ReturnController;
+use App\Http\Controllers\Api\TransferController;
+use App\Http\Controllers\ReturnController as WebReturnController;
+use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SectorController;
+use App\Http\Controllers\Api\UserRoleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +28,120 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('permissions', [PermissionController::class, 'index'])->middleware('permission:permissions.read');
+    Route::post('permissions', [PermissionController::class, 'store'])->middleware('permission:permissions.create');
+    Route::get('permissions/{permission}', [PermissionController::class, 'show'])->middleware('permission:permissions.read');
+    Route::put('permissions/{permission}', [PermissionController::class, 'update'])->middleware('permission:permissions.update');
+    Route::delete('permissions/{permission}', [PermissionController::class, 'destroy'])->middleware('permission:permissions.delete');
+
+    Route::get('roles', [RoleController::class, 'index'])->middleware('permission:roles.read');
+    Route::post('roles', [RoleController::class, 'store'])->middleware('permission:roles.create');
+    Route::get('roles/{role}', [RoleController::class, 'show'])->middleware('permission:roles.read');
+    Route::put('roles/{role}', [RoleController::class, 'update'])->middleware('permission:roles.update');
+    Route::delete('roles/{role}', [RoleController::class, 'destroy'])->middleware('permission:roles.delete');
+
+    Route::put('users/{user}/roles', [UserRoleController::class, 'update'])
+        ->middleware('permission:users.roles.assign');
+    Route::delete('users/{user}/roles', [UserRoleController::class, 'destroy'])
+        ->middleware('permission:users.roles.assign');
+
+    // Cities (delivery destinations)
+    Route::get('cities', [CityController::class, 'index'])->middleware('permission:cities.read');
+    Route::get('cities/{city}/sectors', [CityController::class, 'sectors'])->middleware('permission:cities.read');
+    Route::get('cities/{city}', [CityController::class, 'show'])->middleware('permission:cities.read');
+    Route::post('cities', [CityController::class, 'store'])->middleware('permission:cities.create');
+    Route::put('cities/{city}', [CityController::class, 'update'])->middleware('permission:cities.update');
+    Route::delete('cities/{city}', [CityController::class, 'destroy'])->middleware('permission:cities.delete');
+
+    // Sectors (delivery zones with their own pricing)
+    Route::get('sectors', [SectorController::class, 'index'])->middleware('permission:sectors.read');
+    Route::get('sectors/{sector}', [SectorController::class, 'show'])->middleware('permission:sectors.read');
+    Route::post('sectors', [SectorController::class, 'store'])->middleware('permission:sectors.create');
+    Route::put('sectors/{sector}', [SectorController::class, 'update'])->middleware('permission:sectors.update');
+    Route::delete('sectors/{sector}', [SectorController::class, 'destroy'])->middleware('permission:sectors.delete');
+
+    // Driver zone assignments
+    Route::get('drivers/{driver}/sectors', [DriverZoneController::class, 'index'])->middleware('permission:driver_zones.read');
+    Route::post('drivers/{driver}/sectors', [DriverZoneController::class, 'store'])->middleware('permission:driver_zones.assign');
+    Route::delete('drivers/{driver}/sectors/{sector}', [DriverZoneController::class, 'destroy'])->middleware('permission:driver_zones.remove');
+
+    // Orders
+    Route::get('orders/{order}/tracking', [OrderController::class, 'tracking'])
+        ->whereNumber('order')->name('api.orders.tracking');
+    Route::get('orders/{order}/pdf', [OrderController::class, 'pdf'])
+        ->whereNumber('order')->name('api.orders.pdf');
+    Route::get('orders/track/{trackingNumber}', [OrderController::class, 'trackByNumber'])
+        ->name('api.orders.track');
+    Route::post('orders/{order}/transition', OrderTransitionController::class)
+        ->whereNumber('order')->name('api.orders.transition');
+    Route::apiResource('orders', OrderController::class)
+        ->whereNumber('order')
+        ->names('api.orders');
+
+    // Pickup requests
+    Route::post('pickup/scan', [PickupRequestController::class, 'scan'])
+        ->name('api.pickup.scan');
+    Route::post('pickup/bulk-status-update', [PickupRequestController::class, 'bulkStatusUpdate'])
+        ->name('api.pickup.bulk-status-update');
+    Route::post('pickup-requests/bulk-scan', [PickupRequestController::class, 'bulkScan'])
+        ->name('api.pickup-requests.bulk-scan');
+    Route::get('pickup-requests/{pickupRequest}/pdf', [PickupRequestController::class, 'pdf'])
+        ->whereNumber('pickupRequest')
+        ->name('api.pickup-requests.pdf');
+    Route::post('pickup-requests/{pickupRequest}/assign-driver', [PickupRequestController::class, 'assignDriver'])
+        ->whereNumber('pickupRequest')
+        ->name('api.pickup-requests.assign-driver');
+    Route::post('pickup-requests/{pickupRequest}/change-status', [PickupRequestController::class, 'changeStatus'])
+        ->whereNumber('pickupRequest')
+        ->name('api.pickup-requests.change-status');
+    Route::apiResource('pickup-requests', PickupRequestController::class)
+        ->whereNumber('pickupRequest')
+        ->except(['destroy'])
+        ->names('api.pickup-requests');
+
+    // Inter-city transfers
+    Route::get('transfers/eligible-orders', [TransferController::class, 'eligibleOrders'])
+        ->name('api.transfers.eligible-orders');
+    Route::post('transfers/{transfer}/dispatch', [TransferController::class, 'dispatch'])
+        ->whereNumber('transfer')
+        ->name('api.transfers.dispatch');
+    Route::post('transfers/{transfer}/receive', [TransferController::class, 'receive'])
+        ->whereNumber('transfer')
+        ->name('api.transfers.receive');
+    Route::post('transfers/{transfer}/change-status', [TransferController::class, 'changeStatus'])
+        ->whereNumber('transfer')
+        ->name('api.transfers.change-status');
+    Route::post('transfers/{transfer}/scan', [TransferController::class, 'scan'])
+        ->whereNumber('transfer')
+        ->name('api.transfers.scan');
+    Route::post('transfers/{transfer}/bulk-receive', [TransferController::class, 'bulkReceive'])
+        ->whereNumber('transfer')
+        ->name('api.transfers.bulk-receive');
+    Route::apiResource('transfers', TransferController::class)
+        ->whereNumber('transfer')
+        ->names('api.transfers');
+
+    // Returns (reverse logistics)
+    Route::get('returns/eligible-orders', [WebReturnController::class, 'eligibleOrders'])
+        ->name('api.returns.eligible-orders');
+    Route::post('returns/scan', [ReturnController::class, 'scan'])
+        ->name('api.returns.scan');
+    Route::post('returns/process-scan', [ReturnController::class, 'processScan'])
+        ->name('api.returns.process-scan');
+    Route::post('returns/{return}/change-status', [ReturnController::class, 'changeStatus'])
+        ->whereNumber('return')
+        ->name('api.returns.change-status');
+    Route::post('returns/{return}/move-to-depot', [ReturnController::class, 'moveToDepot'])
+        ->whereNumber('return')
+        ->name('api.returns.move-to-depot');
+    Route::put('returns/{return}/customer-data', [ReturnController::class, 'updateCustomerData'])
+        ->whereNumber('return')
+        ->name('api.returns.update-customer-data');
+    Route::apiResource('returns', ReturnController::class)
+        ->whereNumber('return')
+        ->only(['index', 'store', 'show'])
+        ->names('api.returns');
 });

@@ -83,7 +83,7 @@ export default {
                 <BCard no-body id="contactList">
                     <BCardHeader>
                         <div class="d-flex align-items center">
-                            <h5 class="mb-0 flex-grow-1">The top NFTs ranking on Velzon</h5>
+                            <h5 class="mb-0 flex-grow-1">The top NFTs ranking on SpeedZone Express</h5>
                             <p class="text-muted mb-0">Updated: 28 April, 2022 08:05:00</p>
                         </div>
                     </BCardHeader>

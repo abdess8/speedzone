@@ -12,7 +12,17 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Daily seller billing check: generate invoices for sellers whose
+        // next_billing_date has arrived.
+        $schedule->command('billing:run-daily')
+            ->dailyAt('02:00')
+            ->withoutOverlapping();
+
+        // Daily driver billing check: generate settlement invoices for drivers
+        // whose next_billing_date has arrived.
+        $schedule->command('driver-billing:run-daily')
+            ->dailyAt('02:30')
+            ->withoutOverlapping();
     }
 
     /**

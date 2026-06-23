@@ -3,7 +3,7 @@ import { ref, watch } from "vue";
 import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
 
-import CKEditor from "@ckeditor/ckeditor5-vue";
+import { Ckeditor as CKEditor } from "@ckeditor/ckeditor5-vue";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import DropZone from "@/Components/widgets/dropZone.vue";
 import useVuelidate from "@vuelidate/core";

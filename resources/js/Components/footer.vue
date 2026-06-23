@@ -1,13 +1,14 @@
 <template>
     <footer class="footer">
         <BContainer fluid>
-            <BRow>
-                <BCol col sm="6">
-                    {{ new Date().getFullYear() }} © Velzon.
+            <BRow class="align-items-center g-2">
+                <BCol col sm="6" class="d-flex align-items-center gap-2">
+                    <img src="@assets/images/logo-footer.png" alt="SpeedZone Express" class="footer-brand-logo" />
+                    <span>{{ new Date().getFullYear() }} © SpeedZone Express.</span>
                 </BCol>
                 <BCol col sm="6">
                     <div class="text-sm-end d-none d-sm-block">
-                        Design & Develop by Themesbrand
+                        Fast. Reliable. Modern logistics operations.
                     </div>
                 </BCol>
             </BRow>

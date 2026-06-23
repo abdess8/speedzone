@@ -1,0 +1,33 @@
+<?php
+
+return [
+    'menu' => 'Menu',
+    'dashboard' => 'Dashboard',
+    'orders' => 'Orders',
+    'partner_orders' => 'Partner Orders',
+    'pickups' => 'Pickups',
+    'transfers' => 'Transfers',
+    'returns' => 'Returns',
+    'invoices' => 'Invoices',
+    'pending_billing' => 'Pending Billing',
+    'driver_billing' => 'Driver Billing',
+    'driver_invoices' => 'Driver Invoices',
+    'driver_pending_billing' => 'Pending Driver Billing',
+    'driver_payments' => 'Driver Payments',
+    'driver_finance' => 'My Earnings',
+    'support' => 'Support',
+    'support_center' => 'Support Center',
+    'delivery_zones' => 'Delivery Zones',
+    'sectors' => 'Sectors',
+    'driver_zones' => 'Driver Assignment',
+    'settings' => [
+        'title' => 'Settings',
+        'profile' => 'Profile',
+        'users' => 'Users',
+        'roles_permissions' => 'Roles & Permissions',
+        'cities' => 'Cities',
+        'partners' => 'Partners',
+        'partner_assignments' => 'Partner Assignments',
+        'api_integrations' => 'API Integrations',
+    ],
+];

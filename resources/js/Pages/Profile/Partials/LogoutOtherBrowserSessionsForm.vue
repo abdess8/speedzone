@@ -40,15 +40,14 @@ const closeModal = () => {
 <template>
     <BCard no-body>
         <BCardHeader>
-            <BCardTitle>Browser Sessions</BCardTitle>
-            <p class="text-muted mb-0">Manage and log out your active sessions on other browsers and devices.</p>
+            <BCardTitle>{{ $t('profile.sessions.title') }}</BCardTitle>
+            <p class="text-muted mb-0">{{ $t('profile.sessions.description') }}</p>
         </BCardHeader>
         <BCardBody class="p-4">
             <div class="text-sm text-muted">
-                If necessary, you may log out of all of your other browser sessions across all of your devices. Some of your recent sessions are listed below; however, this list may not be exhaustive. If you feel your account has been compromised, you should also update your password.
+                {{ $t('profile.sessions.info') }}
             </div>
 
-            <!-- Other Browser Sessions -->
             <div v-if="sessions.length > 0" class="mt-5">
                 <div v-for="(session, i) in sessions" :key="i" class="d-flex align-items-center mb-2">
                     <div>
@@ -63,15 +62,15 @@ const closeModal = () => {
 
                     <div class="ms-3">
                         <div>
-                            {{ session.agent.platform ? session.agent.platform : 'Unknown' }} - {{ session.agent.browser ? session.agent.browser : 'Unknown' }}
+                            {{ session.agent.platform ? session.agent.platform : $t('profile.sessions.unknown') }} - {{ session.agent.browser ? session.agent.browser : $t('profile.sessions.unknown') }}
                         </div>
 
                         <div>
                             <div class="text-xs">
                                 {{ session.ip_address }},
 
-                                <span v-if="session.is_current_device" class="text-success fw-semibold">This device</span>
-                                <span v-else>Last active {{ session.last_active }}</span>
+                                <span v-if="session.is_current_device" class="text-success fw-semibold">{{ $t('profile.sessions.this_device') }}</span>
+                                <span v-else>{{ $t('profile.sessions.last_active', { time: session.last_active }) }}</span>
                             </div>
                         </div>
                     </div>
@@ -79,22 +78,21 @@ const closeModal = () => {
             </div>
 
             <div class="mt-5">
-                <BButton variant="danger w-100" type="button" @click="confirmLogout">Log Out From Other Browser </BButton>
-                <p class="alert alert-success text-success mt-3" v-if="form.recentlySuccessful">Logged out of all browser.</p>
+                <BButton variant="danger w-100" type="button" @click="confirmLogout">{{ $t('profile.sessions.logout_other') }}</BButton>
+                <p class="alert alert-success text-success mt-3" v-if="form.recentlySuccessful">{{ $t('profile.sessions.logged_out') }}</p>
             </div>
 
-            <!-- Log Out Other Devices Confirmation Modal -->
-            <BModal v-model="confirmingLogout" title="Log Out Other Browser Sessions" hide-footer header-class="bg-info-subtle p-3">
-                <p class="text-muted">Please enter your password to confirm you would like to log out of your other browser sessions across all of your devices.</p>
+            <BModal v-model="confirmingLogout" :title="$t('profile.sessions.modal_title')" hide-footer header-class="bg-info-subtle p-3">
+                <p class="text-muted">{{ $t('profile.sessions.modal_description') }}</p>
                 <div class="mb-3">
-                    <TextInput ref="passwordInput" v-model="form.password" type="password" placeholder="Password" required autocomplete="current-password" @keyup.enter="logoutOtherBrowserSessions" :class="{ 'is-invalid': form.errors.password }" />
+                    <TextInput ref="passwordInput" v-model="form.password" type="password" :placeholder="$t('profile.sessions.password')" required autocomplete="current-password" @keyup.enter="logoutOtherBrowserSessions" :class="{ 'is-invalid': form.errors.password }" />
 
                     <InputError :message="form.errors.password" class="mt-2" />
                 </div>
 
                 <div class="text-end">
-                    <BButton variant="danger" @click="closeModal">Close</BButton>
-                    <BButton variant="primary" class="ms-1" :class="{ 'opacity-25': form.processing }" :disabled="form.processing" @click="logoutOtherBrowserSessions">Log Out Other Browser Sessions</BButton>
+                    <BButton variant="danger" @click="closeModal">{{ $t('common.close') }}</BButton>
+                    <BButton variant="primary" class="ms-1" :class="{ 'opacity-25': form.processing }" :disabled="form.processing" @click="logoutOtherBrowserSessions">{{ $t('profile.sessions.confirm_logout') }}</BButton>
                 </div>
             </BModal>
         </BCardBody>

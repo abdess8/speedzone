@@ -1,0 +1,37 @@
+<?php
+
+return [
+    'Admin' => 'Administrateur',
+    'Dispatcher' => 'Dispatcher',
+    'Driver' => 'Livreur',
+    'Seller' => 'Vendeur',
+    'Partner' => 'Partenaire',
+    'Vendeur' => 'Vendeur',
+    'Livreur' => 'Livreur',
+    'Partenaire' => 'Partenaire',
+    'title' => 'Rôles',
+    'page_title' => 'Gestion des rôles',
+    'list_title' => 'Liste des rôles',
+    'create' => 'Créer un rôle',
+    'create_title' => 'Créer un rôle',
+    'edit_title' => 'Modifier le rôle',
+    'update_button' => 'Mettre à jour le rôle',
+    'table' => [
+        'role' => 'Rôle',
+        'permissions' => 'Permissions',
+        'users' => 'Utilisateurs',
+        'permissions_count' => ':count permissions',
+        'users_count' => ':count utilisateurs',
+    ],
+    'form' => [
+        'details' => 'Détails du rôle',
+        'role_name' => 'Nom du rôle',
+        'role_name_placeholder' => 'ex. Dispatcher',
+        'permissions' => 'Permissions',
+        'permissions_selected' => ':selected sur :total permissions sélectionnées',
+        'select_all' => 'Tout sélectionner',
+        'no_permissions' => 'Aucune permission disponible. Exécutez d\'abord le seeder des permissions.',
+    ],
+    'delete_confirm_text' => 'Supprimer le rôle « :name » ? Cette action est irréversible.',
+    'empty' => 'Aucun rôle trouvé.',
+];

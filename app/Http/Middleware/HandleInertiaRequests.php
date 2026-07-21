@@ -71,6 +71,8 @@ class HandleInertiaRequests extends Middleware
                 'support_object_types' => trans('support_object_types'),
                 'permissions' => trans('permissions'),
                 'notifications' => trans('notifications'),
+                'seller_registration' => trans('seller_registration'),
+                'user_statuses' => trans('user_statuses'),
             ],
         ]);
     }

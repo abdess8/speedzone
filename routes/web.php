@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\PendingUserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\NotificationPreferenceController;
 use App\Http\Controllers\ApiIntegrationController;
@@ -14,10 +15,12 @@ use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerDeliveryController;
 use App\Http\Controllers\PartnerOrderController;
 use App\Http\Controllers\PartnerUserAssignmentController;
+use App\Http\Controllers\PendingApprovalController;
 use App\Http\Controllers\PickupRequestController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SectorController;
+use App\Http\Controllers\SellerDashboardController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\UserController;
@@ -35,7 +38,25 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',])->group(function () {
+Route::get('/verify-email', fn () => redirect()->route('verification.notice'))->name('verify-email');
+
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
+    Route::get('/account/pending-approval', [PendingApprovalController::class, 'show'])
+        ->name('account.pending-approval');
+});
+
+Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'account.active'])->group(function () {
+
+    Route::get('/dashboard/seller', [SellerDashboardController::class, 'index'])->name('dashboard.seller');
+
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::get('pending-users', [PendingUserController::class, 'index'])->name('pending-users.index');
+        Route::get('pending-users/{user}', [PendingUserController::class, 'show'])->name('pending-users.show');
+        Route::post('users/{user}/approve', [PendingUserController::class, 'approve'])->name('users.approve');
+        Route::post('users/{user}/reject', [PendingUserController::class, 'reject'])->name('users.reject');
+    });
+
+    Route::redirect('/admin/users/pending', '/admin/pending-users');
 
     Route::post('locale', [LocaleController::class, 'update'])->name('locale.update');
 

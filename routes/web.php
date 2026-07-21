@@ -9,6 +9,7 @@ use App\Http\Controllers\DriverFinanceController;
 use App\Http\Controllers\DriverInvoiceController;
 use App\Http\Controllers\DriverZoneController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PartnerController;
@@ -37,6 +38,18 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+/*
+|--------------------------------------------------------------------------
+| Public marketing site (SpeedZone landing) — registered first so it wins
+| over the authenticated "/" dashboard route below. Fully independent from
+| the dashboard; guests and authenticated users can both reach it.
+|--------------------------------------------------------------------------
+*/
+Route::get('/', [LandingController::class, 'index'])->name('landing');
+Route::get('/tracking/{trackingNumber}', [LandingController::class, 'track'])
+    ->where('trackingNumber', '[A-Za-z0-9\-]+')
+    ->name('tracking.public');
 
 Route::get('/verify-email', fn () => redirect()->route('verification.notice'))->name('verify-email');
 
@@ -272,7 +285,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::controller(VelzonRoutesController::class)->group(function () {
 
         // dashboards
-        Route::get('/', 'dashboard');
+        // NOTE: "/" is intentionally handled by the public LandingController
+        // (registered at the top of this file). The dashboard lives at "/dashboard".
         Route::get('/dashboard', 'dashboard');
 
         // Route::get('/dashboard/analytics', 'dashboard_analytics');

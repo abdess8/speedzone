@@ -24,6 +24,7 @@ export default defineConfig({
         alias: {
             '@assets': '/resources/', // Update this with the correct path to your images
             '@favicon': '/resources/images/', // Update this with the correct path to your images
+            '@': '/resources/js', // Matches jsconfig.json — only matches imports starting with "@/"
         },
     },
 });

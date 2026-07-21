@@ -24,6 +24,7 @@ return [
         'title' => 'Paramètres',
         'profile' => 'Profil',
         'users' => 'Utilisateurs',
+        'pending_sellers' => 'Vendeurs en attente',
         'roles_permissions' => 'Rôles & Permissions',
         'cities' => 'Villes',
         'partners' => 'Partenaires',

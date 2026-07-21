@@ -12,6 +12,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('partners', 'sync_status')) {
+            return;
+        }
+
         Schema::table('partners', function (Blueprint $table) {
             $table->boolean('sync_status')->default(false)->after('last_synced_at');
         });
@@ -19,6 +23,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::hasColumn('partners', 'sync_status')) {
+            return;
+        }
+
         Schema::table('partners', function (Blueprint $table) {
             $table->dropColumn('sync_status');
         });

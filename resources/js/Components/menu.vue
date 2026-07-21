@@ -392,6 +392,9 @@ export default {
             <li v-if="canViewUsers()" class="nav-item">
               <Link href="/users" class="nav-link">{{ $t('sidebar.settings.users') }}</Link>
             </li>
+            <li v-if="canViewUsers()" class="nav-item">
+              <Link :href="route('admin.pending-users.index')" class="nav-link">{{ $t('sidebar.settings.pending_sellers') }}</Link>
+            </li>
             <li v-if="canViewRoles()" class="nav-item">
               <Link href="/roles" class="nav-link">{{ $t('sidebar.settings.roles_permissions') }}</Link>
             </li>

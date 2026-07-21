@@ -10,6 +10,7 @@ return [
         'ticket_closed' => 'Ticket fermé',
         'ticket_assigned' => 'Ticket assigné',
         'return_requested' => 'Demande de retour',
+        'new_seller_registration' => 'Nouvelle inscription vendeur',
     ],
 
     'messages' => [
@@ -20,6 +21,7 @@ return [
         'ticket_closed' => 'Votre ticket support :reference a été fermé.',
         'ticket_assigned' => 'Le ticket :reference vous a été assigné.',
         'return_requested' => 'Une nouvelle demande de retour a été créée.',
+        'new_seller_registration' => 'Une nouvelle inscription vendeur nécessite une approbation.',
     ],
 
     'types' => [

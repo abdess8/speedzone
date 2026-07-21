@@ -51,10 +51,11 @@ class AppServiceProvider extends ServiceProvider
             return [];
         }
 
-        $user->loadMissing('roles.permissions');
+        $user->loadMissing('roles.permissions', 'permissions');
 
         return $user->roles
             ->flatMap(fn ($role) => $role->permissions)
+            ->merge($user->permissions)
             ->pluck('name')
             ->unique()
             ->values()
@@ -83,6 +84,9 @@ class AppServiceProvider extends ServiceProvider
                 ? trans('roles.'.$primaryRole, [], app()->getLocale())
                 : null,
             'is_seller' => $user->isSeller(),
+            'status' => $user->status?->value ?? \App\Enums\UserStatus::Active->value,
+            'is_account_active' => $user->isAccountActive(),
+            'is_pending_approval' => $user->isPendingApproval(),
             'can_view_returns' => $user->canAccessReturnsModule(),
             'can_create_return_request' => $user->canCreateReturnRequest(),
             'two_factor_enabled' => Features::enabled(Features::twoFactorAuthentication())

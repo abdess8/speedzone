@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\BillingFrequency;
 use App\Enums\SellerPaymentMethod;
+use App\Enums\UserStatus;
+use App\Notifications\VerifySpeedZoneAccountEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -32,6 +34,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'role_id',
+        'status',
         'name',
         'first_name',
         'last_name',
@@ -77,7 +80,9 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array<string, string>
      */
     protected $casts = [
+        'status' => UserStatus::class,
         'email_verified_at' => 'datetime',
+        'approved_at' => 'datetime',
         'attached_files' => 'array',
         'billing_frequency' => BillingFrequency::class,
         'payment_method' => SellerPaymentMethod::class,
@@ -118,6 +123,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class)->withTimestamps();
+    }
+
+    public function permissions(): BelongsToMany
+    {
+        return $this->belongsToMany(Permission::class)->withTimestamps();
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'approved_by');
     }
 
     /**
@@ -306,6 +321,14 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function hasRolePermission(string $permission): bool
     {
+        if (! $this->relationLoaded('permissions')) {
+            $this->load('permissions');
+        }
+
+        if ($this->permissions->contains(fn (Permission $item) => $item->name === $permission)) {
+            return true;
+        }
+
         if (! $this->relationLoaded('roles')) {
             $this->load('roles.permissions');
         } elseif (! $this->roles->every(fn (Role $role) => $role->relationLoaded('permissions'))) {
@@ -315,6 +338,26 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->roles
             ->flatMap(fn (Role $role) => $role->permissions)
             ->contains(fn (Permission $item) => $item->name === $permission);
+    }
+
+    public function isAccountActive(): bool
+    {
+        return ($this->status ?? UserStatus::Active) === UserStatus::Active;
+    }
+
+    public function isPendingApproval(): bool
+    {
+        return ($this->status ?? UserStatus::Active) === UserStatus::PendingApproval;
+    }
+
+    public function isRegistrationRejected(): bool
+    {
+        return ($this->status ?? UserStatus::Active) === UserStatus::Rejected;
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifySpeedZoneAccountEmail);
     }
 
     /**

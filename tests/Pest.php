@@ -16,6 +16,10 @@ use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class)->in('Feature');
 
+// Unit tests get the container (enums resolve their labels through the
+// translator) but not the database refresh, so they stay fast.
+uses(TestCase::class)->in('Unit');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

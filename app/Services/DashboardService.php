@@ -15,10 +15,10 @@ use App\Support\DashboardDateRange;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
-    private const CACHE_TTL_SECONDS = 120;
 
     /**
      * Dashboard status buckets for charts (maps many enum values to one label).
@@ -77,7 +77,9 @@ class DashboardService
             $range->cacheKeySuffix(),
         );
 
-        return Cache::remember($cacheKey, self::CACHE_TTL_SECONDS, fn () => $this->build($user, $range));
+        $ttl = (int) config('performance.dashboard_cache_ttl', 300);
+
+        return Cache::remember($cacheKey, $ttl, fn () => $this->build($user, $range));
     }
 
     /**
@@ -90,22 +92,58 @@ class DashboardService
         $scoped = $this->scopedOrdersQuery($user);
         $inPeriod = (clone $scoped)->whereBetween('orders.created_at', [$range->start, $range->end]);
 
+        // Aggregates consumed by more than one section are resolved once here.
+        // Previously each consumer re-ran its own query, which made the status
+        // breakdown, the success gauge, the agent ranking, the city ranking and
+        // the seller ranking each execute twice per dashboard build.
+        $statusCounts = $this->statusCounts($inPeriod);
+        $agentPerformance = $this->deliveryAgentsPerformance($inPeriod);
+        $cityRanking = $this->cityRanking($inPeriod);
+        $sellerRanking = $this->sellerRanking($inPeriod);
+        $successGauge = $this->deliverySuccessGauge($statusCounts);
+
         return [
             'meta' => [
                 'filter' => $range->toMeta(),
                 'generated_at' => now()->toIso8601String(),
             ],
-            'summary' => $this->buildSummary($scoped, $inPeriod, $range),
-            'charts' => $this->buildCharts($scoped, $inPeriod, $range),
+            'summary' => $this->buildSummary($scoped, $inPeriod, $range, $statusCounts),
+            'charts' => $this->buildCharts($scoped, $range, $inPeriod, [
+                'statusCounts' => $statusCounts,
+                'agentPerformance' => $agentPerformance,
+                'cityRanking' => $cityRanking,
+                'sellerRanking' => $sellerRanking,
+                'successGauge' => $successGauge,
+            ]),
             'recentOrders' => $this->recentOrders($scoped),
             'recentActivities' => $this->recentActivities($scoped),
             'topCustomers' => $this->topCustomers($inPeriod),
-            'topCities' => $this->topCities($inPeriod),
-            'topSellers' => $this->topSellers($inPeriod),
+            'topCities' => $cityRanking,
+            'topSellers' => $sellerRanking,
             'paymentMethods' => $this->paymentMethods($inPeriod),
-            'deliveryPerformance' => $this->deliveryPerformance($inPeriod),
+            'deliveryPerformance' => [
+                'success_rate' => $successGauge['rate'],
+                'delivered' => $successGauge['delivered'],
+                'failed' => $successGauge['failed'],
+                'top_agents' => $agentPerformance,
+            ],
             'limitations' => $this->limitations(),
         ];
+    }
+
+    /**
+     * Order count per status inside the selected period.
+     *
+     * @return array<string, int>
+     */
+    private function statusCounts(Builder $inPeriod): array
+    {
+        return (clone $inPeriod)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->map(fn ($total) => (int) $total)
+            ->all();
     }
 
     public function scopedOrdersQuery(User $user): Builder
@@ -130,53 +168,75 @@ class DashboardService
     /**
      * @return array<string, mixed>
      */
-    private function buildSummary(Builder $scoped, Builder $inPeriod, DashboardDateRange $range): array
+    /**
+     * @param  array<string, int>  $statusCounts
+     * @return array<string, mixed>
+     */
+    private function buildSummary(Builder $scoped, Builder $inPeriod, DashboardDateRange $range, array $statusCounts): array
     {
-        $periodCounts = (clone $inPeriod)
-            ->selectRaw('status, COUNT(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+        $statusCount = fn (array $statuses): int => array_sum(
+            array_map(fn (string $status) => $statusCounts[$status] ?? 0, $statuses)
+        );
 
-        $statusCount = fn (array $statuses): int => (int) collect($statuses)
-            ->sum(fn (string $status) => (int) ($periodCounts[$status] ?? 0));
-
-        $ordersTotal = (int) (clone $inPeriod)->count();
-
-        $deliveredInPeriod = (clone $inPeriod)->where('status', OrderStatus::DELIVERED->value);
-        $deliveredCount = (int) (clone $deliveredInPeriod)->count();
-
+        // Every status bucket is already known from the grouped count, so the
+        // total and the delivered/failed figures need no extra round trips.
+        $ordersTotal = array_sum($statusCounts);
+        $deliveredCount = $statusCount([OrderStatus::DELIVERED->value]);
         $failedCount = $statusCount([OrderStatus::FAILED->value, OrderStatus::REJECTED->value]);
+
         $attempted = $deliveredCount + $failedCount;
         $successRate = $attempted > 0 ? round(($deliveredCount / $attempted) * 100, 1) : null;
 
-        $avgDeliveryHours = (clone $deliveredInPeriod)
-            ->whereNotNull('delivered_at')
-            ->selectRaw('AVG(TIMESTAMPDIFF(HOUR, created_at, delivered_at)) as avg_hours')
-            ->value('avg_hours');
+        // Single pass over the period for every money/duration aggregate.
+        $totals = (clone $inPeriod)
+            ->selectRaw('AVG(total_amount) as avg_order_value')
+            ->selectRaw('SUM(CASE WHEN status = ? THEN delivery_price ELSE 0 END) as revenue_total', [
+                OrderStatus::DELIVERED->value,
+            ])
+            ->selectRaw('SUM(CASE WHEN status = ? AND payment_method = ? THEN order_amount ELSE 0 END) as cod_collected', [
+                OrderStatus::DELIVERED->value,
+                PaymentMethod::CASH->value,
+            ])
+            ->selectRaw('AVG(CASE WHEN status = ? AND delivered_at IS NOT NULL THEN TIMESTAMPDIFF(HOUR, created_at, delivered_at) END) as avg_hours', [
+                OrderStatus::DELIVERED->value,
+            ])
+            ->first();
 
-        $revenueTotal = (float) (clone $deliveredInPeriod)->sum('delivery_price');
+        $avgDeliveryHours = $totals?->avg_hours;
+        $revenueTotal = (float) ($totals?->revenue_total ?? 0);
+        $codCollected = (float) ($totals?->cod_collected ?? 0);
+        $avgOrderValue = $ordersTotal > 0 ? round((float) ($totals?->avg_order_value ?? 0), 2) : 0.0;
 
         $todayStart = Carbon::today()->startOfDay();
         $todayEnd = Carbon::today()->endOfDay();
-        $revenueToday = (float) (clone $scoped)
-            ->where('status', OrderStatus::DELIVERED->value)
-            ->whereBetween('delivered_at', [$todayStart, $todayEnd])
-            ->sum('delivery_price');
-
-        $ordersToday = (int) (clone $scoped)
-            ->whereBetween('created_at', [$todayStart, $todayEnd])
-            ->count();
-
         $monthStart = Carbon::now()->startOfMonth();
         $monthEnd = Carbon::now()->endOfMonth();
-        $ordersThisMonth = (int) (clone $scoped)
-            ->whereBetween('created_at', [$monthStart, $monthEnd])
-            ->count();
 
-        $revenueThisMonth = (float) (clone $scoped)
+        // Today always falls inside the current month, so one scan of the month
+        // yields both the daily and the monthly figure.
+        $createdThisMonth = (clone $scoped)
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->selectRaw('COUNT(*) as orders_month')
+            ->selectRaw('SUM(CASE WHEN created_at BETWEEN ? AND ? THEN 1 ELSE 0 END) as orders_today', [
+                $todayStart,
+                $todayEnd,
+            ])
+            ->first();
+
+        $deliveredThisMonth = (clone $scoped)
             ->where('status', OrderStatus::DELIVERED->value)
             ->whereBetween('delivered_at', [$monthStart, $monthEnd])
-            ->sum('delivery_price');
+            ->selectRaw('SUM(delivery_price) as revenue_month')
+            ->selectRaw('SUM(CASE WHEN delivered_at BETWEEN ? AND ? THEN delivery_price ELSE 0 END) as revenue_today', [
+                $todayStart,
+                $todayEnd,
+            ])
+            ->first();
+
+        $ordersToday = (int) ($createdThisMonth?->orders_today ?? 0);
+        $ordersThisMonth = (int) ($createdThisMonth?->orders_month ?? 0);
+        $revenueToday = (float) ($deliveredThisMonth?->revenue_today ?? 0);
+        $revenueThisMonth = (float) ($deliveredThisMonth?->revenue_month ?? 0);
 
         $cashPendingStatuses = [
             OrderStatus::CREATED->value,
@@ -196,18 +256,11 @@ class DashboardService
             ->whereIn('status', $cashPendingStatuses)
             ->sum('order_amount');
 
-        $codCollected = (float) (clone $inPeriod)
-            ->where('payment_method', PaymentMethod::CASH->value)
-            ->where('status', OrderStatus::DELIVERED->value)
-            ->sum('order_amount');
-
-        $avgOrderValue = $ordersTotal > 0
-            ? round((float) (clone $inPeriod)->avg('total_amount'), 2)
-            : 0.0;
-
-        $activeSellerIds = (clone $inPeriod)->distinct()->pluck('seller_id');
+        // Counting through a subquery keeps the id list inside MySQL instead of
+        // pulling every distinct seller/driver id into PHP and sending it back
+        // as a giant IN (...) list.
         $activeSellers = User::query()
-            ->whereIn('id', $activeSellerIds)
+            ->whereIn('id', (clone $inPeriod)->select('orders.seller_id'))
             ->where('status', UserStatus::Active->value)
             ->whereHas('roles', fn (Builder $q) => $q->where('name', Role::SELLER))
             ->count();
@@ -218,14 +271,11 @@ class DashboardService
             OrderStatus::RECEIVED_IN_DESTINATION->value,
         ];
 
-        $activeDriverIds = (clone $scoped)
-            ->whereIn('status', $activeDriverStatuses)
-            ->whereNotNull('driver_id')
-            ->distinct()
-            ->pluck('driver_id');
-
         $activeDeliveryAgents = User::query()
-            ->whereIn('id', $activeDriverIds)
+            ->whereIn('id', (clone $scoped)
+                ->whereIn('status', $activeDriverStatuses)
+                ->whereNotNull('driver_id')
+                ->select('orders.driver_id'))
             ->where('status', UserStatus::Active->value)
             ->whereHas('roles', fn (Builder $q) => $q->where('name', Role::DRIVER))
             ->count();
@@ -275,39 +325,46 @@ class DashboardService
         ];
     }
 
+    /**
+     * Customers whose very first order falls inside the period.
+     *
+     * Resolved entirely in SQL: the previous implementation pulled every
+     * distinct phone number of the period into PHP and sent them straight back
+     * as an IN (...) list, then counted the hydrated rows in PHP.
+     */
     private function countNewCustomers(Builder $scoped, DashboardDateRange $range): int
     {
-        $phonesInPeriod = (clone $scoped)
-            ->whereBetween('created_at', [$range->start, $range->end])
-            ->distinct()
-            ->pluck('customer_phone');
-
-        if ($phonesInPeriod->isEmpty()) {
-            return 0;
-        }
-
-        return (int) (clone $scoped)
-            ->whereIn('customer_phone', $phonesInPeriod)
+        $firstOrderPerCustomer = (clone $scoped)
             ->select('customer_phone')
             ->groupBy('customer_phone')
-            ->havingRaw('MIN(created_at) BETWEEN ? AND ?', [$range->start, $range->end])
-            ->get()
-            ->count();
+            ->havingRaw('MIN(created_at) BETWEEN ? AND ?', [$range->start, $range->end]);
+
+        return (int) DB::query()->fromSub($firstOrderPerCustomer, 'first_orders')->count();
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function buildCharts(Builder $scoped, Builder $inPeriod, DashboardDateRange $range): array
+    /**
+     * @param  array<string, mixed>  $shared
+     * @return array<string, mixed>
+     */
+    private function buildCharts(Builder $scoped, DashboardDateRange $range, Builder $inPeriod, array $shared): array
     {
         return [
             'ordersByDay' => $this->ordersByDay($scoped, $range),
-            'ordersByStatus' => $this->ordersByStatus($inPeriod),
-            'ordersByCity' => $this->ordersByCity($inPeriod),
+            'ordersByStatus' => $this->ordersByStatus($shared['statusCounts']),
+            'ordersByCity' => [
+                'labels' => array_column($shared['cityRanking'], 'city_name'),
+                'series' => array_column($shared['cityRanking'], 'orders'),
+            ],
             'monthlyRevenue' => $this->monthlyRevenue($scoped, $range),
-            'deliverySuccessRate' => $this->deliverySuccessGauge($inPeriod),
-            'ordersPerSeller' => $this->ordersPerSeller($inPeriod),
-            'deliveryAgentsPerformance' => $this->deliveryAgentsPerformance($inPeriod),
+            'deliverySuccessRate' => $shared['successGauge'],
+            'ordersPerSeller' => [
+                'labels' => array_column($shared['sellerRanking'], 'seller_name'),
+                'series' => array_column($shared['sellerRanking'], 'orders'),
+            ],
+            'deliveryAgentsPerformance' => $shared['agentPerformance'],
         ];
     }
 
@@ -341,17 +398,13 @@ class DashboardService
     }
 
     /**
+     * @param  array<string, int>  $statusCounts
      * @return array{labels: array<int, string>, series: array<int, int>}
      */
-    private function ordersByStatus(Builder $inPeriod): array
+    private function ordersByStatus(array $statusCounts): array
     {
-        $raw = (clone $inPeriod)
-            ->selectRaw('status, COUNT(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
-
         $bucketed = [];
-        foreach ($raw as $status => $count) {
+        foreach ($statusCounts as $status => $count) {
             $bucket = self::STATUS_BUCKETS[$status] ?? 'created';
             $bucketed[$bucket] = ($bucketed[$bucket] ?? 0) + (int) $count;
         }
@@ -370,22 +423,26 @@ class DashboardService
     }
 
     /**
-     * @return array{labels: array<int, string>, series: array<int, int>}
+     * Top cities by order volume. Feeds both the "top cities" table and the
+     * ordersByCity chart.
+     *
+     * @return array<int, array<string, mixed>>
      */
-    private function ordersByCity(Builder $inPeriod): array
+    private function cityRanking(Builder $inPeriod): array
     {
-        $rows = (clone $inPeriod)
+        return (clone $inPeriod)
             ->join('cities', 'cities.id', '=', 'orders.city_id')
-            ->selectRaw('cities.name as city_name, COUNT(*) as total')
+            ->selectRaw('cities.id, cities.name, COUNT(*) as orders_count')
             ->groupBy('cities.id', 'cities.name')
-            ->orderByDesc('total')
+            ->orderByDesc('orders_count')
             ->limit(10)
-            ->get();
-
-        return [
-            'labels' => $rows->pluck('city_name')->all(),
-            'series' => $rows->pluck('total')->map(fn ($v) => (int) $v)->all(),
-        ];
+            ->get()
+            ->map(fn ($row) => [
+                'city_id' => (int) $row->id,
+                'city_name' => $row->name,
+                'orders' => (int) $row->orders_count,
+            ])
+            ->all();
     }
 
     /**
@@ -420,40 +477,22 @@ class DashboardService
     }
 
     /**
+     * Derived from the already-fetched status breakdown — no query needed.
+     *
+     * @param  array<string, int>  $statusCounts
      * @return array{delivered: int, failed: int, rate: float|null}
      */
-    private function deliverySuccessGauge(Builder $inPeriod): array
+    private function deliverySuccessGauge(array $statusCounts): array
     {
-        $delivered = (int) (clone $inPeriod)->where('status', OrderStatus::DELIVERED->value)->count();
-        $failed = (int) (clone $inPeriod)->whereIn('status', [
-            OrderStatus::FAILED->value,
-            OrderStatus::REJECTED->value,
-        ])->count();
+        $delivered = $statusCounts[OrderStatus::DELIVERED->value] ?? 0;
+        $failed = ($statusCounts[OrderStatus::FAILED->value] ?? 0)
+            + ($statusCounts[OrderStatus::REJECTED->value] ?? 0);
         $attempted = $delivered + $failed;
 
         return [
             'delivered' => $delivered,
             'failed' => $failed,
             'rate' => $attempted > 0 ? round(($delivered / $attempted) * 100, 1) : null,
-        ];
-    }
-
-    /**
-     * @return array{labels: array<int, string>, series: array<int, int>}
-     */
-    private function ordersPerSeller(Builder $inPeriod): array
-    {
-        $rows = (clone $inPeriod)
-            ->join('users', 'users.id', '=', 'orders.seller_id')
-            ->selectRaw('users.name as seller_name, COUNT(*) as total')
-            ->groupBy('users.id', 'users.name')
-            ->orderByDesc('total')
-            ->limit(10)
-            ->get();
-
-        return [
-            'labels' => $rows->pluck('seller_name')->all(),
-            'series' => $rows->pluck('total')->map(fn ($v) => (int) $v)->all(),
         ];
     }
 
@@ -499,11 +538,29 @@ class DashboardService
     /**
      * @return array<int, array<string, mixed>>
      */
+    /**
+     * Columns formatOrderRow() actually reads. Selecting them explicitly keeps
+     * the row narrow instead of hydrating every order column.
+     *
+     * @var array<int, string>
+     */
+    private const RECENT_ORDER_COLUMNS = [
+        'id', 'tracking_number', 'customer_first_name', 'customer_last_name',
+        'customer_phone', 'seller_id', 'city_id', 'driver_id', 'status',
+        'payment_method', 'total_amount', 'order_amount', 'created_at',
+    ];
+
     private function recentOrders(Builder $scoped): array
     {
         return (clone $scoped)
-            ->with(['city', 'seller.city', 'driver'])
-            ->latest('created_at')
+            ->select(self::RECENT_ORDER_COLUMNS)
+            ->with([
+                'city:id,name',
+                'seller:id,name,city_id',
+                'seller.city:id,name',
+                'driver:id,name',
+            ])
+            ->latest('id')
             ->limit(10)
             ->get()
             ->map(fn (Order $order) => $this->formatOrderRow($order))
@@ -545,12 +602,16 @@ class DashboardService
      */
     private function recentActivities(Builder $scoped): array
     {
-        $orderIds = (clone $scoped)->select('id');
+        $orderIds = (clone $scoped)->select('orders.id');
 
+        // History rows are append-only, so id order matches created_at order.
+        // Sorting on the primary key lets MySQL walk the index backwards and
+        // stop after 20 matches instead of filesorting the whole table.
         return OrderStatusHistory::query()
-            ->with(['order', 'user'])
+            ->select(['id', 'order_id', 'user_id', 'status', 'is_system', 'comment', 'created_at'])
+            ->with(['order:id,tracking_number', 'user:id,name'])
             ->whereIn('order_id', $orderIds)
-            ->latest('created_at')
+            ->latest('id')
             ->limit(20)
             ->get()
             ->map(function (OrderStatusHistory $history) {
@@ -617,29 +678,12 @@ class DashboardService
     }
 
     /**
+     * Top sellers by order volume. Feeds both the "top sellers" table and the
+     * ordersPerSeller chart.
+     *
      * @return array<int, array<string, mixed>>
      */
-    private function topCities(Builder $inPeriod): array
-    {
-        return (clone $inPeriod)
-            ->join('cities', 'cities.id', '=', 'orders.city_id')
-            ->selectRaw('cities.id, cities.name, COUNT(*) as orders_count')
-            ->groupBy('cities.id', 'cities.name')
-            ->orderByDesc('orders_count')
-            ->limit(10)
-            ->get()
-            ->map(fn ($row) => [
-                'city_id' => (int) $row->id,
-                'city_name' => $row->name,
-                'orders' => (int) $row->orders_count,
-            ])
-            ->all();
-    }
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    private function topSellers(Builder $inPeriod): array
+    private function sellerRanking(Builder $inPeriod): array
     {
         return (clone $inPeriod)
             ->join('users', 'users.id', '=', 'orders.seller_id')
@@ -681,22 +725,6 @@ class DashboardService
             'labels' => $labels,
             'series' => $series,
             'note' => __('dashboard.payment_methods_note'),
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function deliveryPerformance(Builder $inPeriod): array
-    {
-        $gauge = $this->deliverySuccessGauge($inPeriod);
-        $agents = $this->deliveryAgentsPerformance($inPeriod);
-
-        return [
-            'success_rate' => $gauge['rate'],
-            'delivered' => $gauge['delivered'],
-            'failed' => $gauge['failed'],
-            'top_agents' => $agents,
         ];
     }
 

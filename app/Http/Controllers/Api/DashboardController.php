@@ -18,8 +18,10 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
+        // Stateless API calls have no session store, so it is only consulted
+        // when one was actually started for this request.
         $locale = $user?->locale
-            ?? $request->session()->get('locale')
+            ?? ($request->hasSession() ? $request->session()->get('locale') : null)
             ?? config('app.locale', 'fr');
 
         if (in_array($locale, ['fr', 'en'], true)) {

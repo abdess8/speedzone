@@ -243,24 +243,103 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Per-instance memo of role names, keyed for O(1) lookups.
+     *
+     * @var array<string, true>|null
+     */
+    protected ?array $roleNameMemo = null;
+
+    /**
+     * Per-instance memo of every granted permission name (roles + direct),
+     * keyed for O(1) lookups.
+     *
+     * @var array<string, true>|null
+     */
+    protected ?array $permissionNameMemo = null;
+
+    /**
+     * All role names held by this user, keyed for O(1) lookups.
+     *
+     * @return array<string, true>
+     */
+    protected function roleNameMap(): array
+    {
+        if ($this->roleNameMemo !== null) {
+            return $this->roleNameMemo;
+        }
+
+        $this->loadMissing('roles');
+
+        return $this->roleNameMemo = array_fill_keys(
+            $this->roles->pluck('name')->all(),
+            true
+        );
+    }
+
+    /**
+     * All permission names granted through roles or assigned directly.
+     *
+     * Resolved once per instance: without the memo a single request re-walks
+     * roles → permissions for every hasPermission() call (dozens per page).
+     *
+     * @return array<string, true>
+     */
+    protected function permissionNameMap(): array
+    {
+        if ($this->permissionNameMemo !== null) {
+            return $this->permissionNameMemo;
+        }
+
+        $this->loadMissing('roles.permissions', 'permissions');
+
+        $names = $this->roles
+            ->flatMap(fn (Role $role) => $role->permissions->pluck('name'))
+            ->merge($this->permissions->pluck('name'))
+            ->unique()
+            ->all();
+
+        return $this->permissionNameMemo = array_fill_keys($names, true);
+    }
+
+    /**
+     * Every permission name granted to this user.
+     *
+     * @return array<int, string>
+     */
+    public function permissionNames(): array
+    {
+        return array_keys($this->permissionNameMap());
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function roleNames(): array
+    {
+        return array_keys($this->roleNameMap());
+    }
+
+    /**
+     * Drop the memoized role/permission lookups (call after granting or
+     * revoking access on an already-loaded instance).
+     */
+    public function forgetAccessMemo(): void
+    {
+        $this->roleNameMemo = null;
+        $this->permissionNameMemo = null;
+    }
+
+    /**
      * Whether the user holds the Driver role.
      */
     public function isDriver(): bool
     {
-        if (! $this->relationLoaded('roles')) {
-            $this->load('roles');
-        }
-
-        return $this->roles->contains(fn (Role $role) => $role->name === Role::DRIVER);
+        return isset($this->roleNameMap()[Role::DRIVER]);
     }
 
     public function isSeller(): bool
     {
-        if (! $this->relationLoaded('roles')) {
-            $this->load('roles');
-        }
-
-        return $this->roles->contains(fn (Role $role) => $role->name === Role::SELLER);
+        return isset($this->roleNameMap()[Role::SELLER]);
     }
 
     /**
@@ -300,11 +379,15 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isSuperAdmin(): bool
     {
-        if (! $this->relationLoaded('roles')) {
-            $this->load('roles');
+        $roles = $this->roleNameMap();
+
+        foreach (self::SUPER_ADMIN_ROLES as $role) {
+            if (isset($roles[$role])) {
+                return true;
+            }
         }
 
-        return $this->roles->contains(fn (Role $role) => in_array($role->name, self::SUPER_ADMIN_ROLES, true));
+        return false;
     }
 
     public function hasPermission(string $permission): bool
@@ -321,23 +404,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function hasRolePermission(string $permission): bool
     {
-        if (! $this->relationLoaded('permissions')) {
-            $this->load('permissions');
-        }
-
-        if ($this->permissions->contains(fn (Permission $item) => $item->name === $permission)) {
-            return true;
-        }
-
-        if (! $this->relationLoaded('roles')) {
-            $this->load('roles.permissions');
-        } elseif (! $this->roles->every(fn (Role $role) => $role->relationLoaded('permissions'))) {
-            $this->load('roles.permissions');
-        }
-
-        return $this->roles
-            ->flatMap(fn (Role $role) => $role->permissions)
-            ->contains(fn (Permission $item) => $item->name === $permission);
+        return isset($this->permissionNameMap()[$permission]);
     }
 
     public function isAccountActive(): bool

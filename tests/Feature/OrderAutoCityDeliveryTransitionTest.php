@@ -65,7 +65,9 @@ it('auto transitions to IN_DELIVERY_CITY when pickup is complete and cities matc
     expect($result)->toBeTrue();
     expect($order->fresh()->status)->toBe(OrderStatus::IN_DELIVERY_CITY);
 
-    $history = $order->statusHistories()->latest('id')->first();
+    // The relation is ordered chronologically by default, so it has to be
+    // reset before asking for the most recent row.
+    $history = $order->statusHistories()->reorder()->latest('id')->first();
     expect($history->status)->toBe(OrderStatus::IN_DELIVERY_CITY);
     expect($history->is_system)->toBeTrue();
     expect($history->user_id)->toBeNull();

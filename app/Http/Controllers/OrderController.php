@@ -9,6 +9,7 @@ use App\Enums\ReturnReason;
 use App\Http\Requests\AssignOrderDriverRequest;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
+use App\Http\Resources\OrderListResource;
 use App\Http\Resources\OrderResource;
 use App\Models\City;
 use App\Models\Order;
@@ -47,20 +48,27 @@ class OrderController extends Controller
     {
         $this->authorize('viewAny', Order::class);
 
-        $orders = $this->orderQuery->build($request, $request->user())
+        // The list only renders the destination city and sector, so the seller
+        // relation is neither eager loaded nor serialised here, and the select
+        // is limited to the columns the table shows.
+        $orders = $this->orderQuery
+            ->build($request, $request->user(), ['city:id,name', 'sector:id,name'])
+            ->select(OrderListResource::COLUMNS)
             ->paginate($this->orderQuery->perPage($request))
             ->withQueryString();
 
         return Inertia::render('orders/index', [
-            'orders' => OrderResource::collection($orders)->response()->getData(true),
+            'orders' => OrderListResource::collection($orders)->response()->getData(true),
             'filters' => $request->only([
                 'tracking_number', 'order_number', 'customer_name', 'customer_phone',
                 'seller', 'city_id', 'sector_id', 'status', 'payment_method',
                 'created_from', 'created_to', 'delivery_from', 'delivery_to',
                 'is_fragile', 'can_be_opened', 'sort', 'direction', 'per_page',
             ]),
-            'filterOptions' => $this->filterOptions(),
-            'can' => $this->abilities($request),
+            // Closures so Inertia can skip them entirely on partial reloads:
+            // paging, sorting and filtering only ask for "orders".
+            'filterOptions' => fn () => $this->filterOptions(),
+            'can' => fn () => $this->abilities($request),
         ]);
     }
 
@@ -458,16 +466,14 @@ class OrderController extends Controller
      */
     private function cityOptions(): array
     {
-        return City::query()
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name', 'region'])
-            ->map(fn (City $city) => [
-                'id' => $city->id,
-                'name' => $city->name,
-                'region' => $city->region,
-            ])
-            ->all();
+        return array_map(
+            static fn (array $city) => [
+                'id' => $city['id'],
+                'name' => $city['name'],
+                'region' => $city['region'],
+            ],
+            City::options()
+        );
     }
 
     /**

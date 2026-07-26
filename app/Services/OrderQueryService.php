@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -24,11 +26,22 @@ class OrderQueryService
     private const DEFAULT_PAGE_SIZE = 25;
 
     /**
-     * Build the filtered, scoped and sorted order query.
+     * Relations the JSON API contract expects on every order.
+     *
+     * @var array<int, string>
      */
-    public function build(Request $request, User $user): Builder
+    public const DEFAULT_RELATIONS = ['city', 'sector', 'seller'];
+
+    /**
+     * Build the filtered, scoped and sorted order query.
+     *
+     * @param  array<int, string>  $with  Relations to eager load. Callers that
+     *                                    render a narrow list can pass a
+     *                                    reduced set instead of the full API one.
+     */
+    public function build(Request $request, User $user, array $with = self::DEFAULT_RELATIONS): Builder
     {
-        $query = Order::query()->with(['city', 'sector', 'seller']);
+        $query = Order::query()->with($with);
 
         // Native orders only — partner-ingested orders live on /partner-orders.
         $query->whereNull('partner_id');
@@ -107,16 +120,30 @@ class OrderQueryService
 
         $query->when($request->input('payment_method'), fn (Builder $q, $value) => $q->whereIn('payment_method', (array) $value));
 
-        // Creation date range.
-        $query->when($request->input('created_from'), fn (Builder $q, $value) => $q->whereDate('created_at', '>=', $value));
-        $query->when($request->input('created_to'), fn (Builder $q, $value) => $q->whereDate('created_at', '<=', $value));
+        // Creation date range. Compared as an open interval rather than with
+        // whereDate(): wrapping the column in DATE() makes MySQL ignore the
+        // index on orders.created_at and scan the table.
+        $query->when(
+            $request->input('created_from'),
+            fn (Builder $q, $value) => $q->where('created_at', '>=', $this->startOfDay($value))
+        );
+        $query->when(
+            $request->input('created_to'),
+            fn (Builder $q, $value) => $q->where('created_at', '<=', $this->endOfDay($value))
+        );
 
         // Delivery date range — based on when the order reached the DELIVERED status.
         if ($request->filled('delivery_from') || $request->filled('delivery_to')) {
             $query->whereHas('statusHistories', function (Builder $sub) use ($request) {
                 $sub->where('status', OrderStatus::DELIVERED->value);
-                $sub->when($request->input('delivery_from'), fn (Builder $s, $value) => $s->whereDate('created_at', '>=', $value));
-                $sub->when($request->input('delivery_to'), fn (Builder $s, $value) => $s->whereDate('created_at', '<=', $value));
+                $sub->when(
+                    $request->input('delivery_from'),
+                    fn (Builder $s, $value) => $s->where('created_at', '>=', $this->startOfDay($value))
+                );
+                $sub->when(
+                    $request->input('delivery_to'),
+                    fn (Builder $s, $value) => $s->where('created_at', '<=', $this->endOfDay($value))
+                );
             });
         }
 
@@ -128,6 +155,16 @@ class OrderQueryService
         if ($request->filled('can_be_opened')) {
             $query->where('can_be_opened', $request->boolean('can_be_opened'));
         }
+    }
+
+    private function startOfDay(string $value): CarbonInterface
+    {
+        return Carbon::parse($value)->startOfDay();
+    }
+
+    private function endOfDay(string $value): CarbonInterface
+    {
+        return Carbon::parse($value)->endOfDay();
     }
 
     private function applySorting(Builder $query, Request $request): void

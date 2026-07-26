@@ -54,8 +54,13 @@ const query = () => {
   return params;
 };
 
+// Filter options and abilities never change between two visits to this page,
+// so every table interaction asks the server for the table only.
+const TABLE_PROPS = ["orders", "filters"];
+
 const reload = () => {
   router.get(route("orders.index"), query(), {
+    only: TABLE_PROPS,
     preserveState: true,
     preserveScroll: true,
     replace: true,
@@ -101,7 +106,7 @@ const toggleAll = () => {
 
 const goToPage = (url) => {
   if (!url) return;
-  router.visit(url, { preserveState: true, preserveScroll: true });
+  router.visit(url, { only: TABLE_PROPS, preserveState: true, preserveScroll: true });
 };
 
 const openPdf = (order) => window.open(route("orders.pdf", order.id), "_blank");

@@ -56,16 +56,39 @@ function laravelToVueI18n(value) {
   return value;
 }
 
+/**
+ * Locales whose server-side bundle has already been merged into vue-i18n.
+ */
+const loadedLocales = new Set();
+
+/**
+ * Tell the backend which locale bundle we already hold so it can leave the
+ * translations out of subsequent Inertia responses. Inertia issues its visits
+ * through axios, so a default header reaches every navigation.
+ */
+function advertiseLoadedLocale(locale) {
+  if (window.axios) {
+    window.axios.defaults.headers.common['X-Inertia-Locale'] = locale;
+  }
+}
+
 export function syncLocaleFromPage(pageProps) {
   const locale = pageProps?.locale ?? defaultLocale;
-  const translations = pageProps?.translations ?? {};
+  const translations = pageProps?.translations;
 
   i18n.global.locale = locale;
   sessionStorage.setItem('locale', locale);
 
-  Object.entries(translations).forEach(([group, strings]) => {
-    i18n.global.mergeLocaleMessage(locale, { [group]: laravelToVueI18n(strings) });
-  });
+  // Omitted by the server once this locale has been delivered.
+  if (translations) {
+    Object.entries(translations).forEach(([group, strings]) => {
+      i18n.global.mergeLocaleMessage(locale, { [group]: laravelToVueI18n(strings) });
+    });
+
+    loadedLocales.add(locale);
+  }
+
+  advertiseLoadedLocale(loadedLocales.has(locale) ? locale : '');
 }
 
 export default i18n;

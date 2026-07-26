@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n';
 import Layout from '@/Layouts/main.vue';
 import KpiCard from '@/Components/Dashboard/KpiCard.vue';
 import ChartCard from '@/Components/Dashboard/ChartCard.vue';
-import { fetchDashboard, PERIOD_VALUES } from '@/services/DashboardService';
+import { fetchDashboard, isCancelled, PERIOD_VALUES } from '@/services/DashboardService';
 import getChartColorsArray from '@/common/getChartColorsArray';
 import { formatMoney } from '@/common/formatMoney';
 import flatPickr from 'vue-flatpickr-component';
@@ -55,7 +55,12 @@ const parseCustomRange = (value) => {
   return null;
 };
 
+// Identifies the newest request so a superseded one can never write back.
+let requestId = 0;
+
 const loadDashboard = async () => {
+  const currentRequest = ++requestId;
+
   loading.value = true;
   error.value = null;
 
@@ -72,12 +77,21 @@ const loadDashboard = async () => {
   }
 
   try {
-    dashboard.value = await fetchDashboard(params);
+    const data = await fetchDashboard(params);
+
+    if (currentRequest !== requestId) return;
+
+    dashboard.value = data;
   } catch (e) {
+    // A superseded request is not a failure: the newer one owns the state.
+    if (currentRequest !== requestId || isCancelled(e)) return;
+
     error.value = e?.response?.data?.message ?? e?.message ?? t('dashboard.errors.load_failed');
     dashboard.value = null;
   } finally {
-    loading.value = false;
+    if (currentRequest === requestId) {
+      loading.value = false;
+    }
   }
 };
 

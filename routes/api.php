@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\CityController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DriverZoneController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderTransitionController;
@@ -31,6 +32,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('dashboard', DashboardController::class)->name('api.dashboard');
+
     Route::get('permissions', [PermissionController::class, 'index'])->middleware('permission:permissions.read');
     Route::post('permissions', [PermissionController::class, 'store'])->middleware('permission:permissions.create');
     Route::get('permissions/{permission}', [PermissionController::class, 'show'])->middleware('permission:permissions.read');

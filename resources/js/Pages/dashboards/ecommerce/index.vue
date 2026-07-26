@@ -1,105 +1,229 @@
-<script>
-import getChartColorsArray from "@/common/getChartColorsArray";
+<script setup>
+import { ref, computed, watch, onMounted } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import { useI18n } from 'vue-i18n';
+import Layout from '@/Layouts/main.vue';
+import KpiCard from '@/Components/Dashboard/KpiCard.vue';
+import ChartCard from '@/Components/Dashboard/ChartCard.vue';
+import { fetchDashboard, PERIOD_VALUES } from '@/services/DashboardService';
+import getChartColorsArray from '@/common/getChartColorsArray';
+import { formatMoney } from '@/common/formatMoney';
+import flatPickr from 'vue-flatpickr-component';
+import { French } from 'flatpickr/dist/l10n/fr.js';
+import 'flatpickr/dist/flatpickr.css';
+import SimpleBar from 'simplebar-vue';
 
-import { CountTo } from "vue3-count-to";
-import  SimpleBar  from "simplebar-vue";
+const { t } = useI18n();
+const page = usePage();
 
-import { Swiper, SwiperSlide } from "swiper/vue";
-import { Autoplay, Mousewheel } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/autoplay";
-import "swiper/css/mousewheel";
+const userName = computed(() => page.props.auth?.user?.name ?? t('dashboard.default_team'));
+const dateLocale = computed(() => (page.props.locale === 'en' ? 'en-US' : 'fr-FR'));
 
-import flatPickr from "vue-flatpickr-component";
-import "flatpickr/dist/flatpickr.css";
+const loading = ref(true);
+const error = ref(null);
+const dashboard = ref(null);
 
-import Layout from "@/Layouts/main.vue";
-import Revenue from "./revenue.vue";
-import SalesLocation from "./sales-location.vue";
+const period = ref('last_30_days');
+const customRange = ref('');
 
-export default {
-  components: {
-    CountTo,
-    Layout,
-    Swiper,
-    SwiperSlide,
-    flatPickr,
-    Revenue,
-    SalesLocation,
-    SimpleBar
-  },
-  data() {
-    return {
-      date: "2022-01-01 to 2022-01-31",
-      config: {
-        mode: "range",
-      },
-      series: [44, 55, 41, 17, 15],
-      chartOptions: {
-        labels: ["Direct", "Social", "Email", "Other", "Referrals"],
-        chart: {
-          height: 333,
-          type: "donut",
-        },
-        legend: {
-          position: "bottom",
-        },
-        stroke: {
-          show: false,
-        },
-        dataLabels: {
-          dropShadow: {
-            enabled: false,
-          },
-        },
-        colors: getChartColorsArray('["--vz-primary", "--vz-success", "--vz-secondary", "--vz-info", "--vz-warning"]'),
-      },
-      Autoplay, Mousewheel
-    };
-  },
-  methods: {
-    rightcolumn() {
-      if (document.querySelector('.layout-rightside-col').classList.contains('d-block')) {
-        document.querySelector('.layout-rightside-col').classList.remove('d-block');
-        document.querySelector('.layout-rightside-col').classList.add('d-none');
-      } else {
-        document.querySelector('.layout-rightside-col').classList.remove('d-none');
-        document.querySelector('.layout-rightside-col').classList.add('d-block');
-      }
-    },
+const flatpickrConfig = computed(() => ({
+  mode: 'range',
+  dateFormat: 'Y-m-d',
+  locale: page.props.locale === 'fr' ? French : undefined,
+}));
 
-    resizerightcolumn() {
-      const element = document.querySelector('.layout-rightside-col');
+const periodOptions = computed(() =>
+  PERIOD_VALUES.map((value) => ({
+    value,
+    label: t(`dashboard.periods.${value}`),
+  }))
+);
 
-      if (element) {
-        if (window.outerWidth < 1699) {
-          element.classList.remove("d-block");
-          element.classList.add("d-none");
-        } else {
-          element.classList.add("d-block");
-          element.classList.remove("d-none");
-        }
-      }
+const parseCustomRange = (value) => {
+  if (!value) return null;
 
-      if (document.documentElement.getAttribute("data-layout") === "semibox") {
-        element.classList.remove("d-block");
-        element.classList.add("d-none");
-      }
-    },
-
-    hiderightcolumn() {
-      const element = document.querySelector('.layout-rightside-col');
-      if (element.classList.contains('d-block')) {
-        element.classList.remove("d-block");
-        element.classList.add("d-none");
+  const separators = [' to ', ' au ', ' à '];
+  for (const separator of separators) {
+    if (value.includes(separator)) {
+      const parts = value.split(separator);
+      if (parts.length === 2) {
+        return { from: parts[0].trim(), to: parts[1].trim() };
       }
     }
-  },
-  mounted() {
-    window.addEventListener("resize", this.resizerightcolumn);
   }
 
+  return null;
 };
+
+const loadDashboard = async () => {
+  loading.value = true;
+  error.value = null;
+
+  const params = { period: period.value };
+
+  if (period.value === 'custom') {
+    const range = parseCustomRange(customRange.value);
+    if (!range) {
+      loading.value = false;
+      return;
+    }
+    params.from = range.from;
+    params.to = range.to;
+  }
+
+  try {
+    dashboard.value = await fetchDashboard(params);
+  } catch (e) {
+    error.value = e?.response?.data?.message ?? e?.message ?? t('dashboard.errors.load_failed');
+    dashboard.value = null;
+  } finally {
+    loading.value = false;
+  }
+};
+
+watch(period, (value) => {
+  if (value !== 'custom') {
+    loadDashboard();
+  }
+});
+
+watch(customRange, (value) => {
+  if (period.value === 'custom' && parseCustomRange(value)) {
+    loadDashboard();
+  }
+});
+
+onMounted(loadDashboard);
+
+const summary = computed(() => dashboard.value?.summary ?? {});
+const charts = computed(() => dashboard.value?.charts ?? {});
+const recentOrders = computed(() => dashboard.value?.recentOrders ?? []);
+const recentActivities = computed(() => dashboard.value?.recentActivities ?? []);
+const topCustomers = computed(() => dashboard.value?.topCustomers ?? []);
+const paymentMethods = computed(() => dashboard.value?.paymentMethods ?? { labels: [], series: [] });
+const agentPerformance = computed(() => charts.value?.deliveryAgentsPerformance ?? []);
+
+const chartColors = getChartColorsArray(
+  '["--vz-primary", "--vz-success", "--vz-warning", "--vz-info", "--vz-danger", "--vz-secondary"]'
+);
+
+const ordersByDayOptions = computed(() => ({
+  chart: { type: 'line', height: 320, toolbar: { show: false } },
+  stroke: { curve: 'smooth', width: 2 },
+  dataLabels: { enabled: false },
+  xaxis: { categories: charts.value?.ordersByDay?.labels ?? [] },
+  colors: [chartColors[0]],
+  grid: { strokeDashArray: 4 },
+}));
+
+const ordersByDaySeries = computed(() => [
+  { name: t('dashboard.series.orders'), data: charts.value?.ordersByDay?.series ?? [] },
+]);
+
+const ordersByStatusOptions = computed(() => ({
+  chart: { type: 'donut', height: 320 },
+  labels: charts.value?.ordersByStatus?.labels ?? [],
+  legend: { position: 'bottom' },
+  colors: chartColors,
+  dataLabels: { dropShadow: { enabled: false } },
+}));
+
+const ordersByStatusSeries = computed(() => charts.value?.ordersByStatus?.series ?? []);
+
+const ordersByCityOptions = computed(() => ({
+  chart: { type: 'bar', height: 320, toolbar: { show: false } },
+  plotOptions: { bar: { borderRadius: 4, columnWidth: '55%' } },
+  dataLabels: { enabled: false },
+  xaxis: { categories: charts.value?.ordersByCity?.labels ?? [] },
+  colors: [chartColors[1]],
+  grid: { strokeDashArray: 4 },
+}));
+
+const ordersByCitySeries = computed(() => [
+  { name: t('dashboard.series.orders'), data: charts.value?.ordersByCity?.series ?? [] },
+]);
+
+const paymentMethodsOptions = computed(() => ({
+  chart: { type: 'pie', height: 300 },
+  labels: paymentMethods.value?.labels ?? [],
+  legend: { position: 'bottom' },
+  colors: chartColors,
+}));
+
+const paymentMethodsSeries = computed(() => paymentMethods.value?.series ?? []);
+
+const monthlyRevenueOptions = computed(() => ({
+  chart: { type: 'area', height: 320, toolbar: { show: false } },
+  stroke: { curve: 'smooth', width: 2 },
+  fill: { type: 'gradient', gradient: { opacityFrom: 0.4, opacityTo: 0.05 } },
+  dataLabels: { enabled: false },
+  xaxis: { categories: charts.value?.monthlyRevenue?.labels ?? [] },
+  yaxis: {
+    labels: {
+      formatter: (v) => `${Math.round(v)} MAD`,
+    },
+  },
+  colors: [chartColors[2]],
+  grid: { strokeDashArray: 4 },
+}));
+
+const monthlyRevenueSeries = computed(() => [
+  { name: t('dashboard.series.revenue'), data: charts.value?.monthlyRevenue?.series ?? [] },
+]);
+
+const successGauge = computed(() => charts.value?.deliverySuccessRate ?? {});
+const successGaugeSeries = computed(() => [successGauge.value?.rate ?? 0]);
+
+const successGaugeOptions = computed(() => ({
+  chart: { type: 'radialBar', height: 300 },
+  plotOptions: {
+    radialBar: {
+      hollow: { size: '65%' },
+      dataLabels: {
+        name: { show: true, fontSize: '14px', offsetY: -8 },
+        value: { show: true, fontSize: '22px', formatter: (v) => `${v}%` },
+      },
+    },
+  },
+  labels: [t('dashboard.series.success_rate')],
+  colors: [chartColors[1]],
+}));
+
+const sellersChartOptions = computed(() => ({
+  chart: { type: 'bar', height: 320, toolbar: { show: false } },
+  plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
+  dataLabels: { enabled: true },
+  xaxis: { categories: charts.value?.ordersPerSeller?.labels ?? [] },
+  colors: [chartColors[0]],
+}));
+
+const sellersChartSeries = computed(() => [
+  { name: t('dashboard.series.orders'), data: charts.value?.ordersPerSeller?.series ?? [] },
+]);
+
+const agentChartOptions = computed(() => ({
+  chart: { type: 'bar', height: Math.max(280, agentPerformance.value.length * 36), toolbar: { show: false } },
+  plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
+  dataLabels: { enabled: true },
+  xaxis: { categories: agentPerformance.value.map((a) => a.driver_name) },
+  colors: [chartColors[3]],
+}));
+
+const agentChartSeries = computed(() => [
+  { name: t('dashboard.series.delivered'), data: agentPerformance.value.map((a) => a.delivered) },
+]);
+
+const deliveredFailedLabel = computed(() =>
+  t('dashboard.charts.delivered_failed', {
+    delivered: successGauge.value?.delivered ?? 0,
+    failed: successGauge.value?.failed ?? 0,
+  })
+);
+
+const formatPercent = (value) => (value != null ? `${value}%` : '—');
+const formatHours = (value) => (value != null ? `${value}h` : '—');
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString(dateLocale.value) : '—');
+const statusBadgeClass = (color) => `badge bg-${color}-subtle text-${color}`;
 </script>
 
 <template>
@@ -111,878 +235,252 @@ export default {
             <BCol cols="12">
               <div class="d-flex align-items-lg-center flex-lg-row flex-column">
                 <div class="flex-grow-1">
-                  <h4 class="fs-16 mb-1">Good morning, Operations Team!</h4>
-                  <p class="text-muted mb-0">
-                    Here's what's happening across SpeedZone Express logistics today.
-                  </p>
+                  <h4 class="fs-16 mb-1">{{ t('dashboard.greeting', { name: userName }) }}</h4>
+                  <p class="text-muted mb-0">{{ t('dashboard.subtitle') }}</p>
                 </div>
                 <div class="mt-3 mt-lg-0">
-                  <form action="javascript:void(0);">
-                    <BRow class="g-3 mb-0 align-items-center">
-                      <BCol sm="auto">
-                        <div class="input-group">
-                          <flat-pickr v-model="date" :config="config"
-                            class="form-control border-0 dash-filter-picker shadow"></flat-pickr>
-
-                          <div class="input-group-text bg-primary border-primary text-white">
-                            <i class="ri-calendar-2-line"></i>
-                          </div>
+                  <BRow class="g-3 mb-0 align-items-center">
+                    <BCol sm="auto">
+                      <BFormSelect v-model="period" class="form-select shadow-sm" :disabled="loading">
+                        <option v-for="opt in periodOptions" :key="opt.value" :value="opt.value">
+                          {{ opt.label }}
+                        </option>
+                      </BFormSelect>
+                    </BCol>
+                    <BCol v-if="period === 'custom'" sm="auto">
+                      <div class="input-group">
+                        <flat-pickr
+                          v-model="customRange"
+                          :config="flatpickrConfig"
+                          class="form-control border-0 dash-filter-picker shadow"
+                          :placeholder="t('dashboard.select_date_range')"
+                        />
+                        <div class="input-group-text bg-primary border-primary text-white">
+                          <i class="ri-calendar-2-line"></i>
                         </div>
-                      </BCol>
-                      <div class="col-auto">
-                        <BButton type="button" variant="secondary">
-                          <i class="ri-add-circle-line align-middle me-1"></i>
-                          Create Shipment
-                        </BButton>
                       </div>
-                      <div class="col-auto">
-                        <BButton type="button" variant="soft-success" class="btn-icon waves-effect layout-rightside-btn"
-                          @click="rightcolumn">
-                          <i class="ri-pulse-line"></i>
-                        </BButton>
-                      </div>
-                    </BRow>
-                  </form>
+                    </BCol>
+                    <BCol sm="auto">
+                      <Link :href="route('orders.create')" class="btn btn-secondary">
+                        <i class="ri-add-circle-line align-middle me-1"></i>
+                        {{ t('dashboard.create_shipment') }}
+                      </Link>
+                    </BCol>
+                    <BCol sm="auto">
+                      <BButton variant="soft-primary" size="sm" :disabled="loading" @click="loadDashboard">
+                        <i class="ri-refresh-line"></i>
+                      </BButton>
+                    </BCol>
+                  </BRow>
                 </div>
               </div>
             </BCol>
           </BRow>
 
+          <BAlert v-if="error" variant="danger" show class="mb-3">
+            {{ error }}
+            <BButton variant="link" class="p-0 ms-2" @click="loadDashboard">{{ t('dashboard.retry') }}</BButton>
+          </BAlert>
+
           <BRow>
             <BCol xl="3" md="6">
-              <BCard no-body class="card-animate dashboard-logistics-card">
-                <BCardBody>
-                  <div class="d-flex align-items-center">
-                    <div class="flex-grow-1 overflow-hidden">
-                      <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
-                        Total Deliveries
-                      </p>
-                    </div>
-                    <div class="flex-shrink-0">
-                      <h5 class="text-success fs-14 mb-0">
-                        <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
-                        +8.45 %
-                      </h5>
-                    </div>
-                  </div>
-                  <div class="d-flex align-items-end justify-content-between mt-4">
-                    <div>
-                      <h4 class="fs-20 fw-semibold ff-secondary mb-4">
-                        <count-to :startVal='0' :endVal='12450' :duration='5000'></count-to>
-                      </h4>
-                      <BLink href="" class="text-decoration-underline">View all deliveries</BLink>
-                    </div>
-                    <div class="avatar-sm flex-shrink-0">
-                      <span class="avatar-title bg-primary-subtle rounded fs-3">
-                        <i class="bx bx-package text-primary"></i>
-                      </span>
-                    </div>
-                  </div>
-                </BCardBody>
-              </BCard>
+              <KpiCard :title="t('dashboard.kpis.orders_today')" :value="summary.orders_today" icon="bx bx-package" :loading="loading" :link="route('orders.index')" :link-label="t('dashboard.view_orders')" />
             </BCol>
-
             <BCol xl="3" md="6">
-              <BCard no-body class="card-animate dashboard-logistics-card">
-                <BCardBody>
-                  <div class="d-flex align-items-center">
-                    <div class="flex-grow-1 overflow-hidden">
-                      <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
-                        Deliveries In Progress
-                      </p>
-                    </div>
-                    <div class="flex-shrink-0">
-                      <h5 class="text-info fs-14 mb-0">
-                        <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
-                        +4.11 %
-                      </h5>
-                    </div>
-                  </div>
-                  <div class="d-flex align-items-end justify-content-between mt-4">
-                    <div>
-                      <h4 class="fs-20 fw-semibold ff-secondary mb-4">
-                        <count-to :startVal='0' :endVal='2431' :duration='5000'></count-to>
-                      </h4>
-                      <BLink href="" class="text-decoration-underline">Track active routes</BLink>
-                    </div>
-                    <div class="avatar-sm flex-shrink-0">
-                      <span class="avatar-title bg-secondary-subtle rounded fs-3">
-                        <i class="bx bx-loader-circle text-secondary"></i>
-                      </span>
-                    </div>
-                  </div>
-                </BCardBody>
-              </BCard>
+              <KpiCard :title="t('dashboard.kpis.orders_this_month')" :value="summary.orders_this_month" icon="ri-calendar-line" icon-class="text-info" icon-bg="bg-info-subtle" :loading="loading" />
             </BCol>
-
             <BCol xl="3" md="6">
-              <BCard no-body class="card-animate dashboard-logistics-card">
-                <BCardBody>
-                  <div class="d-flex align-items-center">
-                    <div class="flex-grow-1 overflow-hidden">
-                      <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
-                        Delivered Packages
-                      </p>
-                    </div>
-                    <div class="flex-shrink-0">
-                      <h5 class="text-success fs-14 mb-0">
-                        <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
-                        +13.62 %
-                      </h5>
-                    </div>
-                  </div>
-                  <div class="d-flex align-items-end justify-content-between mt-4">
-                    <div>
-                      <h4 class="fs-20 fw-semibold ff-secondary mb-4">
-                        <count-to :startVal='0' :endVal='9874' :duration='5000'></count-to>
-
-                      </h4>
-                      <BLink href="" class="text-decoration-underline">Review completion rate</BLink>
-                    </div>
-                    <div class="avatar-sm flex-shrink-0">
-                      <span class="avatar-title bg-success-subtle rounded fs-3">
-                        <i class="bx bx-check-shield text-success"></i>
-                      </span>
-                    </div>
-                  </div>
-                </BCardBody>
-              </BCard>
+              <KpiCard :title="t('dashboard.kpis.delivered_orders')" :value="summary.delivered_orders" icon="bx bx-check-shield" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
             </BCol>
-
             <BCol xl="3" md="6">
-              <BCard no-body class="card-animate dashboard-logistics-card">
-                <BCardBody>
-                  <div class="d-flex align-items-center">
-                    <div class="flex-grow-1 overflow-hidden">
-                      <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
-                        Pending Packages
-                      </p>
-                    </div>
-                    <div class="flex-shrink-0">
-                      <h5 class="text-warning fs-14 mb-0">
-                        <i class="ri-time-line fs-13 align-middle"></i>
-                        SLA monitor
-                      </h5>
-                    </div>
-                  </div>
-                  <div class="d-flex align-items-end justify-content-between mt-4">
-                    <div>
-                      <h4 class="fs-20 fw-semibold ff-secondary mb-4">
-                        <count-to :startVal='0' :endVal='576' :duration='5000'></count-to>
-                      </h4>
-                      <BLink href="" class="text-decoration-underline">View pending queue</BLink>
-                    </div>
-                    <div class="avatar-sm flex-shrink-0">
-                      <span class="avatar-title bg-warning-subtle rounded fs-3">
-                        <i class="bx bx-time-five text-warning"></i>
-                      </span>
-                    </div>
-                  </div>
-                </BCardBody>
-              </BCard>
+              <KpiCard :title="t('dashboard.kpis.pending_pickup')" :value="summary.pending_pickup" icon="ri-time-line" icon-class="text-warning" icon-bg="bg-warning-subtle" :loading="loading" />
             </BCol>
-
             <BCol xl="3" md="6">
-              <BCard no-body class="card-animate dashboard-logistics-card">
-                <BCardBody>
-                  <div class="d-flex align-items-center">
-                    <div class="flex-grow-1 overflow-hidden">
-                      <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
-                        Revenue
-                      </p>
-                    </div>
-                    <div class="flex-shrink-0">
-                      <h5 class="text-success fs-14 mb-0">
-                        <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
-                        +9.22 %
-                      </h5>
-                    </div>
-                  </div>
-                  <div class="d-flex align-items-end justify-content-between mt-4">
-                    <div>
-                      <h4 class="fs-20 fw-semibold ff-secondary mb-4">
-                        <count-to :startVal='0' :endVal='342' :duration='5000'></count-to>k Dhs
-                      </h4>
-                      <BLink href="" class="text-decoration-underline">Revenue overview</BLink>
-                    </div>
-                    <div class="avatar-sm flex-shrink-0">
-                      <span class="avatar-title bg-success-subtle rounded fs-3">
-                        <i class="bx bx-dollar-circle text-success"></i>
-                      </span>
-                    </div>
-                  </div>
-                </BCardBody>
-              </BCard>
+              <KpiCard :title="t('dashboard.kpis.in_transit')" :value="summary.in_transit" icon="ri-truck-line" icon-class="text-primary" icon-bg="bg-primary-subtle" :loading="loading" />
             </BCol>
-
             <BCol xl="3" md="6">
-              <BCard no-body class="card-animate dashboard-logistics-card">
-                <BCardBody>
-                  <div class="d-flex align-items-center">
-                    <div class="flex-grow-1 overflow-hidden">
-                      <p class="text-uppercase fw-medium text-muted text-truncate mb-0">
-                        Active Drivers
-                      </p>
-                    </div>
-                    <div class="flex-shrink-0">
-                      <h5 class="text-primary fs-14 mb-0">
-                        <i class="ri-user-follow-line fs-13 align-middle"></i>
-                        98% online
-                      </h5>
-                    </div>
-                  </div>
-                  <div class="d-flex align-items-end justify-content-between mt-4">
-                    <div>
-                      <h4 class="fs-20 fw-semibold ff-secondary mb-4">
-                        <count-to :startVal='0' :endVal='312' :duration='5000'></count-to>
-                      </h4>
-                      <BLink href="" class="text-decoration-underline">View driver activity</BLink>
-                    </div>
-                    <div class="avatar-sm flex-shrink-0">
-                      <span class="avatar-title bg-primary-subtle rounded fs-3">
-                        <i class="bx bx-id-card text-primary"></i>
-                      </span>
-                    </div>
-                  </div>
-                </BCardBody>
-              </BCard>
+              <KpiCard :title="t('dashboard.kpis.out_for_delivery')" :value="summary.out_for_delivery" icon="ri-e-bike-2-line" icon-class="text-warning" icon-bg="bg-warning-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.returned_orders')" :value="summary.returned_orders" icon="ri-arrow-go-back-line" icon-class="text-dark" icon-bg="bg-dark-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.cancelled_orders')" :value="summary.cancelled_orders" icon="ri-stop-circle-line" icon-class="text-secondary" icon-bg="bg-secondary-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.cash_to_collect')" :value="summary.cash_to_collect" suffix=" MAD" :decimals="2" icon="ri-money-dollar-box-line" icon-class="text-warning" icon-bg="bg-warning-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.cod_collected')" :value="summary.cod_collected" suffix=" MAD" :decimals="2" icon="ri-hand-coin-line" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.delivery_success_rate')" :value="summary.delivery_success_rate ?? 0" suffix="%" :decimals="1" icon="ri-percent-line" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.average_delivery_time')" :value="summary.average_delivery_time_hours ?? 0" suffix=" h" :decimals="1" icon="ri-timer-line" icon-class="text-info" icon-bg="bg-info-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.active_sellers')" :value="summary.active_sellers" icon="ri-store-2-line" icon-class="text-primary" icon-bg="bg-primary-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.active_delivery_agents')" :value="summary.active_delivery_agents" icon="bx bx-id-card" icon-class="text-primary" icon-bg="bg-primary-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.new_customers')" :value="summary.new_customers" icon="ri-user-add-line" icon-class="text-info" icon-bg="bg-info-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.revenue_in_period')" :value="summary.revenue_in_period" suffix=" MAD" :decimals="2" icon="bx bx-dollar-circle" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.revenue_today')" :value="summary.revenue_today" suffix=" MAD" :decimals="2" icon="ri-funds-line" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.revenue_this_month')" :value="summary.revenue_this_month" suffix=" MAD" :decimals="2" icon="ri-line-chart-line" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.average_order_value')" :value="summary.average_order_value" suffix=" MAD" :decimals="2" icon="ri-scales-3-line" icon-class="text-secondary" icon-bg="bg-secondary-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.pending_transfers')" :value="summary.pending_transfers" icon="ri-truck-line" icon-class="text-warning" icon-bg="bg-warning-subtle" :loading="loading" :link="route('transfers.index')" :link-label="t('dashboard.view_transfers')" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.orders_at_agency')" :value="summary.orders_at_agency" icon="ri-building-line" icon-class="text-primary" icon-bg="bg-primary-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.failed_deliveries')" :value="summary.failed_deliveries" icon="ri-close-circle-line" icon-class="text-danger" icon-bg="bg-danger-subtle" :loading="loading" />
+            </BCol>
+            <BCol xl="3" md="6">
+              <KpiCard :title="t('dashboard.kpis.orders_in_period')" :value="summary.orders_in_period" icon="ri-file-list-3-line" icon-class="text-info" icon-bg="bg-info-subtle" :loading="loading" />
             </BCol>
           </BRow>
 
-          <BRow>
+          <BRow class="mt-1">
             <BCol xl="8">
-              <Revenue />
+              <ChartCard :title="t('dashboard.charts.orders_by_day')" :loading="loading" :empty="!ordersByDaySeries[0]?.data?.length" :empty-message="t('dashboard.empty.chart')">
+                <apexchart type="line" height="320" :series="ordersByDaySeries" :options="ordersByDayOptions" />
+              </ChartCard>
             </BCol>
-
             <BCol xl="4">
-              <SalesLocation />
+              <ChartCard :title="t('dashboard.charts.orders_by_status')" :loading="loading" :empty="!ordersByStatusSeries.length" :empty-message="t('dashboard.empty.chart')">
+                <apexchart type="donut" height="320" :series="ordersByStatusSeries" :options="ordersByStatusOptions" />
+              </ChartCard>
             </BCol>
           </BRow>
 
-          <BRow>
+          <BRow class="mt-1">
             <BCol xl="6">
-              <BCard no-body>
-                <BCardHeader class="align-items-center d-flex py-0">
-                  <BCardTitle class="mb-0 flex-grow-1"> Best Selling Products </BCardTitle>
-                  <div class="flex-shrink-0">
-                    <BDropdown variant="link" class="card-header-dropdown"
-                      toggle-class="text-reset dropdown-btn arrow-none" menu-class="dropdown-menu-end"
-                      aria-haspopup="true" :offset="{ alignmentAxis: -45, crossAxis: 0, mainAxis: 0 }">
-                      <template #button-content><span class="fw-semibold text-uppercase fs-12">Sort by: </span><span
-                          class="text-muted">Today<i class="mdi mdi-chevron-down ms-1"></i></span>
-                      </template>
-                      <BDropdownItem>Today</BDropdownItem>
-                      <BDropdownItem>Yesterday</BDropdownItem>
-                      <BDropdownItem>Last 7 Days</BDropdownItem>
-                      <BDropdownItem>Last 30 Days</BDropdownItem>
-                      <BDropdownItem>This Month</BDropdownItem>
-                      <BDropdownItem>Last Month</BDropdownItem>
-                    </BDropdown>
-                  </div>
-                </BCardHeader>
-
-                <BCardBody>
-                  <div class="table-responsive table-card">
-                    <table class="table table-hover table-centered align-middle table-nowrap mb-0">
-                      <tbody>
-                        <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="avatar-sm bg-light rounded p-1 me-2">
-                                <img src="@assets/images/products/img-1.png" alt="" class="img-fluid d-block" />
-                              </div>
-                              <div>
-                                <h5 class="fs-14 my-1">
-                                  <router-link to="/ecommerce/product-details" class="text-reset">Branded T-Shirts
-                                  </router-link>
-                                </h5>
-                                <span class="text-muted">24 Apr 2021</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">29.00 Dhs</h5>
-                            <span class="text-muted">Price</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">62</h5>
-                            <span class="text-muted">Orders</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">510</h5>
-                            <span class="text-muted">Stock</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">1,798 Dhs</h5>
-                            <span class="text-muted">Amount</span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="avatar-sm bg-light rounded p-1 me-2">
-                                <img src="@assets/images/products/img-2.png" alt="" class="img-fluid d-block" />
-                              </div>
-                              <div>
-                                <h5 class="fs-14 my-1">
-                                  <router-link to="/ecommerce/product-details" class="text-reset">Bentwood Chair
-                                  </router-link>
-                                </h5>
-                                <span class="text-muted">19 Mar 2021</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">85.20 Dhs</h5>
-                            <span class="text-muted">Price</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">35</h5>
-                            <span class="text-muted">Orders</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">
-                              <BBadge variant="danger-subtle" class="bg-danger-subtle text-danger">Out of stock</BBadge>
-                            </h5>
-                            <span class="text-muted">Stock</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">2982 Dhs</h5>
-                            <span class="text-muted">Amount</span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="avatar-sm bg-light rounded p-1 me-2">
-                                <img src="@assets/images/products/img-3.png" alt="" class="img-fluid d-block" />
-                              </div>
-                              <div>
-                                <h5 class="fs-14 my-1">
-                                  <router-link to="/ecommerce/product-details" class="text-reset">Borosil Paper Cup
-                                  </router-link>
-                                </h5>
-                                <span class="text-muted">01 Mar 2021</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">14.00 Dhs</h5>
-                            <span class="text-muted">Price</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">80</h5>
-                            <span class="text-muted">Orders</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">749</h5>
-                            <span class="text-muted">Stock</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">1120 Dhs</h5>
-                            <span class="text-muted">Amount</span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="avatar-sm bg-light rounded p-1 me-2">
-                                <img src="@assets/images/products/img-4.png" alt="" class="img-fluid d-block" />
-                              </div>
-                              <div>
-                                <h5 class="fs-14 my-1">
-                                  <router-link to="/ecommerce/product-details" class="text-reset">One Seater Sofa
-                                  </router-link>
-                                </h5>
-                                <span class="text-muted">11 Feb 2021</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">127.50 Dhs</h5>
-                            <span class="text-muted">Price</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">56</h5>
-                            <span class="text-muted">Orders</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">
-                              <BBadge variant="danger-subtle" class="bg-danger-subtle text-danger">Out of stock</BBadge>
-                            </h5>
-                            <span class="text-muted">Stock</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">7140 Dhs</h5>
-                            <span class="text-muted">Amount</span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="avatar-sm bg-light rounded p-1 me-2">
-                                <img src="@assets/images/products/img-5.png" alt="" class="img-fluid d-block" />
-                              </div>
-                              <div>
-                                <h5 class="fs-14 my-1">
-                                  <router-link to="/ecommerce/product-details" class="text-reset">Stillbird Helmet
-                                  </router-link>
-                                </h5>
-                                <span class="text-muted">17 Jan 2021</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">54 Dhs</h5>
-                            <span class="text-muted">Price</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">74</h5>
-                            <span class="text-muted">Orders</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">805</h5>
-                            <span class="text-muted">Stock</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 my-1 fw-normal">3996 Dhs</h5>
-                            <span class="text-muted">Amount</span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <BRow class="align-items-center mt-4 pt-2 justify-content-between text-center text-sm-start">
-                    <BCol sm>
-                      <div class="text-muted">
-                        Showing <span class="fw-semibold">5</span> of
-                        <span class="fw-semibold">25</span> Results
-                      </div>
-                    </BCol>
-                    <BCol sm="auto" class="mt-3 mt-sm-0">
-                      <ul class="pagination pagination-separated pagination-sm mb-0 justify-content-center">
-                        <li class="page-item disabled">
-                          <BLink href="#" class="page-link">←</BLink>
-                        </li>
-                        <li class="page-item">
-                          <BLink href="#" class="page-link">1</BLink>
-                        </li>
-                        <li class="page-item active">
-                          <BLink href="#" class="page-link">2</BLink>
-                        </li>
-                        <li class="page-item">
-                          <BLink href="#" class="page-link">3</BLink>
-                        </li>
-                        <li class="page-item">
-                          <BLink href="#" class="page-link">→</BLink>
-                        </li>
-                      </ul>
-                    </BCol>
-                  </BRow>
-                </BCardBody>
-              </BCard>
+              <ChartCard :title="t('dashboard.charts.orders_by_city')" :loading="loading" :empty="!ordersByCitySeries[0]?.data?.length" :empty-message="t('dashboard.empty.chart')">
+                <apexchart type="bar" height="320" :series="ordersByCitySeries" :options="ordersByCityOptions" />
+              </ChartCard>
             </BCol>
-
             <BCol xl="6">
-              <BCard no-body class="card-height-100">
-                <BCardHeader class="align-items-center d-flex py-0">
-                  <BCardTitle class="mb-0 flex-grow-1">Top Sellers</BCardTitle>
-                  <div class="flex-shrink-0">
-                    <BDropdown variant="link" class="card-header-dropdown"
-                      toggle-class="text-reset dropdown-btn arrow-none" menu-class="dropdown-menu-end"
-                      aria-haspopup="true" :offset="{ alignmentAxis: -100, crossAxis: 0, mainAxis: 0 }">
-                      <template #button-content> <span class="text-muted">Report<i
-                            class="mdi mdi-chevron-down ms-1"></i></span>
-                      </template>
-                      <BDropdownItem>Download Report</BDropdownItem>
-                      <BDropdownItem>Export</BDropdownItem>
-                      <BDropdownItem>Import</BDropdownItem>
-                    </BDropdown>
-                  </div>
-                </BCardHeader>
-
-                <BCardBody>
-                  <div class="table-responsive table-card">
-                    <table class="table table-centered table-hover align-middle table-nowrap mb-0">
-                      <tbody>
-                        <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="flex-shrink-0 me-2">
-                                <img src="@assets/images/companies/img-1.png" alt="" class="avatar-sm p-2" />
-                              </div>
-                              <div>
-                                <h5 class="fs-14 my-1">
-                                  <router-link to="/ecommerce/seller-details" class="text-reset">iTest Factory
-                                  </router-link>
-                                </h5>
-                                <span class="text-muted">Oliver Tyler</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <span class="text-muted">Bags and Wallets</span>
-                          </td>
-                          <td>
-                            <p class="mb-0">8547</p>
-                            <span class="text-muted">Stock</span>
-                          </td>
-                          <td>
-                            <span class="text-muted">541200 Dhs</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 mb-0">
-                              32%<i class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                            </h5>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="flex-shrink-0 me-2">
-                                <img src="@assets/images/companies/img-2.png" alt="" class="avatar-sm p-2" />
-                              </div>
-                              <div class="flex-grow-1">
-                                <h5 class="fs-14 my-1">
-                                  <router-link to="/ecommerce/seller-details" class="text-reset">Digitech Galaxy
-                                  </router-link>
-                                </h5>
-                                <span class="text-muted">John Roberts</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <span class="text-muted">Watches</span>
-                          </td>
-                          <td>
-                            <p class="mb-0">895</p>
-                            <span class="text-muted">Stock</span>
-                          </td>
-                          <td>
-                            <span class="text-muted">75030 Dhs</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 mb-0">
-                              79%<i class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                            </h5>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="flex-shrink-0 me-2">
-                                <img src="@assets/images/companies/img-3.png" alt="" class="avatar-sm p-2" />
-                              </div>
-                              <div class="flex-gow-1">
-                                <h5 class="fs-14 my-1">
-                                  <router-link to="/ecommerce/seller-details" class="text-reset">Nesta Technologies
-                                  </router-link>
-                                </h5>
-                                <span class="text-muted">Harley Fuller</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <span class="text-muted">Bike Accessories</span>
-                          </td>
-                          <td>
-                            <p class="mb-0">3470</p>
-                            <span class="text-muted">Stock</span>
-                          </td>
-                          <td>
-                            <span class="text-muted">45600 Dhs</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 mb-0">
-                              90%<i class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                            </h5>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="flex-shrink-0 me-2">
-                                <img src="@assets/images/companies/img-8.png" alt="" class="avatar-sm p-2" />
-                              </div>
-                              <div class="flex-grow-1">
-                                <h5 class="fs-14 my-1">
-                                  <router-link to="/ecommerce/seller-details" class="text-reset">Zoetic Fashion
-                                  </router-link>
-                                </h5>
-                                <span class="text-muted">James Bowen</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <span class="text-muted">Clothes</span>
-                          </td>
-                          <td>
-                            <p class="mb-0">5488</p>
-                            <span class="text-muted">Stock</span>
-                          </td>
-                          <td>
-                            <span class="text-muted">29456 Dhs</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 mb-0">
-                              40%<i class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                            </h5>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="flex-shrink-0 me-2">
-                                <img src="@assets/images/companies/img-5.png" alt="" class="avatar-sm p-2" />
-                              </div>
-                              <div class="flex-grow-1">
-                                <h5 class="fs-14 my-1">
-                                  <router-link to="/ecommerce/seller-details" class="text-reset">Meta4Systems
-                                  </router-link>
-                                </h5>
-                                <span class="text-muted">Zoe Dennis</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td>
-                            <span class="text-muted">Furniture</span>
-                          </td>
-                          <td>
-                            <p class="mb-0">4100</p>
-                            <span class="text-muted">Stock</span>
-                          </td>
-                          <td>
-                            <span class="text-muted">11260 Dhs</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 mb-0">
-                              57%<i class="ri-bar-chart-fill text-success fs-16 align-middle ms-2"></i>
-                            </h5>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <BRow class="align-items-center mt-4 pt-2 justify-content-between text-center text-sm-start">
-                    <BCol sm>
-                      <div class="text-muted">
-                        Showing <span class="fw-semibold">5</span> of
-                        <span class="fw-semibold">25</span> Results
-                      </div>
-                    </BCol>
-                    <BCol sm="auto" class="mt-3 mt-sm-0">
-                      <ul class="pagination pagination-separated pagination-sm mb-0 justify-content-center">
-                        <li class="page-item disabled">
-                          <BLink href="#" class="page-link">←</BLink>
-                        </li>
-                        <li class="page-item">
-                          <BLink href="#" class="page-link">1</BLink>
-                        </li>
-                        <li class="page-item active">
-                          <BLink href="#" class="page-link">2</BLink>
-                        </li>
-                        <li class="page-item">
-                          <BLink href="#" class="page-link">3</BLink>
-                        </li>
-                        <li class="page-item">
-                          <BLink href="#" class="page-link">→</BLink>
-                        </li>
-                      </ul>
-                    </BCol>
-                  </BRow>
-                </BCardBody>
-              </BCard>
+              <ChartCard :title="t('dashboard.charts.payment_methods')" :loading="loading" :empty="!paymentMethodsSeries.length" :empty-message="t('dashboard.empty.chart')">
+                <apexchart type="pie" height="300" :series="paymentMethodsSeries" :options="paymentMethodsOptions" />
+                <p v-if="paymentMethods.note" class="text-muted fs-12 mb-0 mt-2">{{ paymentMethods.note }}</p>
+              </ChartCard>
             </BCol>
           </BRow>
 
-          <BRow>
-            <BCol xl="4">
-              <BCard no-body class="card-height-100">
-                <BCardHeader class="align-items-center d-flex py-0">
-                  <BCardTitle class="mb-0 flex-grow-1"> Store Visits by Source </BCardTitle>
-                  <div class="flex-shrink-0">
-                    <BDropdown variant="link" class="card-header-dropdown"
-                      toggle-class="text-reset dropdown-btn arrow-none" menu-class="dropdown-menu-end"
-                      aria-haspopup="true" :offset="{ alignmentAxis: -100, crossAxis: 0, mainAxis: 0 }">
-                      <template #button-content><span class="text-muted">Report<i
-                            class="mdi mdi-chevron-down ms-1"></i></span>
-                      </template>
-                      <BDropdownItem>Download Report</BDropdownItem>
-                      <BDropdownItem>Export</BDropdownItem>
-                      <BDropdownItem>Import</BDropdownItem>
-                    </BDropdown>
-                  </div>
-                </BCardHeader>
-
-                <BCardBody>
-                  <apexchart class="apex-charts" dir="ltr" height="333" :series="series" :options="chartOptions">
-                  </apexchart>
-                </BCardBody>
-              </BCard>
+          <BRow class="mt-1">
+            <BCol xl="8">
+              <ChartCard :title="t('dashboard.charts.monthly_revenue')" :loading="loading" :empty="!monthlyRevenueSeries[0]?.data?.length" :empty-message="t('dashboard.empty.chart')">
+                <apexchart type="area" height="320" :series="monthlyRevenueSeries" :options="monthlyRevenueOptions" />
+              </ChartCard>
             </BCol>
+            <BCol xl="4">
+              <ChartCard :title="t('dashboard.charts.delivery_success_rate')" :loading="loading" :empty="successGauge.rate == null" :empty-message="t('dashboard.empty.chart')">
+                <apexchart type="radialBar" height="300" :series="successGaugeSeries" :options="successGaugeOptions" />
+                <div class="text-center text-muted fs-13">{{ deliveredFailedLabel }}</div>
+              </ChartCard>
+            </BCol>
+          </BRow>
 
+          <BRow class="mt-1">
+            <BCol xl="6">
+              <ChartCard :title="t('dashboard.charts.orders_per_seller')" :loading="loading" :empty="!sellersChartSeries[0]?.data?.length" :empty-message="t('dashboard.empty.chart')">
+                <apexchart type="bar" height="320" :series="sellersChartSeries" :options="sellersChartOptions" />
+              </ChartCard>
+            </BCol>
+            <BCol xl="6">
+              <ChartCard :title="t('dashboard.charts.delivery_agents_performance')" :loading="loading" :empty="!agentPerformance.length" :empty-message="t('dashboard.empty.chart')">
+                <apexchart type="bar" :height="Math.max(280, agentPerformance.length * 36)" :series="agentChartSeries" :options="agentChartOptions" />
+                <div v-if="agentPerformance.length" class="table-responsive mt-3">
+                  <table class="table table-sm table-borderless mb-0 fs-13">
+                    <thead>
+                      <tr class="text-muted">
+                        <th>{{ t('dashboard.tables.agent') }}</th>
+                        <th>{{ t('dashboard.tables.delivered') }}</th>
+                        <th>{{ t('dashboard.tables.success') }}</th>
+                        <th>{{ t('dashboard.tables.avg_time') }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="agent in agentPerformance" :key="agent.driver_id">
+                        <td>{{ agent.driver_name }}</td>
+                        <td>{{ agent.delivered }}</td>
+                        <td>{{ formatPercent(agent.success_rate) }}</td>
+                        <td>{{ formatHours(agent.average_delivery_time_hours) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </ChartCard>
+            </BCol>
+          </BRow>
+
+          <BRow class="mt-1">
             <BCol xl="8">
               <BCard no-body>
                 <BCardHeader class="align-items-center d-flex">
-                  <BCardTitle class="mb-0 flex-grow-1">Recent Orders</BCardTitle>
-                  <div class="flex-shrink-0">
-                    <BButton type="button" variant="soft-secondary" size="sm">
-                      <i class="ri-file-list-3-line align-middle"></i> Generate
-                      Report
-                    </BButton>
-                  </div>
+                  <BCardTitle class="mb-0 flex-grow-1">{{ t('dashboard.tables.recent_orders') }}</BCardTitle>
+                  <Link :href="route('orders.index')" class="btn btn-sm btn-soft-primary">{{ t('dashboard.view_all') }}</Link>
                 </BCardHeader>
-
                 <BCardBody>
-                  <div class="table-responsive table-card">
-                    <table class="table table-borderless table-centered align-middle table-nowrap mb-0">
-                      <thead class="text-muted table-light">
+                  <div v-if="loading" class="placeholder-glow">
+                    <span v-for="n in 5" :key="n" class="placeholder col-12 mb-2 d-block"></span>
+                  </div>
+                  <div v-else-if="!recentOrders.length" class="text-center text-muted py-4">
+                    <i class="ri-inbox-line fs-1 d-block mb-2 opacity-50"></i>
+                    {{ t('dashboard.empty.orders') }}
+                  </div>
+                  <div v-else class="table-responsive table-card">
+                    <table class="table table-hover table-centered align-middle mb-0">
+                      <thead class="table-light">
                         <tr>
-                          <th scope="col">Order ID</th>
-                          <th scope="col">Customer</th>
-                          <th scope="col">Product</th>
-                          <th scope="col">Amount</th>
-                          <th scope="col">Vendor</th>
-                          <th scope="col">Status</th>
-                          <th scope="col">Rating</th>
+                          <th>{{ t('dashboard.tables.tracking') }}</th>
+                          <th>{{ t('dashboard.tables.customer') }}</th>
+                          <th>{{ t('dashboard.tables.seller') }}</th>
+                          <th>{{ t('dashboard.tables.pickup') }}</th>
+                          <th>{{ t('dashboard.tables.destination') }}</th>
+                          <th>{{ t('dashboard.tables.status') }}</th>
+                          <th>{{ t('dashboard.tables.payment') }}</th>
+                          <th>{{ t('dashboard.tables.amount') }}</th>
+                          <th>{{ t('dashboard.tables.agent') }}</th>
+                          <th>{{ t('dashboard.tables.created') }}</th>
+                          <th></th>
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
+                        <tr v-for="order in recentOrders" :key="order.id">
                           <td>
-                            <router-link to="/ecommerce/order-details" class="fw-medium text-reset">#VZ2112
-                            </router-link>
+                            <Link :href="route('orders.show', order.id)" class="fw-medium">{{ order.tracking_number }}</Link>
                           </td>
                           <td>
-                            <div class="d-flex align-items-center">
-                              <div class="flex-shrink-0 me-2">
-                                <img src="@assets/images/users/avatar-1.jpg" alt="" class="avatar-xs rounded-circle" />
-                              </div>
-                              <div class="flex-grow-1">Alex Smith</div>
-                            </div>
+                            <div>{{ order.customer_name }}</div>
+                            <small class="text-muted">{{ order.customer_phone }}</small>
                           </td>
-                          <td>Clothes</td>
+                          <td>{{ order.seller_name ?? '—' }}</td>
+                          <td>{{ order.pickup_city ?? '—' }}</td>
+                          <td>{{ order.destination_city ?? '—' }}</td>
                           <td>
-                            <span class="text-primary">109.00 Dhs</span>
+                            <span :class="statusBadgeClass(order.status_color)" class="badge">{{ order.status_label }}</span>
                           </td>
-                          <td>Zoetic Fashion</td>
+                          <td>{{ order.payment_method_label }}</td>
+                          <td>{{ formatMoney(order.amount) }} MAD</td>
+                          <td>{{ order.delivery_agent ?? '—' }}</td>
+                          <td><small>{{ formatDate(order.created_at) }}</small></td>
                           <td>
-                            <span class="status-badge status-badge-delivered">Delivered</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 fw-medium mb-0">
-                              5.0<span class="text-muted fs-11 ms-1">(61 votes)</span>
-                            </h5>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <router-link to="/ecommerce/order-details" class="fw-medium text-reset">#VZ2111
-                            </router-link>
-                          </td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="flex-shrink-0 me-2">
-                                <img src="@assets/images/users/avatar-2.jpg" alt="" class="avatar-xs rounded-circle" />
-                              </div>
-                              <div class="flex-grow-1">Jansh Brown</div>
-                            </div>
-                          </td>
-                          <td>Kitchen Storage</td>
-                          <td>
-                            <span class="text-primary">149.00 Dhs</span>
-                          </td>
-                          <td>Micro Design</td>
-                          <td>
-                            <span class="status-badge status-badge-pending">Pending</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 fw-medium mb-0">
-                              4.5<span class="text-muted fs-11 ms-1">(61 votes)</span>
-                            </h5>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <router-link to="/ecommerce/order-details" class="fw-medium text-reset">#VZ2109
-                            </router-link>
-                          </td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="flex-shrink-0 me-2">
-                                <img src="@assets/images/users/avatar-3.jpg" alt="" class="avatar-xs rounded-circle" />
-                              </div>
-                              <div class="flex-grow-1">Ayaan Bowen</div>
-                            </div>
-                          </td>
-                          <td>Bike Accessories</td>
-                          <td>
-                            <span class="text-primary">215.00 Dhs</span>
-                          </td>
-                          <td>Nesta Technologies</td>
-                          <td>
-                            <span class="status-badge status-badge-in-transit">In Transit</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 fw-medium mb-0">
-                              4.9<span class="text-muted fs-11 ms-1">(89 votes)</span>
-                            </h5>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <router-link to="/ecommerce/order-details" class="fw-medium text-reset">#VZ2108
-                            </router-link>
-                          </td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="flex-shrink-0 me-2">
-                                <img src="@assets/images/users/avatar-4.jpg" alt="" class="avatar-xs rounded-circle" />
-                              </div>
-                              <div class="flex-grow-1">Prezy Mark</div>
-                            </div>
-                          </td>
-                          <td>Furniture</td>
-                          <td>
-                            <span class="text-primary">199.00 Dhs</span>
-                          </td>
-                          <td>Syntyce Solutions</td>
-                          <td>
-                            <span class="status-badge status-badge-cancelled">Cancelled</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 fw-medium mb-0">
-                              4.3<span class="text-muted fs-11 ms-1">(47 votes)</span>
-                            </h5>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <router-link to="/ecommerce/order-details" class="fw-medium text-reset">#VZ2107
-                            </router-link>
-                          </td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <div class="flex-shrink-0 me-2">
-                                <img src="@assets/images/users/avatar-6.jpg" alt="" class="avatar-xs rounded-circle" />
-                              </div>
-                              <div class="flex-grow-1">Vihan Hudda</div>
-                            </div>
-                          </td>
-                          <td>Bags and Wallets</td>
-                          <td>
-                            <span class="text-primary">330.00 Dhs</span>
-                          </td>
-                          <td>iTest Factory</td>
-                          <td>
-                            <span class="status-badge status-badge-delivered">Delivered</span>
-                          </td>
-                          <td>
-                            <h5 class="fs-14 fw-medium mb-0">
-                              4.7<span class="text-muted fs-11 ms-1">(161 votes)</span>
-                            </h5>
+                            <Link :href="route('orders.show', order.id)" class="btn btn-sm btn-soft-primary">{{ t('dashboard.view') }}</Link>
                           </td>
                         </tr>
                       </tbody>
@@ -990,503 +488,107 @@ export default {
                   </div>
                 </BCardBody>
               </BCard>
+            </BCol>
+
+            <BCol xl="4">
+              <BCard no-body class="h-100">
+                <BCardHeader>
+                  <BCardTitle class="mb-0">{{ t('dashboard.tables.recent_activity') }}</BCardTitle>
+                </BCardHeader>
+                <BCardBody class="p-0">
+                  <div v-if="loading" class="p-4 placeholder-glow">
+                    <span v-for="n in 6" :key="n" class="placeholder col-12 mb-3 d-block"></span>
+                  </div>
+                  <div v-else-if="!recentActivities.length" class="text-center text-muted py-5">
+                    <i class="ri-history-line fs-1 d-block mb-2 opacity-50"></i>
+                    {{ t('dashboard.empty.activity') }}
+                  </div>
+                  <SimpleBar v-else style="max-height: 520px">
+                    <div class="p-4">
+                      <div v-for="activity in recentActivities" :key="activity.id" class="d-flex mb-4">
+                        <div class="flex-shrink-0">
+                          <span class="avatar-xs rounded-circle d-flex align-items-center justify-content-center bg-light">
+                            <i :class="activity.status_icon"></i>
+                          </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                          <h6 class="mb-1 fs-14">
+                            <span :class="statusBadgeClass(activity.status_color)" class="badge me-1">{{ activity.status_label }}</span>
+                            <Link v-if="activity.order_id" :href="route('orders.show', activity.order_id)" class="text-muted">
+                              {{ activity.tracking_number }}
+                            </Link>
+                          </h6>
+                          <p class="text-muted mb-0 fs-13">{{ activity.actor_name }}</p>
+                          <small class="text-muted">{{ activity.created_at_human }}</small>
+                        </div>
+                      </div>
+                    </div>
+                  </SimpleBar>
+                </BCardBody>
+              </BCard>
+            </BCol>
+          </BRow>
+
+          <BRow class="mt-1 mb-4">
+            <BCol xl="6">
+              <BCard no-body>
+                <BCardHeader>
+                  <BCardTitle class="mb-0">{{ t('dashboard.tables.top_customers') }}</BCardTitle>
+                </BCardHeader>
+                <BCardBody>
+                  <div v-if="loading" class="placeholder-glow">
+                    <span v-for="n in 5" :key="n" class="placeholder col-12 mb-2 d-block"></span>
+                  </div>
+                  <div v-else-if="!topCustomers.length" class="text-center text-muted py-4">
+                    {{ t('dashboard.empty.customers') }}
+                  </div>
+                  <div v-else class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                      <thead class="table-light">
+                        <tr>
+                          <th>{{ t('dashboard.tables.customer') }}</th>
+                          <th>{{ t('dashboard.tables.phone') }}</th>
+                          <th>{{ t('dashboard.tables.orders') }}</th>
+                          <th>{{ t('dashboard.tables.total_cod') }}</th>
+                          <th>{{ t('dashboard.tables.delivered') }}</th>
+                          <th>{{ t('dashboard.tables.pending') }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(customer, idx) in topCustomers" :key="customer.phone + idx">
+                          <td>{{ customer.customer_name || '—' }}</td>
+                          <td>{{ customer.phone }}</td>
+                          <td>{{ customer.orders }}</td>
+                          <td>{{ formatMoney(customer.total_cod) }} MAD</td>
+                          <td>{{ customer.delivered }}</td>
+                          <td>{{ customer.pending }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </BCardBody>
+              </BCard>
+            </BCol>
+
+            <BCol xl="6">
+              <ChartCard :title="t('dashboard.charts.orders_by_status_summary')" :loading="loading" :empty="!ordersByStatusSeries.length" :empty-message="t('dashboard.empty.chart')">
+                <div class="row g-3">
+                  <div
+                    v-for="(label, idx) in charts.ordersByStatus?.labels ?? []"
+                    :key="label"
+                    class="col-6 col-md-4"
+                  >
+                    <div class="border rounded p-3 text-center">
+                      <h5 class="mb-1">{{ charts.ordersByStatus?.series?.[idx] ?? 0 }}</h5>
+                      <p class="text-muted mb-0 fs-13">{{ label }}</p>
+                    </div>
+                  </div>
+                </div>
+              </ChartCard>
             </BCol>
           </BRow>
         </div>
       </BCol>
-
-      <div class="col-auto layout-rightside-col d-none">
-        <div class="overlay" @click="hiderightcolumn"></div>
-        <div class="layout-rightside">
-          <BCard no-body class="h-100 rounded-0">
-            <BCardBody class="p-0">
-              <div class="p-3">
-                <h6 class="text-muted mb-0 text-uppercase fw-semibold">
-                  Recent Activity
-                </h6>
-              </div>
-              <SimpleBar data-simplebar style="max-height: 410px" class="p-3 pt-0">
-                <div class="acitivity-timeline acitivity-main">
-                  <div class="acitivity-item d-flex">
-                    <div class="flex-shrink-0 avatar-xs acitivity-avatar">
-                      <div class="avatar-title bg-success-subtle text-success rounded-circle">
-                        <i class="ri-shopping-cart-2-line"></i>
-                      </div>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                      <h6 class="mb-1 lh-base">Purchase by James Price</h6>
-                      <p class="text-muted mb-1">
-                        Product noise evolve smartwatch
-                      </p>
-                      <small class="mb-0 text-muted">02:14 PM Today</small>
-                    </div>
-                  </div>
-                  <div class="acitivity-item py-3 d-flex">
-                    <div class="flex-shrink-0 avatar-xs acitivity-avatar">
-                      <div class="avatar-title bg-danger-subtle text-danger rounded-circle">
-                        <i class="ri-stack-fill"></i>
-                      </div>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                      <h6 class="mb-1 lh-base">
-                        Added new
-                        <span class="fw-semibold">style collection</span>
-                      </h6>
-                      <p class="text-muted mb-1">By Nesta Technologies</p>
-                      <div class="d-inline-flex gap-2 border border-dashed p-2 mb-2">
-                        <router-link to="/ecommerce/product-details" class="bg-light rounded p-1">
-                          <img src="@assets/images/products/img-8.png" alt="" class="img-fluid d-block" />
-                        </router-link>
-                        <router-link to="/ecommerce/product-details" class="bg-light rounded p-1">
-                          <img src="@assets/images/products/img-2.png" alt="" class="img-fluid d-block" />
-                        </router-link>
-                        <router-link to="/ecommerce/product-details" class="bg-light rounded p-1">
-                          <img src="@assets/images/products/img-10.png" alt="" class="img-fluid d-block" />
-                        </router-link>
-                      </div>
-                      <p class="mb-0 text-muted">
-                        <small>9:47 PM Yesterday</small>
-                      </p>
-                    </div>
-                  </div>
-                  <div class="acitivity-item py-3 d-flex">
-                    <div class="flex-shrink-0">
-                      <img src="@assets/images/users/avatar-2.jpg" alt=""
-                        class="avatar-xs rounded-circle acitivity-avatar" />
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                      <h6 class="mb-1 lh-base">
-                        Natasha Carey have liked the products
-                      </h6>
-                      <p class="text-muted mb-1">
-                        Allow users to like products in your WooCommerce store.
-                      </p>
-                      <small class="mb-0 text-muted">25 Dec, 2021</small>
-                    </div>
-                  </div>
-                  <div class="acitivity-item py-3 d-flex">
-                    <div class="flex-shrink-0">
-                      <div class="avatar-xs acitivity-avatar">
-                        <div class="avatar-title rounded-circle bg-secondary">
-                          <i class="mdi mdi-sale fs-14"></i>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                      <h6 class="mb-1 lh-base">
-                        Today offers by
-                        <router-link to="/ecommerce/seller-details" class="link-secondary">Digitech Galaxy</router-link>
-                      </h6>
-                      <p class="text-muted mb-2">
-                        Offer is valid on orders of Rs.500 Or above for selected
-                        products only.
-                      </p>
-                      <small class="mb-0 text-muted">12 Dec, 2021</small>
-                    </div>
-                  </div>
-                  <div class="acitivity-item py-3 d-flex">
-                    <div class="flex-shrink-0">
-                      <div class="avatar-xs acitivity-avatar">
-                        <div class="avatar-title rounded-circle bg-danger-subtle text-danger">
-                          <i class="ri-bookmark-fill"></i>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                      <h6 class="mb-1 lh-base">Favorite Product</h6>
-                      <p class="text-muted mb-2">
-                        Esther James have Favorite product.
-                      </p>
-                      <small class="mb-0 text-muted">25 Nov, 2021</small>
-                    </div>
-                  </div>
-                  <div class="acitivity-item py-3 d-flex">
-                    <div class="flex-shrink-0">
-                      <div class="avatar-xs acitivity-avatar">
-                        <div class="avatar-title rounded-circle bg-secondary">
-                          <i class="mdi mdi-sale fs-14"></i>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                      <h6 class="mb-1 lh-base">
-                        Flash sale starting
-                        <span class="text-primary">Tomorrow.</span>
-                      </h6>
-                      <p class="text-muted mb-0">
-                        Flash sale by
-                        <BLink href="javascript:void(0);" class="link-secondary fw-medium">Zoetic Fashion</BLink>
-                      </p>
-                      <small class="mb-0 text-muted">22 Oct, 2021</small>
-                    </div>
-                  </div>
-                  <div class="acitivity-item py-3 d-flex">
-                    <div class="flex-shrink-0">
-                      <div class="avatar-xs acitivity-avatar">
-                        <div class="avatar-title rounded-circle bg-info-subtle text-info">
-                          <i class="ri-line-chart-line"></i>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                      <h6 class="mb-1 lh-base">Monthly sales report</h6>
-                      <p class="text-muted mb-2">
-                        <span class="text-danger">2 days left</span>
-                        notification to submit the monthly sales report.
-                        <BLink href="javascript:void(0);" class="link-warning text-decoration-underline">Reports
-                          Builder</BLink>
-                      </p>
-                      <small class="mb-0 text-muted">15 Oct</small>
-                    </div>
-                  </div>
-                  <div class="acitivity-item d-flex">
-                    <div class="flex-shrink-0">
-                      <img src="@assets/images/users/avatar-3.jpg" alt=""
-                        class="avatar-xs rounded-circle acitivity-avatar" />
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                      <h6 class="mb-1 lh-base">Frank Hook Commented</h6>
-                      <p class="text-muted mb-2 fst-italic">
-                        " A product that has reviews is more likable to be sold
-                        than a product. "
-                      </p>
-                      <small class="mb-0 text-muted">26 Aug, 2021</small>
-                    </div>
-                  </div>
-                </div>
-              </SimpleBar>
-
-              <div class="p-3 mt-2">
-                <h6 class="text-muted mb-3 text-uppercase fw-semibold">
-                  Top 10 Categories
-                </h6>
-
-                <ol class="ps-3 text-muted">
-                  <li class="py-1">
-                    <BLink href="#" class="text-muted">Mobile & Accessories
-                      <span class="float-end">(10,294)</span>
-                    </BLink>
-                  </li>
-                  <li class="py-1">
-                    <BLink href="#" class="text-muted">Desktop <span class="float-end">(6,256)</span></BLink>
-                  </li>
-                  <li class="py-1">
-                    <BLink href="#" class="text-muted">Electronics <span class="float-end">(3,479)</span></BLink>
-                  </li>
-                  <li class="py-1">
-                    <BLink href="#" class="text-muted">Home & Furniture
-                      <span class="float-end">(2,275)</span>
-                    </BLink>
-                  </li>
-                  <li class="py-1">
-                    <BLink href="#" class="text-muted">Grocery <span class="float-end">(1,950)</span></BLink>
-                  </li>
-                  <li class="py-1">
-                    <BLink href="#" class="text-muted">Fashion <span class="float-end">(1,582)</span></BLink>
-                  </li>
-                  <li class="py-1">
-                    <BLink href="#" class="text-muted">Appliances <span class="float-end">(1,037)</span></BLink>
-                  </li>
-                  <li class="py-1">
-                    <BLink href="#" class="text-muted">Beauty, Toys & More
-                      <span class="float-end">(924)</span>
-                    </BLink>
-                  </li>
-                  <li class="py-1">
-                    <BLink href="#" class="text-muted">Food & Drinks <span class="float-end">(701)</span></BLink>
-                  </li>
-                  <li class="py-1">
-                    <BLink href="#" class="text-muted">Toys & Games <span class="float-end">(239)</span></BLink>
-                  </li>
-                </ol>
-                <div class="mt-3 text-center">
-                  <BLink href="javascript:void(0);" class="text-muted text-decoration-underline">View all Categories
-                  </BLink>
-                </div>
-              </div>
-              <div class="p-3">
-                <h6 class="text-muted mb-3 text-uppercase fw-semibold">
-                  Products Reviews
-                </h6>
-                <div>
-                  <swiper class="vertical-swiper" :slidesPerView="2" :spaceBetween="10" :mousewheel="true" :loop="true"
-                    :direction="'vertical'" :modules="[Autoplay, Mousewheel]"
-                    :autoplay="{ delay: 2500, disableOnInteraction: false }" style="height: 250px">
-                    <swiper-slide>
-                      <div class="swiper-slide">
-                        <BCard no-body class="border border-dashed shadow-none">
-                          <BCardBody>
-                            <div class="d-flex">
-                              <div class="flex-shrink-0 avatar-sm">
-                                <div class="avatar-title bg-light rounded">
-                                  <img src="@assets/images/companies/img-1.png" alt="" height="30" />
-                                </div>
-                              </div>
-                              <div class="flex-grow-1 ms-3">
-                                <div>
-                                  <p class="text-muted mb-1 fst-italic text-truncate-two-lines">
-                                    " Great product and looks great, lots of
-                                    features. "
-                                  </p>
-                                  <div class="fs-11 align-middle text-warning">
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-fill"></i>
-                                  </div>
-                                </div>
-                                <div class="text-end mb-0 text-muted">
-                                  - by
-                                  <cite title="Source Title">Force Medicines</cite>
-                                </div>
-                              </div>
-                            </div>
-                          </BCardBody>
-                        </BCard>
-                      </div>
-                    </swiper-slide>
-                    <swiper-slide>
-                      <div class="swiper-slide">
-                        <BCard no-body class="border border-dashed shadow-none">
-                          <BCardBody>
-                            <div class="d-flex">
-                              <div class="flex-shrink-0">
-                                <img src="@assets/images/users/avatar-3.jpg" alt="" class="avatar-sm rounded" />
-                              </div>
-                              <div class="flex-grow-1 ms-3">
-                                <div>
-                                  <p class="text-muted mb-1 fst-italic text-truncate-two-lines">
-                                    " Amazing template, very easy to understand
-                                    and manipulate. "
-                                  </p>
-                                  <div class="fs-11 align-middle text-warning">
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-half-fill"></i>
-                                  </div>
-                                </div>
-                                <div class="text-end mb-0 text-muted">
-                                  - by
-                                  <cite title="Source Title">Henry Baird</cite>
-                                </div>
-                              </div>
-                            </div>
-                          </BCardBody>
-                        </BCard>
-                      </div>
-                    </swiper-slide>
-                    <swiper-slide>
-                      <div class="swiper-slide">
-                        <BCard no-body class="border border-dashed shadow-none">
-                          <BCardBody>
-                            <div class="d-flex">
-                              <div class="flex-shrink-0 avatar-sm">
-                                <div class="avatar-title bg-light rounded">
-                                  <img src="@assets/images/companies/img-8.png" alt="" height="30" />
-                                </div>
-                              </div>
-                              <div class="flex-grow-1 ms-3">
-                                <div>
-                                  <p class="text-muted mb-1 fst-italic text-truncate-two-lines">
-                                    "Very beautiful product and Very helpful
-                                    customer service."
-                                  </p>
-                                  <div class="fs-11 align-middle text-warning">
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-line"></i>
-                                    <i class="ri-star-line"></i>
-                                  </div>
-                                </div>
-                                <div class="text-end mb-0 text-muted">
-                                  - by
-                                  <cite title="Source Title">Zoetic Fashion</cite>
-                                </div>
-                              </div>
-                            </div>
-                          </BCardBody>
-                        </BCard>
-                      </div>
-                    </swiper-slide>
-                    <swiper-slide>
-                      <div class="swiper-slide">
-                        <BCard no-body class="border border-dashed shadow-none">
-                          <BCardBody>
-                            <div class="d-flex">
-                              <div class="flex-shrink-0">
-                                <img src="@assets/images/users/avatar-2.jpg" alt="" class="avatar-sm rounded" />
-                              </div>
-                              <div class="flex-grow-1 ms-3">
-                                <div>
-                                  <p class="text-muted mb-1 fst-italic text-truncate-two-lines">
-                                    " The product is very beautiful. I like it.
-                                    "
-                                  </p>
-                                  <div class="fs-11 align-middle text-warning">
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-fill"></i>
-                                    <i class="ri-star-half-fill"></i>
-                                    <i class="ri-star-line"></i>
-                                  </div>
-                                </div>
-                                <div class="text-end mb-0 text-muted">
-                                  - by
-                                  <cite title="Source Title">Nancy Martino</cite>
-                                </div>
-                              </div>
-                            </div>
-                          </BCardBody>
-                        </BCard>
-                      </div>
-                    </swiper-slide>
-                  </swiper>
-                </div>
-              </div>
-
-              <div class="p-3">
-                <h6 class="text-muted mb-3 text-uppercase fw-semibold">
-                  Customer Reviews
-                </h6>
-                <div class="bg-light px-3 py-2 rounded-2 mb-2">
-                  <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                      <div class="fs-16 align-middle text-warning">
-                        <i class="ri-star-fill"></i>
-                        <i class="ri-star-fill"></i>
-                        <i class="ri-star-fill"></i>
-                        <i class="ri-star-fill"></i>
-                        <i class="ri-star-half-fill"></i>
-                      </div>
-                    </div>
-                    <div class="flex-shrink-0">
-                      <h6 class="mb-0">4.5 out of 5</h6>
-                    </div>
-                  </div>
-                </div>
-                <div class="text-center">
-                  <div class="text-muted">
-                    Total <span class="fw-medium">5.50k</span> reviews
-                  </div>
-                </div>
-
-                <div class="mt-3">
-                  <BRow class="align-items-center g-2">
-                    <div class="col-auto">
-                      <div class="p-1">
-                        <h6 class="mb-0">5 star</h6>
-                      </div>
-                    </div>
-                    <BCol>
-                      <div class="p-1">
-                        <BProgress variant="success" class="animated-progess progress-sm" :value="50.16" />
-                      </div>
-                    </BCol>
-                    <div class="col-auto">
-                      <div class="p-1">
-                        <h6 class="mb-0 text-muted">2758</h6>
-                      </div>
-                    </div>
-                  </BRow>
-
-                  <BRow class="align-items-center g-2">
-                    <div class="col-auto">
-                      <div class="p-1">
-                        <h6 class="mb-0">4 star</h6>
-                      </div>
-                    </div>
-                    <BCol>
-                      <div class="p-1">
-                        <BProgress variant="success" class="animated-progess progress-sm" :value="29.32" />
-                      </div>
-                    </BCol>
-                    <div class="col-auto">
-                      <div class="p-1">
-                        <h6 class="mb-0 text-muted">1063</h6>
-                      </div>
-                    </div>
-                  </BRow>
-
-                  <BRow class="align-items-center g-2">
-                    <div class="col-auto">
-                      <div class="p-1">
-                        <h6 class="mb-0">3 star</h6>
-                      </div>
-                    </div>
-                    <BCol>
-                      <div class="p-1">
-                        <BProgress variant="warning" class="animated-progess progress-sm" :value="18.12" />
-                      </div>
-                    </BCol>
-                    <div class="col-auto">
-                      <div class="p-1">
-                        <h6 class="mb-0 text-muted">997</h6>
-                      </div>
-                    </div>
-                  </BRow>
-
-                  <BRow class="align-items-center g-2">
-                    <div class="col-auto">
-                      <div class="p-1">
-                        <h6 class="mb-0">2 star</h6>
-                      </div>
-                    </div>
-                    <BCol>
-                      <div class="p-1">
-                        <BProgress variant="success" class="animated-progess progress-sm" :value="4.98" />
-                      </div>
-                    </BCol>
-
-                    <div class="col-auto">
-                      <div class="p-1">
-                        <h6 class="mb-0 text-muted">227</h6>
-                      </div>
-                    </div>
-                  </BRow>
-
-                  <BRow class="align-items-center g-2">
-                    <div class="col-auto">
-                      <div class="p-1">
-                        <h6 class="mb-0">1 star</h6>
-                      </div>
-                    </div>
-                    <BCol>
-                      <div class="p-1">
-                        <BProgress variant="danger" class="animated-progess progress-sm" :value="7.42" />
-                      </div>
-                    </BCol>
-                    <div class="col-auto">
-                      <div class="p-1">
-                        <h6 class="mb-0 text-muted">408</h6>
-                      </div>
-                    </div>
-                  </BRow>
-                </div>
-              </div>
-
-              <BCard no-body class="sidebar-alert bg-light border-0 text-center mx-4 mb-0 mt-3">
-                <BCardBody>
-                  <img src="@assets/images/giftbox.png" alt="" />
-                  <div class="mt-4">
-                    <h5>Invite New Seller</h5>
-                    <p class="text-muted lh-base">
-                      Refer a new seller to us and earn 100 Dhs per refer.
-                    </p>
-                    <BButton type="button" variant="primary" pill class="btn-label">
-                      <i class="ri-mail-fill label-icon align-middle rounded-pill fs-16 me-2"></i>
-                      Invite Now
-                    </BButton>
-                  </div>
-                </BCardBody>
-              </BCard>
-            </BCardBody>
-          </BCard>
-        </div>
-      </div>
     </BRow>
   </Layout>
 </template>

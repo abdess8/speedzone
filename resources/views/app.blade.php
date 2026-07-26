@@ -20,9 +20,9 @@
     <meta name="twitter:card" content="summary_large_image">
 
     <!-- App favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ Vite::asset('resources/images/favicon-32x32.png') }}">
-    <link rel="shortcut icon" href="{{ Vite::asset('resources/images/favicon.ico') }}">
-    <link rel="apple-touch-icon" href="{{ Vite::asset('resources/images/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
 
     <!-- Scripts -->
     @routes

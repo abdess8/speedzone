@@ -61,6 +61,19 @@ return [
         'print_ticket' => 'Imprimer le ticket',
         'download_pdf' => 'Télécharger PDF',
     ],
+    'driver' => [
+        'call' => 'Appeler',
+        'navigate' => 'Itinéraire',
+        'update_status' => 'Changer le statut',
+        'status_title' => 'Nouveau statut',
+        'reason_title' => 'Motif de non-livraison',
+        'note_label' => 'Commentaire (optionnel)',
+        'note_placeholder' => 'Précisez si nécessaire…',
+        'confirm' => 'Confirmer',
+    ],
+    'failure' => [
+        'reason_required' => 'Veuillez sélectionner un motif de non-livraison.',
+    ],
     'show' => [
         'general' => 'Informations générales',
         'pickup_request' => 'Demande de ramassage',

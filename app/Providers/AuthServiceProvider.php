@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\OrderReturn;
 use App\Models\Partner;
 use App\Models\PickupRequest;
+use App\Models\Role;
 use App\Models\Sector;
 use App\Models\SupportTicket;
 use App\Models\Transfer;
@@ -21,11 +22,13 @@ use App\Policies\OrderReturnPolicy;
 use App\Policies\PartnerDeliveryPolicy;
 use App\Policies\PartnerPolicy;
 use App\Policies\PickupRequestPolicy;
+use App\Policies\RolePolicy;
 use App\Policies\SectorPolicy;
 use App\Policies\SupportTicketPolicy;
 use App\Policies\TransferPolicy;
-use Illuminate\Support\Facades\Gate;
+use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -45,6 +48,8 @@ class AuthServiceProvider extends ServiceProvider
         DriverInvoice::class => DriverInvoicePolicy::class,
         SupportTicket::class => SupportTicketPolicy::class,
         Partner::class => PartnerPolicy::class,
+        User::class => UserPolicy::class,
+        Role::class => RolePolicy::class,
     ];
 
     /**

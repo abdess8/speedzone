@@ -5,6 +5,8 @@ import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
+import DriverOrderCard from "./Partials/DriverOrderCard.vue";
+import DriverStatusSheet from "./Partials/DriverStatusSheet.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -14,6 +16,7 @@ const props = defineProps({
   filters: { type: Object, default: () => ({}) },
   filterOptions: { type: Object, default: () => ({}) },
   can: { type: Object, default: () => ({}) },
+  workflow: { type: Object, default: () => ({}) },
 });
 
 const filters = reactive({
@@ -129,6 +132,49 @@ const applyBulkStatus = () => {
       onSuccess: () => {
         selected.value = [];
         bulkStatus.value = "";
+      },
+    }
+  );
+};
+
+/*
+ * Driver quick-action flow.
+ *
+ * The transition graph is shipped once per page keyed by source status, so the
+ * options for a row are a lookup rather than a request.
+ */
+const canUpdateStatus = computed(() => props.workflow.can_update_status === true);
+const isDriver = computed(() => props.workflow.is_driver === true);
+const failureReasons = computed(() => props.workflow.failure_reasons ?? []);
+
+const transitionsFor = (order) => props.workflow.transitions?.[order.status] ?? [];
+
+const sheetOrder = ref(null);
+const sheetProcessing = ref(false);
+const sheetTransitions = computed(() =>
+  sheetOrder.value ? transitionsFor(sheetOrder.value) : []
+);
+
+const openStatusSheet = (order) => {
+  sheetOrder.value = order;
+};
+
+const closeStatusSheet = () => {
+  if (sheetProcessing.value) return;
+  sheetOrder.value = null;
+};
+
+const submitStatusChange = ({ order, to_status, failure_reason, failure_note }) => {
+  sheetProcessing.value = true;
+
+  router.post(
+    route("orders.bulk-status"),
+    { ids: [order.id], to_status, failure_reason, failure_note },
+    {
+      preserveScroll: true,
+      onFinish: () => {
+        sheetProcessing.value = false;
+        sheetOrder.value = null;
       },
     }
   );
@@ -275,9 +321,24 @@ onMounted(() => {
         </div>
       </BCardBody>
 
-      <!-- Table -->
+      <!-- Table, plus the driver's card list which replaces it on small screens -->
       <BCardBody>
-        <div class="table-responsive table-card">
+        <!-- Driver mobile view: cards instead of a table, sheet instead of a modal -->
+        <div v-if="isDriver" class="d-lg-none">
+          <DriverOrderCard
+            v-for="order in rows"
+            :key="order.id"
+            :order="order"
+            :can-update-status="canUpdateStatus"
+            :transitions="transitionsFor(order)"
+            @change-status="openStatusSheet"
+          />
+          <p v-if="rows.length === 0" class="text-center text-muted py-4 mb-0">
+            {{ $t('orders.empty') }}
+          </p>
+        </div>
+
+        <div class="table-responsive table-card" :class="{ 'd-none d-lg-block': isDriver }">
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
               <tr>
@@ -391,5 +452,15 @@ onMounted(() => {
         </BRow>
       </BCardBody>
     </BCard>
+
+    <DriverStatusSheet
+      :show="sheetOrder !== null"
+      :order="sheetOrder"
+      :transitions="sheetTransitions"
+      :failure-reasons="failureReasons"
+      :processing="sheetProcessing"
+      @close="closeStatusSheet"
+      @submit="submitStatusChange"
+    />
   </Layout>
 </template>

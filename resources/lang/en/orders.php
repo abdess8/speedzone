@@ -61,6 +61,19 @@ return [
         'print_ticket' => 'Print Ticket',
         'download_pdf' => 'Download PDF',
     ],
+    'driver' => [
+        'call' => 'Call',
+        'navigate' => 'Directions',
+        'update_status' => 'Change status',
+        'status_title' => 'New status',
+        'reason_title' => 'Non-delivery reason',
+        'note_label' => 'Comment (optional)',
+        'note_placeholder' => 'Add details if needed…',
+        'confirm' => 'Confirm',
+    ],
+    'failure' => [
+        'reason_required' => 'Please select a non-delivery reason.',
+    ],
     'show' => [
         'general' => 'General Information',
         'pickup_request' => 'Pickup Request',

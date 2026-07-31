@@ -1,20 +1,34 @@
 <script>
 import { Link } from '@inertiajs/vue3';
+import { resolveMenuItems } from '@/navigation/menuItems';
 
 export default {
   components: { Link },
   computed: {
-    auth() {
+    /**
+     * Permission context handed to the menu definition. Kept as plain values so
+     * `menuItems.js` stays free of Vue reactivity concerns and is unit testable.
+     */
+    permissionContext() {
+      const permissions = this.$page.props.permissions ?? [];
+      const isSuperAdmin = this.$page.props.isSuperAdmin === true;
+      const user = this.$page.props.auth?.user ?? null;
+      const roles = user?.roles ?? [];
+
+      const can = (permission) => isSuperAdmin || permissions.includes(permission);
+
       return {
-        permissions: this.$page.props.permissions ?? [],
-        isSuperAdmin: this.$page.props.isSuperAdmin ?? false,
+        can,
+        canAny: (candidates) => [candidates].flat().filter(Boolean).some(can),
+        isSuperAdmin,
+        user,
+        roles,
+        isDriver: roles.includes('Driver'),
+        isSeller: user?.is_seller === true || roles.includes('Seller'),
       };
     },
-    showDeliveryZones() {
-      return this.canViewSectors() || this.canViewDriverZones();
-    },
-    showSettings() {
-      return true;
+    visibleItems() {
+      return resolveMenuItems(this.permissionContext);
     },
   },
   mounted() {
@@ -23,107 +37,13 @@ export default {
     this.bindCollapseHandlers();
   },
   methods: {
-    hasPermission(permission) {
-      if (this.auth.isSuperAdmin) {
-        return true;
-      }
-
-      return (this.auth.permissions ?? []).includes(permission);
-    },
-    canViewOrders() {
-      return (
-        this.hasPermission('orders.read.all')
-        || this.hasPermission('orders.read.own')
-        || this.hasPermission('orders.read.assigned')
-      );
-    },
-    canViewPickups() {
-      return (
-        this.hasPermission('pickup_requests.read.all') ||
-        this.hasPermission('pickup_requests.read.own') ||
-        this.hasPermission('pickup_requests.read.assigned')
-      );
-    },
-    canViewTransfers() {
-      return this.hasPermission('transfers.read') || this.hasPermission('transfers.read.assigned');
-    },
-    isSeller() {
-      const user = this.$page.props.auth?.user;
-      if (!user) {
-        return false;
-      }
-
-      if (user.is_seller === true) {
-        return true;
-      }
-
-      return (user.roles ?? []).includes('Seller');
-    },
-    canViewReturns() {
-      const user = this.$page.props.auth?.user;
-      if (user?.can_view_returns === true) {
-        return true;
-      }
-
-      return (
-        this.isSeller() ||
-        this.hasPermission('returns.read.all') ||
-        this.hasPermission('returns.read.own') ||
-        this.hasPermission('returns.create_request') ||
-        this.hasPermission('returns.update_status') ||
-        this.hasPermission('returns.create') ||
-        this.hasPermission('returns.manage')
-      );
-    },
-    canViewInvoices() {
-      return this.hasPermission('invoices.read.all') || this.hasPermission('invoices.read.own');
-    },
-    canManageInvoices() {
-      return this.hasPermission('invoices.read.all');
-    },
-    canManageDriverInvoices() {
-      return this.hasPermission('driver_invoices.read.all');
-    },
-    canViewDriverFinance() {
-      return this.hasPermission('driver_invoices.read.own') && !this.hasPermission('driver_invoices.read.all');
-    },
-    canViewSectors() {
-      return this.hasPermission('sectors.read');
-    },
-    canViewDriverZones() {
-      return this.hasPermission('driver_zones.read');
-    },
-    canViewUsers() {
-      return this.hasPermission('roles.read');
-    },
-    canViewRoles() {
-      return this.hasPermission('roles.read');
-    },
-    canViewCities() {
-      return this.hasPermission('cities.read');
-    },
-    canViewPartners() {
-      return this.hasPermission('partners.read');
-    },
-    canViewPartnerOrders() {
-      return (
-        this.hasPermission('partners.read') ||
-        this.hasPermission('partners.deliveries.manage') ||
-        (this.$page.props.auth?.user?.roles ?? []).includes('Driver')
-      );
-    },
-    canViewPartnerAssignments() {
-      return this.hasPermission('partners.update');
-    },
-    canViewApiIntegrations() {
-      return this.hasPermission('permissions.read') || this.hasPermission('roles.read');
-    },
-    canViewSupport() {
-      return (
-        this.hasPermission('support.read.all') ||
-        this.hasPermission('support.read.own') ||
-        this.hasPermission('support.manage')
-      );
+    /**
+     * Ziggy route names are resolved lazily: a name belonging to a route the user
+     * cannot reach still exists in the Ziggy manifest, but the entry itself is
+     * already filtered out by then.
+     */
+    itemHref(item) {
+      return item.route ? this.route(item.route) : item.href;
     },
     bindCollapseHandlers() {
       if (!document.querySelectorAll('.navbar-nav .collapse')) {
@@ -241,177 +161,37 @@ export default {
         <span>{{ $t('sidebar.menu') }}</span>
       </li>
 
-      <li class="nav-item">
-        <Link href="/" class="nav-link menu-link">
-          <i class="ri-dashboard-2-line"></i>
-          <span>{{ $t('sidebar.dashboard') }}</span>
+      <li
+        v-for="item in visibleItems"
+        :key="item.key"
+        class="nav-item"
+        :class="{ 'mt-auto': item.footer }"
+      >
+        <Link v-if="!item.children" :href="itemHref(item)" class="nav-link menu-link">
+          <i :class="item.icon"></i>
+          <span>{{ $t(item.labelKey) }}</span>
         </Link>
-      </li>
 
-      <li v-if="canViewOrders()" class="nav-item">
-        <Link href="/orders" class="nav-link menu-link">
-          <i class="ri-shopping-basket-2-line"></i>
-          <span>{{ $t('sidebar.orders') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewPartnerOrders()" class="nav-item">
-        <Link href="/partner-orders" class="nav-link menu-link">
-          <i class="ri-links-line"></i>
-          <span>{{ $t('sidebar.partner_orders') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewPickups()" class="nav-item">
-        <Link href="/pickup-requests" class="nav-link menu-link">
-          <i class="ri-truck-line"></i>
-          <span>{{ $t('sidebar.pickups') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewTransfers()" class="nav-item">
-        <Link href="/transfers" class="nav-link menu-link">
-          <i class="ri-route-line"></i>
-          <span>{{ $t('sidebar.transfers') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewReturns()" class="nav-item">
-        <Link href="/returns" class="nav-link menu-link">
-          <i class="ri-arrow-go-back-line"></i>
-          <span>{{ $t('sidebar.returns') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewInvoices()" class="nav-item">
-        <a
-          class="nav-link menu-link"
-          href="#sidebarBilling"
-          data-bs-toggle="collapse"
-          role="button"
-          aria-expanded="false"
-          aria-controls="sidebarBilling"
-        >
-          <i class="ri-bill-line"></i>
-          <span>{{ $t('sidebar.invoices') }}</span>
-        </a>
-        <div class="collapse menu-dropdown" id="sidebarBilling">
-          <ul class="nav nav-sm flex-column">
-            <li class="nav-item">
-              <Link href="/invoices" class="nav-link">{{ $t('sidebar.invoices') }}</Link>
-            </li>
-            <li class="nav-item">
-              <Link href="/invoices/pending" class="nav-link">{{ $t('sidebar.pending_billing') }}</Link>
-            </li>
-          </ul>
-        </div>
-      </li>
-
-      <li v-if="canManageDriverInvoices" class="nav-item">
-        <a
-          class="nav-link menu-link"
-          href="#sidebarDriverBilling"
-          data-bs-toggle="collapse"
-          role="button"
-          aria-expanded="false"
-          aria-controls="sidebarDriverBilling"
-        >
-          <i class="ri-e-bike-2-line"></i>
-          <span>{{ $t('sidebar.driver_billing') }}</span>
-        </a>
-        <div class="collapse menu-dropdown" id="sidebarDriverBilling">
-          <ul class="nav nav-sm flex-column">
-            <li class="nav-item">
-              <Link href="/driver-invoices" class="nav-link">{{ $t('sidebar.driver_invoices') }}</Link>
-            </li>
-            <li class="nav-item">
-              <Link href="/driver-invoices/pending" class="nav-link">{{ $t('sidebar.driver_pending_billing') }}</Link>
-            </li>
-            <li class="nav-item">
-              <Link href="/driver-invoices/payments" class="nav-link">{{ $t('sidebar.driver_payments') }}</Link>
-            </li>
-          </ul>
-        </div>
-      </li>
-
-      <li v-if="canViewDriverFinance" class="nav-item">
-        <Link href="/driver-finance" class="nav-link menu-link">
-          <i class="ri-wallet-3-line"></i>
-          <span>{{ $t('sidebar.driver_finance') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewSupport()" class="nav-item">
-        <Link href="/support-tickets" class="nav-link menu-link">
-          <i class="ri-customer-service-2-line"></i>
-          <span>{{ $t('sidebar.support') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="showDeliveryZones" class="nav-item">
-        <a
-          class="nav-link menu-link"
-          href="#sidebarZones"
-          data-bs-toggle="collapse"
-          role="button"
-          aria-expanded="false"
-          aria-controls="sidebarZones"
-        >
-          <i class="ri-map-pin-line"></i>
-          <span>{{ $t('sidebar.delivery_zones') }}</span>
-        </a>
-        <div class="collapse menu-dropdown" id="sidebarZones">
-          <ul class="nav nav-sm flex-column">
-            <li v-if="canViewSectors()" class="nav-item">
-              <Link href="/sectors" class="nav-link">{{ $t('sidebar.sectors') }}</Link>
-            </li>
-            <li v-if="canViewDriverZones()" class="nav-item">
-              <Link href="/driver-zones" class="nav-link">{{ $t('sidebar.driver_zones') }}</Link>
-            </li>
-          </ul>
-        </div>
-      </li>
-
-      <li v-if="showSettings" class="nav-item mt-auto">
-        <a
-          class="nav-link menu-link"
-          href="#sidebarSettings"
-          data-bs-toggle="collapse"
-          role="button"
-          aria-expanded="false"
-          aria-controls="sidebarSettings"
-        >
-          <i class="ri-settings-3-line"></i>
-          <span>{{ $t('sidebar.settings.title') }}</span>
-        </a>
-        <div class="collapse menu-dropdown" id="sidebarSettings">
-          <ul class="nav nav-sm flex-column">
-            <li class="nav-item">
-              <Link :href="route('profile.show')" class="nav-link">{{ $t('sidebar.settings.profile') }}</Link>
-            </li>
-            <li v-if="canViewUsers()" class="nav-item">
-              <Link href="/users" class="nav-link">{{ $t('sidebar.settings.users') }}</Link>
-            </li>
-            <li v-if="canViewUsers()" class="nav-item">
-              <Link :href="route('admin.pending-users.index')" class="nav-link">{{ $t('sidebar.settings.pending_sellers') }}</Link>
-            </li>
-            <li v-if="canViewRoles()" class="nav-item">
-              <Link href="/roles" class="nav-link">{{ $t('sidebar.settings.roles_permissions') }}</Link>
-            </li>
-            <li v-if="canViewCities()" class="nav-item">
-              <Link href="/cities" class="nav-link">{{ $t('sidebar.settings.cities') }}</Link>
-            </li>
-            <li v-if="canViewPartners()" class="nav-item">
-              <Link href="/partners" class="nav-link">{{ $t('sidebar.settings.partners') }}</Link>
-            </li>
-            <li v-if="canViewPartnerAssignments()" class="nav-item">
-              <Link :href="route('partner-assignments.index')" class="nav-link">{{ $t('sidebar.settings.partner_assignments') }}</Link>
-            </li>
-            <li v-if="canViewApiIntegrations()" class="nav-item">
-              <Link :href="route('api-integrations.index')" class="nav-link">{{ $t('sidebar.settings.api_integrations') }}</Link>
-            </li>
-          </ul>
-        </div>
+        <template v-else>
+          <a
+            class="nav-link menu-link"
+            :href="`#sidebar-${item.key}`"
+            data-bs-toggle="collapse"
+            role="button"
+            aria-expanded="false"
+            :aria-controls="`sidebar-${item.key}`"
+          >
+            <i :class="item.icon"></i>
+            <span>{{ $t(item.labelKey) }}</span>
+          </a>
+          <div class="collapse menu-dropdown" :id="`sidebar-${item.key}`">
+            <ul class="nav nav-sm flex-column">
+              <li v-for="child in item.children" :key="child.key" class="nav-item">
+                <Link :href="itemHref(child)" class="nav-link">{{ $t(child.labelKey) }}</Link>
+              </li>
+            </ul>
+          </div>
+        </template>
       </li>
     </ul>
   </BContainer>

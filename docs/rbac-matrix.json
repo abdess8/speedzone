@@ -1,0 +1,857 @@
+{
+    "roles": [
+        "Admin",
+        "Dispatcher",
+        "Driver",
+        "Seller"
+    ],
+    "scopes": {
+        "all": "RBAC only — every row of the resource.",
+        "own": "ABAC — rows created by / belonging to the actor.",
+        "assigned": "ABAC — rows assigned to the actor.",
+        "any": "Scopeless action (no row-level dimension)."
+    },
+    "resources": {
+        "cities": {
+            "create": {
+                "any": {
+                    "permission": "cities.create",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "read": {
+                "any": {
+                    "permission": "cities.read",
+                    "type": "admin",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Seller"
+                    ]
+                }
+            },
+            "update": {
+                "any": {
+                    "permission": "cities.update",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "delete": {
+                "any": {
+                    "permission": "cities.delete",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            }
+        },
+        "driver_invoices": {
+            "read": {
+                "own": {
+                    "permission": "driver_invoices.read.own",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Driver"
+                    ]
+                },
+                "all": {
+                    "permission": "driver_invoices.read.all",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "generate": {
+                "any": {
+                    "permission": "driver_invoices.generate",
+                    "type": "resource",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "pay": {
+                "any": {
+                    "permission": "driver_invoices.pay",
+                    "type": "resource",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "cancel": {
+                "any": {
+                    "permission": "driver_invoices.cancel",
+                    "type": "resource",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "delete": {
+                "any": {
+                    "permission": "driver_invoices.delete",
+                    "type": "resource",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "print": {
+                "any": {
+                    "permission": "driver_invoices.print",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver"
+                    ]
+                }
+            },
+            "assign_driver": {
+                "any": {
+                    "permission": "driver_invoices.assign_driver",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "adjust": {
+                "any": {
+                    "permission": "driver_invoices.adjust",
+                    "type": "resource",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            }
+        },
+        "driver_zones": {
+            "read": {
+                "any": {
+                    "permission": "driver_zones.read",
+                    "type": "admin",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "assign": {
+                "any": {
+                    "permission": "driver_zones.assign",
+                    "type": "admin",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "remove": {
+                "any": {
+                    "permission": "driver_zones.remove",
+                    "type": "admin",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            }
+        },
+        "invoices": {
+            "read": {
+                "own": {
+                    "permission": "invoices.read.own",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                },
+                "all": {
+                    "permission": "invoices.read.all",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "generate": {
+                "any": {
+                    "permission": "invoices.generate",
+                    "type": "resource",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "pay": {
+                "any": {
+                    "permission": "invoices.pay",
+                    "type": "resource",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "cancel": {
+                "any": {
+                    "permission": "invoices.cancel",
+                    "type": "resource",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "delete": {
+                "any": {
+                    "permission": "invoices.delete",
+                    "type": "resource",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "print": {
+                "any": {
+                    "permission": "invoices.print",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Seller"
+                    ]
+                }
+            }
+        },
+        "orders": {
+            "create": {
+                "any": {
+                    "permission": "orders.create",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
+            "read": {
+                "own": {
+                    "permission": "orders.read.own",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                },
+                "assigned": {
+                    "permission": "orders.read.assigned",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Driver"
+                    ]
+                },
+                "all": {
+                    "permission": "orders.read.all",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "update": {
+                "own": {
+                    "permission": "orders.update.own",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                },
+                "assigned": {
+                    "permission": "orders.update.assigned",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Driver"
+                    ]
+                },
+                "all": {
+                    "permission": "orders.update.all",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "delete": {
+                "own": {
+                    "permission": "orders.delete.own",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                },
+                "all": {
+                    "permission": "orders.delete.all",
+                    "type": "resource",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "export": {
+                "any": {
+                    "permission": "orders.export",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Seller"
+                    ]
+                }
+            },
+            "print": {
+                "any": {
+                    "permission": "orders.print",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver",
+                        "Seller"
+                    ]
+                }
+            },
+            "transition": {
+                "any": {
+                    "permission": "orders.transition.to_returned",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            }
+        },
+        "partners": {
+            "create": {
+                "any": {
+                    "permission": "partners.create",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "read": {
+                "any": {
+                    "permission": "partners.read",
+                    "type": "admin",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "update": {
+                "any": {
+                    "permission": "partners.update",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "delete": {
+                "any": {
+                    "permission": "partners.delete",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "sync": {
+                "any": {
+                    "permission": "partners.sync",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "deliveries.manage": {
+                "any": {
+                    "permission": "partners.deliveries.manage",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            }
+        },
+        "permissions": {
+            "create": {
+                "any": {
+                    "permission": "permissions.create",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "read": {
+                "any": {
+                    "permission": "permissions.read",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "update": {
+                "any": {
+                    "permission": "permissions.update",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "delete": {
+                "any": {
+                    "permission": "permissions.delete",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            }
+        },
+        "pickup_requests": {
+            "create": {
+                "any": {
+                    "permission": "pickup_requests.create",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
+            "read": {
+                "own": {
+                    "permission": "pickup_requests.read.own",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                },
+                "all": {
+                    "permission": "pickup_requests.read.all",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "assigned": {
+                    "permission": "pickup_requests.read.assigned",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Driver"
+                    ]
+                }
+            },
+            "assign": {
+                "any": {
+                    "permission": "pickup_requests.assign",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "change_status": {
+                "any": {
+                    "permission": "pickup_requests.change_status",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "pickup": {
+                "any": {
+                    "permission": "pickup_requests.pickup",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Driver"
+                    ]
+                }
+            }
+        },
+        "returns": {
+            "create_request": {
+                "any": {
+                    "permission": "returns.create_request",
+                    "type": "resource",
+                    "roles": [
+                        "Seller"
+                    ]
+                }
+            },
+            "read": {
+                "own": {
+                    "permission": "returns.read.own",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                },
+                "all": {
+                    "permission": "returns.read.all",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "create": {
+                "any": {
+                    "permission": "returns.create",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Driver"
+                    ]
+                }
+            },
+            "manage": {
+                "any": {
+                    "permission": "returns.manage",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "update_status": {
+                "any": {
+                    "permission": "returns.update_status",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver"
+                    ]
+                }
+            },
+            "edit_customer_data": {
+                "any": {
+                    "permission": "returns.edit_customer_data",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            }
+        },
+        "roles": {
+            "create": {
+                "any": {
+                    "permission": "roles.create",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "read": {
+                "any": {
+                    "permission": "roles.read",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "update": {
+                "any": {
+                    "permission": "roles.update",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "delete": {
+                "any": {
+                    "permission": "roles.delete",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            }
+        },
+        "sectors": {
+            "create": {
+                "any": {
+                    "permission": "sectors.create",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "read": {
+                "any": {
+                    "permission": "sectors.read",
+                    "type": "admin",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Seller"
+                    ]
+                }
+            },
+            "update": {
+                "any": {
+                    "permission": "sectors.update",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "delete": {
+                "any": {
+                    "permission": "sectors.delete",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            }
+        },
+        "support": {
+            "create": {
+                "any": {
+                    "permission": "support.create",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
+            "read": {
+                "own": {
+                    "permission": "support.read.own",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                },
+                "all": {
+                    "permission": "support.read.all",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "reply": {
+                "any": {
+                    "permission": "support.reply",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Seller"
+                    ]
+                }
+            },
+            "assign": {
+                "any": {
+                    "permission": "support.assign",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "update_status": {
+                "any": {
+                    "permission": "support.update_status",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "close": {
+                "any": {
+                    "permission": "support.close",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Seller"
+                    ]
+                }
+            },
+            "manage": {
+                "any": {
+                    "permission": "support.manage",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            }
+        },
+        "transfers": {
+            "create": {
+                "any": {
+                    "permission": "transfers.create",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "read": {
+                "any": {
+                    "permission": "transfers.read",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "assigned": {
+                    "permission": "transfers.read.assigned",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Driver"
+                    ]
+                }
+            },
+            "update": {
+                "any": {
+                    "permission": "transfers.update",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "dispatch": {
+                "any": {
+                    "permission": "transfers.dispatch",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "receive": {
+                "any": {
+                    "permission": "transfers.receive",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver"
+                    ]
+                }
+            }
+        },
+        "users": {
+            "read": {
+                "any": {
+                    "permission": "users.read",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "create": {
+                "any": {
+                    "permission": "users.create",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "update": {
+                "any": {
+                    "permission": "users.update",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "delete": {
+                "any": {
+                    "permission": "users.delete",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "roles.assign": {
+                "any": {
+                    "permission": "users.roles.assign",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            }
+        }
+    }
+}

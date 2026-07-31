@@ -56,6 +56,10 @@ class PermissionCatalog
             self::make('roles.read', 'roles', 'read', null, 'admin'),
             self::make('roles.update', 'roles', 'update', null, 'admin'),
             self::make('roles.delete', 'roles', 'delete', null, 'admin'),
+            self::make('users.read', 'users', 'read', null, 'admin'),
+            self::make('users.create', 'users', 'create', null, 'admin'),
+            self::make('users.update', 'users', 'update', null, 'admin'),
+            self::make('users.delete', 'users', 'delete', null, 'admin'),
             self::make('users.roles.assign', 'users', 'roles.assign', null, 'admin'),
         ];
     }
@@ -71,6 +75,7 @@ class PermissionCatalog
             self::make('orders.read.assigned', 'orders', 'read', 'assigned', 'resource'),
             self::make('orders.read.all', 'orders', 'read', 'all', 'resource'),
             self::make('orders.update.own', 'orders', 'update', 'own', 'resource'),
+            self::make('orders.update.assigned', 'orders', 'update', 'assigned', 'resource'),
             self::make('orders.update.all', 'orders', 'update', 'all', 'resource'),
             self::make('orders.delete.own', 'orders', 'delete', 'own', 'resource'),
             self::make('orders.delete.all', 'orders', 'delete', 'all', 'resource'),

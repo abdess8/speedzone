@@ -22,7 +22,7 @@ class OrderListResource extends JsonResource
 {
     /**
      * Columns this resource needs. Used to keep the underlying select narrow so
-     * heavy text columns (address, notes, sync errors) never leave MySQL.
+     * heavy text columns (notes, sync errors) never leave MySQL.
      *
      * @var array<int, string>
      */
@@ -32,6 +32,7 @@ class OrderListResource extends JsonResource
         'customer_first_name',
         'customer_last_name',
         'customer_phone',
+        'customer_address',
         'city_id',
         'sector_id',
         'payment_method',
@@ -71,6 +72,8 @@ class OrderListResource extends JsonResource
             'customer' => [
                 'full_name' => $this->customer_full_name,
                 'phone' => $this->customer_phone,
+                // Rendered by the driver card, not by the desktop table.
+                'address' => $this->customer_address,
             ],
 
             'city' => $this->whenLoaded('city', fn () => $this->city ? [

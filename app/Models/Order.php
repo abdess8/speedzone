@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\PaymentMethodCast;
+use App\Enums\OrderFailureReason;
 use App\Enums\OrderStatus;
 use App\Enums\PartnerOrderStatus;
 use App\Enums\PaymentMethod;
@@ -54,12 +55,17 @@ class Order extends Model
         'can_be_opened',
         'option_exchange',
         'status',
+        'failure_reason',
+        'failure_note',
+        'failed_at',
         'is_returned',
     ];
 
     protected $casts = [
         'payment_method' => PaymentMethodCast::class,
         'status' => OrderStatus::class,
+        'failure_reason' => OrderFailureReason::class,
+        'failed_at' => 'datetime',
         'order_value' => 'decimal:2',
         'order_amount' => 'decimal:2',
         'delivery_price' => 'decimal:2',
@@ -297,7 +303,7 @@ class Order extends Model
     /**
      * Partner deliveries visible to the given user (RBAC + driver assignment).
      */
-    public function scopeVisibleForPartnerDeliveryAccess(Builder $query, \App\Models\User $user): Builder
+    public function scopeVisibleForPartnerDeliveryAccess(Builder $query, User $user): Builder
     {
         return PartnerDeliveryVisibilityScope::applyToQuery($query, $user);
     }

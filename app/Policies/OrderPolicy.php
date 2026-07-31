@@ -29,21 +29,57 @@ class OrderPolicy
         return $user->hasPermission('orders.create');
     }
 
+    /**
+     * Editing the order's own fields (customer, address, amounts…).
+     *
+     * Distinct from {@see self::updateStatus()}: a driver may move an order
+     * through the workflow but must never rewrite its content.
+     */
     public function update(User $user, Order $order): bool
     {
-        if ($user->isSuperAdmin() && $user->hasPermission('orders.update.all')) {
+        if ($user->hasPermission('orders.update.all')) {
             return true;
         }
 
         if ($order->seller_id === $user->id && $user->hasPermission('orders.update.own')) {
-            $status = $order->status instanceof OrderStatus
-                ? $order->status
-                : OrderStatus::from($order->status);
-
-            return $status === OrderStatus::CREATED;
+            // A seller may only correct an order nobody has picked up yet.
+            return $this->statusOf($order) === OrderStatus::CREATED;
         }
 
         return false;
+    }
+
+    /**
+     * Moving the order through the status workflow.
+     *
+     * RBAC decides *which* target statuses are reachable (checked per target in
+     * OrderTransitionService via `orders.transition.to_*`); this ability is the
+     * ABAC half, answering "may this user act on *this* order at all?".
+     */
+    public function updateStatus(User $user, Order $order): bool
+    {
+        if ($user->hasPermission('orders.update.all')) {
+            return true;
+        }
+
+        // Field agent: strictly the orders dispatched to him.
+        if ((int) $order->driver_id === (int) $user->id && $user->hasPermission('orders.update.assigned')) {
+            return true;
+        }
+
+        // Seller: may still cancel/reject an order that has not moved yet.
+        if ($order->seller_id === $user->id && $user->hasPermission('orders.update.own')) {
+            return $this->statusOf($order) === OrderStatus::CREATED;
+        }
+
+        return false;
+    }
+
+    private function statusOf(Order $order): OrderStatus
+    {
+        return $order->status instanceof OrderStatus
+            ? $order->status
+            : OrderStatus::from($order->status);
     }
 
     public function delete(User $user, Order $order): bool

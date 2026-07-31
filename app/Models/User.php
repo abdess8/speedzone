@@ -6,11 +6,12 @@ use App\Enums\BillingFrequency;
 use App\Enums\SellerPaymentMethod;
 use App\Enums\UserStatus;
 use App\Notifications\VerifySpeedZoneAccountEmail;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -107,8 +108,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * The role that the user belongs to.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function role(): BelongsTo
     {
@@ -462,6 +461,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * Scope-aware permission check for order access controls.
+     *
+     * Resolution order is always "all" (pure RBAC) → "own" (seller_id) →
+     * "assigned" (driver_id), the last two forming the ABAC layer. Passing a
+     * null order answers the listing question ("may this user reach the index
+     * at all?"), where holding any row-level scope is sufficient.
      */
     public function hasOrderScopePermission(string $action, ?Order $order = null): bool
     {
@@ -469,19 +473,17 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
-        if ($order && $order->seller_id === $this->id) {
-            return $this->hasPermission("orders.{$action}.own");
+        if (! $order) {
+            return $this->hasPermission("orders.{$action}.own")
+                || $this->hasPermission("orders.{$action}.assigned");
         }
 
-        if ($order && (int) $order->driver_id === (int) $this->id) {
-            return $action === 'read' && $this->hasPermission('orders.read.assigned');
-        }
-
-        if (! $order && $action === 'read' && $this->hasPermission('orders.read.assigned')) {
+        if ($order->seller_id === $this->id && $this->hasPermission("orders.{$action}.own")) {
             return true;
         }
 
-        return false;
+        return (int) $order->driver_id === (int) $this->id
+            && $this->hasPermission("orders.{$action}.assigned");
     }
 
     /**
@@ -557,7 +559,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getFullNameAttribute(): string
     {
-        $fullName = trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
+        $fullName = trim(($this->first_name ?? '').' '.($this->last_name ?? ''));
 
         return $fullName !== '' ? $fullName : (string) $this->name;
     }
@@ -645,7 +647,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Whether automatic billing is enabled and currently due for this seller.
      */
-    public function isBillingDue(?\Carbon\CarbonInterface $asOf = null): bool
+    public function isBillingDue(?CarbonInterface $asOf = null): bool
     {
         if (! $this->billing_enabled || ! $this->next_billing_date) {
             return false;

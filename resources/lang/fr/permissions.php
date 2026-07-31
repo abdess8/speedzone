@@ -10,6 +10,9 @@ return [
         'returns' => 'Retours',
         'transfers' => 'Transferts',
         'partners' => 'Intégrations partenaires',
+        'users' => 'Utilisateurs',
+        'roles' => 'Rôles',
+        'permissions' => 'Permissions',
     ],
 
     'names' => [
@@ -21,6 +24,13 @@ return [
         'partners.deliveries.manage' => 'Gérer les livraisons partenaires',
 
         'orders.read.assigned' => 'Voir les commandes qui lui sont affectées',
+        'orders.update.assigned' => 'Modifier le statut des commandes affectées',
+
+        'users.read' => 'Voir les utilisateurs',
+        'users.create' => 'Créer des utilisateurs',
+        'users.update' => 'Modifier les utilisateurs',
+        'users.delete' => 'Supprimer des utilisateurs',
+        'users.roles.assign' => 'Attribuer des rôles',
 
         'support.create' => 'Créer des tickets',
         'support.read.own' => 'Voir ses propres tickets',
@@ -46,6 +56,12 @@ return [
         'partners.sync' => 'Lancer une ingestion « synchroniser maintenant » pour un partenaire.',
         'partners.deliveries.manage' => 'Mettre à jour et scanner en masse les livraisons des partenaires assignés.',
         'orders.read.assigned' => 'Consulter uniquement les commandes assignées à l\'utilisateur connecté (livreur).',
+        'orders.update.assigned' => 'Faire avancer le statut des commandes assignées au livreur. Ne permet pas de modifier le contenu de la commande.',
+        'users.read' => 'Accéder à la liste et aux fiches des utilisateurs.',
+        'users.create' => 'Créer des comptes utilisateurs (vendeurs, livreurs, staff).',
+        'users.update' => 'Modifier les informations d\'un compte utilisateur.',
+        'users.delete' => 'Supprimer un compte utilisateur.',
+        'users.roles.assign' => 'Attribuer ou retirer un rôle à un utilisateur. Permission sensible : elle permet une élévation de privilèges.',
         'support.create' => 'Permet aux vendeurs d\'ouvrir des tickets liés à leurs commandes, factures ou ramassages.',
         'support.read.own' => 'Consulter uniquement les tickets créés par l\'utilisateur connecté.',
         'support.read.all' => 'Consulter tous les tickets dans le centre de support.',

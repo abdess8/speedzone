@@ -1,6 +1,7 @@
 <script>
 import NavBar from '@/Components/nav-bar.vue';
 import AppSidebar from '@/Components/AppSidebar.vue';
+import BottomNav from '@/Components/BottomNav.vue';
 import Footer from '@/Components/footer.vue';
 import { layoutComputed } from '@/state/helpers';
 import { applyLayoutAttributes } from '@/utils/applyLayoutAttributes';
@@ -8,7 +9,7 @@ import { applyLayoutAttributes } from '@/utils/applyLayoutAttributes';
 localStorage.setItem('hoverd', false);
 
 export default {
-  components: { NavBar, AppSidebar, Footer },
+  components: { NavBar, AppSidebar, BottomNav, Footer },
   computed: {
     ...layoutComputed,
   },
@@ -47,5 +48,9 @@ export default {
       </div>
       <Footer />
     </div>
+
+    <!-- Mobile navigation. Renders below `lg` only, where the stylesheet also
+         hides the off-canvas sidebar and its trigger. -->
+    <BottomNav />
   </div>
 </template>

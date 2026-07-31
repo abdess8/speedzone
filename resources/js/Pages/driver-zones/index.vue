@@ -6,6 +6,10 @@ import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import BottomSheet from "@/Components/BottomSheet.vue";
+import FilterPanel from "@/Components/FilterPanel.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -61,6 +65,30 @@ const resetFilters = () => {
 watch(() => filters.city_id, reload);
 watch(() => filters.sector_id, reload);
 
+const activeFilterCount = computed(
+  () => Object.values(filters).filter((value) => value !== "" && value !== null).length
+);
+
+/* --- Mobile cards --- */
+const selectedDriver = ref(null);
+
+const sectorNames = (driver) =>
+  (driver.sectors ?? []).map((sector) => `${sector.city?.name} › ${sector.name}`).join(", ");
+
+const cardRows = (driver) => [
+  { label: t("driver_zones.table.zones"), value: driver.sectors_count ?? 0, emphasis: true },
+  { label: t("users.table.phone"), value: driver.phone || null },
+];
+
+const sheetRows = (driver) => [
+  ...cardRows(driver),
+  { label: t("users.table.email"), value: driver.email },
+  {
+    label: t("driver_zones.table.assigned_sectors"),
+    value: sectorNames(driver) || t("driver_zones.no_sectors_assigned"),
+  },
+];
+
 const goToPage = (url) => {
   if (url) router.visit(url, { preserveState: true, preserveScroll: true });
 };
@@ -85,6 +113,9 @@ const groupedSectorOptions = computed(() => {
 });
 
 const openAssign = (driver) => {
+  // The editor can be reached from the detail sheet, which must give way rather
+  // than stack a second sheet behind it.
+  selectedDriver.value = null;
   activeDriver.value = driver;
   assignForm.reset();
   assignForm.clearErrors();
@@ -130,35 +161,46 @@ onMounted(() => {
     <PageHeader :title="$t('driver_zones.title')" :pageTitle="$t('common.delivery_zones')" />
 
     <BCard no-body>
-      <BCardHeader class="border-bottom-dashed">
-        <h5 class="card-title mb-0">{{ $t('driver_zones.list_title') }}</h5>
-      </BCardHeader>
+      <FilterPanel :active-count="activeFilterCount" @apply="reload" @reset="resetFilters">
+        <template #title>
+          <h5 class="card-title mb-0">{{ $t('driver_zones.list_title') }}</h5>
+        </template>
 
-      <BCardBody class="border-bottom-dashed">
-        <BRow class="g-3">
-          <BCol md="4">
-            <label class="form-label">{{ $t('driver_zones.filters.search_driver') }}</label>
-            <input v-model="filters.search" type="text" class="form-control" :placeholder="$t('driver_zones.filters.search_placeholder')" @keyup.enter="reload" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('driver_zones.filters.filter_by_city') }}</label>
-            <Multiselect v-model="filters.city_id" :options="cityOptions" :searchable="true" :close-on-select="true" :placeholder="$t('driver_zones.filters.city_placeholder')" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('driver_zones.filters.filter_by_sector') }}</label>
-            <Multiselect v-model="filters.sector_id" :options="sectorOptions" :searchable="true" :close-on-select="true" :placeholder="$t('driver_zones.filters.sector_placeholder')" />
-          </BCol>
-          <BCol md="2" class="d-flex align-items-end">
-            <div class="hstack gap-2 w-100">
-              <button class="btn btn-light w-100" @click="resetFilters"><i class="ri-refresh-line"></i></button>
-              <button class="btn btn-primary w-100" @click="reload"><i class="ri-search-line"></i></button>
-            </div>
-          </BCol>
-        </BRow>
-      </BCardBody>
+        <BCol lg="4">
+          <label class="form-label">{{ $t('driver_zones.filters.search_driver') }}</label>
+          <input v-model="filters.search" type="text" class="form-control" :placeholder="$t('driver_zones.filters.search_placeholder')" @keyup.enter="reload" />
+        </BCol>
+        <BCol lg="4">
+          <label class="form-label">{{ $t('driver_zones.filters.filter_by_city') }}</label>
+          <Multiselect v-model="filters.city_id" :options="cityOptions" :searchable="true" :close-on-select="true" :placeholder="$t('driver_zones.filters.city_placeholder')" />
+        </BCol>
+        <BCol lg="4">
+          <label class="form-label">{{ $t('driver_zones.filters.filter_by_sector') }}</label>
+          <Multiselect v-model="filters.sector_id" :options="sectorOptions" :searchable="true" :close-on-select="true" :placeholder="$t('driver_zones.filters.sector_placeholder')" />
+        </BCol>
+      </FilterPanel>
 
       <BCardBody>
-        <div class="table-responsive table-card">
+        <div class="d-lg-none">
+          <EntityCard
+            v-for="driver in rows"
+            :key="driver.id"
+            :title="driver.name"
+            :subtitle="driver.email"
+            :rows="cardRows(driver)"
+            @open="selectedDriver = driver"
+          >
+            <template v-if="can.assign" #actions>
+              <button class="btn btn-sm btn-soft-primary flex-fill" @click="openAssign(driver)">
+                <i class="ri-map-pin-add-line align-bottom me-1"></i> {{ $t('driver_zones.actions.manage') }}
+              </button>
+            </template>
+          </EntityCard>
+
+          <p v-if="rows.length === 0" class="text-center text-muted py-4 mb-0">{{ $t('driver_zones.empty') }}</p>
+        </div>
+
+        <div class="table-responsive table-card d-none d-lg-block">
           <table class="table align-middle mb-0">
             <thead class="table-light text-muted">
               <tr>
@@ -217,7 +259,26 @@ onMounted(() => {
       </BCardBody>
     </BCard>
 
-    <BModal v-model="showModal" :title="$t('driver_zones.modal.title', { name: activeDriver?.name ?? '' })" hide-footer size="lg">
+    <EntityDetailSheet
+      :show="selectedDriver !== null"
+      :title="selectedDriver?.name ?? ''"
+      :subtitle="selectedDriver?.email ?? ''"
+      :rows="selectedDriver ? sheetRows(selectedDriver) : []"
+      @close="selectedDriver = null"
+    >
+      <template v-if="can.assign" #actions>
+        <button class="btn btn-primary flex-fill sheet-action" @click="openAssign(selectedDriver)">
+          <i class="ri-map-pin-add-line align-bottom me-1"></i> {{ $t('driver_zones.actions.manage') }}
+        </button>
+      </template>
+    </EntityDetailSheet>
+
+    <BottomSheet
+      :show="showModal"
+      :title="$t('driver_zones.modal.title', { name: activeDriver?.name ?? '' })"
+      size="lg"
+      @close="showModal = false"
+    >
       <form @submit.prevent="submitAssign">
         <p class="text-muted">
           {{ $t('driver_zones.modal.description') }}
@@ -240,6 +301,6 @@ onMounted(() => {
           </BButton>
         </div>
       </form>
-    </BModal>
+    </BottomSheet>
   </Layout>
 </template>

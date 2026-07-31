@@ -8,6 +8,9 @@ import CreateReturnModal from "./Partials/CreateReturnModal.vue";
 import ReturnQrScanner from "./Partials/ReturnQrScanner.vue";
 import EntityLink from "@/Components/EntityLink.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
+import FilterPanel from "@/Components/FilterPanel.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -32,11 +35,37 @@ const filters = reactive({
 const perPage = ref(props.filters.per_page ?? 15);
 const showCreateModal = ref(false);
 const showQrScanner = ref(false);
+/** Row whose mobile detail sheet is open. */
+const selectedReturn = ref(null);
 
 const rows = computed(() => props.returns.data ?? []);
 const meta = computed(() => props.returns.meta ?? {});
 
 const formatDate = (value) => (value ? new Date(value).toLocaleString() : t("common.empty_value"));
+
+/** Drives the "Filter" badge, since the form itself is collapsed by default. */
+const activeFilterCount = computed(
+  () => Object.values(filters).filter((value) => value !== "" && value !== null).length
+);
+
+const customerName = (row) =>
+  row.effective_customer_name || row.order?.customer?.full_name || null;
+
+const cardRows = (row) => [
+  {
+    label: t("returns.table.order_tracking"),
+    value: row.order?.reference ?? row.order?.tracking_number,
+  },
+  { label: t("returns.table.reason"), value: row.reason_label },
+  { label: t("returns.table.current_city"), value: row.current_location_city?.name },
+];
+
+const sheetRows = (row) => [
+  { label: t("returns.table.customer"), value: customerName(row) },
+  { label: t("returns.table.seller"), value: row.order?.seller?.full_name ?? row.order?.seller?.name },
+  ...cardRows(row),
+  { label: t("returns.table.created"), value: formatDate(row.created_at) },
+];
 
 const query = () => {
   const params = { per_page: perPage.value };
@@ -80,75 +109,80 @@ onMounted(() => {
     <PageHeader :title="$t('returns.title')" :pageTitle="$t('returns.page_title')" />
 
     <BCard no-body>
-      <BCardHeader class="border-bottom-dashed">
-        <BRow class="g-3 align-items-center">
-          <BCol sm>
-            <h5 class="card-title mb-0">{{ $t('returns.title') }}</h5>
-          </BCol>
-          <BCol sm="auto" class="hstack gap-2">
-            <button v-if="can.scan" type="button" class="btn btn-soft-primary" @click="showQrScanner = true">
-              <i class="ri-qr-scan-2-line align-bottom me-1"></i> {{ $t('returns.qr_scan') }}
-            </button>
-            <button v-if="can.create_request" type="button" class="btn btn-success" @click="showCreateModal = true">
-              <i class="ri-add-line align-bottom me-1"></i> {{ $t('returns.create') }}
-            </button>
-          </BCol>
-        </BRow>
-      </BCardHeader>
+      <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
+        <template #title>
+          <h5 class="card-title mb-0">{{ $t('returns.title') }}</h5>
+        </template>
 
-      <BCardBody class="border-bottom-dashed">
-        <BRow class="g-3">
-          <BCol md="3">
-            <label class="form-label">{{ $t('returns.filters.reference') }}</label>
-            <input v-model="filters.search" type="text" class="form-control" :placeholder="$t('returns.filters.reference_placeholder')" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('returns.filters.status') }}</label>
-            <select v-model="filters.status" class="form-select">
-              <option value="">{{ $t('returns.filters.all_statuses') }}</option>
-              <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
-            </select>
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('returns.filters.city') }}</label>
-            <select v-model="filters.city_id" class="form-select">
-              <option value="">{{ $t('returns.filters.all_cities') }}</option>
-              <option v-for="city in filterOptions.cities" :key="city.id" :value="city.id">{{ city.name }}</option>
-            </select>
-          </BCol>
-          <BCol md="2" v-if="filterOptions.sellers?.length">
-            <label class="form-label">{{ $t('returns.filters.seller') }}</label>
-            <select v-model="filters.seller_id" class="form-select">
-              <option value="">{{ $t('returns.filters.all_sellers') }}</option>
-              <option v-for="seller in filterOptions.sellers" :key="seller.id" :value="seller.id">{{ seller.name }}</option>
-            </select>
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('returns.filters.reason') }}</label>
-            <select v-model="filters.reason" class="form-select">
-              <option value="">{{ $t('returns.filters.all_reasons') }}</option>
-              <option v-for="r in filterOptions.reasons" :key="r.value" :value="r.value">{{ r.label }}</option>
-            </select>
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('returns.filters.created_from') }}</label>
-            <input v-model="filters.created_from" type="date" class="form-control" />
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('returns.filters.created_to') }}</label>
-            <input v-model="filters.created_to" type="date" class="form-control" />
-          </BCol>
-          <BCol md="12" class="hstack gap-2">
-            <button type="button" class="btn btn-primary" @click="applyFilters">
-              <i class="ri-filter-3-line align-bottom me-1"></i> {{ $t('common.apply_filters') }}
-            </button>
-            <button type="button" class="btn btn-light" @click="resetFilters">{{ $t('common.reset') }}</button>
-          </BCol>
-        </BRow>
-      </BCardBody>
+        <template #actions>
+          <button v-if="can.scan" type="button" class="btn btn-soft-primary" @click="showQrScanner = true">
+            <i class="ri-qr-scan-2-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('returns.qr_scan') }}</span>
+          </button>
+          <button v-if="can.create_request" type="button" class="btn btn-success" @click="showCreateModal = true">
+            <i class="ri-add-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('returns.create') }}</span>
+          </button>
+        </template>
+
+        <BCol md="3">
+          <label class="form-label">{{ $t('returns.filters.reference') }}</label>
+          <input v-model="filters.search" type="text" class="form-control" :placeholder="$t('returns.filters.reference_placeholder')" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol md="2">
+          <label class="form-label">{{ $t('returns.filters.status') }}</label>
+          <select v-model="filters.status" class="form-select">
+            <option value="">{{ $t('returns.filters.all_statuses') }}</option>
+            <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
+          </select>
+        </BCol>
+        <BCol md="2">
+          <label class="form-label">{{ $t('returns.filters.city') }}</label>
+          <select v-model="filters.city_id" class="form-select">
+            <option value="">{{ $t('returns.filters.all_cities') }}</option>
+            <option v-for="city in filterOptions.cities" :key="city.id" :value="city.id">{{ city.name }}</option>
+          </select>
+        </BCol>
+        <BCol md="2" v-if="filterOptions.sellers?.length">
+          <label class="form-label">{{ $t('returns.filters.seller') }}</label>
+          <select v-model="filters.seller_id" class="form-select">
+            <option value="">{{ $t('returns.filters.all_sellers') }}</option>
+            <option v-for="seller in filterOptions.sellers" :key="seller.id" :value="seller.id">{{ seller.name }}</option>
+          </select>
+        </BCol>
+        <BCol md="2">
+          <label class="form-label">{{ $t('returns.filters.reason') }}</label>
+          <select v-model="filters.reason" class="form-select">
+            <option value="">{{ $t('returns.filters.all_reasons') }}</option>
+            <option v-for="r in filterOptions.reasons" :key="r.value" :value="r.value">{{ r.label }}</option>
+          </select>
+        </BCol>
+        <BCol md="2">
+          <label class="form-label">{{ $t('returns.filters.created_from') }}</label>
+          <input v-model="filters.created_from" type="date" class="form-control" />
+        </BCol>
+        <BCol md="2">
+          <label class="form-label">{{ $t('returns.filters.created_to') }}</label>
+          <input v-model="filters.created_to" type="date" class="form-control" />
+        </BCol>
+      </FilterPanel>
 
       <BCardBody>
-        <div class="table-responsive">
+        <div class="d-lg-none">
+          <EntityCard
+            v-for="row in rows"
+            :key="row.id"
+            :title="row.reference"
+            :subtitle="customerName(row) ?? ''"
+            :status-label="row.status_label"
+            :status-color="row.status_color"
+            :rows="cardRows(row)"
+            @open="selectedReturn = row"
+          />
+          <p v-if="rows.length === 0" class="text-center text-muted py-4 mb-0">{{ $t('returns.empty') }}</p>
+        </div>
+
+        <div class="table-responsive d-none d-lg-block">
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light">
               <tr>
@@ -212,5 +246,24 @@ onMounted(() => {
 
     <CreateReturnModal v-if="can.create_request" :show="showCreateModal" :filter-options="filterOptions" @close="showCreateModal = false" />
     <ReturnQrScanner v-if="can.scan" :show="showQrScanner" @close="showQrScanner = false" />
+
+    <EntityDetailSheet
+      :show="selectedReturn !== null"
+      :title="selectedReturn?.reference ?? ''"
+      :subtitle="(selectedReturn ? customerName(selectedReturn) : '') ?? ''"
+      :status-label="selectedReturn?.status_label ?? ''"
+      :status-color="selectedReturn?.status_color ?? 'secondary'"
+      :rows="selectedReturn ? sheetRows(selectedReturn) : []"
+      @close="selectedReturn = null"
+    >
+      <template #actions>
+        <Link
+          :href="route('returns.show', selectedReturn?.id)"
+          class="btn btn-primary flex-fill sheet-action"
+        >
+          <i class="ri-eye-line align-bottom me-1"></i> {{ $t('common.view') }}
+        </Link>
+      </template>
+    </EntityDetailSheet>
   </Layout>
 </template>

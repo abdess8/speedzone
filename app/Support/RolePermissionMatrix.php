@@ -163,6 +163,29 @@ class RolePermissionMatrix
     }
 
     /**
+     * Maps the entity names used in the functional specification onto the
+     * resources actually implemented, so a reader of the exported matrix can
+     * tell a renaming apart from a missing module.
+     *
+     * @var array<string, array<string, string>>
+     */
+    public const ENTITY_ALIASES = [
+        'pickups' => [
+            'resource' => 'pickup_requests',
+            'note' => 'Ramassages are modelled as pickup requests (PickupRequest).',
+        ],
+        'tickets' => [
+            'resource' => 'support',
+            'note' => 'Support tickets (SupportTicket) live under the "support" resource.',
+        ],
+        'cashboxes' => [
+            'resource' => 'driver_invoices',
+            'note' => 'A driver\'s caisse is his wallet: DriverInvoice + DriverTransaction, '
+                .'read with driver_invoices.read.own and surfaced by /driver-finance.',
+        ],
+    ];
+
+    /**
      * Machine-readable matrix, grouped by resource then action, listing the
      * scope each role is granted. Consumed by `php artisan rbac:matrix`.
      *
@@ -177,11 +200,8 @@ class RolePermissionMatrix
 
         foreach ($catalog as $permission) {
             $name = $permission['name'];
-            $resource = $permission['resource'];
-            $action = $permission['action'];
-            $scope = $permission['scope'] ?? 'any';
 
-            $resources[$resource][$action][$scope] = [
+            $resources[$permission['resource']][$permission['action']][self::variantKey($permission)] = [
                 'permission' => $name,
                 'type' => $permission['type'],
                 'roles' => array_values(array_filter(
@@ -201,8 +221,29 @@ class RolePermissionMatrix
                 'assigned' => 'ABAC — rows assigned to the actor.',
                 'any' => 'Scopeless action (no row-level dimension).',
             ],
+            'entity_aliases' => self::ENTITY_ALIASES,
             'resources' => $resources,
         ];
+    }
+
+    /**
+     * Key that distinguishes two permissions sharing a resource and an action.
+     *
+     * Scope is the usual discriminator, but every `orders.transition.*` entry is
+     * scopeless, so grouping them by scope collapsed all fourteen of them onto a
+     * single line. Transitions are keyed by their target status instead.
+     *
+     * @param  array<string, string|null>  $permission
+     */
+    private static function variantKey(array $permission): string
+    {
+        if ($permission['type'] === 'workflow_transition') {
+            $target = strrchr((string) $permission['name'], '.');
+
+            return $target === false ? 'any' : substr($target, 1);
+        }
+
+        return $permission['scope'] ?? 'any';
     }
 
     /**

@@ -24,6 +24,37 @@ class OrderPolicy
         return $user->hasOrderScopePermission('read', $order);
     }
 
+    /**
+     * Opening the full order detail screen.
+     *
+     * Deliberately narrower than {@see self::view()}: a field agent works from
+     * his card, which already carries everything he acts on, while the detail
+     * screen also exposes the seller, the billing trail and the change history.
+     * Holding `orders.read.assigned` as the *only* read scope therefore grants
+     * the list and the status actions, never this page.
+     */
+    public function viewDetails(User $user, Order $order): bool
+    {
+        if (! $this->view($user, $order)) {
+            return false;
+        }
+
+        return self::grantsDetailAccess($user);
+    }
+
+    /**
+     * Whether the user's read scope covers the detail screen at all.
+     *
+     * Exposed statically so the list controller can decide whether to render a
+     * link to it without holding an order instance.
+     */
+    public static function grantsDetailAccess(User $user): bool
+    {
+        return $user->isSuperAdmin()
+            || $user->hasPermission('orders.read.all')
+            || $user->hasPermission('orders.read.own');
+    }
+
     public function create(User $user): bool
     {
         return $user->hasPermission('orders.create');

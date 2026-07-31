@@ -4,6 +4,9 @@ import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import FilterPanel from "@/Components/FilterPanel.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
 
@@ -18,6 +21,8 @@ const props = defineProps({
 });
 
 const selectedSeller = ref(props.sellerId);
+/** Line whose mobile detail sheet is open. */
+const selectedLine = ref(null);
 
 const sellerOptions = computed(() =>
   props.sellers.map((s) => ({ value: s.id, label: `${s.name} (${s.email})` }))
@@ -39,33 +44,68 @@ const changeSeller = (value) => {
     replace: true,
   });
 };
+
+const activeFilterCount = computed(() => (selectedSeller.value ? 1 : 0));
+
+const applyFilters = () => changeSeller(selectedSeller.value);
+
+const resetFilters = () => {
+  selectedSeller.value = null;
+  changeSeller(null);
+};
+
+const lineStatusColor = (line) => (line.status === "RETURNED" ? "dark" : "success");
+
+const cardRows = (line) => [
+  { label: t("invoices.columns.order_amount"), value: money(line.order_amount) },
+  { label: t("invoices.columns.delivery_fee"), value: money(line.delivery_fee) },
+  { label: t("invoices.columns.final_amount"), value: money(line.final_amount), emphasis: true },
+];
+
+const sheetRows = (line) => [
+  { label: t("invoices.columns.city"), value: line.city },
+  { label: t("invoices.columns.return_fee"), value: money(line.return_fee) },
+  ...cardRows(line),
+];
 </script>
 
 <template>
   <Layout>
     <PageHeader :title="$t('invoices.pending.title')" :pageTitle="$t('invoices.pending.page_title')" />
 
-    <BRow v-if="isAdmin" class="mb-3">
-      <BCol md="4">
-        <label class="form-label">{{ $t('invoices.filters.seller') }}</label>
-        <Multiselect
-          v-model="selectedSeller"
-          :options="sellerOptions"
-          :searchable="true"
-          :close-on-select="true"
-          :placeholder="$t('invoices.create.seller_placeholder')"
-          @change="changeSeller"
-        />
-      </BCol>
-    </BRow>
-
     <BRow>
       <BCol lg="8">
         <BCard no-body>
-          <BCardHeader class="d-flex align-items-center">
+          <FilterPanel
+            v-if="isAdmin"
+            :active-count="activeFilterCount"
+            @apply="applyFilters"
+            @reset="resetFilters"
+          >
+            <template #title>
+              <div class="d-flex align-items-center gap-2">
+                <h5 class="card-title mb-0">{{ $t('invoices.pending.orders_title') }}</h5>
+                <span class="badge bg-primary-subtle text-primary">{{ summary.total_orders_count ?? 0 }}</span>
+              </div>
+            </template>
+
+            <BCol md="6">
+              <label class="form-label">{{ $t('invoices.filters.seller') }}</label>
+              <Multiselect
+                v-model="selectedSeller"
+                :options="sellerOptions"
+                :searchable="true"
+                :close-on-select="true"
+                :placeholder="$t('invoices.create.seller_placeholder')"
+              />
+            </BCol>
+          </FilterPanel>
+
+          <BCardHeader v-else class="d-flex align-items-center">
             <h5 class="card-title mb-0 flex-grow-1">{{ $t('invoices.pending.orders_title') }}</h5>
             <span class="badge bg-primary-subtle text-primary">{{ summary.total_orders_count ?? 0 }}</span>
           </BCardHeader>
+
           <BCardBody>
             <BRow v-if="(summary.total_orders_count ?? 0) > 0" class="g-3 mb-3">
               <BCol md="3" cols="6">
@@ -86,7 +126,23 @@ const changeSeller = (value) => {
               </BCol>
             </BRow>
 
-            <div class="table-responsive table-card">
+            <div class="d-lg-none">
+              <EntityCard
+                v-for="line in lines"
+                :key="line.id"
+                :title="line.tracking_number ?? '—'"
+                :subtitle="line.customer_full_name ?? '—'"
+                :status-label="line.status"
+                :status-color="lineStatusColor(line)"
+                :rows="cardRows(line)"
+                @open="selectedLine = line"
+              />
+              <p v-if="lines.length === 0" class="text-center text-muted py-4 mb-0">
+                {{ $t('invoices.pending.empty') }}
+              </p>
+            </div>
+
+            <div class="table-responsive table-card d-none d-lg-block">
               <table class="table align-middle table-nowrap mb-0">
                 <thead class="table-light text-muted">
                   <tr>
@@ -158,5 +214,15 @@ const changeSeller = (value) => {
         </BCard>
       </BCol>
     </BRow>
+
+    <EntityDetailSheet
+      :show="selectedLine !== null"
+      :title="selectedLine?.tracking_number ?? ''"
+      :subtitle="selectedLine?.customer_full_name ?? ''"
+      :status-label="selectedLine?.status ?? ''"
+      :status-color="selectedLine ? lineStatusColor(selectedLine) : 'secondary'"
+      :rows="selectedLine ? sheetRows(selectedLine) : []"
+      @close="selectedLine = null"
+    />
   </Layout>
 </template>

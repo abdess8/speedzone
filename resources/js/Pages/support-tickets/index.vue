@@ -4,6 +4,9 @@ import { Link, router, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import FilterPanel from "@/Components/FilterPanel.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -29,6 +32,8 @@ const filters = reactive({
 const sort = ref(props.filters.sort ?? "created_at");
 const direction = ref(props.filters.direction ?? "desc");
 const perPage = ref(props.filters.per_page ?? 25);
+/** Row whose mobile detail sheet is open. */
+const selectedTicket = ref(null);
 
 const rows = computed(() => props.tickets.data ?? []);
 const meta = computed(() => props.tickets.meta ?? {});
@@ -41,6 +46,30 @@ const objectLabel = (ticket) => {
   const ref = ticket.object?.reference ?? (ticket.object_id ? `#${ticket.object_id}` : "");
   return ref ? `${ticket.object_type_label}: ${ref}` : ticket.object_type_label;
 };
+
+/** Drives the "Filter" badge, since the form itself is collapsed by default. */
+const activeFilterCount = computed(
+  () => Object.values(filters).filter((value) => value !== "" && value !== null).length
+);
+
+const cardRows = (ticket) => [
+  { label: t("support_tickets.table.category"), value: ticket.category_label },
+  { label: t("support_tickets.table.object"), value: objectLabel(ticket) },
+  { label: t("support_tickets.table.created_at"), value: formatDate(ticket.created_at) },
+];
+
+const sheetRows = (ticket) => [
+  ...cardRows(ticket),
+  ...(props.can.read_all
+    ? [
+        { label: t("support_tickets.table.seller"), value: ticket.creator?.name },
+        {
+          label: t("support_tickets.table.assigned"),
+          value: ticket.assignee?.name ?? t("support_tickets.filters.unassigned"),
+        },
+      ]
+    : []),
+];
 
 const query = () => {
   const params = { sort: sort.value, direction: direction.value, per_page: perPage.value };
@@ -100,78 +129,78 @@ onMounted(() => {
     <PageHeader :title="$t('support_tickets.title')" :pageTitle="$t('support_tickets.page_title')" />
 
     <BCard no-body>
-      <BCardHeader class="border-bottom-dashed">
-        <BRow class="g-3 align-items-center">
-          <BCol sm>
-            <h5 class="card-title mb-0">{{ $t('support_tickets.list_title') }}</h5>
-          </BCol>
-          <BCol sm="auto">
-            <Link v-if="can.create" :href="route('support-tickets.create')" class="btn btn-success">
-              <i class="ri-add-line align-bottom me-1"></i> {{ $t('support_tickets.create') }}
-            </Link>
-          </BCol>
-        </BRow>
-      </BCardHeader>
+      <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
+        <template #title>
+          <h5 class="card-title mb-0">{{ $t('support_tickets.list_title') }}</h5>
+        </template>
 
-      <BCardBody class="border-bottom-dashed">
-        <BRow class="g-3">
-          <BCol md="2">
-            <label class="form-label">{{ $t('support_tickets.filters.reference') }}</label>
-            <input v-model="filters.reference" type="text" class="form-control" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('support_tickets.filters.subject') }}</label>
-            <input v-model="filters.subject" type="text" class="form-control" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol v-if="can.read_all" md="2">
-            <label class="form-label">{{ $t('support_tickets.filters.seller') }}</label>
-            <input v-model="filters.seller" type="text" class="form-control" :placeholder="$t('support_tickets.filters.seller_placeholder')" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol v-if="can.assign" md="2">
-            <label class="form-label">{{ $t('support_tickets.filters.assigned_to') }}</label>
-            <select v-model="filters.assigned_to" class="form-select">
-              <option value="">{{ $t('common.all') }}</option>
-              <option value="unassigned">{{ $t('support_tickets.filters.unassigned') }}</option>
-              <option v-for="agent in filterOptions.agents" :key="agent.id" :value="agent.id">{{ agent.name }}</option>
-            </select>
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('support_tickets.filters.status') }}</label>
-            <select v-model="filters.status" class="form-select">
-              <option value="">{{ $t('support_tickets.filters.all_statuses') }}</option>
-              <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
-            </select>
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('support_tickets.filters.category') }}</label>
-            <select v-model="filters.category" class="form-select">
-              <option value="">{{ $t('support_tickets.filters.all_categories') }}</option>
-              <option v-for="c in filterOptions.categories" :key="c.value" :value="c.value">{{ c.label }}</option>
-            </select>
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('support_tickets.filters.created_from') }}</label>
-            <input v-model="filters.created_from" type="date" class="form-control" />
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('support_tickets.filters.created_to') }}</label>
-            <input v-model="filters.created_to" type="date" class="form-control" />
-          </BCol>
-          <BCol cols="12">
-            <div class="hstack gap-2 justify-content-end">
-              <button class="btn btn-light text-nowrap" @click="resetFilters">
-                <i class="ri-refresh-line align-bottom me-1"></i> {{ $t('common.reset') }}
-              </button>
-              <button class="btn btn-primary text-nowrap" @click="applyFilters">
-                <i class="ri-search-line align-bottom me-1"></i> {{ $t('common.apply_filters') }}
-              </button>
-            </div>
-          </BCol>
-        </BRow>
-      </BCardBody>
+        <template #actions>
+          <Link v-if="can.create" :href="route('support-tickets.create')" class="btn btn-success">
+            <i class="ri-add-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('support_tickets.create') }}</span>
+          </Link>
+        </template>
+
+        <BCol md="2">
+          <label class="form-label">{{ $t('support_tickets.filters.reference') }}</label>
+          <input v-model="filters.reference" type="text" class="form-control" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol md="2">
+          <label class="form-label">{{ $t('support_tickets.filters.subject') }}</label>
+          <input v-model="filters.subject" type="text" class="form-control" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol v-if="can.read_all" md="2">
+          <label class="form-label">{{ $t('support_tickets.filters.seller') }}</label>
+          <input v-model="filters.seller" type="text" class="form-control" :placeholder="$t('support_tickets.filters.seller_placeholder')" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol v-if="can.assign" md="2">
+          <label class="form-label">{{ $t('support_tickets.filters.assigned_to') }}</label>
+          <select v-model="filters.assigned_to" class="form-select">
+            <option value="">{{ $t('common.all') }}</option>
+            <option value="unassigned">{{ $t('support_tickets.filters.unassigned') }}</option>
+            <option v-for="agent in filterOptions.agents" :key="agent.id" :value="agent.id">{{ agent.name }}</option>
+          </select>
+        </BCol>
+        <BCol md="2">
+          <label class="form-label">{{ $t('support_tickets.filters.status') }}</label>
+          <select v-model="filters.status" class="form-select">
+            <option value="">{{ $t('support_tickets.filters.all_statuses') }}</option>
+            <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
+          </select>
+        </BCol>
+        <BCol md="2">
+          <label class="form-label">{{ $t('support_tickets.filters.category') }}</label>
+          <select v-model="filters.category" class="form-select">
+            <option value="">{{ $t('support_tickets.filters.all_categories') }}</option>
+            <option v-for="c in filterOptions.categories" :key="c.value" :value="c.value">{{ c.label }}</option>
+          </select>
+        </BCol>
+        <BCol md="2">
+          <label class="form-label">{{ $t('support_tickets.filters.created_from') }}</label>
+          <input v-model="filters.created_from" type="date" class="form-control" />
+        </BCol>
+        <BCol md="2">
+          <label class="form-label">{{ $t('support_tickets.filters.created_to') }}</label>
+          <input v-model="filters.created_to" type="date" class="form-control" />
+        </BCol>
+      </FilterPanel>
 
       <BCardBody>
-        <div class="table-responsive table-card">
+        <div class="d-lg-none">
+          <EntityCard
+            v-for="ticket in rows"
+            :key="ticket.id"
+            :title="ticket.reference"
+            :subtitle="ticket.subject"
+            :status-label="ticket.status_label"
+            :status-color="ticket.status_color"
+            :rows="cardRows(ticket)"
+            @open="selectedTicket = ticket"
+          />
+          <p v-if="rows.length === 0" class="text-center text-muted py-4 mb-0">{{ $t('support_tickets.empty') }}</p>
+        </div>
+
+        <div class="table-responsive table-card d-none d-lg-block">
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
               <tr>
@@ -255,5 +284,24 @@ onMounted(() => {
         </BRow>
       </BCardBody>
     </BCard>
+
+    <EntityDetailSheet
+      :show="selectedTicket !== null"
+      :title="selectedTicket?.reference ?? ''"
+      :subtitle="selectedTicket?.subject ?? ''"
+      :status-label="selectedTicket?.status_label ?? ''"
+      :status-color="selectedTicket?.status_color ?? 'secondary'"
+      :rows="selectedTicket ? sheetRows(selectedTicket) : []"
+      @close="selectedTicket = null"
+    >
+      <template #actions>
+        <Link
+          :href="route('support-tickets.show', selectedTicket?.id)"
+          class="btn btn-primary flex-fill sheet-action"
+        >
+          <i class="ri-eye-line align-bottom me-1"></i> {{ $t('support_tickets.actions.view') }}
+        </Link>
+      </template>
+    </EntityDetailSheet>
   </Layout>
 </template>

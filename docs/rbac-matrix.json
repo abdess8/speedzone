@@ -11,6 +11,20 @@
         "assigned": "ABAC — rows assigned to the actor.",
         "any": "Scopeless action (no row-level dimension)."
     },
+    "entity_aliases": {
+        "pickups": {
+            "resource": "pickup_requests",
+            "note": "Ramassages are modelled as pickup requests (PickupRequest)."
+        },
+        "tickets": {
+            "resource": "support",
+            "note": "Support tickets (SupportTicket) live under the \"support\" resource."
+        },
+        "cashboxes": {
+            "resource": "driver_invoices",
+            "note": "A driver's caisse is his wallet: DriverInvoice + DriverTransaction, read with driver_invoices.read.own and surfaced by /driver-finance."
+        }
+    },
     "resources": {
         "cities": {
             "create": {
@@ -341,7 +355,114 @@
                 }
             },
             "transition": {
-                "any": {
+                "to_pickup_requested": {
+                    "permission": "orders.transition.to_pickup_requested",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "to_waiting_pickup": {
+                    "permission": "orders.transition.to_waiting_pickup",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "to_picked_up": {
+                    "permission": "orders.transition.to_picked_up",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "to_in_depot": {
+                    "permission": "orders.transition.to_in_depot",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "to_transfer_created": {
+                    "permission": "orders.transition.to_transfer_created",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "to_in_transit": {
+                    "permission": "orders.transition.to_in_transit",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "to_received_in_destination": {
+                    "permission": "orders.transition.to_received_in_destination",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "to_in_delivery_city": {
+                    "permission": "orders.transition.to_in_delivery_city",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "to_out_for_delivery": {
+                    "permission": "orders.transition.to_out_for_delivery",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver"
+                    ]
+                },
+                "to_delivered": {
+                    "permission": "orders.transition.to_delivered",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver"
+                    ]
+                },
+                "to_failed": {
+                    "permission": "orders.transition.to_failed",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver"
+                    ]
+                },
+                "to_rejected": {
+                    "permission": "orders.transition.to_rejected",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "to_canceled": {
+                    "permission": "orders.transition.to_canceled",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "to_returned": {
                     "permission": "orders.transition.to_returned",
                     "type": "workflow_transition",
                     "roles": [

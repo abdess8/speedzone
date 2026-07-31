@@ -67,7 +67,7 @@ class OrderController extends Controller
             'orders' => OrderListResource::collection($orders)->response()->getData(true),
             'filters' => $request->only([
                 'tracking_number', 'order_number', 'customer_name', 'customer_phone',
-                'seller', 'city_id', 'sector_id', 'status', 'payment_method',
+                'seller', 'city_id', 'sector_id', 'status', 'status_group', 'payment_method',
                 'created_from', 'created_to', 'delivery_from', 'delivery_to',
                 'is_fragile', 'can_be_opened', 'sort', 'direction', 'per_page',
             ]),
@@ -115,6 +115,14 @@ class OrderController extends Controller
             'can_update_status' => $user->hasPermission('orders.update.all')
                 || $user->hasPermission('orders.update.assigned'),
             'is_driver' => $user->isDriver(),
+            // A driver who could not hand a parcel over opens the return from
+            // his card: the detail screen that normally hosts that action is
+            // closed to him.
+            'can_create_return' => $user->canCreateDriverReturn(),
+            'return_eligible_statuses' => ReturnService::eligibleOrderStatuses(
+                ReturnInitiatedByRole::DRIVER
+            ),
+            'return_reasons' => ReturnReason::options(),
         ];
     }
 
@@ -173,7 +181,9 @@ class OrderController extends Controller
 
     public function show(Request $request, Order $order): Response
     {
-        $this->authorize('view', $order);
+        // Not `view`: a driver may read his assigned orders in the list without
+        // being allowed to open the full detail screen.
+        $this->authorize('viewDetails', $order);
 
         $order->load([
             'city',
@@ -517,6 +527,15 @@ class OrderController extends Controller
             'paymentMethods' => PaymentMethod::options(),
             'cities' => $this->cityOptions(),
             'pageSizes' => [10, 25, 50, 100],
+            // Labels for the sidebar shortcuts, so the list can name the view
+            // it is currently restricted to.
+            'statusGroups' => array_map(
+                static fn (string $group): array => [
+                    'value' => $group,
+                    'label' => __('orders.views.'.$group),
+                ],
+                array_keys(OrderQueryService::STATUS_GROUPS)
+            ),
         ];
     }
 
@@ -629,6 +648,9 @@ class OrderController extends Controller
             'read_all' => $user->hasPermission('orders.read.all'),
             'export' => $user->hasPermission('orders.export'),
             'print' => $user->hasPermission('orders.print'),
+            // Drives whether the list renders links to the detail screen at all,
+            // mirroring OrderPolicy::viewDetails().
+            'view_details' => OrderPolicy::grantsDetailAccess($user),
         ];
     }
 

@@ -2,10 +2,26 @@
 import { Link, router } from "@inertiajs/vue3";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import FilterPanel from "@/Components/FilterPanel.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
 
+/** Contextual colour per role, used by both the desktop badge and the mobile card. */
+const ROLE_COLORS = {
+  SuperAdmin: "danger",
+  Admin: "primary",
+  Dispatcher: "secondary",
+  Seller: "success",
+  Vendeur: "success",
+  Driver: "info",
+  Livreur: "info",
+  Partner: "warning",
+  Partenaire: "warning",
+};
+
 export default {
-  components: { Layout, PageHeader, Link },
+  components: { Layout, PageHeader, Link, FilterPanel, EntityCard, EntityDetailSheet },
   props: {
     users: { type: Object, required: true },
     roles: { type: Array, default: () => [] },
@@ -16,26 +32,33 @@ export default {
       search: this.filters.search || "",
       role: this.filters.role || "",
       searchTimer: null,
+      /** Row whose mobile detail sheet is open. */
+      selectedUser: null,
     };
   },
   computed: {
+    /** Table badge classes, derived from {@see roleColor} so the two never drift. */
     roleBadgeClasses() {
-      return {
-        SuperAdmin: "bg-danger-subtle text-danger",
-        Admin: "bg-primary-subtle text-primary",
-        Vendeur: "bg-success-subtle text-success",
-        Livreur: "bg-info-subtle text-info",
-        Partenaire: "bg-warning-subtle text-warning",
-      };
+      return Object.fromEntries(
+        Object.entries(ROLE_COLORS).map(([name, color]) => [
+          name,
+          `bg-${color}-subtle text-${color}`,
+        ])
+      );
+    },
+    /** Drives the "Filter" badge, since the form itself is collapsed by default. */
+    activeFilterCount() {
+      return [this.search, this.role].filter(Boolean).length;
     },
   },
   watch: {
+    // Both go through one timer so clearing several filters at once — which the
+    // reset button does — results in a single request.
     search() {
-      clearTimeout(this.searchTimer);
-      this.searchTimer = setTimeout(() => this.applyFilters(), 350);
+      this.scheduleFilters(350);
     },
     role() {
-      this.applyFilters();
+      this.scheduleFilters(0);
     },
   },
   mounted() {
@@ -46,6 +69,13 @@ export default {
       const key = `roles.${name}`;
       const translated = this.$t(key);
       return translated !== key ? translated : name;
+    },
+    roleColor(name) {
+      return ROLE_COLORS[name] ?? "secondary";
+    },
+    scheduleFilters(delay) {
+      clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(() => this.applyFilters(), delay);
     },
     applyFilters() {
       router.get(
@@ -62,6 +92,26 @@ export default {
     cityName(user) {
       if (!user.city) return this.$t("common.empty_value_short");
       return typeof user.city === "object" ? user.city.name : user.city;
+    },
+    resetFilters() {
+      this.search = "";
+      this.role = "";
+    },
+    /** Detail lines shared by the mobile card and its sheet. */
+    cardRows(user) {
+      return [
+        { label: this.$t("users.table.phone"), value: user.phone_number },
+        { label: this.$t("sidebar.cities"), value: this.cityName(user) },
+        { label: this.$t("orders.table.created"), value: this.formatDate(user.created_at) },
+      ];
+    },
+    sheetRows(user) {
+      return [
+        { label: this.$t("users.table.email"), value: user.email },
+        ...this.cardRows(user),
+        { label: this.$t("users.table.cin"), value: user.cin },
+        { label: this.$t("users.table.ice"), value: user.ice_number },
+      ];
     },
     formatDate(value) {
       if (!value) return this.$t("common.empty_value_short");
@@ -83,6 +133,9 @@ export default {
         cancelButtonText: this.$t("common.cancel"),
       }).then((result) => {
         if (result.isConfirmed) {
+          // The sheet may be the caller; it would otherwise linger on a row
+          // that no longer exists.
+          this.selectedUser = null;
           router.delete(route("users.destroy", user.id), { preserveScroll: true });
         }
       });
@@ -111,43 +164,72 @@ export default {
     <BRow>
       <BCol lg="12">
         <BCard no-body id="usersList">
-          <BCardHeader class="border-bottom-dashed">
-            <BRow class="g-4 align-items-center">
-              <BCol sm>
-                <h5 class="card-title mb-0">{{ $t('users.list_title') }}</h5>
-              </BCol>
-              <BCol sm="auto">
-                <Link :href="route('users.create')" class="btn btn-success add-btn">
-                  <i class="ri-add-line align-bottom me-1"></i> {{ $t('users.create') }}
-                </Link>
-              </BCol>
-            </BRow>
-          </BCardHeader>
+          <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
+            <template #title>
+              <h5 class="card-title mb-0">{{ $t('users.list_title') }}</h5>
+            </template>
 
-          <BCardBody class="border-bottom-dashed border-bottom">
-            <BRow class="g-3">
-              <BCol xl="6">
-                <div class="search-box">
-                  <input
-                    type="text"
-                    class="form-control search"
-                    :placeholder="$t('users.filters.search_placeholder')"
-                    v-model="search"
-                  />
-                  <i class="ri-search-line search-icon"></i>
-                </div>
-              </BCol>
-              <BCol xl="3">
-                <select class="form-select" v-model="role">
-                  <option value="">{{ $t('users.filters.all_roles') }}</option>
-                  <option v-for="r in roles" :key="r.id" :value="r.id">{{ roleLabel(r.name) }}</option>
-                </select>
-              </BCol>
-            </BRow>
-          </BCardBody>
+            <template #actions>
+              <Link :href="route('users.create')" class="btn btn-success add-btn">
+                <i class="ri-add-line align-bottom"></i>
+                <span class="d-none d-sm-inline ms-1">{{ $t('users.create') }}</span>
+              </Link>
+            </template>
+
+            <BCol xl="6">
+              <label class="form-label">{{ $t('users.table.full_name') }}</label>
+              <div class="search-box">
+                <input
+                  type="text"
+                  class="form-control search"
+                  :placeholder="$t('users.filters.search_placeholder')"
+                  v-model="search"
+                />
+                <i class="ri-search-line search-icon"></i>
+              </div>
+            </BCol>
+            <BCol xl="3">
+              <label class="form-label">{{ $t('users.table.role') }}</label>
+              <select class="form-select" v-model="role">
+                <option value="">{{ $t('users.filters.all_roles') }}</option>
+                <option v-for="r in roles" :key="r.id" :value="r.id">{{ roleLabel(r.name) }}</option>
+              </select>
+            </BCol>
+          </FilterPanel>
 
           <BCardBody>
-            <div class="table-responsive table-card mb-1">
+            <div class="d-lg-none">
+              <EntityCard
+                v-for="user in users.data"
+                :key="user.id"
+                :title="user.full_name"
+                :subtitle="user.email"
+                :status-label="user.role ? roleLabel(user.role.name) : ''"
+                :status-color="user.role ? roleColor(user.role.name) : 'secondary'"
+                :rows="cardRows(user)"
+                @open="selectedUser = user"
+              >
+                <template #avatar>
+                  <img
+                    v-if="user.photo_url"
+                    :src="user.photo_url"
+                    :alt="user.full_name"
+                    class="avatar-xs rounded-circle object-fit-cover flex-shrink-0"
+                  />
+                  <div
+                    v-else
+                    class="avatar-xs rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center fw-medium flex-shrink-0"
+                  >
+                    {{ initials(user) }}
+                  </div>
+                </template>
+              </EntityCard>
+              <p v-if="users.data.length === 0" class="text-center text-muted py-4 mb-0">
+                {{ $t('users.empty') }}
+              </p>
+            </div>
+
+            <div class="table-responsive table-card mb-1 d-none d-lg-block">
               <table class="table align-middle">
                 <thead class="table-light text-muted">
                   <tr>
@@ -246,5 +328,37 @@ export default {
         </BCard>
       </BCol>
     </BRow>
+
+    <EntityDetailSheet
+      :show="selectedUser !== null"
+      :title="selectedUser?.full_name ?? ''"
+      :subtitle="selectedUser?.role ? roleLabel(selectedUser.role.name) : ''"
+      :rows="selectedUser ? sheetRows(selectedUser) : []"
+      @close="selectedUser = null"
+    >
+      <template #actions>
+        <Link
+          :href="route('users.show', selectedUser?.id)"
+          class="btn btn-primary flex-fill sheet-action"
+        >
+          <i class="ri-eye-line align-bottom me-1"></i> {{ $t('common.view') }}
+        </Link>
+        <Link
+          :href="route('users.edit', selectedUser?.id)"
+          class="btn btn-soft-warning sheet-action"
+          :aria-label="$t('common.edit')"
+        >
+          <i class="ri-pencil-fill"></i>
+        </Link>
+        <button
+          type="button"
+          class="btn btn-soft-danger sheet-action"
+          :aria-label="$t('common.delete')"
+          @click="confirmDelete(selectedUser)"
+        >
+          <i class="ri-delete-bin-5-fill"></i>
+        </button>
+      </template>
+    </EntityDetailSheet>
   </Layout>
 </template>

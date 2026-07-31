@@ -5,6 +5,9 @@ import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import InputError from "@/Components/InputError.vue";
+import BottomSheet from "@/Components/BottomSheet.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -25,6 +28,22 @@ const period = (inv) => {
   return `${inv.period_start ?? "…"} → ${inv.period_end ?? "…"}`;
 };
 
+/* --- Mobile cards --- */
+const selectedInvoice = ref(null);
+
+const driverName = (inv) => inv.driver?.full_name ?? inv.driver?.name ?? "—";
+
+const cardRows = (inv) => [
+  { label: t("driver_invoices.table.total"), value: money(inv.total_amount), emphasis: true },
+  { label: t("driver_invoices.table.deliveries"), value: inv.deliveries_count },
+  { label: t("driver_invoices.table.period"), value: period(inv) },
+];
+
+const sheetRows = (inv) => [
+  ...cardRows(inv),
+  { label: t("driver_invoices.table.driver"), value: driverName(inv) },
+];
+
 const showPayModal = ref(false);
 const activeInvoice = ref(null);
 
@@ -34,6 +53,8 @@ const payForm = useForm({
 });
 
 const openPay = (invoice) => {
+  // Reachable from the detail sheet, which must give way rather than stack.
+  selectedInvoice.value = null;
   activeInvoice.value = invoice;
   payForm.reset();
   payForm.paid_at = new Date().toISOString().slice(0, 10);
@@ -80,7 +101,28 @@ onMounted(() => {
         <h5 class="card-title mb-0">{{ $t('driver_invoices.payments.subtitle') }}</h5>
       </BCardHeader>
       <BCardBody>
-        <div class="table-responsive table-card">
+        <div class="d-lg-none">
+          <EntityCard
+            v-for="inv in rows"
+            :key="inv.id"
+            :title="inv.invoice_number"
+            :subtitle="driverName(inv)"
+            :status-label="inv.status_label"
+            :status-color="inv.status_color"
+            :rows="cardRows(inv)"
+            @open="selectedInvoice = inv"
+          >
+            <template v-if="can.pay" #actions>
+              <button class="btn btn-sm btn-success flex-fill" @click="openPay(inv)">
+                <i class="ri-money-dollar-circle-line align-bottom me-1"></i> {{ $t('driver_invoices.actions.mark_paid') }}
+              </button>
+            </template>
+          </EntityCard>
+
+          <p v-if="rows.length === 0" class="text-center text-muted py-4 mb-0">{{ $t('driver_invoices.payments.empty') }}</p>
+        </div>
+
+        <div class="table-responsive table-card d-none d-lg-block">
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
               <tr>
@@ -135,7 +177,29 @@ onMounted(() => {
       </BCardBody>
     </BCard>
 
-    <BModal v-model="showPayModal" :title="$t('driver_invoices.pay.title')" hide-footer>
+    <EntityDetailSheet
+      :show="selectedInvoice !== null"
+      :title="selectedInvoice?.invoice_number ?? ''"
+      :subtitle="selectedInvoice ? driverName(selectedInvoice) : ''"
+      :status-label="selectedInvoice?.status_label ?? ''"
+      :status-color="selectedInvoice?.status_color ?? 'secondary'"
+      :rows="selectedInvoice ? sheetRows(selectedInvoice) : []"
+      @close="selectedInvoice = null"
+    >
+      <template #actions>
+        <Link
+          :href="route('driver-invoices.show', selectedInvoice?.id)"
+          class="btn btn-light flex-fill sheet-action"
+        >
+          <i class="ri-eye-line align-bottom me-1"></i> {{ $t('common.view') }}
+        </Link>
+        <button v-if="can.pay" class="btn btn-success flex-fill sheet-action" @click="openPay(selectedInvoice)">
+          <i class="ri-money-dollar-circle-line align-bottom me-1"></i> {{ $t('driver_invoices.actions.mark_paid') }}
+        </button>
+      </template>
+    </EntityDetailSheet>
+
+    <BottomSheet :show="showPayModal" :title="$t('driver_invoices.pay.title')" @close="showPayModal = false">
       <form @submit.prevent="submitPay">
         <div class="mb-3" v-if="activeInvoice">
           <div class="alert alert-light border">
@@ -161,6 +225,6 @@ onMounted(() => {
           </BButton>
         </div>
       </form>
-    </BModal>
+    </BottomSheet>
   </Layout>
 </template>

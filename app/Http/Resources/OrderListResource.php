@@ -43,6 +43,7 @@ class OrderListResource extends JsonResource
         'status',
         'is_fragile',
         'can_be_opened',
+        'return_id',
         'created_at',
     ];
 
@@ -92,12 +93,22 @@ class OrderListResource extends JsonResource
             'payment_method_color' => $payment->color(),
 
             'amount_to_collect' => $payment->amountToCollect($orderAmount),
+            // An empty "to collect" cell is ambiguous on a driver's card: it
+            // reads as missing data rather than "nothing to collect". This flag
+            // lets the card state it outright.
+            'is_already_paid' => ! $payment->requiresCashCollection(),
             'order_value' => $this->order_value !== null ? (float) $this->order_value : null,
             'delivery_price' => (float) $this->delivery_price,
             'total_amount' => (float) $this->total_amount,
 
             'is_fragile' => (bool) $this->is_fragile,
             'can_be_opened' => (bool) $this->can_be_opened,
+
+            // Gates the driver card's "open a return" action. Deliberately
+            // coarse: a cancelled return makes the order eligible again, but the
+            // list would need a join to know that, and ReturnService rejects a
+            // duplicate anyway.
+            'has_return' => $this->return_id !== null,
 
             'created_at' => $this->created_at?->toIso8601String(),
         ];

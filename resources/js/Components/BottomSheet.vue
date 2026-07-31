@@ -20,6 +20,14 @@ const props = defineProps({
    * request is in flight so a stray swipe cannot abandon a pending action.
    */
   dismissible: { type: Boolean, default: true },
+  /**
+   * Width once the sheet becomes a centered card on tablets and up. Ignored on
+   * phones, where it is always full-width. `lg`/`xl` exist for the pickers that
+   * embed a selection table and cannot work in a single narrow column.
+   *
+   * @values md, lg, xl
+   */
+  size: { type: String, default: 'md' },
 });
 
 const emit = defineEmits(['close']);
@@ -32,8 +40,11 @@ let dragStartY = 0;
 /** Past this many pixels the release is treated as a dismiss rather than a snap-back. */
 const DISMISS_THRESHOLD = 110;
 
+// The drag travels through a custom property rather than an inline `transform`,
+// because on a touch-capable tablet the sheet is also centered with a translate
+// and an inline transform would drop that centering mid-drag.
 const panelStyle = computed(() => ({
-  transform: dragOffset.value ? `translateY(${dragOffset.value}px)` : '',
+  '--sheet-drag': `${dragOffset.value}px`,
   transition: isDragging.value ? 'none' : '',
 }));
 
@@ -130,6 +141,7 @@ onBeforeUnmount(() => {
         v-if="show"
         ref="panel"
         class="sheet-panel"
+        :class="`sheet-panel--${size}`"
         role="dialog"
         aria-modal="true"
         :aria-label="title || undefined"
@@ -187,6 +199,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 -0.5rem 1.75rem rgba(0, 0, 0, 0.22);
   /* Keep the last control clear of the iOS home indicator. */
   padding-bottom: env(safe-area-inset-bottom, 0);
+  transform: translateY(var(--sheet-drag, 0px));
   transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
@@ -195,10 +208,21 @@ onBeforeUnmount(() => {
   .sheet-panel {
     right: auto;
     left: 50%;
-    width: 30rem;
-    transform: translateX(-50%);
+    transform: translate(-50%, var(--sheet-drag, 0px));
     border-radius: 1.25rem;
     bottom: 1.5rem;
+  }
+
+  .sheet-panel--md {
+    width: 30rem;
+  }
+
+  .sheet-panel--lg {
+    width: 40rem;
+  }
+
+  .sheet-panel--xl {
+    width: min(56rem, calc(100vw - 3rem));
   }
 }
 

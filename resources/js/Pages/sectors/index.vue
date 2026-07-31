@@ -6,6 +6,9 @@ import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import FilterPanel from "@/Components/FilterPanel.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -24,6 +27,8 @@ const filters = reactive({
 });
 
 const perPage = ref(props.filters.per_page ?? 15);
+/** Row whose mobile detail sheet is open. */
+const selectedSector = ref(null);
 
 const rows = computed(() => props.sectors.data ?? []);
 const meta = computed(() => props.sectors.meta ?? {});
@@ -34,6 +39,26 @@ const cityOptions = computed(() => [
 ]);
 
 import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
+
+/** Drives the "Filter" badge, since the form itself is collapsed by default. */
+const activeFilterCount = computed(
+  () => Object.values(filters).filter((value) => value !== "" && value !== null).length
+);
+
+const statusLabel = (sector) => (sector.is_active ? t("common.active") : t("common.inactive"));
+const statusColor = (sector) => (sector.is_active ? "success" : "danger");
+
+const cardRows = (sector) => [
+  { label: t("sectors.table.delivery_price"), value: money(sector.delivery_price), emphasis: true },
+  { label: t("sectors.table.return_price"), value: money(sector.return_price) },
+  { label: t("sectors.table.orders"), value: sector.orders_count ?? 0 },
+];
+
+const sheetRows = (sector) => [
+  { label: t("sectors.filters.city"), value: sector.city?.name },
+  ...cardRows(sector),
+  { label: t("sectors.table.drivers"), value: sector.drivers_count ?? 0 },
+];
 
 const query = () => {
   const params = { per_page: perPage.value };
@@ -73,7 +98,12 @@ const confirmDelete = (sector) => {
     confirmButtonText: t("common.confirm_delete"),
     cancelButtonText: t("common.cancel"),
   }).then((result) => {
-    if (result.isConfirmed) router.delete(route("sectors.destroy", sector.id), { preserveScroll: true });
+    if (result.isConfirmed) {
+      // The sheet may be the caller; it would otherwise linger on a row that no
+      // longer exists.
+      selectedSector.value = null;
+      router.delete(route("sectors.destroy", sector.id), { preserveScroll: true });
+    }
   });
 };
 
@@ -88,46 +118,52 @@ onMounted(() => {
     <PageHeader :title="$t('sectors.title')" :pageTitle="$t('common.delivery_zones')" />
 
     <BCard no-body>
-      <BCardHeader class="border-bottom-dashed">
-        <BRow class="g-3 align-items-center">
-          <BCol sm><h5 class="card-title mb-0">{{ $t('sectors.list_title') }}</h5></BCol>
-          <BCol sm="auto">
-            <Link v-if="can.create" :href="route('sectors.create')" class="btn btn-success">
-              <i class="ri-add-line align-bottom me-1"></i> {{ $t('sectors.new_sector') }}
-            </Link>
-          </BCol>
-        </BRow>
-      </BCardHeader>
+      <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
+        <template #title>
+          <h5 class="card-title mb-0">{{ $t('sectors.list_title') }}</h5>
+        </template>
 
-      <BCardBody class="border-bottom-dashed">
-        <BRow class="g-3">
-          <BCol md="4">
-            <label class="form-label">{{ $t('common.search') }}</label>
-            <input v-model="filters.search" type="text" class="form-control" :placeholder="$t('sectors.filters.search_placeholder')" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol md="4">
-            <label class="form-label">{{ $t('sectors.filters.city') }}</label>
-            <Multiselect v-model="filters.city_id" :options="cityOptions" :searchable="true" :close-on-select="true" :placeholder="$t('sectors.filters.city_placeholder')" />
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('common.status') }}</label>
-            <select v-model="filters.status" class="form-select">
-              <option value="">{{ $t('common.all') }}</option>
-              <option value="active">{{ $t('common.active') }}</option>
-              <option value="inactive">{{ $t('common.inactive') }}</option>
-            </select>
-          </BCol>
-          <BCol md="2" class="d-flex align-items-end">
-            <div class="hstack gap-2 w-100">
-              <button class="btn btn-light w-100" @click="resetFilters"><i class="ri-refresh-line"></i></button>
-              <button class="btn btn-primary w-100" @click="applyFilters"><i class="ri-search-line"></i></button>
-            </div>
-          </BCol>
-        </BRow>
-      </BCardBody>
+        <template #actions>
+          <Link v-if="can.create" :href="route('sectors.create')" class="btn btn-success">
+            <i class="ri-add-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('sectors.new_sector') }}</span>
+          </Link>
+        </template>
+
+        <BCol md="4">
+          <label class="form-label">{{ $t('common.search') }}</label>
+          <input v-model="filters.search" type="text" class="form-control" :placeholder="$t('sectors.filters.search_placeholder')" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol md="4">
+          <label class="form-label">{{ $t('sectors.filters.city') }}</label>
+          <Multiselect v-model="filters.city_id" :options="cityOptions" :searchable="true" :close-on-select="true" :placeholder="$t('sectors.filters.city_placeholder')" />
+        </BCol>
+        <BCol md="4">
+          <label class="form-label">{{ $t('common.status') }}</label>
+          <select v-model="filters.status" class="form-select">
+            <option value="">{{ $t('common.all') }}</option>
+            <option value="active">{{ $t('common.active') }}</option>
+            <option value="inactive">{{ $t('common.inactive') }}</option>
+          </select>
+        </BCol>
+      </FilterPanel>
 
       <BCardBody>
-        <div class="table-responsive table-card">
+        <div class="d-lg-none">
+          <EntityCard
+            v-for="sector in rows"
+            :key="sector.id"
+            :title="sector.name"
+            :subtitle="sector.city?.name ?? ''"
+            :status-label="statusLabel(sector)"
+            :status-color="statusColor(sector)"
+            :rows="cardRows(sector)"
+            @open="selectedSector = sector"
+          />
+          <p v-if="rows.length === 0" class="text-center text-muted py-4 mb-0">{{ $t('sectors.empty') }}</p>
+        </div>
+
+        <div class="table-responsive table-card d-none d-lg-block">
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
               <tr>
@@ -189,5 +225,38 @@ onMounted(() => {
         </BRow>
       </BCardBody>
     </BCard>
+
+    <EntityDetailSheet
+      :show="selectedSector !== null"
+      :title="selectedSector?.name ?? ''"
+      :subtitle="selectedSector?.city?.name ?? ''"
+      :status-label="selectedSector ? statusLabel(selectedSector) : ''"
+      :status-color="selectedSector ? statusColor(selectedSector) : 'secondary'"
+      :rows="selectedSector ? sheetRows(selectedSector) : []"
+      @close="selectedSector = null"
+    >
+      <template #actions>
+        <Link :href="route('sectors.show', selectedSector?.id)" class="btn btn-primary flex-fill sheet-action">
+          <i class="ri-eye-line align-bottom me-1"></i> {{ $t('common.view') }}
+        </Link>
+        <Link
+          v-if="can.update"
+          :href="route('sectors.edit', selectedSector?.id)"
+          class="btn btn-soft-warning sheet-action"
+          :aria-label="$t('common.edit')"
+        >
+          <i class="ri-pencil-fill"></i>
+        </Link>
+        <button
+          v-if="can.delete"
+          type="button"
+          class="btn btn-soft-danger sheet-action"
+          :aria-label="$t('common.delete')"
+          @click="confirmDelete(selectedSector)"
+        >
+          <i class="ri-delete-bin-5-fill"></i>
+        </button>
+      </template>
+    </EntityDetailSheet>
   </Layout>
 </template>

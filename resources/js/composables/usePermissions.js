@@ -56,6 +56,28 @@ export function usePermissions() {
     return roles.value.includes(role);
   }
 
+  const isDriver = computed(() => roles.value.includes('Driver'));
+  const isSeller = computed(
+    () => user.value?.is_seller === true || roles.value.includes('Seller')
+  );
+
+  /**
+   * Plain-value snapshot handed to the navigation definitions.
+   *
+   * `menuItems.js` stays free of Vue reactivity, and — more importantly — the
+   * desktop sidebar and the mobile bottom bar resolve their visibility from the
+   * *same* object, so an entry can never be hidden in one and shown in the other.
+   */
+  const navigationContext = computed(() => ({
+    can,
+    canAny: (candidates) => canAny(candidates),
+    isSuperAdmin: isSuperAdmin.value,
+    user: user.value,
+    roles: roles.value,
+    isDriver: isDriver.value,
+    isSeller: isSeller.value,
+  }));
+
   return {
     permissions,
     isSuperAdmin,
@@ -65,9 +87,10 @@ export function usePermissions() {
     canAny,
     canAll,
     hasRole,
+    navigationContext,
     isAdmin: computed(() => isSuperAdmin.value),
-    isDriver: computed(() => roles.value.includes('Driver')),
-    isSeller: computed(() => user.value?.is_seller === true || roles.value.includes('Seller')),
+    isDriver,
+    isSeller,
     isDispatcher: computed(() => roles.value.includes('Dispatcher')),
   };
 }

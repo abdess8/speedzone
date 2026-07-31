@@ -6,6 +6,7 @@ import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import InputError from "@/Components/InputError.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
+import BottomSheet from "@/Components/BottomSheet.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -335,8 +336,11 @@ onMounted(() => {
       </BCol>
     </BRow>
 
-    <!-- Assign modal -->
-    <BModal v-model="showAssignModal" :title="$t('support_tickets.assign.title')" hide-footer>
+    <BottomSheet
+      :show="showAssignModal"
+      :title="$t('support_tickets.assign.title')"
+      @close="showAssignModal = false"
+    >
       <form @submit.prevent="submitAssign">
         <div class="mb-3">
           <label class="form-label">{{ $t('support_tickets.assign.select_agent') }}</label>
@@ -355,10 +359,13 @@ onMounted(() => {
           </BButton>
         </div>
       </form>
-    </BModal>
+    </BottomSheet>
 
-    <!-- Status modal -->
-    <BModal v-model="showStatusModal" :title="$t('support_tickets.status.title')" hide-footer>
+    <BottomSheet
+      :show="showStatusModal"
+      :title="$t('support_tickets.status.title')"
+      @close="showStatusModal = false"
+    >
       <form @submit.prevent="submitStatus">
         <div class="mb-3">
           <label class="form-label">{{ $t('support_tickets.status.select') }}</label>
@@ -374,6 +381,6 @@ onMounted(() => {
           </BButton>
         </div>
       </form>
-    </BModal>
+    </BottomSheet>
   </Layout>
 </template>

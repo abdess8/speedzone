@@ -6,6 +6,7 @@ import FormSection from '@/Components/FormSection.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
+import BottomSheet from '@/Components/BottomSheet.vue';
 
 const props = defineProps({
     tokens: Array,
@@ -132,8 +133,7 @@ const deleteApiToken = () => {
             </BCard>
         </div>
 
-        <!-- Token Value Modal -->
-        <BModal v-model="displayingToken" title="API Token" hide-footer header-class="bg-success-subtle p-3">
+        <BottomSheet :show="displayingToken" title="API Token" @close="displayingToken = false">
             <p class="fs-14 text-muted">Please copy your new API token. For your security, it won't be shown again.</p>
             <div v-if="$page.props.jetstream.flash.token" class="mt-4 rounded mb-4">
                 <pre class="language-markup"><code>{{ $page.props.jetstream.flash.token }}</code></pre>
@@ -141,10 +141,9 @@ const deleteApiToken = () => {
             <div class="text-end">
                 <BButton variant="danger" @click="displayingToken = false">Cancel</BButton>
             </div>
-        </BModal>
+        </BottomSheet>
 
-        <!-- API Token Permissions Modal -->
-        <BModal v-model="permissionModal" title="API Token Permissions" hide-footer>
+        <BottomSheet :show="permissionModal" title="API Token Permissions" @close="permissionModal = false">
             <div v-for="permission in availablePermissions" :key="permission">
                 <label class="d-flex align-items-center">
                     <Checkbox v-model:checked="updateApiTokenForm.permissions" :value="permission" />
@@ -155,15 +154,14 @@ const deleteApiToken = () => {
                 <BButton variant="danger" @click="permissionModal = !permissionModal">Cancel</BButton>
                 <BButton variant="primary" class="ms-1" :class="{ 'opacity-25': updateApiTokenForm.processing }" :disabled="updateApiTokenForm.processing" @click="updateApiToken">Save</BButton>
             </div>
-        </BModal>
+        </BottomSheet>
 
-        <!-- Delete Token Confirmation Modal -->
-        <BModal v-model="apiTokenDeleteModal" title="Delete API Token" header-class="bg-danger-subtle p-2"  hide-footer>
+        <BottomSheet :show="apiTokenDeleteModal" title="Delete API Token" @close="apiTokenDeleteModal = false">
             <p class="fs-14">Are you sure you would like to delete this API token?</p>
             <div class="text-end">
                 <BButton variant="danger" class="btn-sm" @click="apiTokenDeleteModal = !apiTokenDeleteModal">Cancel</BButton>
                 <BButton variant="primary" class="ms-1 btn-sm" :class="{ 'opacity-25': deleteApiTokenForm.processing }" :disabled="deleteApiTokenForm.processing" @click="deleteApiToken">Delete</BButton>
             </div>
-        </BModal>
+        </BottomSheet>
     </div>
 </template>

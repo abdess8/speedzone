@@ -3,6 +3,7 @@ import { ref, watch, computed } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import axios from "axios";
+import BottomSheet from "@/Components/BottomSheet.vue";
 
 const { t } = useI18n();
 
@@ -63,9 +64,7 @@ const submit = () => {
 </script>
 
 <template>
-  <BModal :model-value="show" @update:model-value="(v) => !v && emit('close')" size="lg" hide-footer centered>
-    <template #title>{{ $t('returns.create_modal_title') }}</template>
-
+  <BottomSheet :show="show" :title="$t('returns.create_modal_title')" size="lg" @close="emit('close')">
     <div v-if="loading" class="text-center py-4 text-muted">…</div>
 
     <div v-else-if="!canSubmit" class="alert alert-warning">
@@ -117,5 +116,5 @@ const submit = () => {
         <button type="submit" class="btn btn-success" :disabled="form.processing">{{ $t('returns.modal.submit') }}</button>
       </div>
     </form>
-  </BModal>
+  </BottomSheet>
 </template>

@@ -183,3 +183,73 @@ it('never lets a driver edit the content of an assigned order', function () {
     expect($driver->can('updateStatus', $order))->toBeTrue()
         ->and($driver->can('update', $order))->toBeFalse();
 });
+
+it('forbids a driver from opening the detail screen of an order assigned to him', function () {
+    $seller = workflowUser(Role::SELLER);
+    $driver = workflowUser(Role::DRIVER);
+    $city = workflowCity();
+
+    $order = workflowOrder($seller, $city, OrderStatus::OUT_FOR_DELIVERY, $driver);
+
+    // He may read the row in his list, but the detail screen also carries the
+    // seller, the billing trail and the change history.
+    expect($driver->can('view', $order))->toBeTrue()
+        ->and($driver->can('viewDetails', $order))->toBeFalse();
+
+    $this->actingAs($driver)
+        ->get(route('orders.show', $order))
+        ->assertForbidden();
+});
+
+it('still lets a driver list the orders assigned to him', function () {
+    $seller = workflowUser(Role::SELLER);
+    $driver = workflowUser(Role::DRIVER);
+    $city = workflowCity();
+
+    workflowOrder($seller, $city, OrderStatus::OUT_FOR_DELIVERY, $driver);
+
+    $this->actingAs($driver)
+        ->get(route('orders.index'))
+        ->assertOk();
+});
+
+it('keeps the detail screen open to the seller who owns the order', function () {
+    $seller = workflowUser(Role::SELLER);
+    $city = workflowCity();
+
+    $order = workflowOrder($seller, $city, OrderStatus::CREATED);
+
+    expect($seller->can('viewDetails', $order))->toBeTrue();
+
+    $this->actingAs($seller)
+        ->get(route('orders.show', $order))
+        ->assertOk();
+});
+
+it('keeps the detail screen open to a dispatcher', function () {
+    $seller = workflowUser(Role::SELLER);
+    $dispatcher = workflowUser(Role::DISPATCHER);
+    $city = workflowCity();
+
+    $order = workflowOrder($seller, $city, OrderStatus::IN_DELIVERY_CITY);
+
+    expect($dispatcher->can('viewDetails', $order))->toBeTrue();
+});
+
+it('restricts the list to the statuses of the requested sidebar view', function () {
+    $seller = workflowUser(Role::SELLER);
+    $dispatcher = workflowUser(Role::DISPATCHER);
+    $city = workflowCity();
+
+    $outForDelivery = workflowOrder($seller, $city, OrderStatus::OUT_FOR_DELIVERY);
+    $delivered = workflowOrder($seller, $city, OrderStatus::DELIVERED);
+
+    $trackingNumbers = collect(
+        $this->actingAs($dispatcher)
+            ->get(route('orders.index', ['status_group' => 'delivery']))
+            ->viewData('page')['props']['orders']['data']
+    )->pluck('tracking_number');
+
+    expect($trackingNumbers)->toContain($outForDelivery->tracking_number)
+        ->and($trackingNumbers)->not->toContain($delivered->tracking_number);
+});

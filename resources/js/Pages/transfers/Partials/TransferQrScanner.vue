@@ -3,6 +3,7 @@ import { ref, watch, onUnmounted } from "vue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Swal from "sweetalert2";
+import BottomSheet from "@/Components/BottomSheet.vue";
 
 const { t } = useI18n();
 
@@ -111,13 +112,7 @@ const close = () => emit("close");
 </script>
 
 <template>
-  <BModal
-    :model-value="show"
-    :title="$t('transfers.scanner.title')"
-    size="lg"
-    hide-footer
-    @update:model-value="(v) => !v && close()"
-  >
+  <BottomSheet :show="show" :title="$t('transfers.scanner.title')" size="lg" @close="close">
     <p class="text-muted">{{ $t('transfers.scanner.hint') }}</p>
 
     <div class="input-group mb-3">
@@ -146,5 +141,5 @@ const close = () => emit("close");
         {{ $t('transfers.scanner.submit') }}
       </button>
     </div>
-  </BModal>
+  </BottomSheet>
 </template>

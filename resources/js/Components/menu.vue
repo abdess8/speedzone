@@ -1,34 +1,45 @@
 <script>
 import { Link } from '@inertiajs/vue3';
-import { resolveMenuItems } from '@/navigation/menuItems';
+import { resolveFooterItems, resolveMenuSections } from '@/navigation/menuItems';
+import { usePermissions } from '@/composables/usePermissions';
 
 export default {
   components: { Link },
+  setup() {
+    // Shared with BottomNav: one permission context means the sidebar and the
+    // mobile tab bar can never disagree about what a role may reach.
+    const { navigationContext, user, roles } = usePermissions();
+
+    return { navigationContext, currentUser: user, currentRoles: roles };
+  },
   computed: {
     /**
-     * Permission context handed to the menu definition. Kept as plain values so
-     * `menuItems.js` stays free of Vue reactivity concerns and is unit testable.
+     * Destinations grouped under their Slack-style section caption, followed by
+     * the pinned group (Settings) which carries no caption and is pushed to the
+     * bottom of the panel.
      */
-    permissionContext() {
-      const permissions = this.$page.props.permissions ?? [];
-      const isSuperAdmin = this.$page.props.isSuperAdmin === true;
-      const user = this.$page.props.auth?.user ?? null;
-      const roles = user?.roles ?? [];
+    sections() {
+      const pinned = resolveFooterItems(this.navigationContext);
 
-      const can = (permission) => isSuperAdmin || permissions.includes(permission);
-
-      return {
-        can,
-        canAny: (candidates) => [candidates].flat().filter(Boolean).some(can),
-        isSuperAdmin,
-        user,
-        roles,
-        isDriver: roles.includes('Driver'),
-        isSeller: user?.is_seller === true || roles.includes('Seller'),
-      };
+      return [
+        ...resolveMenuSections(this.navigationContext),
+        ...(pinned.length > 0 ? [{ key: '__pinned', labelKey: null, items: pinned }] : []),
+      ];
     },
-    visibleItems() {
-      return resolveMenuItems(this.permissionContext);
+    roleLabel() {
+      return this.currentUser?.role_label ?? this.currentRoles[0] ?? '';
+    },
+    userInitials() {
+      const user = this.currentUser;
+
+      if (!user) {
+        return '?';
+      }
+
+      const first = (user.first_name || user.name || '?').charAt(0);
+      const last = (user.last_name || '').charAt(0);
+
+      return (first + last).toUpperCase();
     },
   },
   mounted() {
@@ -156,43 +167,137 @@ export default {
 
 <template>
   <BContainer fluid>
+    <!-- Identity and presence at the top of the panel, as in Slack: who you are
+         signed in as is the first thing to confirm when a workspace has several
+         roles with very different permissions. -->
+    <Link :href="route('profile.show')" class="menu-identity">
+      <span class="menu-identity-avatar">
+        <img v-if="currentUser?.photo_url" :src="currentUser.photo_url" :alt="currentUser.full_name" />
+        <span v-else>{{ userInitials }}</span>
+      </span>
+      <span class="menu-identity-text">
+        <span class="menu-identity-name">{{ currentUser?.full_name }}</span>
+        <span class="menu-identity-role">
+          <span class="menu-identity-presence" aria-hidden="true"></span>
+          {{ roleLabel }}
+        </span>
+      </span>
+    </Link>
+
     <ul class="navbar-nav h-100 d-flex flex-column" id="navbar-nav">
-      <li class="menu-title">
-        <span>{{ $t('sidebar.menu') }}</span>
-      </li>
+      <template v-for="section in sections" :key="section.key">
+        <li v-if="section.labelKey" class="menu-section-title">{{ $t(section.labelKey) }}</li>
 
-      <li
-        v-for="item in visibleItems"
-        :key="item.key"
-        class="nav-item"
-        :class="{ 'mt-auto': item.footer }"
-      >
-        <Link v-if="!item.children" :href="itemHref(item)" class="nav-link menu-link">
-          <i :class="item.icon"></i>
-          <span>{{ $t(item.labelKey) }}</span>
-        </Link>
-
-        <template v-else>
-          <a
-            class="nav-link menu-link"
-            :href="`#sidebar-${item.key}`"
-            data-bs-toggle="collapse"
-            role="button"
-            aria-expanded="false"
-            :aria-controls="`sidebar-${item.key}`"
-          >
+        <li
+          v-for="(item, index) in section.items"
+          :key="item.key"
+          class="nav-item"
+          :class="{ 'mt-auto': item.footer && index === 0 }"
+        >
+          <Link v-if="!item.children" :href="itemHref(item)" class="nav-link menu-link">
             <i :class="item.icon"></i>
             <span>{{ $t(item.labelKey) }}</span>
-          </a>
-          <div class="collapse menu-dropdown" :id="`sidebar-${item.key}`">
-            <ul class="nav nav-sm flex-column">
-              <li v-for="child in item.children" :key="child.key" class="nav-item">
-                <Link :href="itemHref(child)" class="nav-link">{{ $t(child.labelKey) }}</Link>
-              </li>
-            </ul>
-          </div>
-        </template>
-      </li>
+          </Link>
+
+          <template v-else>
+            <a
+              class="nav-link menu-link"
+              :href="`#sidebar-${item.key}`"
+              data-bs-toggle="collapse"
+              role="button"
+              aria-expanded="false"
+              :aria-controls="`sidebar-${item.key}`"
+            >
+              <i :class="item.icon"></i>
+              <span>{{ $t(item.labelKey) }}</span>
+            </a>
+            <div class="collapse menu-dropdown" :id="`sidebar-${item.key}`">
+              <ul class="nav nav-sm flex-column">
+                <li v-for="child in item.children" :key="child.key" class="nav-item">
+                  <Link :href="itemHref(child)" class="nav-link">{{ $t(child.labelKey) }}</Link>
+                </li>
+              </ul>
+            </div>
+          </template>
+        </li>
+      </template>
     </ul>
   </BContainer>
 </template>
+
+<style scoped>
+.menu-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0.5rem 0 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.6rem;
+  color: var(--vz-vertical-menu-item-color);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.menu-identity:hover {
+  background-color: var(--vz-vertical-menu-item-active-bg);
+  color: var(--vz-vertical-menu-item-active-color);
+}
+
+.menu-identity-avatar {
+  display: inline-flex;
+  overflow: hidden;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background-color: var(--vz-vertical-menu-item-active-bg);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.menu-identity-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.menu-identity-text {
+  min-width: 0;
+}
+
+.menu-identity-name,
+.menu-identity-role {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-identity-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.menu-identity-role {
+  color: var(--vz-vertical-menu-title-color);
+  font-size: 0.6875rem;
+}
+
+.menu-identity-presence {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.25rem;
+  border-radius: 50%;
+  background-color: #0ab39c;
+  vertical-align: middle;
+}
+
+/* Collapsed sidebar shows icons only; the identity block has no room there. */
+[data-sidebar-size='sm'] .menu-identity,
+[data-sidebar-size='sm-hover'] .menu-identity {
+  display: none;
+}
+</style>

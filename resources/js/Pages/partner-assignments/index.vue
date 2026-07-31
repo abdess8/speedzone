@@ -6,6 +6,9 @@ import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import FilterPanel from "@/Components/FilterPanel.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -24,9 +27,24 @@ const filters = reactive({
 const rows = computed(() => props.partners.data ?? []);
 const meta = computed(() => props.partners.meta ?? {});
 
+/** Row whose mobile detail sheet is open. */
+const selectedPartner = ref(null);
+
 const adminOptions = computed(() =>
   props.admins.map((a) => ({ value: a.id, label: `${a.name}${a.email ? ` (${a.email})` : ""}` }))
 );
+
+/** Drives the "Filter" badge, since the form itself is collapsed by default. */
+const activeFilterCount = computed(
+  () => Object.values(filters).filter((value) => value !== "" && value !== null).length
+);
+
+const adminNames = (partner) => (partner.users ?? []).map((user) => user.name).join(", ");
+
+const cardRows = (partner) => [
+  { label: t("partners.assignments.assigned_admins"), value: partner.users_count ?? 0, emphasis: true },
+  { label: t("partners.table.ice_number"), value: partner.ice_number },
+];
 
 const reload = () => {
   const params = {};
@@ -38,6 +56,11 @@ const reload = () => {
   });
 };
 
+const resetFilters = () => {
+  filters.search = "";
+  reload();
+};
+
 const goToPage = (url) => {
   if (url) router.visit(url, { preserveState: true, preserveScroll: true });
 };
@@ -47,6 +70,8 @@ const activePartner = ref(null);
 const assignForm = useForm({ user_ids: [], replace: false });
 
 const openAssign = (partner) => {
+  // The sheet renders above the modal, so it has to step aside first.
+  selectedPartner.value = null;
   activePartner.value = partner;
   assignForm.user_ids = (partner.users ?? []).map((u) => u.id);
   assignForm.replace = false;
@@ -87,6 +112,10 @@ const removeUser = (partner, user) => {
   }).then((result) => {
     if (!result.isConfirmed) return;
 
+    // The sheet may be the caller; it holds a copy of the row and would keep
+    // listing the admin that is about to be removed.
+    selectedPartner.value = null;
+
     router.delete(route("partner-assignments.remove", [partner.id, user.id]), {
       preserveScroll: true,
     });
@@ -102,22 +131,42 @@ const removeUser = (partner, user) => {
     />
 
     <div class="card">
-      <div class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between">
-        <h5 class="card-title mb-0">{{ t("partners.assignments.list_title") }}</h5>
-        <div class="search-box">
-          <input
-            v-model="filters.search"
-            type="search"
-            class="form-control"
-            :placeholder="t('partners.filters.search_placeholder')"
-            @keyup.enter="reload"
-          />
-          <i class="ri-search-line search-icon"></i>
-        </div>
-      </div>
+      <FilterPanel :active-count="activeFilterCount" @apply="reload" @reset="resetFilters">
+        <template #title>
+          <h5 class="card-title mb-0">{{ t("partners.assignments.list_title") }}</h5>
+        </template>
+
+        <BCol md="4">
+          <label class="form-label">{{ t("common.search") }}</label>
+          <div class="search-box">
+            <input
+              v-model="filters.search"
+              type="search"
+              class="form-control"
+              :placeholder="t('partners.filters.search_placeholder')"
+              @keyup.enter="reload"
+            />
+            <i class="ri-search-line search-icon"></i>
+          </div>
+        </BCol>
+      </FilterPanel>
 
       <div class="card-body">
-        <div class="table-responsive">
+        <div class="d-lg-none">
+          <EntityCard
+            v-for="partner in rows"
+            :key="partner.id"
+            :title="partner.name"
+            :subtitle="adminNames(partner)"
+            :rows="cardRows(partner)"
+            @open="selectedPartner = partner"
+          />
+          <p v-if="rows.length === 0" class="text-center text-muted py-4 mb-0">
+            {{ t("partners.empty") }}
+          </p>
+        </div>
+
+        <div class="table-responsive d-none d-lg-block">
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light">
               <tr>
@@ -232,5 +281,46 @@ const removeUser = (partner, user) => {
         </div>
       </div>
     </div>
+
+    <EntityDetailSheet
+      :show="selectedPartner !== null"
+      :title="selectedPartner?.name ?? ''"
+      :rows="selectedPartner ? cardRows(selectedPartner) : []"
+      @close="selectedPartner = null"
+    >
+      <div v-if="selectedPartner" class="mt-3">
+        <p class="text-muted fs-13 mb-2">{{ t("partners.assignments.assigned_admins") }}</p>
+        <div v-if="(selectedPartner.users ?? []).length" class="d-flex flex-wrap gap-1">
+          <span
+            v-for="user in selectedPartner.users"
+            :key="user.id"
+            class="badge bg-light text-dark border d-inline-flex align-items-center gap-1"
+          >
+            {{ user.name }}
+            <button
+              v-if="can.remove"
+              type="button"
+              class="btn btn-link btn-sm p-0 text-danger"
+              :aria-label="t('common.delete')"
+              @click="removeUser(selectedPartner, user)"
+            >
+              <i class="ri-close-line"></i>
+            </button>
+          </span>
+        </div>
+        <p v-else class="text-muted fs-13 mb-0">{{ t("partners.show.no_assigned_admins") }}</p>
+      </div>
+
+      <template v-if="can.assign" #actions>
+        <button
+          type="button"
+          class="btn btn-primary flex-fill sheet-action"
+          @click="openAssign(selectedPartner)"
+        >
+          <i class="ri-user-add-line align-bottom me-1"></i>
+          {{ t("partners.assignments.assign_action") }}
+        </button>
+      </template>
+    </EntityDetailSheet>
   </Layout>
 </template>

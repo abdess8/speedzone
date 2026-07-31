@@ -62,7 +62,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     Route::get('/dashboard/seller', [SellerDashboardController::class, 'index'])->name('dashboard.seller');
 
-    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware('permission:users.read')->group(function () {
         Route::get('pending-users', [PendingUserController::class, 'index'])->name('pending-users.index');
         Route::get('pending-users/{user}', [PendingUserController::class, 'show'])->name('pending-users.show');
         Route::post('users/{user}/approve', [PendingUserController::class, 'approve'])->name('users.approve');
@@ -147,13 +147,27 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::delete('driver-zones/{driver}/sectors/{sector}', [DriverZoneController::class, 'remove'])
         ->whereNumber('driver')->whereNumber('sector')->name('driver-zones.remove');
 
-    // Order management (logistics)
-    Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
-    Route::get('orders/labels', [OrderController::class, 'labels'])->name('orders.labels');
-    Route::post('orders/bulk-status', [OrderController::class, 'bulkStatus'])->name('orders.bulk-status');
-    Route::post('orders/create-and-new', [OrderController::class, 'storeAndNew'])->name('orders.store-and-new');
+    // Order management (logistics).
+    //
+    // The permission middleware here duplicates the controller's authorize()
+    // calls on purpose: a route that answers 403 before booting the controller
+    // is the same rule the sidebar uses to hide the entry, so "not in the menu"
+    // and "forbidden by URL" can never drift apart.
+    Route::get('orders/export', [OrderController::class, 'export'])
+        ->middleware('permission:orders.export')
+        ->name('orders.export');
+    Route::get('orders/labels', [OrderController::class, 'labels'])
+        ->middleware('permission:orders.print')
+        ->name('orders.labels');
+    Route::post('orders/bulk-status', [OrderController::class, 'bulkStatus'])
+        ->middleware('permission:orders.update.all|orders.update.own|orders.update.assigned')
+        ->name('orders.bulk-status');
+    Route::post('orders/create-and-new', [OrderController::class, 'storeAndNew'])
+        ->middleware('permission:orders.create')
+        ->name('orders.store-and-new');
     Route::get('orders/{order}/pdf', [OrderController::class, 'pdf'])
         ->whereNumber('order')
+        ->middleware('permission:orders.print')
         ->name('orders.pdf');
     Route::post('orders/{order}/assign-driver', [OrderController::class, 'assignDriver'])
         ->whereNumber('order')

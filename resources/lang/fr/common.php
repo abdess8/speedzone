@@ -2,6 +2,9 @@
 
 return [
     'reset' => 'Réinitialiser',
+    'filter' => 'Filtrer',
+    'filters_title' => 'Filtres',
+    'clear_filters' => 'Effacer les filtres',
     'apply_filters' => 'Appliquer les filtres',
     'apply' => 'Appliquer',
     'search' => 'Rechercher',

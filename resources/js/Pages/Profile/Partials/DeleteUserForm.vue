@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import InputError from '@/Components/InputError.vue';
 import TextInput from '@/Components/TextInput.vue';
+import BottomSheet from '@/Components/BottomSheet.vue';
 
 const confirmingUserDeletion = ref(false);
 const passwordInput = ref(null);
@@ -48,7 +49,7 @@ const closeModal = () => {
                 <BButton variant="danger w-100" @click="confirmUserDeletion">{{ $t('profile.delete_account.button') }}</BButton>
             </div>
 
-            <BModal v-model="confirmingUserDeletion" :title="$t('profile.delete_account.modal_title')" hide-footer header-class="bg-danger-subtle p-3">
+            <BottomSheet :show="confirmingUserDeletion" :title="$t('profile.delete_account.modal_title')" @close="closeModal">
                 <p class="text-muted">{{ $t('profile.delete_account.modal_description') }}</p>
                 <div class="mb-3">
                     <TextInput ref="passwordInput" v-model="form.password" type="password" :placeholder="$t('profile.delete_account.password')" required autocomplete="current-password" @keyup.enter="deleteUser" :class="{ 'is-invalid': form.errors.password }" />
@@ -60,7 +61,7 @@ const closeModal = () => {
                     <BButton variant="danger" @click="closeModal">{{ $t('common.close') }}</BButton>
                     <BButton variant="primary" class="ms-1" :class="{ 'opacity-25': form.processing }" :disabled="form.processing" @click="deleteUser">{{ $t('profile.delete_account.confirm') }}</BButton>
                 </div>
-            </BModal>
+            </BottomSheet>
         </BCardBody>
     </BCard>
 </template>

@@ -4,6 +4,7 @@ import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import axios from "axios";
 import Swal from "sweetalert2";
+import BottomSheet from "@/Components/BottomSheet.vue";
 
 const { t } = useI18n();
 
@@ -61,8 +62,7 @@ const processScan = () => {
 </script>
 
 <template>
-  <BModal :model-value="show" @update:model-value="(v) => !v && emit('close')" size="lg" hide-footer centered>
-    <template #title>{{ $t('returns.scanner.title') }}</template>
+  <BottomSheet :show="show" :title="$t('returns.scanner.title')" size="lg" @close="emit('close')">
     <p class="text-muted">{{ $t('returns.scanner.hint') }}</p>
 
     <div class="input-group mb-3">
@@ -87,5 +87,5 @@ const processScan = () => {
       <button class="btn btn-light me-2" @click="emit('close')">{{ $t('common.cancel') }}</button>
       <button class="btn btn-success" :disabled="!scanInput" @click="processScan">{{ $t('returns.scanner.submit') }}</button>
     </div>
-  </BModal>
+  </BottomSheet>
 </template>

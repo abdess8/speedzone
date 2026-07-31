@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import InputError from '@/Components/InputError.vue';
 import TextInput from '@/Components/TextInput.vue';
+import BottomSheet from '@/Components/BottomSheet.vue';
 
 defineProps({
     sessions: Array,
@@ -82,7 +83,7 @@ const closeModal = () => {
                 <p class="alert alert-success text-success mt-3" v-if="form.recentlySuccessful">{{ $t('profile.sessions.logged_out') }}</p>
             </div>
 
-            <BModal v-model="confirmingLogout" :title="$t('profile.sessions.modal_title')" hide-footer header-class="bg-info-subtle p-3">
+            <BottomSheet :show="confirmingLogout" :title="$t('profile.sessions.modal_title')" @close="closeModal">
                 <p class="text-muted">{{ $t('profile.sessions.modal_description') }}</p>
                 <div class="mb-3">
                     <TextInput ref="passwordInput" v-model="form.password" type="password" :placeholder="$t('profile.sessions.password')" required autocomplete="current-password" @keyup.enter="logoutOtherBrowserSessions" :class="{ 'is-invalid': form.errors.password }" />
@@ -94,7 +95,7 @@ const closeModal = () => {
                     <BButton variant="danger" @click="closeModal">{{ $t('common.close') }}</BButton>
                     <BButton variant="primary" class="ms-1" :class="{ 'opacity-25': form.processing }" :disabled="form.processing" @click="logoutOtherBrowserSessions">{{ $t('profile.sessions.confirm_logout') }}</BButton>
                 </div>
-            </BModal>
+            </BottomSheet>
         </BCardBody>
     </BCard>
 </template>

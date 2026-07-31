@@ -132,4 +132,74 @@ return [
 
     'system' => 'System',
     'unknown' => 'Unknown',
+
+    /*
+     * Mobile screen. The desktop dashboard stacks 23 metrics and 8 charts,
+     * which on a phone is simply a wall to scroll past. The mobile version
+     * keeps only what reads at a glance and what can be acted on, so it needs
+     * a vocabulary of its own.
+     */
+    'mobile' => [
+        'title' => 'My activity',
+        'subtitle' => 'SpeedZone Express',
+        'cash_headline' => 'Cash to collect',
+        'refresh' => 'Refresh',
+        'previous_period' => 'Previous period',
+        'next_period' => 'Next period',
+        'currency' => 'MAD',
+
+        'stats' => [
+            'delivered' => 'Delivered',
+            'in_transit' => 'In transit',
+            'returns' => 'Returns',
+            'collected' => 'COD collected',
+            'success_caption' => ':rate% success',
+            'out_for_delivery_caption' => ':count out for delivery',
+            'failed_caption' => ':count failed',
+            'orders_caption' => 'of :count orders',
+        ],
+
+        'tasks' => [
+            'title' => 'Needs attention',
+            'pending_pickup' => 'Waiting for pickup',
+            'failed' => 'Failed deliveries',
+            'transfers' => 'Pending transfers',
+            'at_agency' => 'Parcels at agency',
+            'empty' => 'Nothing to handle, you are all caught up.',
+            'open' => 'Open',
+        ],
+
+        'overview' => [
+            'title' => 'Orders overview',
+            'total' => 'Total',
+            'delivered' => 'Delivered',
+            'in_progress' => 'In progress',
+            'on_track' => ':rate% delivery success rate',
+            'at_risk' => ':count deliveries to recover',
+            'empty' => 'No orders in this period.',
+        ],
+
+        'trend' => [
+            'title' => 'Daily activity',
+            'caption' => 'Last 30 days',
+            'count' => ':count orders',
+            'on_day' => 'on :day',
+            'previous_day' => ':count orders on :day',
+            'stable' => 'steady',
+        ],
+
+        'recent' => [
+            'title' => 'Latest orders',
+            'view_all' => 'View all',
+        ],
+
+        'breakdown' => [
+            'title' => 'Breakdown',
+            'by_status' => 'Statuses',
+            'by_city' => 'Cities',
+            'total' => 'Orders',
+            'all' => 'All categories',
+            'share' => ':count of :total orders',
+        ],
+    ],
 ];

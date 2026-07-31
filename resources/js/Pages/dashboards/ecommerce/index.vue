@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n';
 import Layout from '@/Layouts/main.vue';
 import KpiCard from '@/Components/Dashboard/KpiCard.vue';
 import ChartCard from '@/Components/Dashboard/ChartCard.vue';
+import MobileDashboard from '@/Components/Dashboard/mobile/MobileDashboard.vue';
+import { useIsMobile } from '@/composables/useMediaQuery';
 import { fetchDashboard, isCancelled, PERIOD_VALUES } from '@/services/DashboardService';
 import getChartColorsArray from '@/common/getChartColorsArray';
 import { formatMoney } from '@/common/formatMoney';
@@ -15,6 +17,14 @@ import SimpleBar from 'simplebar-vue';
 
 const { t } = useI18n();
 const page = usePage();
+
+/**
+ * The two views share this page's data and period state but not its markup:
+ * the desktop layout is 23 metric cards and 8 charts, which on a phone is a
+ * wall to scroll rather than a dashboard. Switching on a media query instead of
+ * `d-none` classes means a phone never mounts the charts it will not show.
+ */
+const isMobile = useIsMobile();
 
 const userName = computed(() => page.props.auth?.user?.name ?? t('dashboard.default_team'));
 const dateLocale = computed(() => (page.props.locale === 'en' ? 'en-US' : 'fr-FR'));
@@ -242,7 +252,16 @@ const statusBadgeClass = (color) => `badge bg-${color}-subtle text-${color}`;
 
 <template>
   <Layout>
-    <BRow>
+    <MobileDashboard
+      v-if="isMobile"
+      v-model:period="period"
+      :dashboard="dashboard"
+      :loading="loading"
+      :error="error ?? ''"
+      @refresh="loadDashboard"
+    />
+
+    <BRow v-else>
       <BCol>
         <div class="h-100">
           <BRow class="mb-3 pb-1">

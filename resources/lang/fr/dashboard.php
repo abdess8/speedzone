@@ -132,4 +132,74 @@ return [
 
     'system' => 'Système',
     'unknown' => 'Inconnu',
+
+    /*
+     * Écran mobile. Le tableau de bord bureau empile 23 indicateurs et 8
+     * graphiques : sur un téléphone cela devient un mur à faire défiler. La
+     * version mobile ne garde que ce qui se lit d'un coup d'œil et ce sur quoi
+     * on peut agir, d'où un vocabulaire qui lui est propre.
+     */
+    'mobile' => [
+        'title' => 'Mon activité',
+        'subtitle' => 'SpeedZone Express',
+        'cash_headline' => 'Espèces à encaisser',
+        'refresh' => 'Actualiser',
+        'previous_period' => 'Période précédente',
+        'next_period' => 'Période suivante',
+        'currency' => 'MAD',
+
+        'stats' => [
+            'delivered' => 'Livrées',
+            'in_transit' => 'En transit',
+            'returns' => 'Retours',
+            'collected' => 'COD encaissé',
+            'success_caption' => ':rate% de réussite',
+            'out_for_delivery_caption' => ':count en livraison',
+            'failed_caption' => ':count échouées',
+            'orders_caption' => 'sur :count commandes',
+        ],
+
+        'tasks' => [
+            'title' => 'À traiter',
+            'pending_pickup' => 'En attente de ramassage',
+            'failed' => 'Livraisons échouées',
+            'transfers' => 'Transferts en attente',
+            'at_agency' => 'Colis en agence',
+            'empty' => 'Rien à traiter, tout est à jour.',
+            'open' => 'Ouvrir',
+        ],
+
+        'overview' => [
+            'title' => 'Aperçu des commandes',
+            'total' => 'Total',
+            'delivered' => 'Livrées',
+            'in_progress' => 'En cours',
+            'on_track' => 'Taux de réussite de :rate%',
+            'at_risk' => ':count livraisons à rattraper',
+            'empty' => 'Aucune commande sur la période.',
+        ],
+
+        'trend' => [
+            'title' => 'Activité quotidienne',
+            'caption' => '30 derniers jours',
+            'count' => ':count commandes',
+            'on_day' => 'le :day',
+            'previous_day' => ':count commandes le :day',
+            'stable' => 'stable',
+        ],
+
+        'recent' => [
+            'title' => 'Dernières commandes',
+            'view_all' => 'Tout voir',
+        ],
+
+        'breakdown' => [
+            'title' => 'Répartition',
+            'by_status' => 'Statuts',
+            'by_city' => 'Villes',
+            'total' => 'Commandes',
+            'all' => 'Toutes les catégories',
+            'share' => ':count sur :total commandes',
+        ],
+    ],
 ];

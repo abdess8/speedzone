@@ -588,6 +588,7 @@ class DashboardService
             'status' => $status->value,
             'status_label' => $status->label(),
             'status_color' => $status->color(),
+            'status_icon' => $status->icon(),
             'payment_method' => $payment->value,
             'payment_method_label' => $payment->displayLabel(),
             'amount' => (float) $order->total_amount,

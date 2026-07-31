@@ -3,6 +3,10 @@ const moneyFormatter = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 2,
 });
 
+const roundedMoneyFormatter = new Intl.NumberFormat("fr-FR", {
+  maximumFractionDigits: 0,
+});
+
 /**
  * Parse and normalize a monetary amount.
  *
@@ -22,6 +26,19 @@ export function formatAmount(value) {
  */
 export function formatMoney(value) {
   return moneyFormatter.format(formatAmount(value));
+}
+
+/**
+ * Format a monetary amount without centimes.
+ *
+ * Headline figures on a phone are read at a glance rather than reconciled, and
+ * the two decimals cost horizontal space a 360 px screen does not have.
+ *
+ * @param {number|string|null|undefined} value
+ * @returns {string}
+ */
+export function formatMoneyRounded(value) {
+  return roundedMoneyFormatter.format(formatAmount(value));
 }
 
 /**

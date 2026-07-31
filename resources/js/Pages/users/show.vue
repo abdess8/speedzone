@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { Link } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
@@ -10,6 +10,10 @@ const { t, locale } = useI18n();
 const props = defineProps({
   user: { type: Object, required: true },
 });
+
+// A stored photo path is no proof the file is still on disk, so fall back to the
+// initials rather than showing the browser's broken-image glyph.
+const photoFailed = ref(false);
 
 const initials = computed(() => {
   const first = (props.user.first_name || props.user.name || "?").charAt(0);
@@ -101,10 +105,11 @@ const labelFrom = (group, value) => {
         <BCard no-body>
           <BCardBody class="text-center">
             <img
-              v-if="user.photo_url"
+              v-if="user.photo_url && !photoFailed"
               :src="user.photo_url"
               :alt="user.full_name"
               class="rounded-circle avatar-xl object-fit-cover mx-auto"
+              @error="photoFailed = true"
             />
             <div
               v-else

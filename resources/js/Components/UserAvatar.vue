@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { Link } from "@inertiajs/vue3";
 
 const props = defineProps({
@@ -25,6 +25,15 @@ const hasPhoto = computed(() => {
 
 const src = computed(() => props.photoUrl || props.user?.photo_url || props.user?.profile_photo_url);
 
+// A stored path is no proof the file is still on disk — an upload can be removed
+// or a storage volume reset without the column being cleared. Without this the
+// avatar renders as the browser's broken-image glyph instead of the fallback.
+const failed = ref(false);
+
+watch(src, () => {
+  failed.value = false;
+});
+
 const linkHref = computed(() => {
   if (props.href) return props.href;
   if (props.clickable && props.user?.id) return route("users.show", props.user.id);
@@ -47,11 +56,12 @@ const sizeStyle = computed(() => ({
     :class="linkHref ? 'text-body text-decoration-none' : ''"
   >
     <img
-      v-if="hasPhoto && src"
+      v-if="hasPhoto && src && !failed"
       :src="src"
       :alt="displayName"
       class="rounded-circle object-fit-cover flex-shrink-0"
       :style="sizeStyle"
+      @error="failed = true"
     />
     <span
       v-else

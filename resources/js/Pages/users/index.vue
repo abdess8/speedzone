@@ -34,6 +34,12 @@ export default {
       searchTimer: null,
       /** Row whose mobile detail sheet is open. */
       selectedUser: null,
+      /**
+       * Ids whose photo failed to load. A stored path is no proof the file is
+       * still on disk, and tracking failures per user lets one dead upload fall
+       * back to initials without affecting the other rows.
+       */
+      failedPhotos: new Set(),
     };
   },
   computed: {
@@ -88,6 +94,9 @@ export default {
       const first = (user.first_name || user.name || "?").charAt(0);
       const last = (user.last_name || "").charAt(0);
       return (first + last).toUpperCase();
+    },
+    hasPhoto(user) {
+      return Boolean(user.photo_url) && !this.failedPhotos.has(user.id);
     },
     cityName(user) {
       if (!user.city) return this.$t("common.empty_value_short");
@@ -211,10 +220,11 @@ export default {
               >
                 <template #avatar>
                   <img
-                    v-if="user.photo_url"
+                    v-if="hasPhoto(user)"
                     :src="user.photo_url"
                     :alt="user.full_name"
                     class="avatar-xs rounded-circle object-fit-cover flex-shrink-0"
+                    @error="failedPhotos.add(user.id)"
                   />
                   <div
                     v-else
@@ -249,10 +259,11 @@ export default {
                   <tr v-for="user in users.data" :key="user.id">
                     <td>
                       <img
-                        v-if="user.photo_url"
+                        v-if="hasPhoto(user)"
                         :src="user.photo_url"
                         :alt="user.full_name"
                         class="avatar-xs rounded-circle object-fit-cover"
+                        @error="failedPhotos.add(user.id)"
                       />
                       <div
                         v-else

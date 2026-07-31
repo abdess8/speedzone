@@ -12,6 +12,13 @@ export default {
 
     return { navigationContext, currentUser: user, currentRoles: roles };
   },
+  data() {
+    return {
+      // A stored photo path is no proof the file is still on disk, so a removed
+      // upload would otherwise show the browser's broken-image glyph.
+      photoFailed: false,
+    };
+  },
   computed: {
     /**
      * Destinations grouped under their Slack-style section caption, followed by
@@ -172,7 +179,12 @@ export default {
          roles with very different permissions. -->
     <Link :href="route('profile.show')" class="menu-identity">
       <span class="menu-identity-avatar">
-        <img v-if="currentUser?.photo_url" :src="currentUser.photo_url" :alt="currentUser.full_name" />
+        <img
+          v-if="currentUser?.photo_url && !photoFailed"
+          :src="currentUser.photo_url"
+          :alt="currentUser.full_name"
+          @error="photoFailed = true"
+        />
         <span v-else>{{ userInitials }}</span>
       </span>
       <span class="menu-identity-text">

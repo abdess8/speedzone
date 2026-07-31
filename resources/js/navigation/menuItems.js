@@ -40,7 +40,9 @@ export const menuItems = [
     key: 'dashboard',
     labelKey: 'sidebar.dashboard',
     icon: 'ri-dashboard-2-line',
-    href: '/',
+    // Not "/": that path serves the public marketing site, for guests and signed-in
+    // users alike. The application dashboard lives at /dashboard.
+    href: '/dashboard',
     permissions: [],
   },
   {
@@ -296,7 +298,7 @@ export const mobileTabs = [
     labelKey: 'sidebar.bottom_nav.home',
     icon: 'ri-home-5-line',
     activeIcon: 'ri-home-5-fill',
-    href: '/',
+    href: '/dashboard',
     permissions: [],
   },
   {

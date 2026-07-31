@@ -48,14 +48,13 @@ const socials = [
             <div class="sz-footer__top">
                 <div class="sz-footer__brand-col">
                     <a href="#accueil" class="sz-footer__brand">
-                        <span class="sz-footer__logo">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <path d="M3 13l2-6h9l4 4h3v5h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                <circle cx="7.5" cy="17.5" r="2" stroke="currentColor" stroke-width="2" />
-                                <circle cx="17.5" cy="17.5" r="2" stroke="currentColor" stroke-width="2" />
-                            </svg>
-                        </span>
-                        <span class="sz-footer__name">Speed<span>Zone</span></span>
+                        <img
+                            src="@assets/images/logo-brand-full.png"
+                            alt="SpeedZone Express"
+                            class="sz-footer__logo"
+                            width="180"
+                            height="54"
+                        />
                     </a>
                     <p class="sz-footer__tagline">Livraison rapide. Confiance assurée.</p>
                     <p class="sz-footer__desc">
@@ -144,27 +143,15 @@ const socials = [
 .sz-footer__brand {
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
     text-decoration: none;
     margin-bottom: 1rem;
 }
 .sz-footer__logo {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: var(--sz-gradient);
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-.sz-footer__name {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: #fff;
-}
-.sz-footer__name span {
-    color: #60a5fa;
+    display: block;
+    width: auto;
+    height: 54px;
+    max-width: 180px;
+    object-fit: contain;
 }
 .sz-footer__tagline {
     margin: 0 0 0.5rem;

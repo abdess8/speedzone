@@ -8,15 +8,17 @@ const activeCities = [
 
 const comingSoon = ['Casablanca', 'Fès', 'Marrakech', 'Tanger'];
 
-// Pins positioned (%) over the stylized north-west map area.
+// Pins positioned (%) over the Morocco SVG (Mercator, viewBox 0 0 400 340).
 const pins = [
-    { name: 'Kénitra', x: 46, y: 30 },
-    { name: 'Mehdia', x: 38, y: 26 },
-    { name: 'Sidi Kacem', x: 63, y: 22 },
-    { name: 'Sidi Slimane', x: 60, y: 33 },
-    { name: 'Salé', x: 40, y: 46 },
-    { name: 'Rabat', x: 36, y: 52 },
-    { name: 'Témara', x: 33, y: 60 },
+    { name: 'Tanger', x: 66.6, y: 10.7 },
+    { name: 'Rabat', x: 61.4, y: 20.8 },
+    { name: 'Casablanca', x: 57.6, y: 23.4 },
+    { name: 'Marrakech', x: 55.6, y: 34.5 },
+    { name: 'Agadir', x: 47.3, y: 41.2 },
+    { name: 'Fès', x: 70.8, y: 20.9 },
+    { name: 'Oujda', x: 86.7, y: 17 },
+    { name: 'Laâyoune', x: 29, y: 59.3 },
+    { name: 'Dakhla', x: 14.7, y: 77.6 },
 ];
 </script>
 
@@ -31,7 +33,7 @@ const pins = [
 
             <div class="sz-coverage__grid">
                 <div class="sz-coverage__map" data-aos="fade-right">
-                    <svg viewBox="0 0 400 340" class="sz-coverage__svg" aria-hidden="true">
+                    <svg viewBox="0 0 400 340" class="sz-coverage__svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
                         <defs>
                             <linearGradient id="szMap" x1="0" y1="0" x2="1" y2="1">
                                 <stop offset="0%" stop-color="#dbeafe" />
@@ -39,13 +41,14 @@ const pins = [
                             </linearGradient>
                         </defs>
                         <path
-                            d="M96 22 L150 12 L214 26 L268 20 L326 46 L360 96 L372 150 L356 196 L372 232 L340 276 L300 300 L250 318 L196 322 L150 306 L120 320 L84 300 L60 258 L44 210 L30 160 L40 108 L64 60 Z"
+                            d="M288.8 18.1 L302.6 27.8 L324.4 26.2 L348.1 31.2 L358.1 31.5 L366.7 45.9 L368.1 59.6 L376 83 L382 87.7 L377.8 96.2 L347.8 99.9 L337.5 108 L324.2 109.9 L323.2 126 L296.5 134.5 L287.7 145.2 L269 151 L246.1 154.2 L209.1 169.9 L209.3 194.8 L205.8 194.8 L205.8 194.8 L206.4 206 L192.2 206.7 L184.8 211.4 L174.4 211.4 L166.1 208.7 L146.9 211 L139.4 227.1 L132.3 228.6 L121.5 254.5 L89.7 276.4 L82.1 304.2 L72.7 313.2 L70 320.4 L18.4 322 L18 322 L19.1 312.7 L27.9 307.3 L35.4 296.8 L33.9 290 L41.8 275.8 L54.5 262.9 L62.2 259.6 L68.3 247.7 L68.8 236.7 L77.1 224 L92.3 216.5 L106.9 195.2 L107.3 194.9 L118.8 186.8 L140.1 184.5 L158.1 170.1 L169.6 164.5 L188.7 146.7 L183 119.9 L191.7 101.2 L194.8 89.6 L209.5 74.7 L232.5 64.5 L249.5 55.3 L264.8 32 L272 18 L288.8 18.1 Z"
                             fill="url(#szMap)"
                             stroke="#bfdbfe"
                             stroke-width="2"
+                            stroke-linejoin="round"
                         />
                         <path
-                            d="M96 22 L150 12 L214 26 L268 20 L326 46 L360 96 L372 150"
+                            d="M274.2 18 L270.4 30.7 L251.1 57.3 L242.9 62.2 L233.9 67.3"
                             fill="none"
                             stroke="#93c5fd"
                             stroke-width="2"
@@ -123,6 +126,7 @@ const pins = [
     border-radius: var(--sz-radius);
     padding: 1.5rem;
     box-shadow: var(--sz-shadow);
+    overflow: hidden;
 }
 .sz-coverage__svg {
     width: 100%;

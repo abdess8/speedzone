@@ -242,7 +242,7 @@ export default {
       </li>
 
       <li class="nav-item">
-        <Link href="/" class="nav-link menu-link">
+        <Link href="/dashboard" class="nav-link menu-link">
           <i class="ri-dashboard-2-line"></i>
           <span>{{ $t('sidebar.dashboard') }}</span>
         </Link>

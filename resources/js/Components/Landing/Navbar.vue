@@ -42,15 +42,13 @@ onBeforeUnmount(() => {
     <header class="sz-nav" :class="{ 'sz-nav--scrolled': scrolled }">
         <div class="sz-nav__inner">
             <a href="#accueil" class="sz-nav__brand" @click="closeMobile">
-                <span class="sz-nav__logo" aria-hidden="true">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                        <path d="M3 13l2-6h9l4 4h3v5h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        <circle cx="7.5" cy="17.5" r="2" stroke="currentColor" stroke-width="2" />
-                        <circle cx="17.5" cy="17.5" r="2" stroke="currentColor" stroke-width="2" />
-                        <path d="M2 10h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                    </svg>
-                </span>
-                <span class="sz-nav__name">Speed<span>Zone</span></span>
+                <img
+                    src="@assets/images/logo-brand-full.png"
+                    alt="SpeedZone Express"
+                    class="sz-nav__logo"
+                    width="160"
+                    height="48"
+                />
             </a>
 
             <nav class="sz-nav__menu" :class="{ 'is-open': mobileOpen }">
@@ -127,31 +125,15 @@ onBeforeUnmount(() => {
 .sz-nav__brand {
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
     text-decoration: none;
-    color: var(--sz-dark);
-    font-weight: 800;
+    flex-shrink: 0;
 }
 .sz-nav__logo {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 42px;
-    border-radius: 13px;
-    background: var(--sz-gradient);
-    color: #fff;
-    box-shadow: var(--sz-shadow-primary);
-}
-.sz-nav__name {
-    font-size: 1.3rem;
-    letter-spacing: -0.02em;
-}
-.sz-nav__name span {
-    color: var(--sz-primary);
-}
-.sz-nav--scrolled .sz-nav__name {
-    color: var(--sz-dark);
+    display: block;
+    width: auto;
+    height: 48px;
+    max-width: min(160px, 42vw);
+    object-fit: contain;
 }
 
 .sz-nav__menu {

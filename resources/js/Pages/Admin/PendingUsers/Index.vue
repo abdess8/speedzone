@@ -2,10 +2,20 @@
 import { Link, router } from '@inertiajs/vue3';
 import Layout from '@/Layouts/main.vue';
 import PageHeader from '@/Components/page-header.vue';
+import FilterPanel from '@/Components/FilterPanel.vue';
+import EntityCard from '@/Components/EntityCard.vue';
+import EntityDetailSheet from '@/Components/EntityDetailSheet.vue';
 import Swal from 'sweetalert2';
 
+/** Contextual colour per registration status, used by the badge and the mobile card. */
+const STATUS_COLORS = {
+    PENDING_EMAIL_VERIFICATION: 'info',
+    PENDING_APPROVAL: 'warning',
+    REJECTED: 'danger',
+};
+
 export default {
-    components: { Layout, PageHeader, Link },
+    components: { Layout, PageHeader, Link, FilterPanel, EntityCard, EntityDetailSheet },
     props: {
         users: { type: Object, required: true },
         filters: { type: Object, default: () => ({}) },
@@ -16,21 +26,38 @@ export default {
             search: this.filters.search || '',
             status: this.filters.status || '',
             searchTimer: null,
+            /** Row whose mobile detail sheet is open. */
+            selectedUser: null,
         };
     },
+    computed: {
+        /** Drives the "Filter" badge, since the form itself is collapsed by default. */
+        activeFilterCount() {
+            return [this.search, this.status].filter(Boolean).length;
+        },
+    },
     watch: {
+        // Both go through one timer so clearing several filters at once — which the
+        // reset button does — results in a single request.
         search() {
-            clearTimeout(this.searchTimer);
-            this.searchTimer = setTimeout(() => this.applyFilters(), 350);
+            this.scheduleFilters(350);
         },
         status() {
-            this.applyFilters();
+            this.scheduleFilters(0);
         },
     },
     mounted() {
         this.flashMessage();
     },
     methods: {
+        scheduleFilters(delay) {
+            clearTimeout(this.searchTimer);
+            this.searchTimer = setTimeout(() => this.applyFilters(), delay);
+        },
+        resetFilters() {
+            this.search = '';
+            this.status = '';
+        },
         applyFilters() {
             router.get(
                 route('admin.pending-users.index'),
@@ -44,12 +71,33 @@ export default {
         statusLabel(value) {
             return this.statuses[value] || value;
         },
+        statusColor(value) {
+            return STATUS_COLORS[value] ?? 'secondary';
+        },
         statusBadgeClass(value) {
-            return {
-                PENDING_EMAIL_VERIFICATION: 'bg-info-subtle text-info',
-                PENDING_APPROVAL: 'bg-warning-subtle text-warning',
-                REJECTED: 'bg-danger-subtle text-danger',
-            }[value] || 'bg-secondary-subtle text-secondary';
+            const color = this.statusColor(value);
+
+            return `bg-${color}-subtle text-${color}`;
+        },
+        userName(user) {
+            return user.full_name || user.name || '';
+        },
+        /** Detail lines shared by the mobile card and its sheet. */
+        cardRows(user) {
+            return [
+                { label: this.$t('seller_registration.admin.columns.phone'), value: user.phone_number },
+                { label: this.$t('seller_registration.admin.columns.city'), value: this.cityName(user) },
+                {
+                    label: this.$t('seller_registration.admin.columns.registered_at'),
+                    value: this.formatDate(user.created_at),
+                },
+            ];
+        },
+        sheetRows(user) {
+            return [
+                { label: this.$t('seller_registration.admin.columns.email'), value: user.email },
+                ...this.cardRows(user),
+            ];
         },
         cityName(user) {
             if (!user.city) return this.$t('common.empty_value_short');
@@ -89,32 +137,52 @@ export default {
         />
 
         <BCard no-body>
-            <BCardHeader class="border-0">
-                <BRow class="g-3 align-items-center">
-                    <BCol md="4">
-                        <div class="search-box">
-                            <input
-                                v-model="search"
-                                type="text"
-                                class="form-control search"
-                                :placeholder="$t('seller_registration.admin.search_placeholder')"
-                            >
-                            <i class="ri-search-line search-icon"></i>
-                        </div>
-                    </BCol>
-                    <BCol md="3">
-                        <select v-model="status" class="form-select">
-                            <option value="">{{ $t('seller_registration.admin.all_statuses') }}</option>
-                            <option v-for="(label, value) in statuses" :key="value" :value="value">
-                                {{ label }}
-                            </option>
-                        </select>
-                    </BCol>
-                </BRow>
-            </BCardHeader>
+            <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
+                <template #title>
+                    <h5 class="card-title mb-0">{{ $t('seller_registration.admin.page_title') }}</h5>
+                </template>
+
+                <BCol md="4">
+                    <label class="form-label">{{ $t('common.search') }}</label>
+                    <div class="search-box">
+                        <input
+                            v-model="search"
+                            type="text"
+                            class="form-control search"
+                            :placeholder="$t('seller_registration.admin.search_placeholder')"
+                        >
+                        <i class="ri-search-line search-icon"></i>
+                    </div>
+                </BCol>
+                <BCol md="3">
+                    <label class="form-label">{{ $t('seller_registration.admin.columns.status') }}</label>
+                    <select v-model="status" class="form-select">
+                        <option value="">{{ $t('seller_registration.admin.all_statuses') }}</option>
+                        <option v-for="(label, value) in statuses" :key="value" :value="value">
+                            {{ label }}
+                        </option>
+                    </select>
+                </BCol>
+            </FilterPanel>
 
             <BCardBody>
-                <div class="table-responsive">
+                <div class="d-lg-none">
+                    <EntityCard
+                        v-for="user in users.data"
+                        :key="user.id"
+                        :title="userName(user)"
+                        :subtitle="user.email ?? ''"
+                        :status-label="statusLabel(user.status)"
+                        :status-color="statusColor(user.status)"
+                        :rows="cardRows(user)"
+                        @open="selectedUser = user"
+                    />
+                    <p v-if="!users.data.length" class="text-center text-muted py-4 mb-0">
+                        {{ $t('seller_registration.admin.empty') }}
+                    </p>
+                </div>
+
+                <div class="table-responsive d-none d-lg-block">
                     <table class="table align-middle table-nowrap mb-0">
                         <thead class="table-light">
                             <tr>
@@ -180,5 +248,25 @@ export default {
                 </div>
             </BCardBody>
         </BCard>
+
+        <EntityDetailSheet
+            :show="selectedUser !== null"
+            :title="selectedUser ? userName(selectedUser) : ''"
+            :subtitle="selectedUser?.email ?? ''"
+            :status-label="selectedUser ? statusLabel(selectedUser.status) : ''"
+            :status-color="selectedUser ? statusColor(selectedUser.status) : 'secondary'"
+            :rows="selectedUser ? sheetRows(selectedUser) : []"
+            @close="selectedUser = null"
+        >
+            <template #actions>
+                <Link
+                    :href="route('admin.pending-users.show', selectedUser?.id)"
+                    class="btn btn-primary flex-fill sheet-action"
+                >
+                    <i class="ri-eye-line align-bottom me-1"></i>
+                    {{ $t('seller_registration.admin.view_details') }}
+                </Link>
+            </template>
+        </EntityDetailSheet>
     </Layout>
 </template>

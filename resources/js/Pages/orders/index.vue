@@ -5,7 +5,14 @@ import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
+import FilterPanel from "@/Components/FilterPanel.vue";
+import DriverOrderCard from "./Partials/DriverOrderCard.vue";
+import DriverStatusSheet from "./Partials/DriverStatusSheet.vue";
+import DriverReturnSheet from "./Partials/DriverReturnSheet.vue";
+import OrderCard from "./Partials/OrderCard.vue";
+import OrderDetailSheet from "./Partials/OrderDetailSheet.vue";
 import Swal from "sweetalert2";
+import { formatMoney as money } from "@/common/formatMoney";
 
 const { t } = useI18n();
 
@@ -14,6 +21,7 @@ const props = defineProps({
   filters: { type: Object, default: () => ({}) },
   filterOptions: { type: Object, default: () => ({}) },
   can: { type: Object, default: () => ({}) },
+  workflow: { type: Object, default: () => ({}) },
 });
 
 const filters = reactive({
@@ -32,25 +40,44 @@ const filters = reactive({
   can_be_opened: props.filters.can_be_opened ?? "",
 });
 
+/**
+ * Pre-filtered view selected from the sidebar (`?status_group=delivery`).
+ *
+ * Kept out of `filters` on purpose: it is a scope the user navigated into, not
+ * something he typed, so it survives "reset" and is dropped by leaving the view.
+ */
+const statusGroup = computed(() => props.filters.status_group ?? "");
+
+const activeView = computed(() =>
+  (props.filterOptions.statusGroups ?? []).find((group) => group.value === statusGroup.value)
+);
+
+const activeFilterCount = computed(
+  () => Object.values(filters).filter((value) => value !== "" && value !== null).length
+);
+
 const sort = ref(props.filters.sort ?? "created_at");
 const direction = ref(props.filters.direction ?? "desc");
 const perPage = ref(props.filters.per_page ?? 25);
 
 const selected = ref([]);
-const bulkStatus = ref("");
 
 const rows = computed(() => props.orders.data ?? []);
 const meta = computed(() => props.orders.meta ?? {});
-
-import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const displayMoney = (value) => (value != null && value !== "" ? money(value) : "—");
 
 const query = () => {
   const params = { sort: sort.value, direction: direction.value, per_page: perPage.value };
+
+  if (statusGroup.value) {
+    params.status_group = statusGroup.value;
+  }
+
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== "" && value !== null) params[key] = value;
   });
+
   return params;
 };
 
@@ -104,6 +131,15 @@ const toggleAll = () => {
   selected.value = allChecked.value ? [] : rows.value.map((o) => o.id);
 };
 
+const toggleSelect = (order) => {
+  const index = selected.value.indexOf(order.id);
+  if (index === -1) {
+    selected.value.push(order.id);
+  } else {
+    selected.value.splice(index, 1);
+  }
+};
+
 const goToPage = (url) => {
   if (!url) return;
   router.visit(url, { only: TABLE_PROPS, preserveState: true, preserveScroll: true });
@@ -119,20 +155,82 @@ const printSelected = () => {
   window.open(route("orders.labels", { ids: selected.value.join(",") }), "_blank");
 };
 
-const applyBulkStatus = () => {
-  if (!bulkStatus.value || selected.value.length === 0) return;
+/*
+ * Driver quick-action flow.
+ *
+ * The transition graph is shipped once per page keyed by source status, so the
+ * options for a row are a lookup rather than a request.
+ */
+const canUpdateStatus = computed(() => props.workflow.can_update_status === true);
+const isDriver = computed(() => props.workflow.is_driver === true);
+const failureReasons = computed(() => props.workflow.failure_reasons ?? []);
+const returnReasons = computed(() => props.workflow.return_reasons ?? []);
+
+const transitionsFor = (order) => props.workflow.transitions?.[order.status] ?? [];
+
+/** A parcel already tied to a return must not spawn a second one. */
+const canReturn = (order) =>
+  props.workflow.can_create_return === true &&
+  order.has_return !== true &&
+  (props.workflow.return_eligible_statuses ?? []).includes(order.status);
+
+const sheetOrder = ref(null);
+const sheetProcessing = ref(false);
+const sheetTransitions = computed(() =>
+  sheetOrder.value ? transitionsFor(sheetOrder.value) : []
+);
+
+const openStatusSheet = (order) => {
+  sheetOrder.value = order;
+};
+
+const closeStatusSheet = () => {
+  if (sheetProcessing.value) return;
+  sheetOrder.value = null;
+};
+
+const submitStatusChange = ({ order, to_status, failure_reason, failure_note }) => {
+  sheetProcessing.value = true;
+
   router.post(
     route("orders.bulk-status"),
-    { ids: selected.value, to_status: bulkStatus.value },
+    { ids: [order.id], to_status, failure_reason, failure_note },
     {
       preserveScroll: true,
-      onSuccess: () => {
-        selected.value = [];
-        bulkStatus.value = "";
+      onFinish: () => {
+        sheetProcessing.value = false;
+        sheetOrder.value = null;
       },
     }
   );
 };
+
+const returnOrder = ref(null);
+const returnProcessing = ref(false);
+
+const closeReturnSheet = () => {
+  if (returnProcessing.value) return;
+  returnOrder.value = null;
+};
+
+const submitReturn = ({ order, reason, return_notes }) => {
+  returnProcessing.value = true;
+
+  router.post(
+    route("returns.store"),
+    { order_id: order.id, reason, return_notes },
+    {
+      preserveScroll: true,
+      onFinish: () => {
+        returnProcessing.value = false;
+        returnOrder.value = null;
+      },
+    }
+  );
+};
+
+/* Mobile detail for everyone but the driver, rendered from the row in memory. */
+const detailOrder = ref(null);
 
 onMounted(() => {
   const success = usePage().props?.flash?.success;
@@ -155,112 +253,105 @@ onMounted(() => {
     <PageHeader :title="$t('orders.title')" :pageTitle="$t('orders.page_title')" />
 
     <BCard no-body>
-      <BCardHeader class="border-bottom-dashed">
-        <BRow class="g-3 align-items-center">
-          <BCol sm>
-            <h5 class="card-title mb-0">{{ $t('orders.list_title') }}</h5>
-          </BCol>
-          <BCol sm="auto">
-            <div class="hstack gap-2">
-              <Link v-if="can.create" :href="route('orders.create')" class="btn btn-success">
-                <i class="ri-add-line align-bottom me-1"></i> {{ $t('orders.new_order') }}
-              </Link>
-            </div>
-          </BCol>
-        </BRow>
-      </BCardHeader>
+      <FilterPanel
+        :active-count="activeFilterCount"
+        :title="$t('common.filters_title')"
+        @apply="applyFilters"
+        @reset="resetFilters"
+      >
+        <template #title>
+          <h5 class="card-title mb-0 text-truncate">{{ $t('orders.list_title') }}</h5>
+          <!-- Names the sidebar view the list is restricted to, and offers a way out. -->
+          <span v-if="activeView" class="badge bg-primary-subtle text-primary mt-1">
+            {{ activeView.label }}
+            <Link :href="route('orders.index')" class="text-primary ms-1" :aria-label="$t('common.clear_filters')">
+              <i class="ri-close-line align-bottom"></i>
+            </Link>
+          </span>
+        </template>
 
-      <!-- Filters -->
-      <BCardBody class="border-bottom-dashed">
-        <BRow class="g-3">
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.tracking_number') }}</label>
-            <input v-model="filters.tracking_number" type="text" class="form-control" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.customer_name') }}</label>
-            <input v-model="filters.customer_name" type="text" class="form-control" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.customer_phone') }}</label>
-            <input v-model="filters.customer_phone" type="text" class="form-control" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.seller') }}</label>
-            <input v-model="filters.seller" type="text" class="form-control" :placeholder="$t('orders.filters.seller_placeholder')" @keyup.enter="applyFilters" />
-          </BCol>
+        <template #actions>
+          <Link v-if="can.create" :href="route('orders.create')" class="btn btn-success text-nowrap">
+            <i class="ri-add-line align-bottom me-1"></i> {{ $t('orders.new_order') }}
+          </Link>
+        </template>
 
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.city') }}</label>
-            <select v-model="filters.city_id" class="form-select">
-              <option value="">{{ $t('orders.filters.all_cities') }}</option>
-              <option v-for="city in filterOptions.cities" :key="city.id" :value="city.id">{{ city.name }}</option>
-            </select>
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('common.status') }}</label>
-            <select v-model="filters.status" class="form-select">
-              <option value="">{{ $t('common.all_statuses') }}</option>
-              <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
-            </select>
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.payment_method') }}</label>
-            <select v-model="filters.payment_method" class="form-select">
-              <option value="">{{ $t('orders.filters.all_methods') }}</option>
-              <option v-for="p in filterOptions.paymentMethods" :key="p.value" :value="p.value">{{ p.label }}</option>
-            </select>
-          </BCol>
-          <BCol md="3">
-            <BRow class="g-2">
-              <BCol cols="6">
-                <label class="form-label">{{ $t('orders.filters.fragile') }}</label>
-                <select v-model="filters.is_fragile" class="form-select">
-                  <option value="">{{ $t('common.any') }}</option>
-                  <option value="1">{{ $t('common.yes') }}</option>
-                  <option value="0">{{ $t('common.no') }}</option>
-                </select>
-              </BCol>
-              <BCol cols="6">
-                <label class="form-label">{{ $t('orders.filters.openable') }}</label>
-                <select v-model="filters.can_be_opened" class="form-select">
-                  <option value="">{{ $t('common.any') }}</option>
-                  <option value="1">{{ $t('common.yes') }}</option>
-                  <option value="0">{{ $t('common.no') }}</option>
-                </select>
-              </BCol>
-            </BRow>
-          </BCol>
+        <BCol md="6" lg="3">
+          <label class="form-label">{{ $t('orders.filters.tracking_number') }}</label>
+          <input v-model="filters.tracking_number" type="text" class="form-control" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol md="6" lg="3">
+          <label class="form-label">{{ $t('orders.filters.customer_name') }}</label>
+          <input v-model="filters.customer_name" type="text" class="form-control" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol md="6" lg="3">
+          <label class="form-label">{{ $t('orders.filters.customer_phone') }}</label>
+          <input v-model="filters.customer_phone" type="tel" class="form-control" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol v-if="can.read_all" md="6" lg="3">
+          <label class="form-label">{{ $t('orders.filters.seller') }}</label>
+          <input v-model="filters.seller" type="text" class="form-control" :placeholder="$t('orders.filters.seller_placeholder')" @keyup.enter="applyFilters" />
+        </BCol>
 
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.created_from') }}</label>
-            <input v-model="filters.created_from" type="date" class="form-control" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.created_to') }}</label>
-            <input v-model="filters.created_to" type="date" class="form-control" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.delivered_from') }}</label>
-            <input v-model="filters.delivery_from" type="date" class="form-control" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.delivered_to') }}</label>
-            <input v-model="filters.delivery_to" type="date" class="form-control" />
-          </BCol>
+        <BCol md="6" lg="3">
+          <label class="form-label">{{ $t('orders.filters.city') }}</label>
+          <select v-model="filters.city_id" class="form-select">
+            <option value="">{{ $t('orders.filters.all_cities') }}</option>
+            <option v-for="city in filterOptions.cities" :key="city.id" :value="city.id">{{ city.name }}</option>
+          </select>
+        </BCol>
+        <BCol md="6" lg="3">
+          <label class="form-label">{{ $t('common.status') }}</label>
+          <select v-model="filters.status" class="form-select">
+            <option value="">{{ $t('common.all_statuses') }}</option>
+            <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
+          </select>
+        </BCol>
+        <BCol md="6" lg="3">
+          <label class="form-label">{{ $t('orders.filters.payment_method') }}</label>
+          <select v-model="filters.payment_method" class="form-select">
+            <option value="">{{ $t('orders.filters.all_methods') }}</option>
+            <option v-for="p in filterOptions.paymentMethods" :key="p.value" :value="p.value">{{ p.label }}</option>
+          </select>
+        </BCol>
+        <BCol md="6" lg="3">
+          <BRow class="g-2">
+            <BCol cols="6">
+              <label class="form-label">{{ $t('orders.filters.fragile') }}</label>
+              <select v-model="filters.is_fragile" class="form-select">
+                <option value="">{{ $t('common.any') }}</option>
+                <option value="1">{{ $t('common.yes') }}</option>
+                <option value="0">{{ $t('common.no') }}</option>
+              </select>
+            </BCol>
+            <BCol cols="6">
+              <label class="form-label">{{ $t('orders.filters.openable') }}</label>
+              <select v-model="filters.can_be_opened" class="form-select">
+                <option value="">{{ $t('common.any') }}</option>
+                <option value="1">{{ $t('common.yes') }}</option>
+                <option value="0">{{ $t('common.no') }}</option>
+              </select>
+            </BCol>
+          </BRow>
+        </BCol>
 
-          <BCol cols="12">
-            <div class="hstack gap-2 justify-content-end">
-              <button class="btn btn-light text-nowrap" @click="resetFilters">
-                <i class="ri-refresh-line align-bottom me-1"></i> {{ $t('common.reset') }}
-              </button>
-              <button class="btn btn-primary text-nowrap" @click="applyFilters">
-                <i class="ri-search-line align-bottom me-1"></i> {{ $t('common.apply_filters') }}
-              </button>
-            </div>
-          </BCol>
-        </BRow>
-      </BCardBody>
+        <BCol md="6" lg="3">
+          <label class="form-label">{{ $t('orders.filters.created_from') }}</label>
+          <input v-model="filters.created_from" type="date" class="form-control" />
+        </BCol>
+        <BCol md="6" lg="3">
+          <label class="form-label">{{ $t('orders.filters.created_to') }}</label>
+          <input v-model="filters.created_to" type="date" class="form-control" />
+        </BCol>
+        <BCol md="6" lg="3">
+          <label class="form-label">{{ $t('orders.filters.delivered_from') }}</label>
+          <input v-model="filters.delivery_from" type="date" class="form-control" />
+        </BCol>
+        <BCol md="6" lg="3">
+          <label class="form-label">{{ $t('orders.filters.delivered_to') }}</label>
+          <input v-model="filters.delivery_to" type="date" class="form-control" />
+        </BCol>
+      </FilterPanel>
 
       <!-- Bulk action bar -->
       <BCardBody v-if="selected.length" class="bg-light border-bottom-dashed py-2">
@@ -275,13 +366,47 @@ onMounted(() => {
         </div>
       </BCardBody>
 
-      <!-- Table -->
       <BCardBody>
-        <div class="table-responsive table-card">
+        <!-- Mobile: cards for every role. Drivers get the field-work card, which
+             is their whole view of an order; everybody else gets a summary card
+             that opens a sheet. -->
+        <div class="d-lg-none">
+          <template v-if="isDriver">
+            <DriverOrderCard
+              v-for="order in rows"
+              :key="order.id"
+              :order="order"
+              :can-update-status="canUpdateStatus"
+              :transitions="transitionsFor(order)"
+              :can-create-return="canReturn(order)"
+              @change-status="openStatusSheet"
+              @create-return="returnOrder = $event"
+            />
+          </template>
+          <template v-else>
+            <OrderCard
+              v-for="order in rows"
+              :key="order.id"
+              :order="order"
+              :selectable="can.export || can.print"
+              :selected="selected.includes(order.id)"
+              @open="detailOrder = $event"
+              @toggle-select="toggleSelect"
+            />
+          </template>
+
+          <p v-if="rows.length === 0" class="text-center text-muted py-4 mb-0">
+            {{ $t('orders.empty') }}
+          </p>
+        </div>
+
+        <!-- Desktop: high-density table. The reduced type size is what lets all
+             twelve columns fit without a horizontal scroll. -->
+        <div class="table-responsive table-card d-none d-lg-block">
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
-              <tr>
-                <th style="width: 40px">
+              <tr class="fs-11 text-uppercase">
+                <th style="width: 32px">
                   <input class="form-check-input" type="checkbox" :checked="allChecked" @change="toggleAll" />
                 </th>
                 <th role="button" @click="sortBy('tracking_number')">
@@ -311,7 +436,8 @@ onMounted(() => {
                   <input class="form-check-input" type="checkbox" :value="order.id" v-model="selected" />
                 </td>
                 <td>
-                  <Link :href="route('orders.show', order.id)" class="fw-semibold">{{ order.tracking_number }}</Link>
+                  <Link v-if="can.view_details" :href="route('orders.show', order.id)" class="fw-semibold">{{ order.tracking_number }}</Link>
+                  <span v-else class="fw-semibold">{{ order.tracking_number }}</span>
                   <div v-if="order.is_fragile || order.can_be_opened" class="mt-1">
                     <span v-if="order.is_fragile" class="badge bg-danger-subtle text-danger me-1">{{ $t('orders.badges.fragile') }}</span>
                     <span v-if="order.can_be_opened" class="badge bg-info-subtle text-info">{{ $t('orders.badges.openable') }}</span>
@@ -319,11 +445,11 @@ onMounted(() => {
                 </td>
                 <td>
                   <div class="fw-medium">{{ order.customer.full_name }}</div>
-                  <div class="text-muted fs-12">{{ order.customer.phone }}</div>
+                  <div class="text-muted fs-11">{{ order.customer.phone }}</div>
                 </td>
                 <td>
                   <div>{{ order.city?.name ?? "—" }}</div>
-                  <div v-if="order.sector" class="text-muted fs-12">{{ order.sector.name }}</div>
+                  <div v-if="order.sector" class="text-muted fs-11">{{ order.sector.name }}</div>
                 </td>
                 <td>
                   <PaymentMethodBadge
@@ -332,7 +458,12 @@ onMounted(() => {
                     :color="order.payment_method_color"
                   />
                 </td>
-                <td class="text-end">{{ displayMoney(order.amount_to_collect) }}</td>
+                <td class="text-end">
+                  <span v-if="order.is_already_paid" class="badge bg-success-subtle text-success">
+                    {{ $t('orders.driver.already_paid') }}
+                  </span>
+                  <template v-else>{{ displayMoney(order.amount_to_collect) }}</template>
+                </td>
                 <td class="text-end">{{ displayMoney(order.order_value) }}</td>
                 <td class="text-end">{{ money(order.delivery_price) }}</td>
                 <td class="text-end fw-semibold">{{ money(order.total_amount) }}</td>
@@ -341,17 +472,20 @@ onMounted(() => {
                     {{ order.status_label }}
                   </span>
                 </td>
-                <td class="text-muted fs-13">{{ new Date(order.created_at).toLocaleDateString() }}</td>
+                <td class="text-muted">{{ new Date(order.created_at).toLocaleDateString() }}</td>
                 <td class="text-end">
                   <ul class="list-inline hstack gap-2 mb-0 justify-content-end">
-                    <li class="list-inline-item" :title="$t('common.view')">
-                      <Link :href="route('orders.show', order.id)" class="text-primary"><i class="ri-eye-fill fs-16"></i></Link>
+                    <li v-if="can.view_details" class="list-inline-item" :title="$t('common.view')">
+                      <Link :href="route('orders.show', order.id)" class="text-primary"><i class="ri-eye-fill fs-14"></i></Link>
                     </li>
                     <li v-if="can.print" class="list-inline-item" :title="$t('orders.actions.print_label')">
-                      <BLink class="text-secondary" @click="openPdf(order)"><i class="ri-printer-line fs-16"></i></BLink>
+                      <BLink class="text-secondary" @click="openPdf(order)"><i class="ri-printer-line fs-14"></i></BLink>
                     </li>
-                    <li class="list-inline-item" :title="$t('common.edit')">
-                      <Link :href="route('orders.edit', order.id)" class="text-warning"><i class="ri-pencil-fill fs-16"></i></Link>
+                    <li v-if="can.view_details" class="list-inline-item" :title="$t('common.edit')">
+                      <Link :href="route('orders.edit', order.id)" class="text-warning"><i class="ri-pencil-fill fs-14"></i></Link>
+                    </li>
+                    <li v-if="isDriver && canUpdateStatus && transitionsFor(order).length" class="list-inline-item" :title="$t('orders.driver.update_status')">
+                      <BLink class="text-primary" @click="openStatusSheet(order)"><i class="ri-refresh-line fs-14"></i></BLink>
                     </li>
                   </ul>
                 </td>
@@ -391,5 +525,32 @@ onMounted(() => {
         </BRow>
       </BCardBody>
     </BCard>
+
+    <DriverStatusSheet
+      :show="sheetOrder !== null"
+      :order="sheetOrder"
+      :transitions="sheetTransitions"
+      :failure-reasons="failureReasons"
+      :processing="sheetProcessing"
+      @close="closeStatusSheet"
+      @submit="submitStatusChange"
+    />
+
+    <DriverReturnSheet
+      :show="returnOrder !== null"
+      :order="returnOrder"
+      :reasons="returnReasons"
+      :processing="returnProcessing"
+      @close="closeReturnSheet"
+      @submit="submitReturn"
+    />
+
+    <OrderDetailSheet
+      :show="detailOrder !== null"
+      :order="detailOrder"
+      :can="can"
+      @close="detailOrder = null"
+      @print="openPdf"
+    />
   </Layout>
 </template>

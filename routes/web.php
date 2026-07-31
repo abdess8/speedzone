@@ -1,8 +1,6 @@
 <?php
 
 use App\Http\Controllers\Admin\PendingUserController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\NotificationPreferenceController;
 use App\Http\Controllers\ApiIntegrationController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\DriverFinanceController;
@@ -11,6 +9,8 @@ use App\Http\Controllers\DriverZoneController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\NotificationPreferenceController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerDeliveryController;
@@ -62,7 +62,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     Route::get('/dashboard/seller', [SellerDashboardController::class, 'index'])->name('dashboard.seller');
 
-    Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware('permission:users.read')->group(function () {
         Route::get('pending-users', [PendingUserController::class, 'index'])->name('pending-users.index');
         Route::get('pending-users/{user}', [PendingUserController::class, 'show'])->name('pending-users.show');
         Route::post('users/{user}/approve', [PendingUserController::class, 'approve'])->name('users.approve');
@@ -81,17 +81,25 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::put('notification-preferences', [NotificationPreferenceController::class, 'update'])->name('notification-preferences.update');
 
     // User management
-    Route::resource('users', UserController::class);
+    Route::resource('users', UserController::class)
+        ->middleware('permission:users.read');
 
     // Role & permission management
-    Route::resource('roles', RoleController::class)->except(['show']);
+    Route::resource('roles', RoleController::class)
+        ->except(['show'])
+        ->middleware('permission:roles.read');
 
     // Delivery zones — Cities & Sectors management
     Route::get('cities/{city}/sectors', [CityController::class, 'sectors'])
         ->whereNumber('city')
+        ->middleware('permission:cities.read')
         ->name('cities.sectors');
-    Route::resource('cities', CityController::class)->whereNumber('city');
-    Route::resource('sectors', SectorController::class)->whereNumber('sector');
+    Route::resource('cities', CityController::class)
+        ->whereNumber('city')
+        ->middleware('permission:cities.read');
+    Route::resource('sectors', SectorController::class)
+        ->whereNumber('sector')
+        ->middleware('permission:sectors.read');
 
     // B2B partner integrations
     Route::post('partners/test-connection', [PartnerController::class, 'testConnectionDraft'])
@@ -102,9 +110,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('partners/{partner}/sync', [PartnerController::class, 'sync'])
         ->whereNumber('partner')
         ->name('partners.sync');
-    Route::resource('partners', PartnerController::class)->whereNumber('partner');
+    Route::resource('partners', PartnerController::class)
+        ->whereNumber('partner')
+        ->middleware('permission:partners.read');
 
     Route::get('partner-assignments', [PartnerUserAssignmentController::class, 'index'])
+        ->middleware('permission:partners.update')
         ->name('partner-assignments.index');
     Route::post('partner-assignments/{partner}/users', [PartnerUserAssignmentController::class, 'assign'])
         ->whereNumber('partner')
@@ -128,19 +139,35 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->name('partner-deliveries.update-status');
 
     // Driver zone assignment
-    Route::get('driver-zones', [DriverZoneController::class, 'index'])->name('driver-zones.index');
+    Route::get('driver-zones', [DriverZoneController::class, 'index'])
+        ->middleware('permission:driver_zones.read')
+        ->name('driver-zones.index');
     Route::post('driver-zones/{driver}/sectors', [DriverZoneController::class, 'assign'])
         ->whereNumber('driver')->name('driver-zones.assign');
     Route::delete('driver-zones/{driver}/sectors/{sector}', [DriverZoneController::class, 'remove'])
         ->whereNumber('driver')->whereNumber('sector')->name('driver-zones.remove');
 
-    // Order management (logistics)
-    Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
-    Route::get('orders/labels', [OrderController::class, 'labels'])->name('orders.labels');
-    Route::post('orders/bulk-status', [OrderController::class, 'bulkStatus'])->name('orders.bulk-status');
-    Route::post('orders/create-and-new', [OrderController::class, 'storeAndNew'])->name('orders.store-and-new');
+    // Order management (logistics).
+    //
+    // The permission middleware here duplicates the controller's authorize()
+    // calls on purpose: a route that answers 403 before booting the controller
+    // is the same rule the sidebar uses to hide the entry, so "not in the menu"
+    // and "forbidden by URL" can never drift apart.
+    Route::get('orders/export', [OrderController::class, 'export'])
+        ->middleware('permission:orders.export')
+        ->name('orders.export');
+    Route::get('orders/labels', [OrderController::class, 'labels'])
+        ->middleware('permission:orders.print')
+        ->name('orders.labels');
+    Route::post('orders/bulk-status', [OrderController::class, 'bulkStatus'])
+        ->middleware('permission:orders.update.all|orders.update.own|orders.update.assigned')
+        ->name('orders.bulk-status');
+    Route::post('orders/create-and-new', [OrderController::class, 'storeAndNew'])
+        ->middleware('permission:orders.create')
+        ->name('orders.store-and-new');
     Route::get('orders/{order}/pdf', [OrderController::class, 'pdf'])
         ->whereNumber('order')
+        ->middleware('permission:orders.print')
         ->name('orders.pdf');
     Route::post('orders/{order}/assign-driver', [OrderController::class, 'assignDriver'])
         ->whereNumber('order')
@@ -148,7 +175,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('orders/{order}/sync-partner', [OrderController::class, 'syncPartner'])
         ->whereNumber('order')
         ->name('orders.sync-partner');
-    Route::resource('orders', OrderController::class)->whereNumber('order');
+    Route::resource('orders', OrderController::class)
+        ->whereNumber('order')
+        ->middleware('permission:orders.read.all|orders.read.own|orders.read.assigned');
     // QR code target: /orders/SPD-2026-583920 → public tracking timeline.
     Route::get('orders/{trackingNumber}', [OrderController::class, 'track'])
         ->where('trackingNumber', '[A-Za-z0-9]+-[0-9]{4}-[0-9]+')
@@ -172,7 +201,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->name('pickup-requests.change-status');
     Route::resource('pickup-requests', PickupRequestController::class)
         ->only(['index', 'store', 'show'])
-        ->whereNumber('pickupRequest');
+        ->whereNumber('pickupRequest')
+        ->middleware('permission:pickup_requests.read.all|pickup_requests.read.own|pickup_requests.read.assigned');
 
     // Inter-city transfers — QR scan URL must be registered before numeric {transfer} routes
     Route::get('transfers/eligible-orders', [TransferController::class, 'eligibleOrders'])
@@ -203,7 +233,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->name('transfers.qr');
     Route::resource('transfers', TransferController::class)
         ->only(['index', 'store', 'show', 'update'])
-        ->whereNumber('transfer');
+        ->whereNumber('transfer')
+        ->middleware('permission:transfers.read|transfers.read.assigned');
 
     // Returns (reverse logistics)
     Route::get('returns/eligible-orders', [ReturnController::class, 'eligibleOrders'])
@@ -229,7 +260,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->name('returns.qr');
     Route::resource('returns', ReturnController::class)
         ->only(['index', 'store', 'show'])
-        ->whereNumber('return');
+        ->whereNumber('return')
+        ->middleware('permission:returns.read.all|returns.read.own|returns.create_request|returns.create|returns.update_status|returns.manage');
 
     // Invoicing / seller billing — custom routes registered before the resource
     Route::get('invoices/pending', [InvoiceController::class, 'pending'])->name('invoices.pending');
@@ -244,10 +276,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->whereNumber('invoice')->name('invoices.cancel');
     Route::resource('invoices', InvoiceController::class)
         ->only(['index', 'create', 'store', 'show', 'destroy'])
-        ->whereNumber('invoice');
+        ->whereNumber('invoice')
+        ->middleware('permission:invoices.read.all|invoices.read.own');
 
     // Driver finance & billing — custom routes registered before the resource
-    Route::get('driver-finance', [DriverFinanceController::class, 'dashboard'])->name('driver-finance.dashboard');
+    Route::get('driver-finance', [DriverFinanceController::class, 'dashboard'])
+        ->middleware('permission:driver_invoices.read.own|driver_invoices.read.all')
+        ->name('driver-finance.dashboard');
     Route::get('driver-invoices/pending', [DriverInvoiceController::class, 'pending'])->name('driver-invoices.pending');
     Route::get('driver-invoices/payments', [DriverInvoiceController::class, 'payments'])->name('driver-invoices.payments');
     Route::post('driver-invoices/preview', [DriverInvoiceController::class, 'preview'])->name('driver-invoices.preview');
@@ -260,7 +295,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::resource('driver-invoices', DriverInvoiceController::class)
         ->only(['index', 'create', 'store', 'show', 'destroy'])
         ->whereNumber('driverInvoice')
-        ->parameters(['driver-invoices' => 'driverInvoice']);
+        ->parameters(['driver-invoices' => 'driverInvoice'])
+        ->middleware('permission:driver_invoices.read.all|driver_invoices.read.own');
 
     // Seller support / ticket management — custom routes registered before the resource
     Route::get('support-tickets/related', [SupportTicketController::class, 'relatedObjects'])
@@ -278,9 +314,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::resource('support-tickets', SupportTicketController::class)
         ->only(['index', 'create', 'store', 'show'])
         ->whereNumber('supportTicket')
-        ->parameters(['support-tickets' => 'supportTicket']);
+        ->parameters(['support-tickets' => 'supportTicket'])
+        ->middleware('permission:support.read.all|support.read.own|support.manage');
 
-    Route::get('api-integrations', [ApiIntegrationController::class, 'index'])->name('api-integrations.index');
+    Route::get('api-integrations', [ApiIntegrationController::class, 'index'])
+        ->middleware('permission:partners.read')
+        ->name('api-integrations.index');
 
     Route::controller(VelzonRoutesController::class)->group(function () {
 

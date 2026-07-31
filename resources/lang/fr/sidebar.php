@@ -2,8 +2,29 @@
 
 return [
     'menu' => 'Menu',
+    'sections' => [
+        'shortcuts' => 'Raccourcis',
+        'operations' => 'Exploitation',
+        'finance' => 'Caisse & Facturation',
+        'workspace' => 'Espace de travail',
+    ],
+    'bottom_nav' => [
+        'label' => 'Navigation principale',
+        'home' => 'Accueil',
+        'orders' => 'Commandes',
+        'operations' => 'Traitements',
+        'wallet' => 'Caisse',
+        'more' => 'Plus',
+    ],
     'dashboard' => 'Tableau de bord',
     'orders' => 'Commandes',
+    'orders_views' => [
+        'all' => 'Toutes les commandes',
+        'pickup' => 'En cours de ramassage',
+        'delivery' => 'En cours de livraison',
+        'failed' => 'Non livrées',
+        'delivered' => 'Livrées',
+    ],
     'partner_orders' => 'Commandes partenaires',
     'pickups' => 'Ramassages',
     'transfers' => 'Transferts',

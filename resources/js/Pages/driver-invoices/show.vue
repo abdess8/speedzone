@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import InputError from "@/Components/InputError.vue";
+import BottomSheet from "@/Components/BottomSheet.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -270,8 +271,7 @@ onMounted(() => {
       </BCol>
     </BRow>
 
-    <!-- Payment modal -->
-    <BModal v-model="showPayModal" :title="$t('driver_invoices.pay.title')" hide-footer>
+    <BottomSheet :show="showPayModal" :title="$t('driver_invoices.pay.title')" @close="showPayModal = false">
       <form @submit.prevent="submitPay">
         <div class="mb-3">
           <label class="form-label">{{ $t('driver_invoices.pay.paid_at') }} <span class="text-danger">*</span></label>
@@ -291,6 +291,6 @@ onMounted(() => {
           </BButton>
         </div>
       </form>
-    </BModal>
+    </BottomSheet>
   </Layout>
 </template>

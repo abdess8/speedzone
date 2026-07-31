@@ -4,6 +4,9 @@ import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import FilterPanel from "@/Components/FilterPanel.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
 
@@ -18,6 +21,8 @@ const props = defineProps({
 });
 
 const selectedDriver = ref(props.driverId);
+/** Line whose mobile detail sheet is open. */
+const selectedLine = ref(null);
 
 const driverOptions = computed(() =>
   props.drivers.map((d) => ({ value: d.id, label: `${d.name} (${d.email})` }))
@@ -39,33 +44,64 @@ const changeDriver = (value) => {
     replace: true,
   });
 };
+
+const activeFilterCount = computed(() => (selectedDriver.value ? 1 : 0));
+
+const applyFilters = () => changeDriver(selectedDriver.value);
+
+const resetFilters = () => {
+  selectedDriver.value = null;
+  changeDriver(null);
+};
+
+const cardRows = (line) => [
+  { label: t("driver_invoices.columns.sector"), value: line.sector },
+  { label: t("driver_invoices.columns.amount"), value: money(line.amount), emphasis: true },
+];
+
+const sheetRows = (line) => [
+  ...cardRows(line),
+  { label: t("driver_invoices.columns.note"), value: line.note },
+];
 </script>
 
 <template>
   <Layout>
     <PageHeader :title="$t('driver_invoices.pending.title')" :pageTitle="$t('driver_invoices.pending.page_title')" />
 
-    <BRow v-if="isAdmin" class="mb-3">
-      <BCol md="4">
-        <label class="form-label">{{ $t('driver_invoices.filters.driver') }}</label>
-        <Multiselect
-          v-model="selectedDriver"
-          :options="driverOptions"
-          :searchable="true"
-          :close-on-select="true"
-          :placeholder="$t('driver_invoices.create.driver_placeholder')"
-          @change="changeDriver"
-        />
-      </BCol>
-    </BRow>
-
     <BRow>
       <BCol lg="8">
         <BCard no-body>
-          <BCardHeader class="d-flex align-items-center">
+          <FilterPanel
+            v-if="isAdmin"
+            :active-count="activeFilterCount"
+            @apply="applyFilters"
+            @reset="resetFilters"
+          >
+            <template #title>
+              <div class="d-flex align-items-center gap-2">
+                <h5 class="card-title mb-0">{{ $t('driver_invoices.pending.orders_title') }}</h5>
+                <span class="badge bg-primary-subtle text-primary">{{ summary.transactions_count ?? 0 }}</span>
+              </div>
+            </template>
+
+            <BCol md="6">
+              <label class="form-label">{{ $t('driver_invoices.filters.driver') }}</label>
+              <Multiselect
+                v-model="selectedDriver"
+                :options="driverOptions"
+                :searchable="true"
+                :close-on-select="true"
+                :placeholder="$t('driver_invoices.create.driver_placeholder')"
+              />
+            </BCol>
+          </FilterPanel>
+
+          <BCardHeader v-else class="d-flex align-items-center">
             <h5 class="card-title mb-0 flex-grow-1">{{ $t('driver_invoices.pending.orders_title') }}</h5>
             <span class="badge bg-primary-subtle text-primary">{{ summary.transactions_count ?? 0 }}</span>
           </BCardHeader>
+
           <BCardBody>
             <BRow v-if="(summary.transactions_count ?? 0) > 0" class="g-3 mb-3">
               <BCol md="3" cols="6">
@@ -86,7 +122,23 @@ const changeDriver = (value) => {
               </BCol>
             </BRow>
 
-            <div class="table-responsive table-card">
+            <div class="d-lg-none">
+              <EntityCard
+                v-for="line in lines"
+                :key="line.id"
+                :title="line.tracking_number ?? '—'"
+                :subtitle="line.customer_full_name ?? '—'"
+                :status-label="line.transaction_type_label"
+                status-color="info"
+                :rows="cardRows(line)"
+                @open="selectedLine = line"
+              />
+              <p v-if="lines.length === 0" class="text-center text-muted py-4 mb-0">
+                {{ $t('driver_invoices.pending.empty') }}
+              </p>
+            </div>
+
+            <div class="table-responsive table-card d-none d-lg-block">
               <table class="table align-middle table-nowrap mb-0">
                 <thead class="table-light text-muted">
                   <tr>
@@ -148,5 +200,15 @@ const changeDriver = (value) => {
         </BCard>
       </BCol>
     </BRow>
+
+    <EntityDetailSheet
+      :show="selectedLine !== null"
+      :title="selectedLine?.tracking_number ?? ''"
+      :subtitle="selectedLine?.customer_full_name ?? ''"
+      :status-label="selectedLine?.transaction_type_label ?? ''"
+      status-color="info"
+      :rows="selectedLine ? sheetRows(selectedLine) : []"
+      @close="selectedLine = null"
+    />
   </Layout>
 </template>

@@ -2,6 +2,9 @@
 
 return [
     'reset' => 'Reset',
+    'filter' => 'Filter',
+    'filters_title' => 'Filters',
+    'clear_filters' => 'Clear filters',
     'apply_filters' => 'Apply Filters',
     'apply' => 'Apply',
     'search' => 'Search',
@@ -30,6 +33,7 @@ return [
     'rows_per_page' => 'Rows per page',
     'pagination_range' => ':from–:to of :total',
     'empty_value' => '—',
+    'empty_value_short' => '-',
     'confirm_title' => 'Are you sure?',
     'confirm_delete' => 'Yes, delete it!',
     'delivery_zones' => 'Delivery Zones',

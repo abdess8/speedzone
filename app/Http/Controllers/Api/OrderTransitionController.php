@@ -11,13 +11,11 @@ use Illuminate\Http\JsonResponse;
 
 class OrderTransitionController extends Controller
 {
-    public function __construct(private readonly OrderTransitionService $transitionService)
-    {
-    }
+    public function __construct(private readonly OrderTransitionService $transitionService) {}
 
     public function __invoke(TransitionOrderStatusRequest $request, Order $order): JsonResponse
     {
-        $this->authorize('update', $order);
+        $this->authorize('updateStatus', $order);
 
         $validated = $request->validated();
 
@@ -25,7 +23,8 @@ class OrderTransitionController extends Controller
             $order,
             $validated['to_status'],
             $request->user(),
-            $validated['comment'] ?? null
+            $validated['comment'] ?? null,
+            $request->transitionContext()
         );
 
         $order->load(['city', 'seller', 'statusHistories.user']);

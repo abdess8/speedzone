@@ -1,20 +1,45 @@
 <script>
 import { Link } from '@inertiajs/vue3';
+import { resolveFooterItems, resolveMenuSections } from '@/navigation/menuItems';
+import { usePermissions } from '@/composables/usePermissions';
 
 export default {
   components: { Link },
+  setup() {
+    // Shared with BottomNav: one permission context means the sidebar and the
+    // mobile tab bar can never disagree about what a role may reach.
+    const { navigationContext, user, roles } = usePermissions();
+
+    return { navigationContext, currentUser: user, currentRoles: roles };
+  },
   computed: {
-    auth() {
-      return {
-        permissions: this.$page.props.permissions ?? [],
-        isSuperAdmin: this.$page.props.isSuperAdmin ?? false,
-      };
+    /**
+     * Destinations grouped under their Slack-style section caption, followed by
+     * the pinned group (Settings) which carries no caption and is pushed to the
+     * bottom of the panel.
+     */
+    sections() {
+      const pinned = resolveFooterItems(this.navigationContext);
+
+      return [
+        ...resolveMenuSections(this.navigationContext),
+        ...(pinned.length > 0 ? [{ key: '__pinned', labelKey: null, items: pinned }] : []),
+      ];
     },
-    showDeliveryZones() {
-      return this.canViewSectors() || this.canViewDriverZones();
+    roleLabel() {
+      return this.currentUser?.role_label ?? this.currentRoles[0] ?? '';
     },
-    showSettings() {
-      return true;
+    userInitials() {
+      const user = this.currentUser;
+
+      if (!user) {
+        return '?';
+      }
+
+      const first = (user.first_name || user.name || '?').charAt(0);
+      const last = (user.last_name || '').charAt(0);
+
+      return (first + last).toUpperCase();
     },
   },
   mounted() {
@@ -23,107 +48,13 @@ export default {
     this.bindCollapseHandlers();
   },
   methods: {
-    hasPermission(permission) {
-      if (this.auth.isSuperAdmin) {
-        return true;
-      }
-
-      return (this.auth.permissions ?? []).includes(permission);
-    },
-    canViewOrders() {
-      return (
-        this.hasPermission('orders.read.all')
-        || this.hasPermission('orders.read.own')
-        || this.hasPermission('orders.read.assigned')
-      );
-    },
-    canViewPickups() {
-      return (
-        this.hasPermission('pickup_requests.read.all') ||
-        this.hasPermission('pickup_requests.read.own') ||
-        this.hasPermission('pickup_requests.read.assigned')
-      );
-    },
-    canViewTransfers() {
-      return this.hasPermission('transfers.read') || this.hasPermission('transfers.read.assigned');
-    },
-    isSeller() {
-      const user = this.$page.props.auth?.user;
-      if (!user) {
-        return false;
-      }
-
-      if (user.is_seller === true) {
-        return true;
-      }
-
-      return (user.roles ?? []).includes('Seller');
-    },
-    canViewReturns() {
-      const user = this.$page.props.auth?.user;
-      if (user?.can_view_returns === true) {
-        return true;
-      }
-
-      return (
-        this.isSeller() ||
-        this.hasPermission('returns.read.all') ||
-        this.hasPermission('returns.read.own') ||
-        this.hasPermission('returns.create_request') ||
-        this.hasPermission('returns.update_status') ||
-        this.hasPermission('returns.create') ||
-        this.hasPermission('returns.manage')
-      );
-    },
-    canViewInvoices() {
-      return this.hasPermission('invoices.read.all') || this.hasPermission('invoices.read.own');
-    },
-    canManageInvoices() {
-      return this.hasPermission('invoices.read.all');
-    },
-    canManageDriverInvoices() {
-      return this.hasPermission('driver_invoices.read.all');
-    },
-    canViewDriverFinance() {
-      return this.hasPermission('driver_invoices.read.own') && !this.hasPermission('driver_invoices.read.all');
-    },
-    canViewSectors() {
-      return this.hasPermission('sectors.read');
-    },
-    canViewDriverZones() {
-      return this.hasPermission('driver_zones.read');
-    },
-    canViewUsers() {
-      return this.hasPermission('roles.read');
-    },
-    canViewRoles() {
-      return this.hasPermission('roles.read');
-    },
-    canViewCities() {
-      return this.hasPermission('cities.read');
-    },
-    canViewPartners() {
-      return this.hasPermission('partners.read');
-    },
-    canViewPartnerOrders() {
-      return (
-        this.hasPermission('partners.read') ||
-        this.hasPermission('partners.deliveries.manage') ||
-        (this.$page.props.auth?.user?.roles ?? []).includes('Driver')
-      );
-    },
-    canViewPartnerAssignments() {
-      return this.hasPermission('partners.update');
-    },
-    canViewApiIntegrations() {
-      return this.hasPermission('permissions.read') || this.hasPermission('roles.read');
-    },
-    canViewSupport() {
-      return (
-        this.hasPermission('support.read.all') ||
-        this.hasPermission('support.read.own') ||
-        this.hasPermission('support.manage')
-      );
+    /**
+     * Ziggy route names are resolved lazily: a name belonging to a route the user
+     * cannot reach still exists in the Ziggy manifest, but the entry itself is
+     * already filtered out by then.
+     */
+    itemHref(item) {
+      return item.route ? this.route(item.route) : item.href;
     },
     bindCollapseHandlers() {
       if (!document.querySelectorAll('.navbar-nav .collapse')) {
@@ -236,183 +167,137 @@ export default {
 
 <template>
   <BContainer fluid>
+    <!-- Identity and presence at the top of the panel, as in Slack: who you are
+         signed in as is the first thing to confirm when a workspace has several
+         roles with very different permissions. -->
+    <Link :href="route('profile.show')" class="menu-identity">
+      <span class="menu-identity-avatar">
+        <img v-if="currentUser?.photo_url" :src="currentUser.photo_url" :alt="currentUser.full_name" />
+        <span v-else>{{ userInitials }}</span>
+      </span>
+      <span class="menu-identity-text">
+        <span class="menu-identity-name">{{ currentUser?.full_name }}</span>
+        <span class="menu-identity-role">
+          <span class="menu-identity-presence" aria-hidden="true"></span>
+          {{ roleLabel }}
+        </span>
+      </span>
+    </Link>
+
     <ul class="navbar-nav h-100 d-flex flex-column" id="navbar-nav">
-      <li class="menu-title">
-        <span>{{ $t('sidebar.menu') }}</span>
-      </li>
+      <template v-for="section in sections" :key="section.key">
+        <li v-if="section.labelKey" class="menu-section-title">{{ $t(section.labelKey) }}</li>
 
-      <li class="nav-item">
-        <Link href="/dashboard" class="nav-link menu-link">
-          <i class="ri-dashboard-2-line"></i>
-          <span>{{ $t('sidebar.dashboard') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewOrders()" class="nav-item">
-        <Link href="/orders" class="nav-link menu-link">
-          <i class="ri-shopping-basket-2-line"></i>
-          <span>{{ $t('sidebar.orders') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewPartnerOrders()" class="nav-item">
-        <Link href="/partner-orders" class="nav-link menu-link">
-          <i class="ri-links-line"></i>
-          <span>{{ $t('sidebar.partner_orders') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewPickups()" class="nav-item">
-        <Link href="/pickup-requests" class="nav-link menu-link">
-          <i class="ri-truck-line"></i>
-          <span>{{ $t('sidebar.pickups') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewTransfers()" class="nav-item">
-        <Link href="/transfers" class="nav-link menu-link">
-          <i class="ri-route-line"></i>
-          <span>{{ $t('sidebar.transfers') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewReturns()" class="nav-item">
-        <Link href="/returns" class="nav-link menu-link">
-          <i class="ri-arrow-go-back-line"></i>
-          <span>{{ $t('sidebar.returns') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewInvoices()" class="nav-item">
-        <a
-          class="nav-link menu-link"
-          href="#sidebarBilling"
-          data-bs-toggle="collapse"
-          role="button"
-          aria-expanded="false"
-          aria-controls="sidebarBilling"
+        <li
+          v-for="(item, index) in section.items"
+          :key="item.key"
+          class="nav-item"
+          :class="{ 'mt-auto': item.footer && index === 0 }"
         >
-          <i class="ri-bill-line"></i>
-          <span>{{ $t('sidebar.invoices') }}</span>
-        </a>
-        <div class="collapse menu-dropdown" id="sidebarBilling">
-          <ul class="nav nav-sm flex-column">
-            <li class="nav-item">
-              <Link href="/invoices" class="nav-link">{{ $t('sidebar.invoices') }}</Link>
-            </li>
-            <li class="nav-item">
-              <Link href="/invoices/pending" class="nav-link">{{ $t('sidebar.pending_billing') }}</Link>
-            </li>
-          </ul>
-        </div>
-      </li>
+          <Link v-if="!item.children" :href="itemHref(item)" class="nav-link menu-link">
+            <i :class="item.icon"></i>
+            <span>{{ $t(item.labelKey) }}</span>
+          </Link>
 
-      <li v-if="canManageDriverInvoices" class="nav-item">
-        <a
-          class="nav-link menu-link"
-          href="#sidebarDriverBilling"
-          data-bs-toggle="collapse"
-          role="button"
-          aria-expanded="false"
-          aria-controls="sidebarDriverBilling"
-        >
-          <i class="ri-e-bike-2-line"></i>
-          <span>{{ $t('sidebar.driver_billing') }}</span>
-        </a>
-        <div class="collapse menu-dropdown" id="sidebarDriverBilling">
-          <ul class="nav nav-sm flex-column">
-            <li class="nav-item">
-              <Link href="/driver-invoices" class="nav-link">{{ $t('sidebar.driver_invoices') }}</Link>
-            </li>
-            <li class="nav-item">
-              <Link href="/driver-invoices/pending" class="nav-link">{{ $t('sidebar.driver_pending_billing') }}</Link>
-            </li>
-            <li class="nav-item">
-              <Link href="/driver-invoices/payments" class="nav-link">{{ $t('sidebar.driver_payments') }}</Link>
-            </li>
-          </ul>
-        </div>
-      </li>
-
-      <li v-if="canViewDriverFinance" class="nav-item">
-        <Link href="/driver-finance" class="nav-link menu-link">
-          <i class="ri-wallet-3-line"></i>
-          <span>{{ $t('sidebar.driver_finance') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="canViewSupport()" class="nav-item">
-        <Link href="/support-tickets" class="nav-link menu-link">
-          <i class="ri-customer-service-2-line"></i>
-          <span>{{ $t('sidebar.support') }}</span>
-        </Link>
-      </li>
-
-      <li v-if="showDeliveryZones" class="nav-item">
-        <a
-          class="nav-link menu-link"
-          href="#sidebarZones"
-          data-bs-toggle="collapse"
-          role="button"
-          aria-expanded="false"
-          aria-controls="sidebarZones"
-        >
-          <i class="ri-map-pin-line"></i>
-          <span>{{ $t('sidebar.delivery_zones') }}</span>
-        </a>
-        <div class="collapse menu-dropdown" id="sidebarZones">
-          <ul class="nav nav-sm flex-column">
-            <li v-if="canViewSectors()" class="nav-item">
-              <Link href="/sectors" class="nav-link">{{ $t('sidebar.sectors') }}</Link>
-            </li>
-            <li v-if="canViewDriverZones()" class="nav-item">
-              <Link href="/driver-zones" class="nav-link">{{ $t('sidebar.driver_zones') }}</Link>
-            </li>
-          </ul>
-        </div>
-      </li>
-
-      <li v-if="showSettings" class="nav-item mt-auto">
-        <a
-          class="nav-link menu-link"
-          href="#sidebarSettings"
-          data-bs-toggle="collapse"
-          role="button"
-          aria-expanded="false"
-          aria-controls="sidebarSettings"
-        >
-          <i class="ri-settings-3-line"></i>
-          <span>{{ $t('sidebar.settings.title') }}</span>
-        </a>
-        <div class="collapse menu-dropdown" id="sidebarSettings">
-          <ul class="nav nav-sm flex-column">
-            <li class="nav-item">
-              <Link :href="route('profile.show')" class="nav-link">{{ $t('sidebar.settings.profile') }}</Link>
-            </li>
-            <li v-if="canViewUsers()" class="nav-item">
-              <Link href="/users" class="nav-link">{{ $t('sidebar.settings.users') }}</Link>
-            </li>
-            <li v-if="canViewUsers()" class="nav-item">
-              <Link :href="route('admin.pending-users.index')" class="nav-link">{{ $t('sidebar.settings.pending_sellers') }}</Link>
-            </li>
-            <li v-if="canViewRoles()" class="nav-item">
-              <Link href="/roles" class="nav-link">{{ $t('sidebar.settings.roles_permissions') }}</Link>
-            </li>
-            <li v-if="canViewCities()" class="nav-item">
-              <Link href="/cities" class="nav-link">{{ $t('sidebar.settings.cities') }}</Link>
-            </li>
-            <li v-if="canViewPartners()" class="nav-item">
-              <Link href="/partners" class="nav-link">{{ $t('sidebar.settings.partners') }}</Link>
-            </li>
-            <li v-if="canViewPartnerAssignments()" class="nav-item">
-              <Link :href="route('partner-assignments.index')" class="nav-link">{{ $t('sidebar.settings.partner_assignments') }}</Link>
-            </li>
-            <li v-if="canViewApiIntegrations()" class="nav-item">
-              <Link :href="route('api-integrations.index')" class="nav-link">{{ $t('sidebar.settings.api_integrations') }}</Link>
-            </li>
-          </ul>
-        </div>
-      </li>
+          <template v-else>
+            <a
+              class="nav-link menu-link"
+              :href="`#sidebar-${item.key}`"
+              data-bs-toggle="collapse"
+              role="button"
+              aria-expanded="false"
+              :aria-controls="`sidebar-${item.key}`"
+            >
+              <i :class="item.icon"></i>
+              <span>{{ $t(item.labelKey) }}</span>
+            </a>
+            <div class="collapse menu-dropdown" :id="`sidebar-${item.key}`">
+              <ul class="nav nav-sm flex-column">
+                <li v-for="child in item.children" :key="child.key" class="nav-item">
+                  <Link :href="itemHref(child)" class="nav-link">{{ $t(child.labelKey) }}</Link>
+                </li>
+              </ul>
+            </div>
+          </template>
+        </li>
+      </template>
     </ul>
   </BContainer>
 </template>
+
+<style scoped>
+.menu-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0.5rem 0 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.6rem;
+  color: var(--vz-vertical-menu-item-color);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.menu-identity:hover {
+  background-color: var(--vz-vertical-menu-item-active-bg);
+  color: var(--vz-vertical-menu-item-active-color);
+}
+
+.menu-identity-avatar {
+  display: inline-flex;
+  overflow: hidden;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background-color: var(--vz-vertical-menu-item-active-bg);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.menu-identity-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.menu-identity-text {
+  min-width: 0;
+}
+
+.menu-identity-name,
+.menu-identity-role {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-identity-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.menu-identity-role {
+  color: var(--vz-vertical-menu-title-color);
+  font-size: 0.6875rem;
+}
+
+.menu-identity-presence {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.25rem;
+  border-radius: 50%;
+  background-color: #0ab39c;
+  vertical-align: middle;
+}
+
+/* Collapsed sidebar shows icons only; the identity block has no room there. */
+[data-sidebar-size='sm'] .menu-identity,
+[data-sidebar-size='sm-hover'] .menu-identity {
+  display: none;
+}
+</style>

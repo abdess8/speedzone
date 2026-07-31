@@ -825,3 +825,94 @@ h5.text-primary {
     height: 32px;
   }
 }
+
+// ---------------------------------------------------------------------------
+// App shell: high-density tables, Slack-style sidebar rail, bottom navigation
+// ---------------------------------------------------------------------------
+
+// High-density tables, applied to every table in the app rather than through an
+// opt-in class: the column budget is a product decision, not a per-page one, and
+// a page that forgets the class is exactly how lists drift apart again.
+.table {
+  font-size: 0.75rem;
+
+  > :not(caption) > * > * {
+    padding: 0.375rem 0.5rem;
+  }
+
+  thead th {
+    font-size: 0.6875rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .badge {
+    font-size: 0.65rem;
+    padding: 0.25em 0.5em;
+  }
+
+  // The global row hover inset would clip against the tighter padding.
+  tbody tr:hover {
+    box-shadow: inset 2px 0 0 0 $secondary;
+  }
+}
+
+// Screen density is about fitting columns; paper has no such constraint, and an
+// invoice line item at 12px is not something a customer should have to squint at.
+@media print {
+  .table {
+    font-size: 0.875rem;
+
+    > :not(caption) > * > * {
+      padding: 0.5rem 0.75rem;
+    }
+
+    thead th {
+      font-size: 0.8125rem;
+      text-transform: none;
+    }
+  }
+}
+
+// Primary controls inside a bottom sheet: 48px is the smallest comfortable
+// thumb target, and sheets are used one-handed by definition.
+.sheet-action {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// A searchable dropdown opens absolutely inside the sheet's scroll container,
+// so at its default height it is clipped and has to be scrolled into view.
+// Capping it keeps the whole list visible where it opens.
+.sheet-body .multiselect-dropdown {
+  max-height: 11rem;
+}
+
+// Sidebar section captions in the navigation panel.
+.menu-section-title {
+  padding: 0.75rem 1.5rem 0.25rem;
+  color: var(--#{$prefix}vertical-menu-title-color);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+// Bottom navigation takes over below `md`, which is exactly where Velzon slides
+// the sidebar off screen — so the two never appear at once and the sidebar needs
+// no extra hiding. The trigger that would slide it back in is dropped: every
+// destination it held is either a tab or inside the "More" sheet.
+@include media-breakpoint-down(md) {
+  body.has-bottom-nav {
+    // Keeps the last row of a list clear of the floating bar.
+    .page-content {
+      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    #topnav-hamburger-icon {
+      display: none !important;
+    }
+  }
+}

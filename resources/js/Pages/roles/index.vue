@@ -2,12 +2,20 @@
 import { Link, router } from "@inertiajs/vue3";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
 
 export default {
-  components: { Layout, PageHeader, Link },
+  components: { Layout, PageHeader, Link, EntityCard, EntityDetailSheet },
   props: {
     roles: { type: Array, default: () => [] },
+  },
+  data() {
+    return {
+      /** Row whose mobile detail sheet is open. */
+      selectedRole: null,
+    };
   },
   mounted() {
     this.flashMessage();
@@ -17,6 +25,17 @@ export default {
       const key = `roles.${name}`;
       const translated = this.$t(key);
       return translated !== key ? translated : name;
+    },
+    /** Shown as a subtitle only when translated, so it never repeats the title. */
+    rawName(role) {
+      return this.roleLabel(role.name) === role.name ? "" : role.name;
+    },
+    /** Detail lines shared by the mobile card and its sheet. */
+    cardRows(role) {
+      return [
+        { label: this.$t("roles.table.permissions"), value: role.permissions_count },
+        { label: this.$t("roles.table.users"), value: role.users_count },
+      ];
     },
     confirmDelete(role) {
       Swal.fire({
@@ -30,6 +49,9 @@ export default {
         cancelButtonText: this.$t("common.cancel"),
       }).then((result) => {
         if (result.isConfirmed) {
+          // The sheet may be the caller; it would otherwise linger on a row
+          // that no longer exists.
+          this.selectedRole = null;
           router.delete(route("roles.destroy", role.id), { preserveScroll: true });
         }
       });
@@ -72,7 +94,21 @@ export default {
           </BCardHeader>
 
           <BCardBody>
-            <div class="table-responsive table-card mb-1">
+            <div class="d-lg-none">
+              <EntityCard
+                v-for="role in roles"
+                :key="role.id"
+                :title="roleLabel(role.name)"
+                :subtitle="rawName(role)"
+                :rows="cardRows(role)"
+                @open="selectedRole = role"
+              />
+              <p v-if="roles.length === 0" class="text-center text-muted py-4 mb-0">
+                {{ $t('roles.empty') }}
+              </p>
+            </div>
+
+            <div class="table-responsive table-card mb-1 d-none d-lg-block">
               <table class="table align-middle">
                 <thead class="table-light text-muted">
                   <tr>
@@ -122,5 +158,30 @@ export default {
         </BCard>
       </BCol>
     </BRow>
+
+    <EntityDetailSheet
+      :show="selectedRole !== null"
+      :title="selectedRole ? roleLabel(selectedRole.name) : ''"
+      :subtitle="selectedRole ? rawName(selectedRole) : ''"
+      :rows="selectedRole ? cardRows(selectedRole) : []"
+      @close="selectedRole = null"
+    >
+      <template #actions>
+        <Link
+          :href="route('roles.edit', selectedRole?.id)"
+          class="btn btn-primary flex-fill sheet-action"
+        >
+          <i class="ri-pencil-fill align-bottom me-1"></i> {{ $t('common.edit') }}
+        </Link>
+        <button
+          type="button"
+          class="btn btn-soft-danger sheet-action"
+          :aria-label="$t('common.delete')"
+          @click="confirmDelete(selectedRole)"
+        >
+          <i class="ri-delete-bin-5-fill"></i>
+        </button>
+      </template>
+    </EntityDetailSheet>
   </Layout>
 </template>

@@ -10,6 +10,7 @@ use App\Models\City;
 use App\Models\Role;
 use App\Models\Sector;
 use App\Models\User;
+use App\Policies\UserPolicy;
 use App\Services\DriverZoneService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,6 +28,8 @@ class UserController extends Controller
      */
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', User::class);
+
         $users = User::query()
             ->with(['role', 'city'])
             ->when($request->filled('search'), function ($query) use ($request) {
@@ -59,6 +62,8 @@ class UserController extends Controller
      */
     public function create(): Response
     {
+        $this->authorize('create', User::class);
+
         return Inertia::render('users/create', [
             'roles' => Role::orderBy('name')->get(['id', 'name']),
             'cities' => City::query()->active()->orderBy('name')->get(['id', 'name', 'code']),
@@ -73,9 +78,11 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request): RedirectResponse
     {
+        $this->authorize('create', User::class);
+
         $data = $request->validated();
 
-        $data['name'] = trim($data['first_name'] . ' ' . $data['last_name']);
+        $data['name'] = trim($data['first_name'].' '.$data['last_name']);
         $data['password'] = Hash::make($data['password']);
 
         if ($request->hasFile('photo')) {
@@ -108,6 +115,8 @@ class UserController extends Controller
      */
     public function show(User $user): Response
     {
+        $this->authorize('view', $user);
+
         $user->load(['role', 'city']);
 
         if ($user->isDriver()) {
@@ -124,6 +133,8 @@ class UserController extends Controller
      */
     public function edit(User $user): Response
     {
+        $this->authorize('update', $user);
+
         $user->load(['role', 'city', 'sectors.city']);
 
         return Inertia::render('users/edit', [
@@ -141,9 +152,11 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
+        $this->authorize('update', $user);
+
         $data = $request->validated();
 
-        $data['name'] = trim($data['first_name'] . ' ' . $data['last_name']);
+        $data['name'] = trim($data['first_name'].' '.$data['last_name']);
 
         if (! empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
@@ -172,6 +185,7 @@ class UserController extends Controller
 
         $user->update($data);
         if (array_key_exists('role_id', $data) && ! empty($data['role_id'])) {
+            $this->authorize('assignRoles', User::class);
             $user->roles()->sync([$data['role_id']]);
         }
 
@@ -184,8 +198,12 @@ class UserController extends Controller
     /**
      * Remove the specified user from storage.
      */
-    public function destroy(User $user): RedirectResponse
+    public function destroy(Request $request, User $user): RedirectResponse
     {
+        // Called directly rather than through the Gate: the "never delete your
+        // own account" invariant must apply to super admins too.
+        abort_unless(app(UserPolicy::class)->evaluateDelete($request->user(), $user), 403);
+
         $this->deleteProfilePhotoFiles($user);
 
         foreach ($user->attached_files ?? [] as $file) {

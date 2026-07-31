@@ -2,8 +2,29 @@
 
 return [
     'menu' => 'Menu',
+    'sections' => [
+        'shortcuts' => 'Shortcuts',
+        'operations' => 'Operations',
+        'finance' => 'Cash & Billing',
+        'workspace' => 'Workspace',
+    ],
+    'bottom_nav' => [
+        'label' => 'Main navigation',
+        'home' => 'Home',
+        'orders' => 'Orders',
+        'operations' => 'Handling',
+        'wallet' => 'Cash',
+        'more' => 'More',
+    ],
     'dashboard' => 'Dashboard',
     'orders' => 'Orders',
+    'orders_views' => [
+        'all' => 'All orders',
+        'pickup' => 'Being picked up',
+        'delivery' => 'Out for delivery',
+        'failed' => 'Not delivered',
+        'delivered' => 'Delivered',
+    ],
     'partner_orders' => 'Partner Orders',
     'pickups' => 'Pickups',
     'transfers' => 'Transfers',

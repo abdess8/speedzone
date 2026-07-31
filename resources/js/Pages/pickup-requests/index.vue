@@ -8,6 +8,9 @@ import CreatePickupModal from "./Partials/CreatePickupModal.vue";
 import QrScanner from "./Partials/QrScanner.vue";
 import EntityLink from "@/Components/EntityLink.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
+import FilterPanel from "@/Components/FilterPanel.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -32,6 +35,8 @@ const filters = reactive({
 const perPage = ref(props.filters.per_page ?? 15);
 const showCreateModal = ref(false);
 const showQrScanner = ref(false);
+/** Row whose mobile detail sheet is open. */
+const selectedPickup = ref(null);
 
 const rows = computed(() => props.pickups.data ?? []);
 const meta = computed(() => props.pickups.meta ?? {});
@@ -39,6 +44,27 @@ const meta = computed(() => props.pickups.meta ?? {});
 import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const formatDate = (value) => (value ? new Date(value).toLocaleString() : t("common.empty_value"));
+
+/** Drives the "Filter" badge, since the form itself is collapsed by default. */
+const activeFilterCount = computed(
+  () => Object.values(filters).filter((value) => value !== "" && value !== null).length
+);
+
+/** Detail lines shared by the mobile card and its sheet. */
+const cardRows = (pickup) => [
+  { label: t("pickups.table.packages"), value: pickup.number_of_packages },
+  { label: t("pickups.table.total_amount"), value: money(pickup.total_orders_amount), emphasis: true },
+  { label: t("pickups.table.driver"), value: pickup.assignee?.full_name ?? pickup.assignee?.name },
+];
+
+const sheetRows = (pickup) => [
+  ...(props.can.read_all
+    ? [{ label: t("pickups.filters.seller"), value: pickup.creator?.full_name ?? pickup.creator?.name }]
+    : []),
+  { label: t("pickups.table.address"), value: pickup.pickup_address },
+  ...cardRows(pickup),
+  { label: t("pickups.table.created"), value: formatDate(pickup.created_at) },
+];
 
 const query = () => {
   const params = { per_page: perPage.value };
@@ -91,65 +117,68 @@ onMounted(() => {
     <PageHeader :title="$t('pickups.title')" :pageTitle="$t('pickups.page_title')" />
 
     <BCard no-body>
-      <BCardHeader class="border-bottom-dashed">
-        <BRow class="g-3 align-items-center">
-          <BCol sm>
-            <h5 class="card-title mb-0">{{ $t('pickups.title') }}</h5>
-          </BCol>
-          <BCol sm="auto">
-            <div class="hstack gap-2">
-              <button v-if="can.scan" type="button" class="btn btn-soft-primary" @click="showQrScanner = true">
-                <i class="ri-qr-scan-2-line align-bottom me-1"></i> {{ $t('pickups.qr_scan') }}
-              </button>
-              <button v-if="can.create" type="button" class="btn btn-success" @click="showCreateModal = true">
-                <i class="ri-add-line align-bottom me-1"></i> {{ $t('pickups.create') }}
-              </button>
-            </div>
-          </BCol>
-        </BRow>
-      </BCardHeader>
+      <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
+        <template #title>
+          <h5 class="card-title mb-0">{{ $t('pickups.title') }}</h5>
+        </template>
 
-      <BCardBody class="border-bottom-dashed">
-        <BRow class="g-3">
-          <BCol md="3">
-            <label class="form-label">{{ $t('pickups.filters.reference') }}</label>
-            <input v-model="filters.search" type="text" class="form-control" :placeholder="$t('pickups.filters.reference_placeholder')" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('common.status') }}</label>
-            <select v-model="filters.status" class="form-select">
-              <option value="">{{ $t('common.all_statuses') }}</option>
-              <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
-            </select>
-          </BCol>
-          <BCol v-if="can.read_all" md="3">
-            <label class="form-label">{{ $t('pickups.filters.seller') }}</label>
-            <select v-model="filters.seller_id" class="form-select">
-              <option value="">{{ $t('pickups.filters.all_sellers') }}</option>
-              <option v-for="seller in filterOptions.sellers" :key="seller.id" :value="seller.id">{{ seller.name }}</option>
-            </select>
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('pickups.filters.created_from') }}</label>
-            <input v-model="filters.created_from" type="date" class="form-control" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('pickups.filters.created_to') }}</label>
-            <input v-model="filters.created_to" type="date" class="form-control" />
-          </BCol>
-          <BCol cols="12">
-            <div class="hstack gap-2 justify-content-end">
-              <button type="button" class="btn btn-light text-nowrap" @click="resetFilters">{{ $t('common.reset') }}</button>
-              <button type="button" class="btn btn-primary text-nowrap" @click="applyFilters">
-                <i class="ri-search-line align-bottom me-1"></i> {{ $t('common.apply_filters') }}
-              </button>
-            </div>
-          </BCol>
-        </BRow>
-      </BCardBody>
+        <template #actions>
+          <button v-if="can.scan" type="button" class="btn btn-soft-primary" @click="showQrScanner = true">
+            <i class="ri-qr-scan-2-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('pickups.qr_scan') }}</span>
+          </button>
+          <button v-if="can.create" type="button" class="btn btn-success" @click="showCreateModal = true">
+            <i class="ri-add-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('pickups.create') }}</span>
+          </button>
+        </template>
+
+        <BCol md="3">
+          <label class="form-label">{{ $t('pickups.filters.reference') }}</label>
+          <input v-model="filters.search" type="text" class="form-control" :placeholder="$t('pickups.filters.reference_placeholder')" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol md="3">
+          <label class="form-label">{{ $t('common.status') }}</label>
+          <select v-model="filters.status" class="form-select">
+            <option value="">{{ $t('common.all_statuses') }}</option>
+            <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
+          </select>
+        </BCol>
+        <BCol v-if="can.read_all" md="3">
+          <label class="form-label">{{ $t('pickups.filters.seller') }}</label>
+          <select v-model="filters.seller_id" class="form-select">
+            <option value="">{{ $t('pickups.filters.all_sellers') }}</option>
+            <option v-for="seller in filterOptions.sellers" :key="seller.id" :value="seller.id">{{ seller.name }}</option>
+          </select>
+        </BCol>
+        <BCol md="3">
+          <label class="form-label">{{ $t('pickups.filters.created_from') }}</label>
+          <input v-model="filters.created_from" type="date" class="form-control" />
+        </BCol>
+        <BCol md="3">
+          <label class="form-label">{{ $t('pickups.filters.created_to') }}</label>
+          <input v-model="filters.created_to" type="date" class="form-control" />
+        </BCol>
+      </FilterPanel>
 
       <BCardBody>
-        <div class="table-responsive table-card">
+        <!-- Mobile: cards. A nine-column table on a phone puts the action button
+             off screen, so the list becomes tappable rows opening a sheet. -->
+        <div class="d-lg-none">
+          <EntityCard
+            v-for="pickup in rows"
+            :key="pickup.id"
+            :title="pickup.reference"
+            :subtitle="pickup.pickup_address"
+            :status-label="pickup.status_label"
+            :status-color="pickup.status_color"
+            :rows="cardRows(pickup)"
+            @open="selectedPickup = pickup"
+          />
+          <p v-if="rows.length === 0" class="text-center text-muted py-4 mb-0">{{ $t('pickups.empty') }}</p>
+        </div>
+
+        <div class="table-responsive table-card d-none d-lg-block">
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
               <tr>
@@ -243,5 +272,24 @@ onMounted(() => {
       :scan-mode="can.scan_mode || 'driver'"
       @close="showQrScanner = false"
     />
+
+    <EntityDetailSheet
+      :show="selectedPickup !== null"
+      :title="selectedPickup?.reference ?? ''"
+      :subtitle="selectedPickup?.pickup_address ?? ''"
+      :status-label="selectedPickup?.status_label ?? ''"
+      :status-color="selectedPickup?.status_color ?? 'secondary'"
+      :rows="selectedPickup ? sheetRows(selectedPickup) : []"
+      @close="selectedPickup = null"
+    >
+      <template #actions>
+        <Link
+          :href="route('pickup-requests.show', selectedPickup?.id)"
+          class="btn btn-primary flex-fill sheet-action"
+        >
+          <i class="ri-eye-line align-bottom me-1"></i> {{ $t('common.view') }}
+        </Link>
+      </template>
+    </EntityDetailSheet>
   </Layout>
 </template>

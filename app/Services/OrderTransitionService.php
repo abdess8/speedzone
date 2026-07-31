@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\OrderFailureReason;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
@@ -19,6 +20,7 @@ class OrderTransitionService
         private readonly PartnerOutboundSyncService $outboundSync,
         private readonly OrderDriverAutoAssignmentService $driverAutoAssignment,
     ) {}
+
     /**
      * @var array<string, array<int, string>>
      */
@@ -79,19 +81,28 @@ class OrderTransitionService
     ];
 
     /**
+     * @param  array{failure_reason?: string|null, failure_note?: string|null}  $context
+     *
      * @throws ValidationException
      * @throws AuthorizationException
      */
-    public function transition(Order $order, string $toStatus, User $actor, ?string $comment = null): Order
-    {
+    public function transition(
+        Order $order,
+        string $toStatus,
+        User $actor,
+        ?string $comment = null,
+        array $context = [],
+    ): Order {
         $this->assertTransitionAllowed($order, $toStatus, $actor);
         $this->syncWithPartner($order, $toStatus, $comment);
 
-        return $this->transitionWithoutPartnerSync($order, $toStatus, $actor, $comment);
+        return $this->transitionWithoutPartnerSync($order, $toStatus, $actor, $comment, $context);
     }
 
     /**
      * Apply a validated status transition without triggering outbound partner sync.
+     *
+     * @param  array{failure_reason?: string|null, failure_note?: string|null}  $context
      *
      * @throws ValidationException
      * @throws AuthorizationException
@@ -101,10 +112,11 @@ class OrderTransitionService
         string $toStatus,
         User $actor,
         ?string $comment = null,
+        array $context = [],
     ): Order {
         $this->assertTransitionAllowed($order, $toStatus, $actor);
 
-        return DB::transaction(function () use ($order, $toStatus, $actor, $comment): Order {
+        return DB::transaction(function () use ($order, $toStatus, $actor, $comment, $context): Order {
             $attributes = ['status' => $toStatus];
 
             // Stamp the delivery time so the driver payout is dated correctly.
@@ -112,8 +124,22 @@ class OrderTransitionService
                 $attributes['delivered_at'] = now();
             }
 
+            // A non-delivered order must always carry a reason so the seller and
+            // the return workflow can tell a refusal from an unreachable customer.
+            if ($toStatus === OrderStatus::FAILED->value) {
+                $attributes['failure_reason'] = OrderFailureReason::tryFrom(
+                    (string) ($context['failure_reason'] ?? '')
+                ) ?? OrderFailureReason::OTHER;
+                $attributes['failure_note'] = $context['failure_note'] ?? null;
+                $attributes['failed_at'] = now();
+            }
+
             $order->update($attributes);
-            $order->recordStatus($toStatus, $actor, $comment);
+            $order->recordStatus(
+                $toStatus,
+                $actor,
+                $this->historyComment($comment, $attributes['failure_reason'] ?? null, $attributes['failure_note'] ?? null)
+            );
 
             if ($toStatus === OrderStatus::IN_DEPOT->value) {
                 $this->orderStatus->handleAutoCityDeliveryTransition($order);
@@ -132,6 +158,34 @@ class OrderTransitionService
 
             return $order->refresh();
         });
+    }
+
+    /**
+     * Surface the failure reason in the tracking timeline, which only renders
+     * the history comment.
+     */
+    private function historyComment(?string $comment, ?OrderFailureReason $reason, ?string $note): ?string
+    {
+        if (! $reason) {
+            return $comment;
+        }
+
+        return collect([$reason->label(), $note, $comment])
+            ->filter(fn (?string $part) => filled($part))
+            ->implode(' — ');
+    }
+
+    /**
+     * The whole transition graph, keyed by source status.
+     *
+     * Exposed so a list screen can resolve "what can I do with this row?" for a
+     * full page of orders without instantiating the service per row.
+     *
+     * @return array<string, array<int, string>>
+     */
+    public static function transitionMap(): array
+    {
+        return self::ALLOWED_TRANSITIONS;
     }
 
     /**

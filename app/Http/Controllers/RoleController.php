@@ -6,8 +6,10 @@ use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Policies\RolePolicy;
 use App\Support\PermissionLabels;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,6 +20,8 @@ class RoleController extends Controller
      */
     public function index(): Response
     {
+        $this->authorize('viewAny', Role::class);
+
         $roles = Role::query()
             ->withCount(['permissions', 'users'])
             ->orderBy('name')
@@ -33,6 +37,8 @@ class RoleController extends Controller
      */
     public function create(): Response
     {
+        $this->authorize('create', Role::class);
+
         return Inertia::render('roles/create', [
             'permissionGroups' => $this->groupedPermissions(),
         ]);
@@ -43,6 +49,8 @@ class RoleController extends Controller
      */
     public function store(StoreRoleRequest $request): RedirectResponse
     {
+        $this->authorize('create', Role::class);
+
         $data = $request->validated();
 
         $role = Role::create(['name' => $data['name']]);
@@ -57,6 +65,8 @@ class RoleController extends Controller
      */
     public function edit(Role $role): Response
     {
+        $this->authorize('update', $role);
+
         $role->load('permissions:id');
 
         return Inertia::render('roles/edit', [
@@ -74,6 +84,8 @@ class RoleController extends Controller
      */
     public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
     {
+        $this->authorize('update', $role);
+
         $data = $request->validated();
 
         $role->update(['name' => $data['name']]);
@@ -86,8 +98,12 @@ class RoleController extends Controller
     /**
      * Remove the specified role from storage.
      */
-    public function destroy(Role $role): RedirectResponse
+    public function destroy(Request $request, Role $role): RedirectResponse
     {
+        // Called directly rather than through the Gate: the "never delete a
+        // seeded role" invariant must apply to super admins too.
+        abort_unless(app(RolePolicy::class)->evaluateDelete($request->user(), $role), 403);
+
         $role->permissions()->detach();
         $role->users()->detach();
         $role->delete();

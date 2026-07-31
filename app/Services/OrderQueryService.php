@@ -26,6 +26,46 @@ class OrderQueryService
     private const DEFAULT_PAGE_SIZE = 25;
 
     /**
+     * Named status buckets backing the sidebar's pre-filtered order views.
+     *
+     * A single `status` value cannot express "in the middle of being picked up",
+     * which spans two statuses, so the shortcuts select a group instead of
+     * duplicating the status list in the sidebar definition.
+     *
+     * @var array<string, array<int, string>>
+     */
+    public const STATUS_GROUPS = [
+        'pickup' => [
+            OrderStatus::PICKUP_REQUESTED,
+            OrderStatus::WAITING_PICKUP,
+        ],
+        'delivery' => [
+            OrderStatus::IN_DELIVERY_CITY,
+            OrderStatus::OUT_FOR_DELIVERY,
+        ],
+        'failed' => [
+            OrderStatus::FAILED,
+            OrderStatus::REJECTED,
+        ],
+        'delivered' => [
+            OrderStatus::DELIVERED,
+        ],
+    ];
+
+    /**
+     * Statuses covered by a named group, or an empty list when unknown.
+     *
+     * @return array<int, string>
+     */
+    public static function statusGroup(?string $group): array
+    {
+        return array_map(
+            static fn (OrderStatus $status): string => $status->value,
+            self::STATUS_GROUPS[$group] ?? []
+        );
+    }
+
+    /**
      * Relations the JSON API contract expects on every order.
      *
      * @var array<int, string>
@@ -117,6 +157,17 @@ class OrderQueryService
                 $q->whereIn('status', $values);
             }
         });
+
+        // Sidebar shortcut. An explicit status filter always wins so that
+        // narrowing a pre-filtered view from the filter panel behaves as
+        // expected instead of intersecting two status constraints.
+        if (! $request->filled('status')) {
+            $group = self::statusGroup($request->string('status_group')->toString());
+
+            if ($group !== []) {
+                $query->whereIn('status', $group);
+            }
+        }
 
         $query->when($request->input('payment_method'), fn (Builder $q, $value) => $q->whereIn('payment_method', (array) $value));
 

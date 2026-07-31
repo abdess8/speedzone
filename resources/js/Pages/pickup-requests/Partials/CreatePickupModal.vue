@@ -3,6 +3,7 @@ import { computed, ref, watch } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Swal from "sweetalert2";
+import BottomSheet from "@/Components/BottomSheet.vue";
 
 const { t } = useI18n();
 
@@ -80,14 +81,7 @@ const submit = () => {
 </script>
 
 <template>
-  <BModal
-    :model-value="show"
-    :title="$t('pickups.create_modal_title')"
-    size="xl"
-    hide-footer
-    scrollable
-    @update:model-value="(v) => !v && close()"
-  >
+  <BottomSheet :show="show" :title="$t('pickups.create_modal_title')" size="xl" @close="close">
     <div class="mb-4">
       <ul class="nav nav-pills nav-justified wizard-nav mb-3">
         <li class="nav-item">
@@ -216,7 +210,7 @@ const submit = () => {
         </button>
       </div>
     </div>
-  </BModal>
+  </BottomSheet>
 </template>
 
 <style scoped>

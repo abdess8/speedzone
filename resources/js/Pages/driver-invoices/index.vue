@@ -4,6 +4,9 @@ import { Link, router, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import FilterPanel from "@/Components/FilterPanel.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -26,6 +29,8 @@ const filters = reactive({
 const sort = ref(props.filters.sort ?? "created_at");
 const direction = ref(props.filters.direction ?? "desc");
 const perPage = ref(props.filters.per_page ?? 25);
+/** Row whose mobile detail sheet is open. */
+const selectedInvoice = ref(null);
 
 const rows = computed(() => props.invoices.data ?? []);
 const meta = computed(() => props.invoices.meta ?? {});
@@ -38,6 +43,28 @@ const period = (inv) => {
   if (!inv.period_start && !inv.period_end) return "—";
   return `${inv.period_start ?? "…"} → ${inv.period_end ?? "…"}`;
 };
+
+const driverName = (inv) => inv.driver?.full_name ?? inv.driver?.name ?? "—";
+
+/** Drives the "Filter" badge, since the form itself is collapsed by default. */
+const activeFilterCount = computed(
+  () => Object.values(filters).filter((value) => value !== "" && value !== null).length
+);
+
+/** A driver only ever sees its own invoices, so the period identifies the row instead. */
+const cardSubtitle = (inv) => (props.can.read_all ? driverName(inv) : period(inv));
+
+const cardRows = (inv) => [
+  { label: t("driver_invoices.table.deliveries"), value: inv.deliveries_count },
+  { label: t("driver_invoices.table.total"), value: money(inv.total_amount), emphasis: true },
+  { label: t("driver_invoices.table.generated_at"), value: formatDate(inv.generated_at) },
+];
+
+const sheetRows = (inv) => [
+  ...(props.can.read_all ? [{ label: t("driver_invoices.table.driver"), value: driverName(inv) }] : []),
+  { label: t("driver_invoices.table.period"), value: period(inv) },
+  ...cardRows(inv),
+];
 
 const query = () => {
   const params = { sort: sort.value, direction: direction.value, per_page: perPage.value };
@@ -100,64 +127,63 @@ onMounted(() => {
     <PageHeader :title="$t('driver_invoices.title')" :pageTitle="$t('driver_invoices.page_title')" />
 
     <BCard no-body>
-      <BCardHeader class="border-bottom-dashed">
-        <BRow class="g-3 align-items-center">
-          <BCol sm>
-            <h5 class="card-title mb-0">{{ $t('driver_invoices.list_title') }}</h5>
-          </BCol>
-          <BCol sm="auto">
-            <div class="hstack gap-2">
-              <Link v-if="can.pay" :href="route('driver-invoices.payments')" class="btn btn-soft-primary">
-                <i class="ri-bank-card-line align-bottom me-1"></i> {{ $t('driver_invoices.payments.title') }}
-              </Link>
-              <Link v-if="can.generate" :href="route('driver-invoices.create')" class="btn btn-success">
-                <i class="ri-add-line align-bottom me-1"></i> {{ $t('driver_invoices.generate') }}
-              </Link>
-            </div>
-          </BCol>
-        </BRow>
-      </BCardHeader>
+      <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
+        <template #title>
+          <h5 class="card-title mb-0">{{ $t('driver_invoices.list_title') }}</h5>
+        </template>
 
-      <BCardBody class="border-bottom-dashed">
-        <BRow class="g-3">
-          <BCol md="3">
-            <label class="form-label">{{ $t('driver_invoices.filters.invoice_number') }}</label>
-            <input v-model="filters.invoice_number" type="text" class="form-control" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol v-if="can.read_all" md="3">
-            <label class="form-label">{{ $t('driver_invoices.filters.driver') }}</label>
-            <input v-model="filters.driver" type="text" class="form-control" :placeholder="$t('driver_invoices.filters.driver_placeholder')" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('driver_invoices.filters.status') }}</label>
-            <select v-model="filters.status" class="form-select">
-              <option value="">{{ $t('driver_invoices.filters.all_statuses') }}</option>
-              <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
-            </select>
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('driver_invoices.filters.created_from') }}</label>
-            <input v-model="filters.created_from" type="date" class="form-control" />
-          </BCol>
-          <BCol md="2">
-            <label class="form-label">{{ $t('driver_invoices.filters.created_to') }}</label>
-            <input v-model="filters.created_to" type="date" class="form-control" />
-          </BCol>
-          <BCol cols="12">
-            <div class="hstack gap-2 justify-content-end">
-              <button class="btn btn-light text-nowrap" @click="resetFilters">
-                <i class="ri-refresh-line align-bottom me-1"></i> {{ $t('common.reset') }}
-              </button>
-              <button class="btn btn-primary text-nowrap" @click="applyFilters">
-                <i class="ri-search-line align-bottom me-1"></i> {{ $t('common.apply_filters') }}
-              </button>
-            </div>
-          </BCol>
-        </BRow>
-      </BCardBody>
+        <template #actions>
+          <Link v-if="can.pay" :href="route('driver-invoices.payments')" class="btn btn-soft-primary">
+            <i class="ri-bank-card-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('driver_invoices.payments.title') }}</span>
+          </Link>
+          <Link v-if="can.generate" :href="route('driver-invoices.create')" class="btn btn-success">
+            <i class="ri-add-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('driver_invoices.generate') }}</span>
+          </Link>
+        </template>
+
+        <BCol md="3">
+          <label class="form-label">{{ $t('driver_invoices.filters.invoice_number') }}</label>
+          <input v-model="filters.invoice_number" type="text" class="form-control" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol v-if="can.read_all" md="3">
+          <label class="form-label">{{ $t('driver_invoices.filters.driver') }}</label>
+          <input v-model="filters.driver" type="text" class="form-control" :placeholder="$t('driver_invoices.filters.driver_placeholder')" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol md="2">
+          <label class="form-label">{{ $t('driver_invoices.filters.status') }}</label>
+          <select v-model="filters.status" class="form-select">
+            <option value="">{{ $t('driver_invoices.filters.all_statuses') }}</option>
+            <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
+          </select>
+        </BCol>
+        <BCol md="2">
+          <label class="form-label">{{ $t('driver_invoices.filters.created_from') }}</label>
+          <input v-model="filters.created_from" type="date" class="form-control" />
+        </BCol>
+        <BCol md="2">
+          <label class="form-label">{{ $t('driver_invoices.filters.created_to') }}</label>
+          <input v-model="filters.created_to" type="date" class="form-control" />
+        </BCol>
+      </FilterPanel>
 
       <BCardBody>
-        <div class="table-responsive table-card">
+        <div class="d-lg-none">
+          <EntityCard
+            v-for="inv in rows"
+            :key="inv.id"
+            :title="inv.invoice_number"
+            :subtitle="cardSubtitle(inv)"
+            :status-label="inv.status_label"
+            :status-color="inv.status_color"
+            :rows="cardRows(inv)"
+            @open="selectedInvoice = inv"
+          />
+          <p v-if="rows.length === 0" class="text-center text-muted py-4 mb-0">{{ $t('driver_invoices.empty') }}</p>
+        </div>
+
+        <div class="table-responsive table-card d-none d-lg-block">
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
               <tr>
@@ -235,5 +261,33 @@ onMounted(() => {
         </BRow>
       </BCardBody>
     </BCard>
+
+    <EntityDetailSheet
+      :show="selectedInvoice !== null"
+      :title="selectedInvoice?.invoice_number ?? ''"
+      :subtitle="selectedInvoice ? cardSubtitle(selectedInvoice) : ''"
+      :status-label="selectedInvoice?.status_label ?? ''"
+      :status-color="selectedInvoice?.status_color ?? 'secondary'"
+      :rows="selectedInvoice ? sheetRows(selectedInvoice) : []"
+      @close="selectedInvoice = null"
+    >
+      <template #actions>
+        <Link
+          :href="route('driver-invoices.show', selectedInvoice?.id)"
+          class="btn btn-primary flex-fill sheet-action"
+        >
+          <i class="ri-eye-line align-bottom me-1"></i> {{ $t('driver_invoices.actions.view') }}
+        </Link>
+        <button
+          v-if="selectedInvoice?.pdf_url"
+          type="button"
+          class="btn btn-soft-secondary sheet-action"
+          :aria-label="$t('driver_invoices.actions.view_pdf')"
+          @click="openPdf(selectedInvoice)"
+        >
+          <i class="ri-file-pdf-2-line"></i>
+        </button>
+      </template>
+    </EntityDetailSheet>
   </Layout>
 </template>

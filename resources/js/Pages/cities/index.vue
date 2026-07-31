@@ -4,6 +4,9 @@ import { Link, router, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import FilterPanel from "@/Components/FilterPanel.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -20,9 +23,32 @@ const filters = reactive({
 });
 
 const perPage = ref(props.filters.per_page ?? 15);
+/** Row whose mobile detail sheet is open. */
+const selectedCity = ref(null);
 
 const rows = computed(() => props.cities.data ?? []);
 const meta = computed(() => props.cities.meta ?? {});
+
+/** Drives the "Filter" badge, since the form itself is collapsed by default. */
+const activeFilterCount = computed(
+  () => Object.values(filters).filter((value) => value !== "" && value !== null).length
+);
+
+const statusLabel = (city) => (city.is_active ? t("common.active") : t("common.inactive"));
+const statusColor = (city) => (city.is_active ? "success" : "danger");
+
+const cardRows = (city) => [
+  { label: t("cities.table.code"), value: city.code },
+  {
+    label: t("cities.table.sectors"),
+    value: `${city.active_sectors_count ?? 0} / ${city.sectors_count ?? 0}`,
+  },
+];
+
+const sheetRows = (city) => [
+  { label: t("cities.table.region"), value: city.region },
+  ...cardRows(city),
+];
 
 const query = () => {
   const params = { per_page: perPage.value };
@@ -65,6 +91,9 @@ const confirmDelete = (city) => {
     cancelButtonText: t("common.cancel"),
   }).then((result) => {
     if (result.isConfirmed) {
+      // The sheet may be the caller; it would otherwise linger on a row that no
+      // longer exists.
+      selectedCity.value = null;
       router.delete(route("cities.destroy", city.id), { preserveScroll: true });
     }
   });
@@ -89,56 +118,56 @@ watch(() => usePage().props?.flash, flashToast, { deep: true });
     <PageHeader :title="$t('cities.title')" :pageTitle="$t('common.delivery_zones')" />
 
     <BCard no-body>
-      <BCardHeader class="border-bottom-dashed">
-        <BRow class="g-3 align-items-center">
-          <BCol sm>
-            <h5 class="card-title mb-0">{{ $t('cities.list_title') }}</h5>
-          </BCol>
-          <BCol sm="auto">
-            <Link v-if="can.create" :href="route('cities.create')" class="btn btn-success">
-              <i class="ri-add-line align-bottom me-1"></i> {{ $t('cities.new_city') }}
-            </Link>
-          </BCol>
-        </BRow>
-      </BCardHeader>
+      <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
+        <template #title>
+          <h5 class="card-title mb-0">{{ $t('cities.list_title') }}</h5>
+        </template>
 
-      <BCardBody class="border-bottom-dashed">
-        <BRow class="g-3">
-          <BCol md="5">
-            <label class="form-label">{{ $t('common.search') }}</label>
-            <div class="search-box">
-              <input
-                v-model="filters.search"
-                type="text"
-                class="form-control"
-                :placeholder="$t('cities.filters.search_placeholder')"
-                @keyup.enter="applyFilters"
-              />
-            </div>
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('common.status') }}</label>
-            <select v-model="filters.status" class="form-select">
-              <option value="">{{ $t('common.all') }}</option>
-              <option value="active">{{ $t('common.active') }}</option>
-              <option value="inactive">{{ $t('common.inactive') }}</option>
-            </select>
-          </BCol>
-          <BCol md="4" class="d-flex align-items-end">
-            <div class="hstack gap-2 justify-content-end w-100">
-              <button class="btn btn-light" @click="resetFilters">
-                <i class="ri-refresh-line align-bottom me-1"></i> {{ $t('common.reset') }}
-              </button>
-              <button class="btn btn-primary" @click="applyFilters">
-                <i class="ri-search-line align-bottom me-1"></i> {{ $t('common.apply') }}
-              </button>
-            </div>
-          </BCol>
-        </BRow>
-      </BCardBody>
+        <template #actions>
+          <Link v-if="can.create" :href="route('cities.create')" class="btn btn-success">
+            <i class="ri-add-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('cities.new_city') }}</span>
+          </Link>
+        </template>
+
+        <BCol md="6">
+          <label class="form-label">{{ $t('common.search') }}</label>
+          <div class="search-box">
+            <input
+              v-model="filters.search"
+              type="text"
+              class="form-control"
+              :placeholder="$t('cities.filters.search_placeholder')"
+              @keyup.enter="applyFilters"
+            />
+          </div>
+        </BCol>
+        <BCol md="6">
+          <label class="form-label">{{ $t('common.status') }}</label>
+          <select v-model="filters.status" class="form-select">
+            <option value="">{{ $t('common.all') }}</option>
+            <option value="active">{{ $t('common.active') }}</option>
+            <option value="inactive">{{ $t('common.inactive') }}</option>
+          </select>
+        </BCol>
+      </FilterPanel>
 
       <BCardBody>
-        <div class="table-responsive table-card">
+        <div class="d-lg-none">
+          <EntityCard
+            v-for="city in rows"
+            :key="city.id"
+            :title="city.name"
+            :subtitle="city.region ?? ''"
+            :status-label="statusLabel(city)"
+            :status-color="statusColor(city)"
+            :rows="cardRows(city)"
+            @open="selectedCity = city"
+          />
+          <p v-if="rows.length === 0" class="text-center text-muted py-4 mb-0">{{ $t('cities.empty') }}</p>
+        </div>
+
+        <div class="table-responsive table-card d-none d-lg-block">
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
               <tr>
@@ -211,5 +240,38 @@ watch(() => usePage().props?.flash, flashToast, { deep: true });
         </BRow>
       </BCardBody>
     </BCard>
+
+    <EntityDetailSheet
+      :show="selectedCity !== null"
+      :title="selectedCity?.name ?? ''"
+      :subtitle="selectedCity?.region ?? ''"
+      :status-label="selectedCity ? statusLabel(selectedCity) : ''"
+      :status-color="selectedCity ? statusColor(selectedCity) : 'secondary'"
+      :rows="selectedCity ? sheetRows(selectedCity) : []"
+      @close="selectedCity = null"
+    >
+      <template #actions>
+        <Link :href="route('cities.show', selectedCity?.id)" class="btn btn-primary flex-fill sheet-action">
+          <i class="ri-eye-line align-bottom me-1"></i> {{ $t('common.view') }}
+        </Link>
+        <Link
+          v-if="can.update"
+          :href="route('cities.edit', selectedCity?.id)"
+          class="btn btn-soft-warning sheet-action"
+          :aria-label="$t('common.edit')"
+        >
+          <i class="ri-pencil-fill"></i>
+        </Link>
+        <button
+          v-if="can.delete"
+          type="button"
+          class="btn btn-soft-danger sheet-action"
+          :aria-label="$t('common.delete')"
+          @click="confirmDelete(selectedCity)"
+        >
+          <i class="ri-delete-bin-5-fill"></i>
+        </button>
+      </template>
+    </EntityDetailSheet>
   </Layout>
 </template>

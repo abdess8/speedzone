@@ -54,6 +54,11 @@ export default defineConfig({
         cssCodeSplit: true,
         sourcemap: false,
         chunkSizeWarningLimit: 1500,
+        // Gzipping every emitted asset in memory just to print a size column is
+        // what pushed the build over the V8 heap limit: this project emits well
+        // over a thousand assets. Disabling it also cuts the build time roughly
+        // in half. Use `vite build --mode analyze` style tooling if sizes matter.
+        reportCompressedSize: false,
         rollupOptions: {
             output: {
                 manualChunks,

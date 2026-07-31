@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OrderFailureReason;
 use App\Enums\OrderStatus;
 use App\Enums\PartnerOrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\ReturnInitiatedByRole;
 use App\Enums\ReturnReason;
+use App\Enums\TransferStatus;
 use App\Http\Requests\AssignOrderDriverRequest;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
@@ -13,8 +16,9 @@ use App\Http\Resources\OrderListResource;
 use App\Http\Resources\OrderResource;
 use App\Models\City;
 use App\Models\Order;
-use App\Models\Sector;
 use App\Models\Partner;
+use App\Models\Role;
+use App\Models\Sector;
 use App\Models\User;
 use App\Policies\OrderPolicy;
 use App\Services\OrderDriverAssignmentService;
@@ -24,11 +28,13 @@ use App\Services\OrderService;
 use App\Services\OrderTransitionService;
 use App\Services\Partners\PartnerApiException;
 use App\Services\Partners\PartnerDeliveryIngestionService;
+use App\Services\ReturnService;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
@@ -61,7 +67,7 @@ class OrderController extends Controller
             'orders' => OrderListResource::collection($orders)->response()->getData(true),
             'filters' => $request->only([
                 'tracking_number', 'order_number', 'customer_name', 'customer_phone',
-                'seller', 'city_id', 'sector_id', 'status', 'payment_method',
+                'seller', 'city_id', 'sector_id', 'status', 'status_group', 'payment_method',
                 'created_from', 'created_to', 'delivery_from', 'delivery_to',
                 'is_fragile', 'can_be_opened', 'sort', 'direction', 'per_page',
             ]),
@@ -69,7 +75,55 @@ class OrderController extends Controller
             // paging, sorting and filtering only ask for "orders".
             'filterOptions' => fn () => $this->filterOptions(),
             'can' => fn () => $this->abilities($request),
+            'workflow' => fn () => $this->workflowOptions($request),
         ]);
+    }
+
+    /**
+     * Status transitions the current user may apply, keyed by source status.
+     *
+     * Resolved once per page rather than per row: the transition graph only
+     * depends on the order's current status, and the ownership half of the check
+     * is answered by `can_update_status` on each row's policy check server side.
+     *
+     * @return array<string, mixed>
+     */
+    private function workflowOptions(Request $request): array
+    {
+        $user = $request->user();
+
+        $transitions = collect(OrderTransitionService::transitionMap())
+            ->map(fn (array $targets) => collect($targets)
+                ->filter(fn (string $status) => $user->hasPermission('orders.transition.to_'.strtolower($status)))
+                ->map(fn (string $status) => [
+                    'value' => $status,
+                    'label' => OrderStatus::from($status)->label(),
+                    'color' => OrderStatus::from($status)->color(),
+                    'icon' => OrderStatus::from($status)->icon(),
+                    'requires_reason' => $status === OrderStatus::FAILED->value,
+                ])
+                ->values()
+                ->all())
+            ->filter(fn (array $targets) => $targets !== [])
+            ->all();
+
+        return [
+            'transitions' => $transitions,
+            'failure_reasons' => OrderFailureReason::options(),
+            // Drivers only ever see orders assigned to them, so holding the
+            // scoped permission is enough to enable the quick actions.
+            'can_update_status' => $user->hasPermission('orders.update.all')
+                || $user->hasPermission('orders.update.assigned'),
+            'is_driver' => $user->isDriver(),
+            // A driver who could not hand a parcel over opens the return from
+            // his card: the detail screen that normally hosts that action is
+            // closed to him.
+            'can_create_return' => $user->canCreateDriverReturn(),
+            'return_eligible_statuses' => ReturnService::eligibleOrderStatuses(
+                ReturnInitiatedByRole::DRIVER
+            ),
+            'return_reasons' => ReturnReason::options(),
+        ];
     }
 
     public function create(Request $request): Response
@@ -127,7 +181,9 @@ class OrderController extends Controller
 
     public function show(Request $request, Order $order): Response
     {
-        $this->authorize('view', $order);
+        // Not `view`: a driver may read his assigned orders in the list without
+        // being allowed to open the full detail screen.
+        $this->authorize('viewDetails', $order);
 
         $order->load([
             'city',
@@ -140,7 +196,7 @@ class OrderController extends Controller
             'seller.city',
             'pickupRequest.createdBy.roles',
             'pickupRequest.assignedDriver.roles',
-            'transfers' => fn ($q) => $q->where('transfers.status', '!=', \App\Enums\TransferStatus::CANCELLED->value),
+            'transfers' => fn ($q) => $q->where('transfers.status', '!=', TransferStatus::CANCELLED->value),
             'statusHistories.user.roles',
             'statusHistories.pickupRequest',
             'statusHistories.transfer',
@@ -372,8 +428,17 @@ class OrderController extends Controller
         $validated = $request->validate([
             'ids' => ['required', 'array', 'min:1'],
             'ids.*' => ['integer'],
-            'to_status' => ['required', 'string'],
+            'to_status' => ['required', 'string', Rule::in(OrderStatus::values())],
             'comment' => ['nullable', 'string', 'max:1000'],
+            'failure_reason' => [
+                Rule::requiredIf(fn () => $request->input('to_status') === OrderStatus::FAILED->value),
+                'nullable',
+                'string',
+                Rule::in(OrderFailureReason::values()),
+            ],
+            'failure_note' => ['nullable', 'string', 'max:500'],
+        ], [
+            'failure_reason.required' => __('orders.failure.reason_required'),
         ]);
 
         $partnerOrderIds = Order::query()
@@ -392,12 +457,16 @@ class OrderController extends Controller
 
         foreach ($orders as $order) {
             try {
-                $this->authorize('update', $order);
+                $this->authorize('updateStatus', $order);
                 $this->transitionService->transition(
                     $order,
                     $validated['to_status'],
                     $request->user(),
-                    $validated['comment'] ?? null
+                    $validated['comment'] ?? null,
+                    [
+                        'failure_reason' => $validated['failure_reason'] ?? null,
+                        'failure_note' => $validated['failure_note'] ?? null,
+                    ]
                 );
                 $updated++;
             } catch (\Throwable $e) {
@@ -458,6 +527,15 @@ class OrderController extends Controller
             'paymentMethods' => PaymentMethod::options(),
             'cities' => $this->cityOptions(),
             'pageSizes' => [10, 25, 50, 100],
+            // Labels for the sidebar shortcuts, so the list can name the view
+            // it is currently restricted to.
+            'statusGroups' => array_map(
+                static fn (string $group): array => [
+                    'value' => $group,
+                    'label' => __('orders.views.'.$group),
+                ],
+                array_keys(OrderQueryService::STATUS_GROUPS)
+            ),
         ];
     }
 
@@ -520,12 +598,19 @@ class OrderController extends Controller
                 ->all();
         }
 
+        // Ownership first (ABAC): offering a transition the policy will refuse
+        // produced buttons that always failed for drivers and dispatchers.
+        if (! $user->can('updateStatus', $order)) {
+            return [];
+        }
+
         return collect($this->transitionService->allowedNextStatuses($order))
             ->filter(fn (string $status) => $user->hasPermission('orders.transition.to_'.strtolower($status)))
             ->map(fn (string $status) => [
                 'value' => $status,
                 'label' => OrderStatus::from($status)->label(),
                 'color' => OrderStatus::from($status)->color(),
+                'requires_reason' => $status === OrderStatus::FAILED->value,
             ])
             ->values()
             ->all();
@@ -537,7 +622,7 @@ class OrderController extends Controller
     private function driverAssignmentOptions(): array
     {
         return User::query()
-            ->whereHas('roles', fn ($q) => $q->where('name', \App\Models\Role::DRIVER))
+            ->whereHas('roles', fn ($q) => $q->where('name', Role::DRIVER))
             ->orderBy('first_name')
             ->orderBy('name')
             ->get(['id', 'name', 'first_name', 'last_name', 'email'])
@@ -563,6 +648,9 @@ class OrderController extends Controller
             'read_all' => $user->hasPermission('orders.read.all'),
             'export' => $user->hasPermission('orders.export'),
             'print' => $user->hasPermission('orders.print'),
+            // Drives whether the list renders links to the detail screen at all,
+            // mirroring OrderPolicy::viewDetails().
+            'view_details' => OrderPolicy::grantsDetailAccess($user),
         ];
     }
 
@@ -578,8 +666,8 @@ class OrderController extends Controller
 
         $status = $order->status instanceof OrderStatus ? $order->status->value : $order->status;
 
-        return in_array($status, \App\Services\ReturnService::eligibleOrderStatuses(
-            \App\Enums\ReturnInitiatedByRole::SELLER
+        return in_array($status, ReturnService::eligibleOrderStatuses(
+            ReturnInitiatedByRole::SELLER
         ), true);
     }
 
@@ -591,8 +679,8 @@ class OrderController extends Controller
 
         $status = $order->status instanceof OrderStatus ? $order->status->value : $order->status;
 
-        return in_array($status, \App\Services\ReturnService::eligibleOrderStatuses(
-            \App\Enums\ReturnInitiatedByRole::DRIVER
+        return in_array($status, ReturnService::eligibleOrderStatuses(
+            ReturnInitiatedByRole::DRIVER
         ), true);
     }
 }

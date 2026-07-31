@@ -6,6 +6,9 @@ import axios from "axios";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
+import FilterPanel from "@/Components/FilterPanel.vue";
+import EntityCard from "@/Components/EntityCard.vue";
+import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import PartnerOrderQrScanner from "./Partials/PartnerOrderQrScanner.vue";
 import Swal from "sweetalert2";
 import { formatMoney as money } from "@/common/formatMoney";
@@ -38,6 +41,8 @@ const selected = ref([]);
 const selectedDriverId = ref("");
 const showScanner = ref(false);
 const bulkProcessing = ref(false);
+/** Row whose mobile detail sheet is open. */
+const selectedOrder = ref(null);
 
 const rows = computed(() => props.orders.data ?? []);
 const meta = computed(() => props.orders.meta ?? {});
@@ -53,6 +58,48 @@ const allChecked = computed(
 const toggleAll = () => {
   selected.value = allChecked.value ? [] : rows.value.map((o) => o.id);
 };
+
+const toggleOne = (id) => {
+  const index = selected.value.indexOf(id);
+  if (index === -1) {
+    selected.value.push(id);
+  } else {
+    selected.value.splice(index, 1);
+  }
+};
+
+/** Drives the "Filter" badge, since the form itself is collapsed by default. */
+const activeFilterCount = computed(
+  () => Object.values(filters).filter((value) => value !== "" && value !== null).length
+);
+
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : "—");
+
+const amountToCollect = (order) =>
+  order.amount_to_collect != null ? money(order.amount_to_collect) : "—";
+
+/** Customer and destination identify a delivery better than the partner does. */
+const customerLine = (order) => {
+  const city = order.city?.name;
+  return city ? `${order.customer.full_name} · ${city}` : order.customer.full_name;
+};
+
+const cardRows = (order) => [
+  { label: t("partners.table.name"), value: order.partner?.name },
+  { label: t("orders.table.to_collect"), value: amountToCollect(order), emphasis: true },
+  { label: t("orders.table.created"), value: formatDate(order.created_at) },
+];
+
+const sheetRows = (order) => [
+  { label: t("partners.orders.external_code"), value: order.external_tracking_code },
+  { label: t("orders.filters.customer_phone"), value: order.customer.phone },
+  { label: t("orders.filters.city"), value: order.sector?.name ?? order.city?.name },
+  ...cardRows(order),
+  {
+    label: t("partners.orders.option_exchange"),
+    value: order.option_exchange ? t("common.yes") : t("common.no"),
+  },
+];
 
 const query = () => {
   const params = { sort: sort.value, direction: direction.value, per_page: perPage.value };
@@ -214,99 +261,85 @@ onMounted(() => {
     <PageHeader :title="$t('partners.orders.title')" :pageTitle="$t('partners.title')" />
 
     <BCard no-body>
-      <BCardHeader class="border-bottom-dashed">
-        <BRow class="g-3 align-items-center">
-          <BCol sm>
-            <h5 class="card-title mb-0">{{ $t('partners.orders.list_title') }}</h5>
-            <p class="text-muted fs-13 mb-0">{{ $t('partners.orders.subtitle') }}</p>
-          </BCol>
-          <BCol sm="auto">
-            <div class="hstack gap-2">
-              <button
-                v-if="can.scan"
-                type="button"
-                class="btn btn-soft-info"
-                @click="showScanner = true"
-              >
-                <i class="ri-qr-scan-2-line align-bottom me-1"></i>
-                {{ $t('partners.orders.scanner.open') }}
-              </button>
-              <Link v-if="can.view_partners" :href="route('partners.index')" class="btn btn-light">
-                <i class="ri-links-line align-bottom me-1"></i> {{ $t('partners.title') }}
-              </Link>
-              <button
-                v-if="can.sync"
-                type="button"
-                class="btn btn-primary"
-                :disabled="syncing || !filters.partner_id"
-                @click="syncPartner"
-              >
-                <span v-if="syncing" class="spinner-border spinner-border-sm me-1"></span>
-                <i v-else class="ri-refresh-line align-bottom me-1"></i>
-                {{ syncing ? $t('partners.sync.running') : $t('partners.sync.button') }}
-              </button>
-            </div>
-          </BCol>
-        </BRow>
-      </BCardHeader>
+      <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
+        <template #title>
+          <h5 class="card-title mb-0">{{ $t('partners.orders.list_title') }}</h5>
+          <p class="text-muted fs-13 mb-0">{{ $t('partners.orders.subtitle') }}</p>
+        </template>
 
-      <BCardBody class="border-bottom-dashed">
-        <BRow class="g-3">
-          <BCol md="3">
-            <label class="form-label">{{ $t('partners.orders.filter_partner') }} <span class="text-danger">*</span></label>
-            <select v-model="filters.partner_id" class="form-select">
-              <option value="">{{ $t('partners.orders.all_partners') }}</option>
-              <option v-for="partner in filterOptions.partners" :key="partner.id" :value="partner.id">
-                {{ partner.name }}
-              </option>
-            </select>
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.tracking_number') }}</label>
-            <input v-model="filters.tracking_number" type="text" class="form-control" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.customer_name') }}</label>
-            <input v-model="filters.customer_name" type="text" class="form-control" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.customer_phone') }}</label>
-            <input v-model="filters.customer_phone" type="text" class="form-control" @keyup.enter="applyFilters" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.city') }}</label>
-            <select v-model="filters.city_id" class="form-select">
-              <option value="">{{ $t('orders.filters.all_cities') }}</option>
-              <option v-for="city in filterOptions.cities" :key="city.id" :value="city.id">{{ city.name }}</option>
-            </select>
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('common.status') }}</label>
-            <select v-model="filters.status" class="form-select">
-              <option value="">{{ $t('common.all_statuses') }}</option>
-              <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
-            </select>
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.created_from') }}</label>
-            <input v-model="filters.created_from" type="date" class="form-control" />
-          </BCol>
-          <BCol md="3">
-            <label class="form-label">{{ $t('orders.filters.created_to') }}</label>
-            <input v-model="filters.created_to" type="date" class="form-control" />
-          </BCol>
-          <BCol cols="12">
-            <div class="hstack gap-2 justify-content-end">
-              <button class="btn btn-light" @click="resetFilters">
-                <i class="ri-refresh-line align-bottom me-1"></i> {{ $t('common.reset') }}
-              </button>
-              <button class="btn btn-primary" @click="applyFilters">
-                <i class="ri-search-line align-bottom me-1"></i> {{ $t('common.apply_filters') }}
-              </button>
-            </div>
-          </BCol>
-        </BRow>
-      </BCardBody>
+        <template #actions>
+          <button
+            v-if="can.scan"
+            type="button"
+            class="btn btn-soft-info"
+            @click="showScanner = true"
+          >
+            <i class="ri-qr-scan-2-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('partners.orders.scanner.open') }}</span>
+          </button>
+          <Link v-if="can.view_partners" :href="route('partners.index')" class="btn btn-light">
+            <i class="ri-links-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('partners.title') }}</span>
+          </Link>
+          <button
+            v-if="can.sync"
+            type="button"
+            class="btn btn-primary"
+            :disabled="syncing || !filters.partner_id"
+            @click="syncPartner"
+          >
+            <span v-if="syncing" class="spinner-border spinner-border-sm"></span>
+            <i v-else class="ri-refresh-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">
+              {{ syncing ? $t('partners.sync.running') : $t('partners.sync.button') }}
+            </span>
+          </button>
+        </template>
+
+        <BCol md="3">
+          <label class="form-label">{{ $t('partners.orders.filter_partner') }} <span class="text-danger">*</span></label>
+          <select v-model="filters.partner_id" class="form-select">
+            <option value="">{{ $t('partners.orders.all_partners') }}</option>
+            <option v-for="partner in filterOptions.partners" :key="partner.id" :value="partner.id">
+              {{ partner.name }}
+            </option>
+          </select>
+        </BCol>
+        <BCol md="3">
+          <label class="form-label">{{ $t('orders.filters.tracking_number') }}</label>
+          <input v-model="filters.tracking_number" type="text" class="form-control" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol md="3">
+          <label class="form-label">{{ $t('orders.filters.customer_name') }}</label>
+          <input v-model="filters.customer_name" type="text" class="form-control" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol md="3">
+          <label class="form-label">{{ $t('orders.filters.customer_phone') }}</label>
+          <input v-model="filters.customer_phone" type="text" class="form-control" @keyup.enter="applyFilters" />
+        </BCol>
+        <BCol md="3">
+          <label class="form-label">{{ $t('orders.filters.city') }}</label>
+          <select v-model="filters.city_id" class="form-select">
+            <option value="">{{ $t('orders.filters.all_cities') }}</option>
+            <option v-for="city in filterOptions.cities" :key="city.id" :value="city.id">{{ city.name }}</option>
+          </select>
+        </BCol>
+        <BCol md="3">
+          <label class="form-label">{{ $t('common.status') }}</label>
+          <select v-model="filters.status" class="form-select">
+            <option value="">{{ $t('common.all_statuses') }}</option>
+            <option v-for="s in filterOptions.statuses" :key="s.value" :value="s.value">{{ s.label }}</option>
+          </select>
+        </BCol>
+        <BCol md="3">
+          <label class="form-label">{{ $t('orders.filters.created_from') }}</label>
+          <input v-model="filters.created_from" type="date" class="form-control" />
+        </BCol>
+        <BCol md="3">
+          <label class="form-label">{{ $t('orders.filters.created_to') }}</label>
+          <input v-model="filters.created_to" type="date" class="form-control" />
+        </BCol>
+      </FilterPanel>
 
       <BCardBody v-if="selected.length && can.bulk_status" class="bg-light border-bottom-dashed py-2">
         <div class="d-flex flex-wrap align-items-center gap-2">
@@ -346,7 +379,24 @@ onMounted(() => {
           {{ $t('partners.sync.hint', { name: selectedPartner.name }) }}
         </div>
 
-        <div class="table-responsive table-card">
+        <div class="d-lg-none">
+          <EntityCard
+            v-for="order in rows"
+            :key="order.id"
+            :title="order.tracking_number"
+            :subtitle="customerLine(order)"
+            :status-label="order.status_label"
+            :status-color="order.status_color"
+            :rows="cardRows(order)"
+            :selectable="can.bulk_status"
+            :selected="selected.includes(order.id)"
+            @open="selectedOrder = order"
+            @toggle-select="toggleOne(order.id)"
+          />
+          <p v-if="rows.length === 0" class="text-center text-muted py-4 mb-0">{{ $t('partners.orders.empty') }}</p>
+        </div>
+
+        <div class="table-responsive table-card d-none d-lg-block">
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
               <tr>
@@ -434,5 +484,24 @@ onMounted(() => {
     </BCard>
 
     <PartnerOrderQrScanner :show="showScanner" @close="showScanner = false" />
+
+    <EntityDetailSheet
+      :show="selectedOrder !== null"
+      :title="selectedOrder?.tracking_number ?? ''"
+      :subtitle="selectedOrder ? customerLine(selectedOrder) : ''"
+      :status-label="selectedOrder?.status_label ?? ''"
+      :status-color="selectedOrder?.status_color ?? 'secondary'"
+      :rows="selectedOrder ? sheetRows(selectedOrder) : []"
+      @close="selectedOrder = null"
+    >
+      <template #actions>
+        <Link
+          :href="route('orders.show', selectedOrder?.id)"
+          class="btn btn-primary flex-fill sheet-action"
+        >
+          <i class="ri-eye-line align-bottom me-1"></i> {{ $t('common.view') }}
+        </Link>
+      </template>
+    </EntityDetailSheet>
   </Layout>
 </template>

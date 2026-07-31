@@ -4,6 +4,7 @@ import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import axios from "axios";
 import Swal from "sweetalert2";
+import BottomSheet from "@/Components/BottomSheet.vue";
 
 const { t } = useI18n();
 
@@ -259,14 +260,7 @@ onBeforeUnmount(stopCamera);
 </script>
 
 <template>
-  <BModal
-    :model-value="show"
-    :title="$t('pickups.scanner.title')"
-    size="xl"
-    hide-footer
-    scrollable
-    @update:model-value="(v) => !v && close()"
-  >
+  <BottomSheet :show="show" :title="$t('pickups.scanner.title')" size="xl" @close="close">
     <div class="row g-3">
       <BCol lg="5">
         <div class="ratio ratio-4x3 bg-light rounded border d-flex align-items-center justify-content-center overflow-hidden">
@@ -361,7 +355,7 @@ onBeforeUnmount(stopCamera);
         {{ $t('pickups.scanner.update_status_count', { count: validBatch.length }) }}
       </button>
     </div>
-  </BModal>
+  </BottomSheet>
 </template>
 
 <style scoped>

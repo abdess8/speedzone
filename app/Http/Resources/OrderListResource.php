@@ -22,7 +22,7 @@ class OrderListResource extends JsonResource
 {
     /**
      * Columns this resource needs. Used to keep the underlying select narrow so
-     * heavy text columns (address, notes, sync errors) never leave MySQL.
+     * heavy text columns (notes, sync errors) never leave MySQL.
      *
      * @var array<int, string>
      */
@@ -32,6 +32,7 @@ class OrderListResource extends JsonResource
         'customer_first_name',
         'customer_last_name',
         'customer_phone',
+        'customer_address',
         'city_id',
         'sector_id',
         'payment_method',
@@ -42,6 +43,7 @@ class OrderListResource extends JsonResource
         'status',
         'is_fragile',
         'can_be_opened',
+        'return_id',
         'created_at',
     ];
 
@@ -71,6 +73,8 @@ class OrderListResource extends JsonResource
             'customer' => [
                 'full_name' => $this->customer_full_name,
                 'phone' => $this->customer_phone,
+                // Rendered by the driver card, not by the desktop table.
+                'address' => $this->customer_address,
             ],
 
             'city' => $this->whenLoaded('city', fn () => $this->city ? [
@@ -89,12 +93,22 @@ class OrderListResource extends JsonResource
             'payment_method_color' => $payment->color(),
 
             'amount_to_collect' => $payment->amountToCollect($orderAmount),
+            // An empty "to collect" cell is ambiguous on a driver's card: it
+            // reads as missing data rather than "nothing to collect". This flag
+            // lets the card state it outright.
+            'is_already_paid' => ! $payment->requiresCashCollection(),
             'order_value' => $this->order_value !== null ? (float) $this->order_value : null,
             'delivery_price' => (float) $this->delivery_price,
             'total_amount' => (float) $this->total_amount,
 
             'is_fragile' => (bool) $this->is_fragile,
             'can_be_opened' => (bool) $this->can_be_opened,
+
+            // Gates the driver card's "open a return" action. Deliberately
+            // coarse: a cancelled return makes the order eligible again, but the
+            // list would need a join to know that, and ReturnService rejects a
+            // duplicate anyway.
+            'has_return' => $this->return_id !== null,
 
             'created_at' => $this->created_at?->toIso8601String(),
         ];

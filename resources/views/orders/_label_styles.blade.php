@@ -23,6 +23,10 @@
 
     .page-break { page-break-after: always; }
 
+    /* Arabic fields are already emitted in visual order, so the only thing left
+       to do is to hang them on the right edge of their block. */
+    .rtl { text-align: right; }
+
     /* Header ------------------------------------------------------------- */
     .brand { width: 100%; border-collapse: collapse; }
     .brand td { vertical-align: middle; padding: 0; }

@@ -34,6 +34,11 @@
         .totals .net td { border-top: 2px solid #0d6efd; font-size: 14px; color: #0d6efd; padding-top: 8px; }
         .status-chip { display:inline-block; padding: 3px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; background:#e7f1ff; color:#0d6efd; }
         .footer { position: fixed; bottom: 18px; left: 32px; right: 32px; color: #98a2b3; font-size: 9px; border-top: 1px solid #e5e8ef; padding-top: 6px; }
+        /* Arabic values are emitted in visual order, so they only need to hang
+           right. Table cells additionally refuse to wrap: a break decided by the
+           engine would put the end of the value on the first line. */
+        .rtl { text-align: right; }
+        table.items td.rtl, table.items td.date { white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -47,9 +52,9 @@
             @if($logo)
                 <img src="{{ $logo }}" class="logo" alt="logo">
             @else
-                <div class="brand">{{ $companyName }}</div>
+                <div class="brand">@bidi($companyName)</div>
             @endif
-            <div class="muted mt-2">{{ $companyName }}</div>
+            <div class="muted mt-2">@bidi($companyName)</div>
         </div>
         <div class="col-right">
             <div class="doc-title">{{ __('invoices.pdf.title') }}</div>
@@ -63,16 +68,16 @@
         <div class="col-left">
             <div class="panel">
                 <h4>{{ __('invoices.pdf.billed_to') }}</h4>
-                <div class="name">{{ $seller->full_name }}</div>
+                <div class="name @bidiclass($seller->full_name)">@bidi($seller->full_name)</div>
                 @if($seller->ice_number)<div class="muted">ICE: {{ $seller->ice_number }}</div>@endif
                 @if($seller->phone_number)<div class="muted">{{ $seller->phone_number }}</div>@endif
-                @if($seller->address)<div class="muted">{{ $seller->address }}</div>@endif
+                @if($seller->address)<div class="muted @bidiclass($seller->address)">@bidilines($seller->address, 46)</div>@endif
             </div>
         </div>
         <div class="col-right" style="text-align:left;">
             <div class="panel">
                 <h4>{{ __('invoices.pdf.payment_details') }}</h4>
-                @if($seller->bank_name)<div><span class="muted">{{ __('invoices.pdf.bank') }}:</span> {{ $seller->bank_name }}</div>@endif
+                @if($seller->bank_name)<div><span class="muted">{{ __('invoices.pdf.bank') }}:</span> @bidi($seller->bank_name)</div>@endif
                 @if($seller->rib)<div><span class="muted">RIB:</span> {{ $seller->rib }}</div>@endif
                 @if($invoice->period_start || $invoice->period_end)
                     <div class="mt-2"><span class="muted">{{ __('invoices.pdf.period') }}:</span>
@@ -91,6 +96,7 @@
             <th>{{ __('invoices.pdf.customer') }}</th>
             <th>{{ __('invoices.pdf.city') }}</th>
             <th>{{ __('invoices.pdf.status') }}</th>
+            <th>{{ __('invoices.pdf.completed_on') }}</th>
             <th class="num">{{ __('invoices.pdf.order_amount') }}</th>
             <th class="num">{{ __('invoices.pdf.delivery') }}</th>
             <th class="num">{{ __('invoices.pdf.return') }}</th>
@@ -103,17 +109,19 @@
                 $order = $line->order;
                 $isReturned = $line->order_status_at_invoice === \App\Enums\OrderStatus::RETURNED->value;
                 $orderStatus = \App\Enums\OrderStatus::tryFrom((string) $line->order_status_at_invoice);
+                $completedAt = $line->order_completed_at ?? $order?->completedAt();
             @endphp
             <tr>
                 <td>{{ $i + 1 }}</td>
                 <td>{{ $order?->tracking_number ?? '#'.$line->order_id }}</td>
-                <td>{{ $order?->customer_full_name ?? '—' }}</td>
-                <td>{{ $order?->city?->name ?? '—' }}</td>
+                <td class="@bidiclass($order?->customer_full_name)">@bidilines($order?->customer_full_name ?? '—', 18)</td>
+                <td class="@bidiclass($order?->city?->name)">@bidilines($order?->city?->name ?? '—', 14)</td>
                 <td>
                     <span class="badge {{ $isReturned ? 'badge-returned' : 'badge-delivered' }}">
                         {{ $orderStatus?->label() ?? $line->order_status_at_invoice }}
                     </span>
                 </td>
+                <td class="date">{{ $completedAt?->format('Y-m-d') ?? '—' }}</td>
                 <td class="num">{{ $money($line->order_amount) }}</td>
                 <td class="num">{{ $money($line->delivery_fee) }}</td>
                 <td class="num">{{ $money($line->return_fee) }}</td>

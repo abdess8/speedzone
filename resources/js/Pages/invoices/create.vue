@@ -31,6 +31,8 @@ const sellerOptions = computed(() =>
 
 import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : "—");
+
 const hasOrders = computed(() => (preview.value?.summary?.total_orders_count ?? 0) > 0);
 
 const loadPreview = async () => {
@@ -159,6 +161,7 @@ const submit = () => {
                         <th>{{ $t('invoices.columns.customer') }}</th>
                         <th>{{ $t('invoices.columns.city') }}</th>
                         <th>{{ $t('invoices.columns.status') }}</th>
+                        <th>{{ $t('invoices.columns.completed_on') }}</th>
                         <th class="text-end">{{ $t('invoices.columns.order_amount') }}</th>
                         <th class="text-end">{{ $t('invoices.columns.delivery_fee') }}</th>
                         <th class="text-end">{{ $t('invoices.columns.return_fee') }}</th>
@@ -175,6 +178,7 @@ const submit = () => {
                             {{ line.status }}
                           </span>
                         </td>
+                        <td>{{ formatDate(line.completed_at) }}</td>
                         <td class="text-end">{{ money(line.order_amount) }}</td>
                         <td class="text-end">{{ money(line.delivery_fee) }}</td>
                         <td class="text-end">{{ money(line.return_fee) }}</td>

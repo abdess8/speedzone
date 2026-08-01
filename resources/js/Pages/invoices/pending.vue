@@ -64,6 +64,7 @@ const cardRows = (line) => [
 
 const sheetRows = (line) => [
   { label: t("invoices.columns.city"), value: line.city },
+  { label: t("invoices.columns.completed_on"), value: formatDate(line.completed_at) ?? "—" },
   { label: t("invoices.columns.return_fee"), value: money(line.return_fee) },
   ...cardRows(line),
 ];
@@ -150,6 +151,7 @@ const sheetRows = (line) => [
                     <th>{{ $t('invoices.columns.customer') }}</th>
                     <th>{{ $t('invoices.columns.city') }}</th>
                     <th>{{ $t('invoices.columns.status') }}</th>
+                    <th>{{ $t('invoices.columns.completed_on') }}</th>
                     <th class="text-end">{{ $t('invoices.columns.order_amount') }}</th>
                     <th class="text-end">{{ $t('invoices.columns.delivery_fee') }}</th>
                     <th class="text-end">{{ $t('invoices.columns.return_fee') }}</th>
@@ -166,13 +168,14 @@ const sheetRows = (line) => [
                         {{ line.status }}
                       </span>
                     </td>
+                    <td>{{ formatDate(line.completed_at) ?? "—" }}</td>
                     <td class="text-end">{{ money(line.order_amount) }}</td>
                     <td class="text-end">{{ money(line.delivery_fee) }}</td>
                     <td class="text-end">{{ money(line.return_fee) }}</td>
                     <td class="text-end fw-semibold" :class="line.final_amount < 0 ? 'text-danger' : ''">{{ money(line.final_amount) }}</td>
                   </tr>
                   <tr v-if="lines.length === 0">
-                    <td colspan="8" class="text-center text-muted py-4">{{ $t('invoices.pending.empty') }}</td>
+                    <td colspan="9" class="text-center text-muted py-4">{{ $t('invoices.pending.empty') }}</td>
                   </tr>
                 </tbody>
               </table>

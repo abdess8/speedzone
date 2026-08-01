@@ -66,7 +66,11 @@ class BillingService
     /**
      * Compute the snapshot line for a single order.
      *
-     * @return array{order_amount: float, delivery_fee: float, return_fee: float, final_amount: float, status: string}
+     * `completed_at` is the day the parcel was delivered or handed back to the
+     * seller: it is what makes an invoice line traceable to a real event rather
+     * than to the day the invoice happened to be generated.
+     *
+     * @return array{order_amount: float, delivery_fee: float, return_fee: float, final_amount: float, status: string, completed_at: ?CarbonInterface}
      */
     public function computeLine(Order $order): array
     {
@@ -82,6 +86,7 @@ class BillingService
                 'return_fee' => $returnFee,
                 'final_amount' => round(-$returnFee, 2),
                 'status' => $status->value,
+                'completed_at' => $order->completedAt(),
             ];
         }
 
@@ -94,6 +99,7 @@ class BillingService
             'return_fee' => 0.0,
             'final_amount' => round($orderAmount - $deliveryFee, 2),
             'status' => $status->value,
+            'completed_at' => $order->completedAt(),
         ];
     }
 
@@ -164,6 +170,7 @@ class BillingService
                 'city' => $order->city?->name,
                 'sector' => $order->sector?->name,
                 'created_at' => $order->created_at?->toIso8601String(),
+                'completed_at' => $line['completed_at']?->toIso8601String(),
             ]);
         })->all();
 

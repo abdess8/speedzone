@@ -123,6 +123,7 @@ class OrderResource extends JsonResource
             'driver_id' => $this->driver_id,
             'assigned_at' => $this->assigned_at?->toIso8601String(),
             'delivered_at' => $this->delivered_at?->toIso8601String(),
+            'returned_at' => $this->returned_at?->toIso8601String(),
 
             'pickup_request' => $this->whenLoaded('pickupRequest', function () use ($request) {
                 if (! $this->pickupRequest) {

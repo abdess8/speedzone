@@ -32,6 +32,11 @@
         .totals .net td { border-top: 2px solid #0d6efd; font-size: 14px; color: #0d6efd; padding-top: 8px; }
         .status-chip { display:inline-block; padding: 3px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; background:#e7f1ff; color:#0d6efd; }
         .footer { position: fixed; bottom: 18px; left: 32px; right: 32px; color: #98a2b3; font-size: 9px; border-top: 1px solid #e5e8ef; padding-top: 6px; }
+        /* Arabic values are emitted in visual order, so they only need to hang
+           right. Table cells additionally refuse to wrap: a break decided by the
+           engine would put the end of the value on the first line. */
+        .rtl { text-align: right; }
+        table.items td.rtl { white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -45,9 +50,9 @@
             @if($logo)
                 <img src="{{ $logo }}" class="logo" alt="logo">
             @else
-                <div class="brand">{{ $companyName }}</div>
+                <div class="brand">@bidi($companyName)</div>
             @endif
-            <div class="muted mt-2">{{ $companyName }}</div>
+            <div class="muted mt-2">@bidi($companyName)</div>
         </div>
         <div class="col-right">
             <div class="doc-title">{{ __('driver_invoices.pdf.title') }}</div>
@@ -61,16 +66,16 @@
         <div class="col-left">
             <div class="panel">
                 <h4>{{ __('driver_invoices.pdf.driver') }}</h4>
-                <div class="name">{{ $driver->full_name }}</div>
+                <div class="name @bidiclass($driver->full_name)">@bidi($driver->full_name)</div>
                 @if($driver->phone_number)<div class="muted">{{ $driver->phone_number }}</div>@endif
                 @if($driver->cin)<div class="muted">CIN: {{ $driver->cin }}</div>@endif
-                @if($driver->address)<div class="muted">{{ $driver->address }}</div>@endif
+                @if($driver->address)<div class="muted @bidiclass($driver->address)">@bidilines($driver->address, 46)</div>@endif
             </div>
         </div>
         <div class="col-right" style="text-align:left;">
             <div class="panel">
                 <h4>{{ __('driver_invoices.pdf.payment_details') }}</h4>
-                @if($driver->bank_name)<div><span class="muted">{{ __('driver_invoices.pdf.bank') }}:</span> {{ $driver->bank_name }}</div>@endif
+                @if($driver->bank_name)<div><span class="muted">{{ __('driver_invoices.pdf.bank') }}:</span> @bidi($driver->bank_name)</div>@endif
                 @if($driver->rib)<div><span class="muted">RIB:</span> {{ $driver->rib }}</div>@endif
                 @if($invoice->period_start || $invoice->period_end)
                     <div class="mt-2"><span class="muted">{{ __('driver_invoices.pdf.period') }}:</span>
@@ -105,9 +110,9 @@
             <tr>
                 <td>{{ $i + 1 }}</td>
                 <td>{{ $order?->tracking_number ?? ($order ? '#'.$order->id : '—') }}</td>
-                <td>{{ $order?->customer_full_name ?? '—' }}</td>
-                <td>{{ $order?->city?->name ?? '—' }}</td>
-                <td>{{ $line->sector?->name ?? '—' }}</td>
+                <td class="@bidiclass($order?->customer_full_name)">@bidilines($order?->customer_full_name ?? '—', 18)</td>
+                <td class="@bidiclass($order?->city?->name)">@bidilines($order?->city?->name ?? '—', 14)</td>
+                <td class="@bidiclass($line->sector?->name)">@bidilines($line->sector?->name ?? '—', 14)</td>
                 <td><span class="badge">{{ $type?->label() ?? '—' }}</span></td>
                 <td class="num">{{ $money($line->amount_snapshot) }}</td>
             </tr>

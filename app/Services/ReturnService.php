@@ -302,13 +302,17 @@ class ReturnService
 
         $orderUpdates = ['status' => $orderStatus->value];
 
+        // The parcel is back in the seller's hands: stamp the date the invoice
+        // will quote for this line.
         if ($toStatus === ReturnStatus::DELIVERED_TO_SELLER) {
             $orderUpdates['is_returned'] = true;
+            $orderUpdates['returned_at'] = now();
         }
 
         if ($toStatus === ReturnStatus::CANCELLED) {
             $orderUpdates['return_id'] = null;
             $orderUpdates['is_returned'] = false;
+            $orderUpdates['returned_at'] = null;
         }
 
         $order->update($orderUpdates);

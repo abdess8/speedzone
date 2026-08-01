@@ -18,6 +18,7 @@ class InvoiceOrder extends Model
         'return_fee',
         'final_amount',
         'order_status_at_invoice',
+        'order_completed_at',
     ];
 
     protected $casts = [
@@ -25,6 +26,7 @@ class InvoiceOrder extends Model
         'delivery_fee' => 'decimal:2',
         'return_fee' => 'decimal:2',
         'final_amount' => 'decimal:2',
+        'order_completed_at' => 'datetime',
     ];
 
     public function invoice(): BelongsTo

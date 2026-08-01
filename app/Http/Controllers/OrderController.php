@@ -357,6 +357,11 @@ class OrderController extends Controller
 
         return response()->streamDownload(function () use ($orders) {
             $handle = fopen('php://output', 'wb');
+
+            // Excel assumes the system codepage unless the file opens with a
+            // UTF-8 BOM, which turns Arabic customer data into mojibake.
+            fwrite($handle, "\u{FEFF}");
+
             fputcsv($handle, [
                 'Tracking Number', 'Status', 'Customer', 'Phone', 'City', 'Sector',
                 'Payment', 'Order Value', 'To Collect', 'Delivery Price', 'Total', 'Seller', 'Created At',
@@ -381,7 +386,7 @@ class OrderController extends Controller
             }
 
             fclose($handle);
-        }, $fileName, ['Content-Type' => 'text/csv']);
+        }, $fileName, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     /**

@@ -116,6 +116,7 @@ class InvoiceGeneratorService
                     'return_fee' => $line['return_fee'],
                     'final_amount' => $line['final_amount'],
                     'order_status_at_invoice' => $line['status'],
+                    'order_completed_at' => $line['completed_at'],
                 ]);
 
                 $order->forceFill([

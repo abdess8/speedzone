@@ -17,6 +17,11 @@
         .signatures { margin-top: 40px; width: 100%; }
         .signatures td { border: none; width: 50%; vertical-align: top; }
         .sign-box { border-top: 1px solid #333; margin-top: 50px; padding-top: 6px; }
+        /* Arabic values are emitted in visual order, so they only need to hang
+           right. Table cells additionally refuse to wrap: a break decided by the
+           engine would put the end of the value on the first line. */
+        .rtl { text-align: right; }
+        td.rtl { white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -26,7 +31,7 @@
                 @if ($logo)
                     <img src="{{ $logo }}" class="logo" alt="logo">
                 @else
-                    <strong>{{ $companyName }}</strong>
+                    <strong>@bidi($companyName)</strong>
                 @endif
             </td>
             <td style="text-align: right;">
@@ -39,20 +44,20 @@
 
     <div class="section">
         <div class="section-title">{{ __('pickups.delivery_note_pdf.pickup_info') }}</div>
-        <strong>{{ __('pickups.delivery_note_pdf.address') }}:</strong> {{ $pickup->pickup_address }}<br>
+        <strong>{{ __('pickups.delivery_note_pdf.address') }}:</strong> @bidilines($pickup->pickup_address, 80)<br>
         <strong>{{ __('pickups.delivery_note_pdf.packages') }}:</strong> {{ $pickup->number_of_packages }} &nbsp;|&nbsp;
         <strong>{{ __('pickups.delivery_note_pdf.total_amount') }}:</strong> {{ number_format((float) $pickup->total_orders_amount, 2) }} MAD
     </div>
 
     <div class="section">
         <div class="section-title">{{ __('pickups.delivery_note_pdf.seller') }}</div>
-        {{ $pickup->creator?->full_name ?? '—' }}<br>
+        @bidi($pickup->creator?->full_name ?? '—')<br>
         {{ $pickup->creator?->email ?? '' }} &nbsp; {{ $pickup->creator?->phone_number ?? '' }}
     </div>
 
     <div class="section">
         <div class="section-title">{{ __('pickups.delivery_note_pdf.driver') }}</div>
-        {{ $pickup->assignee?->full_name ?? __('pickups.delivery_note_pdf.not_assigned') }}<br>
+        @bidi($pickup->assignee?->full_name ?? __('pickups.delivery_note_pdf.not_assigned'))<br>
         {{ $pickup->assignee?->phone_number ?? '' }}
     </div>
 
@@ -72,9 +77,9 @@
                 @foreach ($orders as $order)
                     <tr>
                         <td>{{ $order->tracking_number }}</td>
-                        <td>{{ $order->customer_full_name }}</td>
-                        <td>{{ $order->city?->name ?? '—' }}</td>
-                        <td>{{ $order->sector?->name ?? '—' }}</td>
+                        <td class="@bidiclass($order->customer_full_name)">@bidilines($order->customer_full_name, 22)</td>
+                        <td class="@bidiclass($order->city?->name)">@bidilines($order->city?->name ?? '—', 16)</td>
+                        <td class="@bidiclass($order->sector?->name)">@bidilines($order->sector?->name ?? '—', 16)</td>
                         <td style="text-align:right;">{{ number_format((float) $order->order_amount, 2) }}</td>
                     </tr>
                 @endforeach
@@ -85,7 +90,7 @@
     @if ($pickup->notes)
         <div class="section">
             <div class="section-title">{{ __('pickups.delivery_note_pdf.notes') }}</div>
-            {{ $pickup->notes }}
+            <div class="@bidiclass($pickup->notes)">@bidilines($pickup->notes, 80)</div>
         </div>
     @endif
 

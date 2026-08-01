@@ -92,6 +92,10 @@ class InvoiceResource extends JsonResource
                     'final_amount' => (float) $line->final_amount,
                     'order_status_at_invoice' => $line->order_status_at_invoice,
                     'order_status_label' => $lineStatus?->label() ?? \App\Enums\OrderStatus::tryFrom((string) $line->order_status_at_invoice)?->label(),
+                    // Delivered or returned on: snapshotted when the line was
+                    // billed, with a fallback for invoices generated before the
+                    // column existed and never backfilled.
+                    'completed_at' => ($line->order_completed_at ?? $order?->completedAt())?->toIso8601String(),
                 ];
             })->values()->all()),
 

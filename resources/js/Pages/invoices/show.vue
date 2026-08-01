@@ -158,6 +158,7 @@ onMounted(() => {
                     <th>{{ $t('invoices.columns.customer') }}</th>
                     <th>{{ $t('invoices.columns.city') }}</th>
                     <th>{{ $t('invoices.columns.status') }}</th>
+                    <th>{{ $t('invoices.columns.completed_on') }}</th>
                     <th class="text-end">{{ $t('invoices.columns.order_amount') }}</th>
                     <th class="text-end">{{ $t('invoices.columns.delivery_fee') }}</th>
                     <th class="text-end">{{ $t('invoices.columns.return_fee') }}</th>
@@ -179,6 +180,7 @@ onMounted(() => {
                         {{ line.order_status_label ?? line.order_status_at_invoice }}
                       </span>
                     </td>
+                    <td>{{ formatDate(line.completed_at) }}</td>
                     <td class="text-end">{{ money(line.order_amount) }}</td>
                     <td class="text-end">{{ money(line.delivery_fee) }}</td>
                     <td class="text-end">{{ money(line.return_fee) }}</td>
@@ -187,7 +189,7 @@ onMounted(() => {
                     </td>
                   </tr>
                   <tr v-if="lines.length === 0">
-                    <td colspan="8" class="text-center text-muted py-4">{{ $t('invoices.detail.no_orders') }}</td>
+                    <td colspan="9" class="text-center text-muted py-4">{{ $t('invoices.detail.no_orders') }}</td>
                   </tr>
                 </tbody>
               </table>

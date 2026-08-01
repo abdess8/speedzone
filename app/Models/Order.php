@@ -10,6 +10,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\TransferStatus;
 use App\Models\Concerns\BelongsToStore;
 use App\Models\Scopes\PartnerDeliveryVisibilityScope;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -38,6 +39,7 @@ class Order extends Model
         'driver_id',
         'assigned_at',
         'delivered_at',
+        'returned_at',
         'pickup_request_id',
         'return_id',
         'invoice_id',
@@ -79,6 +81,7 @@ class Order extends Model
         'is_returned' => 'boolean',
         'assigned_at' => 'datetime',
         'delivered_at' => 'datetime',
+        'returned_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -271,6 +274,19 @@ class Order extends Model
     public function getCustomerFullNameAttribute(): string
     {
         return trim("{$this->customer_first_name} {$this->customer_last_name}");
+    }
+
+    /**
+     * Day the parcel reached its final stop: handed to the customer, or handed
+     * back to the seller. Null while the order is still moving.
+     */
+    public function completedAt(): ?CarbonInterface
+    {
+        $status = $this->status instanceof OrderStatus ? $this->status : OrderStatus::tryFrom((string) $this->status);
+
+        return $status === OrderStatus::RETURNED
+            ? $this->returned_at
+            : $this->delivered_at;
     }
 
     /*

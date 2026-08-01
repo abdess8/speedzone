@@ -12,7 +12,7 @@
                 @if ($logo)
                     <img src="{{ $logo }}" class="brand-logo" alt="{{ $companyName }}">
                 @else
-                    {{ $companyName }}
+                    @bidi($companyName)
                 @endif
             </td>
             <td class="brand-icon-cell"><img src="{{ $icons['speed'] }}" class="brand-icon" alt=""></td>
@@ -36,20 +36,20 @@
                         <tr>
                             <td>
                                 <div class="recipient-title">{{ __('orders.label_pdf.recipient_details') }}</div>
-                                <div class="recipient-name">{{ Str::limit($order->customer_full_name, 22) }}</div>
+                                <div class="recipient-name @bidiclass($order->customer_full_name)">@bidi(Str::limit($order->customer_full_name, 22))</div>
                                 <div class="recipient-line">{{ Str::limit($order->customer_phone, 24) }}</div>
-                                <div class="recipient-line">{{ Str::limit($order->customer_address, 48) }}</div>
+                                <div class="recipient-line @bidiclass($order->customer_address)">@bidilines(Str::limit($order->customer_address, 48), 38)</div>
                             </td>
                             @if ($destination)
                                 <td class="pin-cell">
                                     <img src="{{ $icons['pin'] }}" alt="">
-                                    <div class="pin-label">{{ Str::limit($destination, 14) }}</div>
+                                    <div class="pin-label">@bidilines(Str::limit($destination, 14), 8)</div>
                                 </td>
                             @endif
                         </tr>
                     </table>
-                    <div class="recipient-city">
-                        {{ Str::limit($destination.($order->sector ? ' · '.$order->sector->name : ''), 24) }}
+                    <div class="recipient-city @bidiclass($destination)">
+                        @bidi(Str::limit($destination.($order->sector ? ' · '.$order->sector->name : ''), 24))
                     </div>
                 </div>
             </td>
@@ -86,11 +86,11 @@
                 </td>
                 <td class="split">
                     <div class="details-label">{{ __('orders.label_pdf.delivery_zone') }}</div>
-                    <div class="details-value">{{ Str::limit($zone ?: '—', 18) }}</div>
+                    <div class="details-value @bidiclass($zone)">@bidi(Str::limit($zone ?: '—', 18))</div>
                 </td>
                 <td class="split last">
                     <div class="details-label">{{ __('orders.label_pdf.notes') }}</div>
-                    <div class="details-value">{{ Str::limit($order->notes ?: '—', 30) }}</div>
+                    <div class="details-value @bidiclass($order->notes)">@bidi(Str::limit($order->notes ?: '—', 30))</div>
                 </td>
             </tr>
         </table>
@@ -127,7 +127,7 @@
         <tr>
             <td class="foot-icon-cell"><img src="{{ $icons['speed_muted'] }}" class="foot-icon" alt=""></td>
             <td>
-                {{ __('orders.label_pdf.seller') }}: {{ $order->seller?->full_name }} &middot; {{ $order->trackingUrl() }}
+                {{ __('orders.label_pdf.seller') }}: @bidi($order->seller?->full_name) &middot; {{ $order->trackingUrl() }}
             </td>
         </tr>
     </table>

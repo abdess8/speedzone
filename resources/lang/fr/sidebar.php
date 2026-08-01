@@ -24,6 +24,7 @@ return [
         'delivery' => 'En cours de livraison',
         'failed' => 'Non livrées',
         'delivered' => 'Livrées',
+        'import' => 'Import en masse',
     ],
     'partner_orders' => 'Commandes partenaires',
     'pickups' => 'Ramassages',

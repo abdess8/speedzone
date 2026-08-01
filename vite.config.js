@@ -39,6 +39,11 @@ function manualChunks(id) {
     if (id.includes('bootstrap')) return 'vendor-bootstrap';
     if (id.includes('pusher-js') || id.includes('laravel-echo')) return 'vendor-echo';
     if (id.includes('moment')) return 'vendor-moment';
+    // Only the bulk import wizard reads spreadsheets, and it imports both
+    // parsers dynamically. Without a chunk of their own the catch-all below
+    // drags them into the eagerly loaded vendor bundle and that lazy import
+    // buys nothing.
+    if (id.includes('xlsx') || id.includes('papaparse')) return 'vendor-spreadsheet';
 
     // Everything else (Vue runtime, Inertia, Vuex, i18n, axios, ...) stays in a
     // single chunk. Splitting the core runtime further produced chunks that

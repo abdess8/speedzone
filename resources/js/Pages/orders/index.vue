@@ -300,6 +300,9 @@ onMounted(() => {
         </template>
 
         <template #actions>
+          <Link v-if="can.create" :href="route('orders.import')" class="btn btn-soft-primary text-nowrap">
+            <i class="ri-file-upload-line align-bottom me-1"></i> {{ $t('orders.import.menu') }}
+          </Link>
           <Link v-if="can.create" :href="route('orders.create')" class="btn btn-success text-nowrap">
             <i class="ri-add-line align-bottom me-1"></i> {{ $t('orders.new_order') }}
           </Link>

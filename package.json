@@ -52,6 +52,7 @@
         "leaflet": "^1.9.4",
         "lottie-web": "^5.12.2",
         "moment": "^2.30.1",
+        "papaparse": "^5.5.4",
         "prismjs": "^1.30.0",
         "pusher-js": "^8.5.0",
         "sass": "1.77.6",
@@ -67,6 +68,7 @@
         "vue3-count-to": "^1.1.2",
         "vue3-echarts": "^1.1.0",
         "vue3-google-map": "^0.21.1",
-        "vuex": "^4.1.0"
+        "vuex": "^4.1.0",
+        "xlsx": "^0.18.5"
     }
 }

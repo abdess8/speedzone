@@ -85,6 +85,12 @@ export const menuItems = [
         href: '/orders?status_group=delivered',
         permissions: ORDER_READ,
       },
+      {
+        key: 'orders-import',
+        labelKey: 'sidebar.orders_views.import',
+        href: '/orders/import',
+        permissions: ['orders.create'],
+      },
     ],
   },
   {

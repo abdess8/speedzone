@@ -12,6 +12,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\NotificationPreferenceController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrderImportController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerDeliveryController;
 use App\Http\Controllers\PartnerOrderController;
@@ -165,6 +166,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('orders/create-and-new', [OrderController::class, 'storeAndNew'])
         ->middleware('permission:orders.create')
         ->name('orders.store-and-new');
+    Route::get('orders/import', [OrderImportController::class, 'create'])
+        ->middleware('permission:orders.create')
+        ->name('orders.import');
+    Route::post('orders/import', [OrderImportController::class, 'store'])
+        ->middleware('permission:orders.create')
+        ->name('orders.import.store');
     Route::get('orders/{order}/pdf', [OrderController::class, 'pdf'])
         ->whereNumber('order')
         ->middleware('permission:orders.print')

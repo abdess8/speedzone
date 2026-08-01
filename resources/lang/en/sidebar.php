@@ -24,6 +24,7 @@ return [
         'delivery' => 'Out for delivery',
         'failed' => 'Not delivered',
         'delivered' => 'Delivered',
+        'import' => 'Bulk import',
     ],
     'partner_orders' => 'Partner Orders',
     'pickups' => 'Pickups',

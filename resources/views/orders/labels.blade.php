@@ -12,6 +12,8 @@
                 'order' => $label['order'],
                 'qrCode' => $label['qrCode'],
                 'barcode' => $label['barcode'],
+                'logo' => $label['logo'],
+                'companyName' => $label['companyName'],
             ])
         </div>
     @endforeach

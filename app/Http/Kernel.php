@@ -36,6 +36,10 @@ class Kernel extends HttpKernel
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
+            // Must precede SubstituteBindings: route model binding has to run
+            // with the store scope already armed, so /orders/{id} pointing at
+            // another store 404s at resolution instead of reaching the policy.
+            \App\Http\Middleware\ResolveActiveStore::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\SetLocale::class,
             // Listed explicitly so Jetstream does not append it after
@@ -49,6 +53,7 @@ class Kernel extends HttpKernel
         'api' => [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            \App\Http\Middleware\ResolveActiveStore::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];

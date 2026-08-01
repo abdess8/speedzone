@@ -71,6 +71,15 @@ class OrderResource extends JsonResource
                 : null),
             'seller_id' => $this->seller_id,
 
+            // Store of origin: also what the shipping label is branded with.
+            'store' => $this->whenLoaded('store', fn () => $this->store ? [
+                'id' => $this->store->id,
+                'name' => $this->store->name,
+                'category' => $this->store->category,
+                'logo_url' => $this->store->logo_url,
+            ] : null),
+            'store_id' => $this->store_id,
+
             'partner_id' => $this->partner_id,
             'external_tracking_code' => $this->external_tracking_code,
             'partner_sync_error' => $this->partner_sync_error,

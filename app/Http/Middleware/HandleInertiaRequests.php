@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Enums\UserStatus;
+use App\Models\Store;
+use App\Support\StoreContext;
 use App\Support\TranslationBundle;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -61,6 +63,7 @@ class HandleInertiaRequests extends Middleware
             'notifications' => [
                 'unread_count' => fn () => (int) ($request->user()?->unreadNotifications()->count() ?? 0),
             ],
+            'store' => fn () => $this->resolveStoreContext($request),
         ]);
 
         // The Vue i18n instance keeps merged messages for the lifetime of the
@@ -108,6 +111,58 @@ class HandleInertiaRequests extends Middleware
             'two_factor_enabled' => Features::enabled(Features::twoFactorAuthentication())
                 && ! is_null($user->two_factor_secret),
         ]);
+    }
+
+    /**
+     * The multi-store context consumed by the switcher and the login picker.
+     *
+     * Null for staff accounts and for vendors who only have one shop, so the
+     * switcher simply does not render for them.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function resolveStoreContext(Request $request): ?array
+    {
+        $user = $request->user();
+
+        if (! $user || ! $user->belongsToStoreAccount()) {
+            return null;
+        }
+
+        $stores = $user->stores()
+            ->where('stores.is_active', true)
+            ->orderByDesc('stores.is_default')
+            ->orderBy('stores.name')
+            ->get(['stores.id', 'stores.name', 'stores.logo_path', 'stores.category']);
+
+        if ($stores->isEmpty()) {
+            return null;
+        }
+
+        $activeId = app(StoreContext::class)->id() ?? $user->defaultStoreId();
+        $active = $stores->firstWhere('id', $activeId);
+
+        return [
+            'active' => $active ? $this->storePayload($active) : null,
+            'available' => $stores->map(fn (Store $store) => $this->storePayload($store))->all(),
+            // Only ask which shop to open when there is actually a choice to
+            // make and the user has not made it yet this session.
+            'must_choose' => $stores->count() > 1
+                && ! $request->session()->get(ResolveActiveStore::CHOSEN_KEY, false),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function storePayload(Store $store): array
+    {
+        return [
+            'id' => $store->id,
+            'name' => $store->name,
+            'category' => $store->category,
+            'logo_url' => $store->logo_url,
+        ];
     }
 
     /**

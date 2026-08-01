@@ -212,6 +212,7 @@ return [
         'related_operations' => 'Opérations liées (Lookups)',
         'open_full_view' => 'Vue complète',
         'seller_phone' => 'Téléphone vendeur',
+        'store' => 'Boutique d\'origine',
         'reference' => 'Référence',
         'created_date' => 'Date de création',
         'created_by' => 'Créé par',

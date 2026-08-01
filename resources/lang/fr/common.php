@@ -8,6 +8,7 @@ return [
     'apply_filters' => 'Appliquer les filtres',
     'apply' => 'Appliquer',
     'search' => 'Rechercher',
+    'select' => 'Sélectionner',
     'status' => 'Statut',
     'all' => 'Tous',
     'all_statuses' => 'Tous les statuts',

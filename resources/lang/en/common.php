@@ -8,6 +8,7 @@ return [
     'apply_filters' => 'Apply Filters',
     'apply' => 'Apply',
     'search' => 'Search',
+    'select' => 'Select',
     'status' => 'Status',
     'all' => 'All',
     'all_statuses' => 'All statuses',

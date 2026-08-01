@@ -24,7 +24,7 @@ class PickupRequestQueryService
         } elseif ($user->hasPermission('pickup_requests.read.assigned')) {
             $query->assignedTo($user->id);
         } elseif ($user->hasPermission('pickup_requests.read.own')) {
-            $query->ownedBy($user->id);
+            $query->ownedBy($user->accountOwnerId());
         } else {
             $query->whereRaw('1 = 0');
         }

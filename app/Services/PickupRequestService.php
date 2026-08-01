@@ -40,7 +40,7 @@ class PickupRequestService
 
             $pickup = PickupRequest::create([
                 'reference' => $this->references->generate(),
-                'created_by' => $seller->id,
+                'created_by' => $seller->accountOwnerId(),
                 'status' => PickupRequestStatus::WAITING_FOR_PICKUP,
                 'pickup_address' => $pickupAddress,
                 'number_of_packages' => $orders->count(),

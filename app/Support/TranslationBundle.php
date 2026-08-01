@@ -39,6 +39,8 @@ final class TranslationBundle
         'billing_frequencies',
         'seller_payment_methods',
         'users',
+        'stores',
+        'team',
         'cities',
         'partners',
         'partner_auth_types',

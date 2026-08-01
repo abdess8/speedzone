@@ -306,6 +306,19 @@ onMounted(() => {
                 <UserAvatar v-if="order.seller" :user="order.seller" :size="36" clickable show-name show-role />
                 <div v-else class="fw-semibold">{{ empty() }}</div>
               </BCol>
+              <BCol md="4">
+                <div class="text-muted fs-13">{{ $t('orders.show.store') }}</div>
+                <div v-if="order.store" class="d-flex align-items-center gap-2">
+                  <img
+                    v-if="order.store.logo_url"
+                    :src="order.store.logo_url"
+                    :alt="order.store.name"
+                    class="order-store-logo rounded"
+                  />
+                  <span class="fw-semibold">{{ order.store.name }}</span>
+                </div>
+                <div v-else class="fw-semibold">{{ empty() }}</div>
+              </BCol>
               <BCol md="4"><div class="text-muted fs-13">{{ $t('orders.show.seller_phone') }}</div><div class="fw-semibold">{{ order.seller?.phone ?? empty() }}</div></BCol>
               <BCol md="4"><div class="text-muted fs-13">{{ $t('orders.show.pickup_city') }}</div><div class="fw-semibold">{{ order.pickup_city?.name ?? order.seller?.city?.name ?? empty() }}</div></BCol>
               <BCol md="4">
@@ -558,3 +571,12 @@ onMounted(() => {
     />
   </Layout>
 </template>
+
+<style scoped>
+.order-store-logo {
+  height: 28px;
+  width: 28px;
+  object-fit: contain;
+  background-color: var(--vz-light);
+}
+</style>

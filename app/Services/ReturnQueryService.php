@@ -26,7 +26,7 @@ class ReturnQueryService
         if ($user->hasPermission('returns.read.all')) {
             // full access
         } elseif ($user->hasPermission('returns.read.own')) {
-            $query->ownedBySeller($user->id);
+            $query->ownedBySeller($user->accountOwnerId());
         } elseif ($user->hasPermission('returns.update_status') || $user->hasPermission('returns.create')) {
             // Drivers see returns they created or that are in processable statuses
             $query->where(function (Builder $q) use ($user): void {

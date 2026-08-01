@@ -159,7 +159,7 @@ class DashboardService
         }
 
         if ($user->hasPermission('orders.read.own')) {
-            return $query->ownedBy($user->id);
+            return $query->ownedBy($user->accountOwnerId());
         }
 
         return $query->whereRaw('1 = 0');

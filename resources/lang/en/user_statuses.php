@@ -5,4 +5,5 @@ return [
     'PENDING_APPROVAL' => 'Pending approval',
     'ACTIVE' => 'Active',
     'REJECTED' => 'Rejected',
+    'SUSPENDED' => 'Suspended',
 ];

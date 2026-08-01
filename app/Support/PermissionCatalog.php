@@ -21,8 +21,49 @@ class PermissionCatalog
             self::cityPermissions(),
             self::sectorPermissions(),
             self::driverZonePermissions(),
-            self::partnerPermissions()
+            self::partnerPermissions(),
+            self::storePermissions(),
+            self::teamPermissions()
         );
+    }
+
+    /**
+     * Vendor team administration.
+     *
+     * Like the store write permissions, these are excluded from the seller
+     * ceiling: a member allowed to manage the team could grant himself any
+     * role, which would make every other restriction moot.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    public static function teamPermissions(): array
+    {
+        return [
+            self::make('team.read', 'team', 'read', null, 'resource'),
+            self::make('team.create', 'team', 'create', null, 'resource'),
+            self::make('team.update', 'team', 'update', null, 'resource'),
+            self::make('team.suspend', 'team', 'suspend', null, 'resource'),
+            self::make('team_roles.manage', 'team_roles', 'manage', null, 'resource'),
+        ];
+    }
+
+    /**
+     * Vendor shop management.
+     *
+     * Deliberately kept out of the seller permission ceiling used for custom
+     * team roles: a member who could create a store could also grant himself
+     * access to it.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    public static function storePermissions(): array
+    {
+        return [
+            self::make('stores.read', 'stores', 'read', null, 'resource'),
+            self::make('stores.create', 'stores', 'create', null, 'resource'),
+            self::make('stores.update', 'stores', 'update', null, 'resource'),
+            self::make('stores.delete', 'stores', 'delete', null, 'resource'),
+        ];
     }
 
     /**

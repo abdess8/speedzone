@@ -34,7 +34,7 @@ class InvoiceQueryService
 
         // Authorization scope: users without read.all only see their own invoices.
         if (! $user->hasPermission('invoices.read.all')) {
-            $query->forSeller($user->id);
+            $query->forSeller($user->accountOwnerId());
         }
 
         $this->applyFilters($query, $request);

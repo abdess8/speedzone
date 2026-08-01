@@ -68,6 +68,12 @@ class FortifyServiceProvider extends ServiceProvider
                 ]);
             }
 
+            if ($user->isSuspended()) {
+                throw ValidationException::withMessages([
+                    Fortify::username() => [__('team.login.suspended')],
+                ]);
+            }
+
             return $user;
         });
 

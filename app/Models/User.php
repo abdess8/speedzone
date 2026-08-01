@@ -6,6 +6,7 @@ use App\Enums\BillingFrequency;
 use App\Enums\SellerPaymentMethod;
 use App\Enums\UserStatus;
 use App\Notifications\VerifySpeedZoneAccountEmail;
+use App\Support\StoreContext;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -35,6 +36,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'role_id',
+        'parent_user_id',
         'status',
         'name',
         'first_name',
@@ -61,6 +63,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'rib_attachment',
         'cin_front_attachment',
         'cin_back_attachment',
+        'default_store_name',
+        'default_store_logo',
     ];
 
     /**
@@ -132,6 +136,142 @@ class User extends Authenticatable implements MustVerifyEmail
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(self::class, 'approved_by');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Multi-store account
+    |--------------------------------------------------------------------------
+    |
+    | A vendor account is a tree one level deep: the seller who signed up, plus
+    | the team members he creates. Ownership of business rows always stays on
+    | the seller (accountOwnerId), while day-to-day visibility is narrowed to
+    | the store the actor is currently standing on.
+    */
+
+    /**
+     * The vendor account this user belongs to (null for a vendor admin).
+     */
+    public function parentUser(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_user_id');
+    }
+
+    /**
+     * Team members created under this vendor account.
+     */
+    public function teamMembers(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_user_id');
+    }
+
+    /**
+     * Stores this user may switch into (owner and team members alike).
+     */
+    public function stores(): BelongsToMany
+    {
+        return $this->belongsToMany(Store::class)->withTimestamps();
+    }
+
+    /**
+     * Stores this user owns as a vendor admin.
+     */
+    public function ownedStores(): HasMany
+    {
+        return $this->hasMany(Store::class, 'owner_id');
+    }
+
+    /**
+     * Id of the account that owns the data — this user, or the vendor he works
+     * for. Every `.own` permission scope resolves through this, which is what
+     * lets a team member read his employer's orders without owning them.
+     */
+    public function accountOwnerId(): int
+    {
+        return $this->parent_user_id ?? $this->id;
+    }
+
+    public function isTeamMember(): bool
+    {
+        return $this->parent_user_id !== null;
+    }
+
+    /**
+     * Whether this user's visibility is bound to a store.
+     *
+     * Staff accounts are excluded: a dispatcher must keep seeing every seller's
+     * orders, and a super admin must never be boxed into one shop.
+     */
+    public function belongsToStoreAccount(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return false;
+        }
+
+        return $this->isSeller() || $this->isTeamMember();
+    }
+
+    /**
+     * Per-instance memo of the accessible store ids.
+     *
+     * @var array<int, int>|null
+     */
+    protected ?array $accessibleStoreIdMemo = null;
+
+    /**
+     * Ids of the active stores this user may read, ordered with the default
+     * one first so the UI has a stable, meaningful ordering.
+     *
+     * @return array<int, int>
+     */
+    public function accessibleStoreIds(): array
+    {
+        if ($this->accessibleStoreIdMemo !== null) {
+            return $this->accessibleStoreIdMemo;
+        }
+
+        return $this->accessibleStoreIdMemo = $this->stores()
+            ->where('stores.is_active', true)
+            ->orderByDesc('stores.is_default')
+            ->orderBy('stores.name')
+            ->pluck('stores.id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+    }
+
+    public function canAccessStore(int $storeId): bool
+    {
+        return in_array($storeId, $this->accessibleStoreIds(), true);
+    }
+
+    /**
+     * Store pre-selected at login when the user has not chosen one yet.
+     */
+    public function defaultStoreId(): ?int
+    {
+        return $this->accessibleStoreIds()[0] ?? null;
+    }
+
+    public function forgetStoreMemo(): void
+    {
+        $this->accessibleStoreIdMemo = null;
+    }
+
+    /**
+     * Whether a row belongs to the store currently being viewed.
+     *
+     * Always true when no store boundary is in force (staff accounts, queued
+     * jobs, console commands), so non-store actors are unaffected.
+     */
+    private function sharesActiveStore(?int $storeId): bool
+    {
+        $context = app(StoreContext::class);
+
+        if (! $context->isEnforced()) {
+            return true;
+        }
+
+        return $storeId !== null && $storeId === $context->id();
     }
 
     /**
@@ -336,9 +476,37 @@ class User extends Authenticatable implements MustVerifyEmail
         return isset($this->roleNameMap()[Role::DRIVER]);
     }
 
+    /**
+     * Whether the user acts on the vendor side of the platform.
+     *
+     * Team members hold a custom role instead of the global Seller role — they
+     * must never inherit its full permission set — but they still belong to a
+     * vendor account, so seller-side affordances have to recognise them.
+     */
     public function isSeller(): bool
     {
-        return isset($this->roleNameMap()[Role::SELLER]);
+        return isset($this->roleNameMap()[Role::SELLER]) || $this->isTeamMember();
+    }
+
+    /**
+     * The vendor admin: owns the stores and administers the team.
+     */
+    public function isAccountOwner(): bool
+    {
+        return ! $this->isTeamMember() && isset($this->roleNameMap()[Role::SELLER]);
+    }
+
+    public function isSuspended(): bool
+    {
+        return ($this->status ?? UserStatus::Active) === UserStatus::Suspended;
+    }
+
+    /**
+     * Custom roles this vendor defined for his team.
+     */
+    public function customRoles(): HasMany
+    {
+        return $this->hasMany(Role::class, 'owner_id');
     }
 
     /**
@@ -478,7 +646,9 @@ class User extends Authenticatable implements MustVerifyEmail
                 || $this->hasPermission("orders.{$action}.assigned");
         }
 
-        if ($order->seller_id === $this->id && $this->hasPermission("orders.{$action}.own")) {
+        if ((int) $order->seller_id === $this->accountOwnerId()
+            && $this->sharesActiveStore($order->store_id)
+            && $this->hasPermission("orders.{$action}.own")) {
             return true;
         }
 
@@ -499,7 +669,10 @@ class User extends Authenticatable implements MustVerifyEmail
             return $action === 'read' || ($action === 'pickup' && $this->hasPermission('pickup_requests.pickup'));
         }
 
-        if ($pickup && $pickup->created_by === $this->id && $this->hasPermission('pickup_requests.read.own')) {
+        if ($pickup
+            && (int) $pickup->created_by === $this->accountOwnerId()
+            && $this->sharesActiveStore($pickup->store_id)
+            && $this->hasPermission('pickup_requests.read.own')) {
             return $action === 'read';
         }
 
@@ -535,7 +708,10 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
-        if ($return && $return->order?->seller_id === $this->id && $this->hasPermission('returns.read.own')) {
+        if ($return
+            && (int) $return->order?->seller_id === $this->accountOwnerId()
+            && $this->sharesActiveStore($return->store_id)
+            && $this->hasPermission('returns.read.own')) {
             return $action === 'read' || ($action === 'edit_customer_data' && $this->canCreateReturnRequest());
         }
 

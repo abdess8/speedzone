@@ -70,7 +70,7 @@ class OrderQueryService
      *
      * @var array<int, string>
      */
-    public const DEFAULT_RELATIONS = ['city', 'sector', 'seller'];
+    public const DEFAULT_RELATIONS = ['city', 'sector', 'seller', 'store'];
 
     /**
      * Build the filtered, scoped and sorted order query.
@@ -91,7 +91,10 @@ class OrderQueryService
         } elseif ($user->hasPermission('orders.read.assigned')) {
             $query->assignedTo($user->id);
         } elseif ($user->hasPermission('orders.read.own')) {
-            $query->ownedBy($user->id);
+            // The vendor account, not the logged-in user: a team member reads
+            // his employer's orders. The store scope then narrows the result to
+            // the shop he is currently standing on.
+            $query->ownedBy($user->accountOwnerId());
         } else {
             $query->whereRaw('1 = 0');
         }

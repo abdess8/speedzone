@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActiveStoreController;
 use App\Http\Controllers\Admin\PendingUserController;
 use App\Http\Controllers\ApiIntegrationController;
 use App\Http\Controllers\CityController;
@@ -23,7 +24,10 @@ use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\SellerDashboardController;
+use App\Http\Controllers\StoreController;
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\TeamMemberController;
+use App\Http\Controllers\TeamRoleController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VelzonRoutesController;
@@ -89,6 +93,41 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::resource('roles', RoleController::class)
         ->except(['show'])
         ->middleware('permission:roles.read');
+
+    // Vendor shops (multi-store). The active-store switch is intentionally
+    // outside the stores.read guard: a team member may switch between the shops
+    // he was granted without being allowed to administer them.
+    Route::put('stores/active', [ActiveStoreController::class, 'update'])
+        ->name('stores.active.update');
+    Route::resource('stores', StoreController::class)
+        ->except(['show'])
+        ->whereNumber('store')
+        ->middleware('permission:stores.read');
+
+    // Vendor team. Custom roles are declared before the member resource so
+    // `team/roles` is not swallowed by `team/{member}`.
+    Route::middleware('permission:team_roles.manage')->group(function () {
+        Route::resource('team/roles', TeamRoleController::class)
+            ->except(['show'])
+            ->whereNumber('role')
+            ->names('team.roles')
+            ->parameters(['roles' => 'role']);
+    });
+
+    Route::middleware('permission:team.read')->group(function () {
+        Route::put('team/{member}/suspend', [TeamMemberController::class, 'suspend'])
+            ->whereNumber('member')
+            ->name('team.suspend');
+        Route::put('team/{member}/reactivate', [TeamMemberController::class, 'reactivate'])
+            ->whereNumber('member')
+            ->name('team.reactivate');
+        // No destroy: a member who created orders must stay referenceable, so
+        // revoking access means suspending him.
+        Route::resource('team', TeamMemberController::class)
+            ->except(['show', 'destroy'])
+            ->whereNumber('member')
+            ->parameters(['team' => 'member']);
+    });
 
     // Delivery zones — Cities & Sectors management
     Route::get('cities/{city}/sectors', [CityController::class, 'sectors'])

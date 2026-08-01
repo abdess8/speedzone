@@ -8,6 +8,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PartnerOrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\TransferStatus;
+use App\Models\Concerns\BelongsToStore;
 use App\Models\Scopes\PartnerDeliveryVisibilityScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
+    use BelongsToStore;
     use HasFactory;
 
     /**
@@ -31,6 +33,7 @@ class Order extends Model
         'external_tracking_code',
         'partner_sync_error',
         'seller_id',
+        'store_id',
         'partner_id',
         'driver_id',
         'assigned_at',

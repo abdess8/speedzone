@@ -126,6 +126,7 @@ return [
     ],
 
     'generated' => 'Invoice :number generated successfully.',
+    'generated_many' => ':count invoices generated, one per store.',
     'marked_paid' => 'Invoice marked as paid.',
     'marked_sent' => 'Invoice marked as sent.',
     'cancelled' => 'Invoice cancelled.',

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\SupportObjectType;
 use App\Enums\SupportTicketCategory;
 use App\Enums\SupportTicketStatus;
+use App\Models\Concerns\BelongsToStore;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,11 +14,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SupportTicket extends Model
 {
+    use BelongsToStore;
     use HasFactory;
 
     protected $fillable = [
         'reference',
         'created_by',
+        'store_id',
         'assigned_to',
         'object_type',
         'object_id',

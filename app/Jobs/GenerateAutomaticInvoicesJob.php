@@ -51,14 +51,16 @@ class GenerateAutomaticInvoicesJob implements ShouldQueue
     private function processSeller(InvoiceGeneratorService $generator, User $seller, CarbonImmutable $asOf): void
     {
         try {
-            // Automatic runs bill everything outstanding (no period filter).
-            $invoice = $generator->generate($seller, null, null, null);
+            // Automatic runs bill everything outstanding (no period filter),
+            // one invoice per store.
+            $invoices = $generator->generateForSeller($seller, null, null, null);
 
             $this->advanceNextBillingDate($seller, $asOf);
 
-            if ($invoice) {
+            foreach ($invoices as $invoice) {
                 Log::info('Automatic invoice generated', [
                     'seller_id' => $seller->id,
+                    'store_id' => $invoice->store_id,
                     'invoice_number' => $invoice->invoice_number,
                     'orders' => $invoice->total_orders_count,
                     'net_amount' => $invoice->net_amount,

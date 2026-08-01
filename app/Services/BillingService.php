@@ -29,12 +29,24 @@ class BillingService
      * When a period is provided, only orders whose DELIVERED/RETURNED status was
      * recorded inside the window are included (based on the status history). The
      * automatic flow passes no period and bills everything still outstanding.
+     *
+     * `$storeId` narrows the run to one shop. Billing is store by store so an
+     * invoice never mixes two shops and stays readable by a team member who
+     * only has access to one of them.
      */
-    public function billableOrdersQuery(User $seller, ?CarbonInterface $start = null, ?CarbonInterface $end = null): Builder
-    {
+    public function billableOrdersQuery(
+        User $seller,
+        ?CarbonInterface $start = null,
+        ?CarbonInterface $end = null,
+        ?int $storeId = null,
+    ): Builder {
         $query = Order::query()
             ->ownedBy($seller->id)
             ->billable();
+
+        if ($storeId !== null) {
+            $query->where('store_id', $storeId);
+        }
 
         if ($start || $end) {
             $query->whereHas('statusHistories', function (Builder $sub) use ($start, $end) {
@@ -131,9 +143,13 @@ class BillingService
      *
      * @return array{summary: array<string, float|int>, lines: array<int, array<string, mixed>>}
      */
-    public function preview(User $seller, ?CarbonInterface $start = null, ?CarbonInterface $end = null): array
-    {
-        $orders = $this->billableOrdersQuery($seller, $start, $end)
+    public function preview(
+        User $seller,
+        ?CarbonInterface $start = null,
+        ?CarbonInterface $end = null,
+        ?int $storeId = null,
+    ): array {
+        $orders = $this->billableOrdersQuery($seller, $start, $end, $storeId)
             ->with(['city', 'sector'])
             ->orderBy('id')
             ->get();

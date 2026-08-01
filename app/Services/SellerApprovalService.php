@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 
 class SellerApprovalService
 {
+    public function __construct(private readonly StoreService $stores) {}
+
     /**
      * @return array<int, array<string, mixed>>
      */
@@ -67,6 +69,11 @@ class SellerApprovalService
             ])->save();
 
             $user->permissions()->sync($permissionIds);
+
+            // Every active vendor needs at least one shop: without it there is
+            // no store to attach his orders to and the isolation scope has
+            // nothing to enforce.
+            $this->stores->createDefaultFor($user);
 
             SellerApproved::dispatch($user->fresh(['city', 'permissions']));
 

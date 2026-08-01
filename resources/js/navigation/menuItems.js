@@ -190,6 +190,32 @@ export const menuItems = [
     permissions: SUPPORT_READ,
   },
   {
+    key: 'my-shop',
+    labelKey: 'sidebar.my_shop',
+    icon: 'ri-store-2-line',
+    permissions: ['stores.read', 'team.read'],
+    children: [
+      {
+        key: 'stores',
+        labelKey: 'sidebar.stores',
+        href: '/stores',
+        permissions: ['stores.read'],
+      },
+      {
+        key: 'team',
+        labelKey: 'sidebar.team',
+        href: '/team',
+        permissions: ['team.read'],
+      },
+      {
+        key: 'team-roles',
+        labelKey: 'sidebar.team_roles',
+        href: '/team/roles',
+        permissions: ['team_roles.manage'],
+      },
+    ],
+  },
+  {
     key: 'delivery-zones',
     labelKey: 'sidebar.delivery_zones',
     icon: 'ri-map-pin-line',

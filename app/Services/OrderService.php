@@ -19,6 +19,10 @@ class OrderService
     /**
      * Create a new order on behalf of the authenticated seller.
      *
+     * Ownership goes to the vendor account, so an order keyed in by a team
+     * member is billed to — and stays readable by — his employer. The store is
+     * filled in automatically by BelongsToStore from the active store.
+     *
      * @param  array<string, mixed>  $data  Validated order payload.
      */
     public function create(array $data, User $seller): Order
@@ -27,7 +31,7 @@ class OrderService
             $data['delivery_price'] = $this->resolveDeliveryPrice($data);
 
             $order = new Order($data);
-            $order->seller_id = $seller->id;
+            $order->seller_id = $seller->accountOwnerId();
             $order->tracking_number = $this->trackingNumbers->generate();
             $order->status = OrderStatus::CREATED->value;
             $order->save();

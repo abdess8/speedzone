@@ -126,6 +126,7 @@ return [
     ],
 
     'generated' => 'Facture :number générée avec succès.',
+    'generated_many' => ':count factures générées, une par boutique.',
     'marked_paid' => 'Facture marquée comme payée.',
     'marked_sent' => 'Facture marquée comme envoyée.',
     'cancelled' => 'Facture annulée.',

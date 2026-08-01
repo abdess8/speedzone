@@ -1,5 +1,6 @@
 <script setup>
 import NotificationBell from '@/Components/Notifications/NotificationBell.vue';
+import StoreSwitcher from '@/Components/StoreSwitcher.vue';
 import { layoutMethods } from '@/state/helpers';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -178,6 +179,8 @@ export default {
         </div>
 
         <div class="d-flex align-items-center">
+          <StoreSwitcher />
+
           <BDropdown
             class="dropdown"
             variant="ghost-secondary"

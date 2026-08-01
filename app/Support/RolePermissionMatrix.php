@@ -158,8 +158,47 @@ class RolePermissionMatrix
             'returns.read.own',
             'invoices.read.own',
             'invoices.print',
+            'stores.read',
+            'stores.create',
+            'stores.update',
+            'stores.delete',
+            'team.read',
+            'team.create',
+            'team.update',
+            'team.suspend',
+            'team_roles.manage',
             ...SupportPermissions::sellerDefaults(),
         ];
+    }
+
+    /**
+     * Account administration a vendor may not delegate to his team.
+     *
+     * Granting any of these to a custom role would let a member widen his own
+     * access, so they are excluded from the ceiling used when composing team
+     * roles.
+     *
+     * @var array<int, string>
+     */
+    public const ACCOUNT_ADMIN_ONLY = [
+        'stores.create',
+        'stores.update',
+        'stores.delete',
+        'team.read',
+        'team.create',
+        'team.update',
+        'team.suspend',
+        'team_roles.manage',
+    ];
+
+    /**
+     * The widest set of permissions a vendor may grant to a team member.
+     *
+     * @return array<int, string>
+     */
+    public static function sellerCeiling(): array
+    {
+        return array_values(array_diff(self::seller(), self::ACCOUNT_ADMIN_ONLY));
     }
 
     /**

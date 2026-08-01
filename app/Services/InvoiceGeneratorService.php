@@ -7,8 +7,10 @@ use App\Events\InvoiceGenerated;
 use App\Models\Invoice;
 use App\Models\InvoiceLog;
 use App\Models\Order;
+use App\Models\Store;
 use App\Models\User;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -27,7 +29,40 @@ class InvoiceGeneratorService
     ) {}
 
     /**
-     * Generate an invoice for a seller over an optional period.
+     * Generate one invoice per store for a seller over an optional period.
+     *
+     * Stores are billed separately so an invoice never spans two shops: a team
+     * member with access to a single store must be able to read his invoices
+     * without ever seeing another store's figures.
+     *
+     * @return Collection<int, Invoice>
+     */
+    public function generateForSeller(
+        User $seller,
+        ?CarbonInterface $start = null,
+        ?CarbonInterface $end = null,
+        ?User $createdBy = null,
+    ): Collection {
+        $storeIds = Store::query()
+            ->ownedBy($seller->id)
+            ->orderBy('id')
+            ->pluck('id')
+            ->all();
+
+        // A seller with no store yet (or legacy data not backfilled) is still
+        // billable — the run then simply produces one store-less invoice.
+        if ($storeIds === []) {
+            $storeIds = [null];
+        }
+
+        return collect($storeIds)
+            ->map(fn (?int $storeId) => $this->generate($seller, $start, $end, $createdBy, $storeId))
+            ->filter()
+            ->values();
+    }
+
+    /**
+     * Generate a single invoice, optionally restricted to one store.
      *
      * Returns null when there are no billable orders (nothing is created).
      */
@@ -36,10 +71,11 @@ class InvoiceGeneratorService
         ?CarbonInterface $start = null,
         ?CarbonInterface $end = null,
         ?User $createdBy = null,
+        ?int $storeId = null,
     ): ?Invoice {
-        $invoice = DB::transaction(function () use ($seller, $start, $end, $createdBy): ?Invoice {
+        $invoice = DB::transaction(function () use ($seller, $start, $end, $createdBy, $storeId): ?Invoice {
             // Lock the candidate orders so two concurrent runs can't double-bill.
-            $orders = $this->billing->billableOrdersQuery($seller, $start, $end)
+            $orders = $this->billing->billableOrdersQuery($seller, $start, $end, $storeId)
                 ->with('sector')
                 ->lockForUpdate()
                 ->get();
@@ -53,6 +89,7 @@ class InvoiceGeneratorService
             $invoice = Invoice::create([
                 'invoice_number' => 'PENDING',
                 'seller_id' => $seller->id,
+                'store_id' => $storeId,
                 'period_start' => $start?->toDateString(),
                 'period_end' => $end?->toDateString(),
                 'total_orders_count' => $summary['total_orders_count'],

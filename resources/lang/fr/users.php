@@ -39,6 +39,8 @@ return [
         'updated_at' => 'Dernière mise à jour',
         'attached_documents' => 'Documents joints',
         'no_documents' => 'Aucun document joint.',
+        'stores' => 'Boutiques du vendeur',
+        'team' => 'Équipe du vendeur',
         'billing_info' => 'Informations de facturation',
         'billing_status' => 'Facturation automatique',
         'billing_enabled' => 'Activée',

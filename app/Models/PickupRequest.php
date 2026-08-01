@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PickupRequestStatus;
+use App\Models\Concerns\BelongsToStore;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,11 +12,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PickupRequest extends Model
 {
+    use BelongsToStore;
     use HasFactory;
 
     protected $fillable = [
         'reference',
         'created_by',
+        'store_id',
         'assigned_to',
         'status',
         'pickup_address',

@@ -6,6 +6,7 @@ use App\Models\Order;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as PdfInstance;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 class OrderLabelPdfService
 {
@@ -20,7 +21,7 @@ class OrderLabelPdfService
      */
     public function build(Order $order): PdfInstance
     {
-        $order->loadMissing(['city', 'sector', 'seller']);
+        $order->loadMissing(['city', 'sector', 'seller', 'store']);
 
         $width = (float) config('orders.label.paper_width', 283);
         $height = (float) config('orders.label.paper_height', 425);
@@ -30,8 +31,7 @@ class OrderLabelPdfService
             'qrCode' => $this->qrCodeService->dataUri($order->trackingUrl(), 220, 4),
             'barcode' => $this->barcodeService->code128DataUri((string) $order->tracking_number),
             'icons' => $this->iconService->labelIcons(),
-            'logo' => $this->logoDataUri(),
-            'companyName' => config('orders.label.company_name', 'SpeedZone Express'),
+            ...$this->branding($order),
         ])->setPaper([0, 0, $width, $height]);
     }
 
@@ -42,22 +42,23 @@ class OrderLabelPdfService
      */
     public function buildBatch(Collection $orders): PdfInstance
     {
-        $orders->loadMissing(['city', 'sector', 'seller']);
+        $orders->loadMissing(['city', 'sector', 'seller', 'store']);
 
         $width = (float) config('orders.label.paper_width', 283);
         $height = (float) config('orders.label.paper_height', 425);
 
+        // Branding is resolved per label, not once for the batch: an admin
+        // printing a mixed selection must get each package's own store on it.
         $labels = $orders->map(fn (Order $order) => [
             'order' => $order,
             'qrCode' => $this->qrCodeService->dataUri($order->trackingUrl(), 220, 4),
             'barcode' => $this->barcodeService->code128DataUri((string) $order->tracking_number),
+            ...$this->branding($order),
         ])->all();
 
         return Pdf::loadView('orders.labels', [
             'labels' => $labels,
             'icons' => $this->iconService->labelIcons(),
-            'logo' => $this->logoDataUri(),
-            'companyName' => config('orders.label.company_name', 'SpeedZone Express'),
         ])->setPaper([0, 0, $width, $height]);
     }
 
@@ -67,7 +68,44 @@ class OrderLabelPdfService
     }
 
     /**
-     * Encode the company logo as a data URI so dompdf can embed it reliably.
+     * Name and logo printed on the label.
+     *
+     * The order's store wins over the platform defaults, so a package leaves
+     * the depot branded with the shop that sold it. Falls back to the SpeedZone
+     * identity for orders with no store (partner ingestion, legacy rows).
+     *
+     * @return array{logo: string|null, companyName: string}
+     */
+    private function branding(Order $order): array
+    {
+        $store = $order->store;
+
+        return [
+            'logo' => $this->storeLogoDataUri($store?->logo_path) ?? $this->logoDataUri(),
+            'companyName' => $store?->name ?: config('orders.label.company_name', 'SpeedZone Express'),
+        ];
+    }
+
+    /**
+     * Encode a store logo (a user upload on the public disk) as a data URI.
+     */
+    private function storeLogoDataUri(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        $disk = Storage::disk('public');
+
+        if (! $disk->exists($path)) {
+            return null;
+        }
+
+        return 'data:'.$this->mimeFor($path).';base64,'.base64_encode((string) $disk->get($path));
+    }
+
+    /**
+     * Encode the platform logo as a data URI so dompdf can embed it reliably.
      */
     private function logoDataUri(): ?string
     {
@@ -77,13 +115,17 @@ class OrderLabelPdfService
             return null;
         }
 
-        $mime = match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
+        return 'data:'.$this->mimeFor($path).';base64,'.base64_encode((string) file_get_contents($path));
+    }
+
+    private function mimeFor(string $path): string
+    {
+        return match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
             'jpg', 'jpeg' => 'image/jpeg',
             'gif' => 'image/gif',
             'svg' => 'image/svg+xml',
+            'webp' => 'image/webp',
             default => 'image/png',
         };
-
-        return 'data:'.$mime.';base64,'.base64_encode((string) file_get_contents($path));
     }
 }

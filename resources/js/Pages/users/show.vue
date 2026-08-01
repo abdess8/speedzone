@@ -9,6 +9,8 @@ const { t, locale } = useI18n();
 
 const props = defineProps({
   user: { type: Object, required: true },
+  stores: { type: Array, default: () => [] },
+  teamMembers: { type: Array, default: () => [] },
 });
 
 // A stored photo path is no proof the file is still on disk, so fall back to the
@@ -228,6 +230,89 @@ const labelFrom = (group, value) => {
           </BCardBody>
         </BCard>
 
+        <BCard v-if="isSeller" no-body>
+          <BCardHeader>
+            <h5 class="card-title mb-0">{{ $t('users.show.stores') }}</h5>
+          </BCardHeader>
+          <BCardBody>
+            <div v-if="stores.length" class="table-responsive">
+              <table class="table table-borderless align-middle mb-0">
+                <tbody>
+                  <tr v-for="store in stores" :key="store.id">
+                    <td class="ps-0" style="width: 48px">
+                      <img
+                        v-if="store.logo_url"
+                        :src="store.logo_url"
+                        :alt="store.name"
+                        class="user-store-logo rounded"
+                      />
+                      <span v-else class="user-store-placeholder rounded">
+                        <i class="ri-store-2-line"></i>
+                      </span>
+                    </td>
+                    <td>
+                      <span class="fw-medium d-block">{{ store.name }}</span>
+                      <span class="text-muted fs-12">
+                        {{ store.category || $t('stores.no_category') }}
+                      </span>
+                    </td>
+                    <td class="text-muted">
+                      {{ $t('stores.orders_count', { count: store.orders_count ?? 0 }) }}
+                    </td>
+                    <td class="text-end pe-0">
+                      <span v-if="store.is_default" class="badge bg-primary-subtle text-primary">
+                        {{ $t('stores.badges.default') }}
+                      </span>
+                      <span v-if="!store.is_active" class="badge bg-danger-subtle text-danger ms-1">
+                        {{ $t('common.inactive') }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p v-else class="text-muted mb-0">{{ $t('stores.empty') }}</p>
+          </BCardBody>
+        </BCard>
+
+        <BCard v-if="isSeller" no-body>
+          <BCardHeader>
+            <h5 class="card-title mb-0">{{ $t('users.show.team') }}</h5>
+          </BCardHeader>
+          <BCardBody>
+            <div v-if="teamMembers.length" class="table-responsive">
+              <table class="table table-borderless align-middle mb-0">
+                <tbody>
+                  <tr v-for="member in teamMembers" :key="member.id">
+                    <td class="ps-0">
+                      <span class="fw-medium d-block">{{ member.name }}</span>
+                      <span class="text-muted fs-12">{{ member.email }}</span>
+                    </td>
+                    <td>
+                      <span
+                        v-for="role in member.roles"
+                        :key="role"
+                        class="badge bg-primary-subtle text-primary me-1"
+                      >
+                        {{ role }}
+                      </span>
+                    </td>
+                    <td class="text-muted fs-13">
+                      {{ member.stores.join(', ') }}
+                    </td>
+                    <td class="text-end pe-0">
+                      <span class="badge" :class="member.status_class">
+                        {{ $t(`user_statuses.${member.status}`) }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p v-else class="text-muted mb-0">{{ $t('team.empty') }}</p>
+          </BCardBody>
+        </BCard>
+
         <BCard v-if="showBilling" no-body>
           <BCardHeader>
             <h5 class="card-title mb-0">{{ $t('users.show.billing_info') }}</h5>
@@ -318,3 +403,22 @@ const labelFrom = (group, value) => {
     </BRow>
   </Layout>
 </template>
+
+<style scoped>
+.user-store-logo {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+  background-color: var(--vz-light);
+}
+
+.user-store-placeholder {
+  height: 40px;
+  width: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--vz-primary);
+  background-color: rgba(var(--vz-primary-rgb), 0.12);
+}
+</style>

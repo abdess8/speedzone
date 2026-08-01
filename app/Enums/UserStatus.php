@@ -8,6 +8,8 @@ enum UserStatus: string
     case PendingApproval = 'PENDING_APPROVAL';
     case Active = 'ACTIVE';
     case Rejected = 'REJECTED';
+    /** Access revoked by the vendor admin for one of his team members. */
+    case Suspended = 'SUSPENDED';
 
     /**
      * @return array<string, string>
@@ -30,6 +32,7 @@ enum UserStatus: string
             self::PendingApproval => 'bg-warning-subtle text-warning',
             self::Active => 'bg-success-subtle text-success',
             self::Rejected => 'bg-danger-subtle text-danger',
+            self::Suspended => 'bg-dark-subtle text-dark',
         };
     }
 

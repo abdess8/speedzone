@@ -13,6 +13,7 @@ class RoleController extends Controller
     public function index(): JsonResponse
     {
         $roles = Role::query()
+            ->system()
             ->with('permissions:id,name')
             ->orderBy('name')
             ->paginate(20);

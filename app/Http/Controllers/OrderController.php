@@ -188,6 +188,7 @@ class OrderController extends Controller
         $order->load([
             'city',
             'sector',
+            'store',
             'partner',
             'invoice',
             'driver.roles',

@@ -39,6 +39,8 @@ return [
         'updated_at' => 'Last Updated',
         'attached_documents' => 'Attached Documents',
         'no_documents' => 'No documents attached.',
+        'stores' => 'Seller stores',
+        'team' => 'Seller team',
         'billing_info' => 'Billing Information',
         'billing_status' => 'Automatic Billing',
         'billing_enabled' => 'Enabled',

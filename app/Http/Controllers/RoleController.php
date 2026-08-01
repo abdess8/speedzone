@@ -23,6 +23,7 @@ class RoleController extends Controller
         $this->authorize('viewAny', Role::class);
 
         $roles = Role::query()
+            ->system()
             ->withCount(['permissions', 'users'])
             ->orderBy('name')
             ->get();

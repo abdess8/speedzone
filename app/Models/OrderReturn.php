@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ReturnInitiatedByRole;
 use App\Enums\ReturnStatus;
+use App\Models\Concerns\BelongsToStore;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrderReturn extends Model
 {
+    use BelongsToStore;
     use HasFactory;
 
     protected $table = 'returns';
@@ -19,6 +21,7 @@ class OrderReturn extends Model
     protected $fillable = [
         'reference',
         'order_id',
+        'store_id',
         'created_by',
         'initiated_by_role',
         'reason',
@@ -36,6 +39,20 @@ class OrderReturn extends Model
         'status' => ReturnStatus::class,
         'initiated_by_role' => ReturnInitiatedByRole::class,
     ];
+
+    protected static function booted(): void
+    {
+        // A return is almost always opened by a driver or by back-office staff,
+        // neither of whom stands on a store, so BelongsToStore has nothing to
+        // copy. The store is inherited from the order being reversed instead.
+        static::creating(function (self $return): void {
+            if ($return->store_id === null && $return->order_id !== null) {
+                $return->store_id = Order::acrossStores()
+                    ->whereKey($return->order_id)
+                    ->value('store_id');
+            }
+        });
+    }
 
     public function order(): BelongsTo
     {

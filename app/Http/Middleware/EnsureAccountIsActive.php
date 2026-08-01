@@ -39,6 +39,15 @@ class EnsureAccountIsActive
                 ->withErrors(['email' => __('seller_registration.login.rejected')]);
         }
 
+        if ($status === UserStatus::Suspended) {
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->withErrors(['email' => __('team.login.suspended')]);
+        }
+
         if ($status === UserStatus::PendingEmailVerification) {
             return redirect()->route('verification.notice');
         }

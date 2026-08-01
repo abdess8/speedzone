@@ -6,6 +6,7 @@ use App\Enums\BillingFrequency;
 use App\Enums\SellerPaymentMethod;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Resources\StoreResource;
 use App\Models\City;
 use App\Models\Role;
 use App\Models\Sector;
@@ -52,7 +53,7 @@ class UserController extends Controller
 
         return Inertia::render('users/index', [
             'users' => $users,
-            'roles' => Role::orderBy('name')->get(['id', 'name']),
+            'roles' => Role::query()->system()->orderBy('name')->get(['id', 'name']),
             'filters' => $request->only(['search', 'role']),
         ]);
     }
@@ -65,7 +66,7 @@ class UserController extends Controller
         $this->authorize('create', User::class);
 
         return Inertia::render('users/create', [
-            'roles' => Role::orderBy('name')->get(['id', 'name']),
+            'roles' => Role::query()->system()->orderBy('name')->get(['id', 'name']),
             'cities' => City::query()->active()->orderBy('name')->get(['id', 'name', 'code']),
             'sectors' => $this->sectorOptions(),
             'billingFrequencies' => BillingFrequency::options(),
@@ -123,8 +124,43 @@ class UserController extends Controller
             $user->load(['sectors.city']);
         }
 
+        $stores = [];
+        $teamMembers = [];
+
+        if ($user->isAccountOwner()) {
+            $teamMembers = $user->teamMembers()
+                ->with(['roles:id,name,label', 'stores:id,name'])
+                ->orderBy('first_name')
+                ->get()
+                ->map(fn (User $member) => [
+                    'id' => $member->id,
+                    'name' => $member->name,
+                    'email' => $member->email,
+                    'status' => $member->status?->value,
+                    'status_class' => $member->status?->badgeClass(),
+                    'roles' => $member->roles->map(fn ($role) => $role->displayName())->values(),
+                    'stores' => $member->stores->pluck('name')->values(),
+                ])
+                ->all();
+        }
+
+        if ($user->isSeller() && ! $user->isTeamMember()) {
+            $stores = StoreResource::collection(
+                $user->ownedStores()
+                    ->with('city')
+                    // The admin is not standing on a store, but the count is
+                    // spelled out as unscoped so the intent survives a refactor.
+                    ->withCount(['orders' => fn ($q) => $q->withoutGlobalScope('store')])
+                    ->orderByDesc('is_default')
+                    ->orderBy('name')
+                    ->get()
+            )->resolve(request());
+        }
+
         return Inertia::render('users/show', [
             'user' => $user,
+            'stores' => $stores,
+            'teamMembers' => $teamMembers,
         ]);
     }
 
@@ -139,7 +175,7 @@ class UserController extends Controller
 
         return Inertia::render('users/edit', [
             'user' => $user,
-            'roles' => Role::orderBy('name')->get(['id', 'name']),
+            'roles' => Role::query()->system()->orderBy('name')->get(['id', 'name']),
             'cities' => City::query()->active()->orderBy('name')->get(['id', 'name', 'code']),
             'sectors' => $this->sectorOptions(),
             'billingFrequencies' => BillingFrequency::options(),

@@ -34,7 +34,8 @@ class SupportTicketQueryService
         // Sellers / agents without read.all only see their own or assigned tickets.
         if (! $user->hasPermission(SupportPermissions::READ_ALL) && ! $user->hasPermission(SupportPermissions::MANAGE)) {
             $query->where(function (Builder $q) use ($user) {
-                $q->where('created_by', $user->id)
+                $q->where('created_by', $user->accountOwnerId())
+                    ->orWhere('created_by', $user->id)
                     ->orWhere('assigned_to', $user->id);
             });
         }

@@ -83,11 +83,20 @@ class InvoiceController extends Controller
         $seller = User::query()->findOrFail($request->integer('seller_id'));
         [$start, $end] = $this->period($request);
 
-        $invoice = $this->generator->generate($seller, $start, $end, $request->user());
+        // One invoice per store: a seller with three shops gets three documents.
+        $invoices = $this->generator->generateForSeller($seller, $start, $end, $request->user());
 
-        if (! $invoice) {
+        if ($invoices->isEmpty()) {
             return back()->with('error', __('invoices.no_billable_orders'));
         }
+
+        if ($invoices->count() > 1) {
+            return redirect()
+                ->route('invoices.index')
+                ->with('success', __('invoices.generated_many', ['count' => $invoices->count()]));
+        }
+
+        $invoice = $invoices->first();
 
         return redirect()
             ->route('invoices.show', $invoice)

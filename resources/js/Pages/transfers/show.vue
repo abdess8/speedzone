@@ -111,21 +111,26 @@ onMounted(() => {
         </span>
         <div class="vr"></div>
 
+        <!-- Labels collapse below `sm`; `title` still names the icon-only button. -->
         <button
           v-if="can.dispatch && ['CREATED', 'WAITING_DISPATCH'].includes(transfer.status)"
           class="btn btn-sm btn-primary"
+          :title="dispatchLabel()"
           @click="dispatchTransfer"
         >
-          <i class="ri-send-plane-line align-bottom me-1"></i> {{ dispatchLabel() }}
+          <i class="ri-send-plane-line align-bottom"></i>
+          <span class="d-none d-sm-inline ms-1">{{ dispatchLabel() }}</span>
         </button>
 
-        <button v-if="can.receive && transfer.status === 'IN_TRANSIT'" class="btn btn-sm btn-success" @click="receiveTransfer">
-          <i class="ri-checkbox-circle-line align-bottom me-1"></i> {{ $t('transfers.show.receive') }}
+        <button v-if="can.receive && transfer.status === 'IN_TRANSIT'" class="btn btn-sm btn-success" :title="$t('transfers.show.receive')" @click="receiveTransfer">
+          <i class="ri-checkbox-circle-line align-bottom"></i>
+          <span class="d-none d-sm-inline ms-1">{{ $t('transfers.show.receive') }}</span>
         </button>
 
         <div class="dropdown" v-if="allowedTransitions.length">
-          <button class="btn btn-sm btn-soft-primary dropdown-toggle" data-bs-toggle="dropdown">
-            <i class="ri-exchange-line align-bottom me-1"></i> {{ $t('orders.actions.update_status') }}
+          <button class="btn btn-sm btn-soft-primary dropdown-toggle" data-bs-toggle="dropdown" :title="$t('orders.actions.update_status')">
+            <i class="ri-exchange-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('orders.actions.update_status') }}</span>
           </button>
           <ul class="dropdown-menu">
             <li v-for="trans in allowedTransitions" :key="trans.value">
@@ -136,12 +141,14 @@ onMounted(() => {
           </ul>
         </div>
 
-        <div class="ms-auto hstack gap-2">
-          <button v-if="can.scan && transfer.status === 'IN_TRANSIT'" class="btn btn-sm btn-soft-primary" @click="showQrScanner = true">
-            <i class="ri-qr-scan-2-line align-bottom me-1"></i> {{ $t('transfers.qr_scan') }}
+        <div class="ms-auto action-bar">
+          <button v-if="can.scan && transfer.status === 'IN_TRANSIT'" class="btn btn-sm btn-soft-primary" :title="$t('transfers.qr_scan')" @click="showQrScanner = true">
+            <i class="ri-qr-scan-2-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('transfers.qr_scan') }}</span>
           </button>
-          <Link :href="route('transfers.index')" class="btn btn-sm btn-light">
-            <i class="ri-arrow-left-line align-bottom me-1"></i> {{ $t('transfers.show.back') }}
+          <Link :href="route('transfers.index')" class="btn btn-sm btn-light" :title="$t('transfers.show.back')">
+            <i class="ri-arrow-left-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('transfers.show.back') }}</span>
           </Link>
         </div>
       </BCardBody>

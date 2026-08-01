@@ -229,9 +229,12 @@ onMounted(() => {
         </span>
         <div class="vr"></div>
 
+        <!-- Ten actions on one row: labels collapse below `sm` so the row stays
+             a single line of icons, and `title` is what still names each one. -->
         <div class="dropdown" v-if="allowedTransitions.length">
-          <button class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown">
-            <i class="ri-exchange-line align-bottom me-1"></i> {{ $t('orders.actions.update_status') }}
+          <button class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" :title="$t('orders.actions.update_status')">
+            <i class="ri-exchange-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('orders.actions.update_status') }}</span>
           </button>
           <ul class="dropdown-menu">
             <li v-for="trans in allowedTransitions" :key="trans.value">
@@ -242,38 +245,48 @@ onMounted(() => {
           </ul>
         </div>
 
-        <button v-if="canAssignDriver" class="btn btn-sm btn-soft-primary" @click="assignDriver">
-          <i class="ri-e-bike-2-line align-bottom me-1"></i>
-          {{ order.driver_id ? $t('driver_invoices.assign.reassign_action') : $t('driver_invoices.assign.assign_action') }}
+        <button v-if="canAssignDriver" class="btn btn-sm btn-soft-primary" :title="$t('driver_invoices.assign.assign_action')" @click="assignDriver">
+          <i class="ri-e-bike-2-line align-bottom"></i>
+          <span class="d-none d-sm-inline ms-1">
+            {{ order.driver_id ? $t('driver_invoices.assign.reassign_action') : $t('driver_invoices.assign.assign_action') }}
+          </span>
         </button>
 
-        <button v-if="can.create_failed_return" class="btn btn-sm btn-soft-danger" @click="initiateFailedReturn">
-          <i class="ri-arrow-go-back-line align-bottom me-1"></i> {{ $t('returns.actions.failed_delivery') }}
+        <button v-if="can.create_failed_return" class="btn btn-sm btn-soft-danger" :title="$t('returns.actions.failed_delivery')" @click="initiateFailedReturn">
+          <i class="ri-arrow-go-back-line align-bottom"></i>
+          <span class="d-none d-sm-inline ms-1">{{ $t('returns.actions.failed_delivery') }}</span>
         </button>
 
-        <button v-if="can.request_return" class="btn btn-sm btn-soft-warning" @click="showReturnModal = true">
-          <i class="ri-arrow-go-back-line align-bottom me-1"></i> {{ $t('returns.actions.request_return') }}
+        <button v-if="can.request_return" class="btn btn-sm btn-soft-warning" :title="$t('returns.actions.request_return')" @click="showReturnModal = true">
+          <i class="ri-arrow-go-back-line align-bottom"></i>
+          <span class="d-none d-sm-inline ms-1">{{ $t('returns.actions.request_return') }}</span>
         </button>
 
-        <Link v-if="order.active_return" :href="route('returns.show', order.active_return.id)" class="btn btn-sm btn-soft-info">
-          <i class="ri-eye-line align-bottom me-1"></i> {{ $t('returns.actions.view_return') }}
+        <Link v-if="order.active_return" :href="route('returns.show', order.active_return.id)" class="btn btn-sm btn-soft-info" :title="$t('returns.actions.view_return')">
+          <i class="ri-eye-line align-bottom"></i>
+          <span class="d-none d-sm-inline ms-1">{{ $t('returns.actions.view_return') }}</span>
         </Link>
 
-        <div class="ms-auto hstack gap-2">
-          <Link v-if="can.create" :href="route('orders.create', { clone: order.id })" class="btn btn-sm btn-soft-info">
-            <i class="ri-file-copy-line align-bottom me-1"></i> {{ $t('orders.actions.clone') }}
+        <div class="ms-auto action-bar">
+          <Link v-if="can.create" :href="route('orders.create', { clone: order.id })" class="btn btn-sm btn-soft-info" :title="$t('orders.actions.clone')">
+            <i class="ri-file-copy-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('orders.actions.clone') }}</span>
           </Link>
-          <Link v-if="can.update" :href="route('orders.edit', order.id)" class="btn btn-sm btn-soft-warning">
-            <i class="ri-pencil-line align-bottom me-1"></i> {{ $t('common.edit') }}
+          <Link v-if="can.update" :href="route('orders.edit', order.id)" class="btn btn-sm btn-soft-warning" :title="$t('common.edit')">
+            <i class="ri-pencil-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('common.edit') }}</span>
           </Link>
-          <button v-if="can.print" class="btn btn-sm btn-soft-secondary" @click="openPdf">
-            <i class="ri-printer-line align-bottom me-1"></i> {{ $t('orders.actions.print_ticket') }}
+          <button v-if="can.print" class="btn btn-sm btn-soft-secondary" :title="$t('orders.actions.print_ticket')" @click="openPdf">
+            <i class="ri-printer-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('orders.actions.print_ticket') }}</span>
           </button>
-          <button v-if="can.print" class="btn btn-sm btn-soft-secondary" @click="downloadPdf">
-            <i class="ri-download-2-line align-bottom me-1"></i> {{ $t('orders.actions.download_pdf') }}
+          <button v-if="can.print" class="btn btn-sm btn-soft-secondary" :title="$t('orders.actions.download_pdf')" @click="downloadPdf">
+            <i class="ri-download-2-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('orders.actions.download_pdf') }}</span>
           </button>
-          <button v-if="can.delete" class="btn btn-sm btn-soft-danger" @click="confirmDelete">
-            <i class="ri-delete-bin-line align-bottom me-1"></i> {{ $t('common.delete') }}
+          <button v-if="can.delete" class="btn btn-sm btn-soft-danger" :title="$t('common.delete')" @click="confirmDelete">
+            <i class="ri-delete-bin-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('common.delete') }}</span>
           </button>
         </div>
       </BCardBody>

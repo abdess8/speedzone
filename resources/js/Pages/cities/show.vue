@@ -126,15 +126,19 @@ const confirmDeleteSector = (sector) => {
         <span class="text-muted fs-13">
           {{ sectorsList.length }} {{ $t('cities.table.sectors').toLowerCase() }}
         </span>
-        <div class="ms-auto hstack gap-2">
-          <Link :href="route('cities.index')" class="btn btn-sm btn-light">
-            <i class="ri-arrow-left-line align-bottom me-1"></i> {{ $t('common.back') }}
+        <!-- Labels collapse below `sm`; `title` still names the icon-only button. -->
+        <div class="ms-auto action-bar">
+          <Link :href="route('cities.index')" class="btn btn-sm btn-light" :title="$t('common.back')">
+            <i class="ri-arrow-left-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('common.back') }}</span>
           </Link>
-          <Link v-if="can.update" :href="route('cities.edit', city.id)" class="btn btn-sm btn-soft-warning">
-            <i class="ri-pencil-line align-bottom me-1"></i> {{ $t('common.edit') }}
+          <Link v-if="can.update" :href="route('cities.edit', city.id)" class="btn btn-sm btn-soft-warning" :title="$t('common.edit')">
+            <i class="ri-pencil-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('common.edit') }}</span>
           </Link>
-          <button v-if="can.delete" class="btn btn-sm btn-soft-danger" @click="confirmDeleteCity">
-            <i class="ri-delete-bin-line align-bottom me-1"></i> {{ $t('common.delete') }}
+          <button v-if="can.delete" class="btn btn-sm btn-soft-danger" :title="$t('common.delete')" @click="confirmDeleteCity">
+            <i class="ri-delete-bin-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('common.delete') }}</span>
           </button>
         </div>
       </BCardBody>

@@ -6,6 +6,7 @@ import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
 import FilterPanel from "@/Components/FilterPanel.vue";
+import StatusPills from "@/Components/StatusPills.vue";
 import DriverOrderCard from "./Partials/DriverOrderCard.vue";
 import DriverStatusSheet from "./Partials/DriverStatusSheet.vue";
 import DriverReturnSheet from "./Partials/DriverReturnSheet.vue";
@@ -45,8 +46,18 @@ const filters = reactive({
  *
  * Kept out of `filters` on purpose: it is a scope the user navigated into, not
  * something he typed, so it survives "reset" and is dropped by leaving the view.
+ *
+ * A ref rather than a computed because picking a status pill has to be able to
+ * drop the scope; it is re-synced whenever the server sends a new one.
  */
-const statusGroup = computed(() => props.filters.status_group ?? "");
+const statusGroup = ref(props.filters.status_group ?? "");
+
+watch(
+  () => props.filters.status_group,
+  (value) => {
+    statusGroup.value = value ?? "";
+  }
+);
 
 const activeView = computed(() =>
   (props.filterOptions.statusGroups ?? []).find((group) => group.value === statusGroup.value)
@@ -95,6 +106,24 @@ const reload = () => {
 };
 
 const applyFilters = () => {
+  selected.value = [];
+  reload();
+};
+
+/**
+ * Which pill reads as selected.
+ *
+ * A sidebar scope spans several statuses, so no single pill can stand for it —
+ * leaving "All" lit would claim the list is unfiltered when it is not. None is
+ * lit instead, and the badge beside the title explains the scope.
+ */
+const activeStatusPill = computed(() => (statusGroup.value ? null : filters.status));
+
+const selectStatus = (value) => {
+  filters.status = value;
+  // The pill is an explicit choice; keeping the sidebar's scope on top of it
+  // would silently narrow the very result the user just asked for.
+  statusGroup.value = "";
   selected.value = [];
   reload();
 };
@@ -352,6 +381,18 @@ onMounted(() => {
           <input v-model="filters.delivery_to" type="date" class="form-control" />
         </BCol>
       </FilterPanel>
+
+      <!-- Status is what these lists are filtered by almost every time, so on a
+           phone it gets a row of its own instead of four taps inside the sheet.
+           Desktop keeps the select: there the whole form is visible at once. -->
+      <StatusPills
+        class="d-lg-none"
+        :model-value="activeStatusPill"
+        :options="filterOptions.statuses ?? []"
+        :all-label="$t('common.all_statuses')"
+        :label="$t('common.status')"
+        @change="selectStatus"
+      />
 
       <!-- Bulk action bar -->
       <BCardBody v-if="selected.length" class="bg-light border-bottom-dashed py-2">

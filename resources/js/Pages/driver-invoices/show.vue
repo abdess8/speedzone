@@ -108,12 +108,15 @@ onMounted(() => {
                 <i :class="inv.status_icon" class="align-bottom me-1"></i>{{ inv.status_label }}
               </span>
             </h5>
-            <div class="hstack gap-2">
-              <BButton variant="soft-secondary" size="sm" @click="openPdf">
-                <i class="ri-eye-line align-bottom me-1"></i> {{ $t('driver_invoices.actions.view_pdf') }}
+            <!-- Labels collapse below `sm`; `title` still names the icon-only button. -->
+            <div class="action-bar">
+              <BButton variant="soft-secondary" size="sm" :title="$t('driver_invoices.actions.view_pdf')" @click="openPdf">
+                <i class="ri-eye-line align-bottom"></i>
+                <span class="d-none d-sm-inline ms-1">{{ $t('driver_invoices.actions.view_pdf') }}</span>
               </BButton>
-              <BButton variant="soft-primary" size="sm" @click="downloadPdf">
-                <i class="ri-download-2-line align-bottom me-1"></i> {{ $t('driver_invoices.actions.download_pdf') }}
+              <BButton variant="soft-primary" size="sm" :title="$t('driver_invoices.actions.download_pdf')" @click="downloadPdf">
+                <i class="ri-download-2-line align-bottom"></i>
+                <span class="d-none d-sm-inline ms-1">{{ $t('driver_invoices.actions.download_pdf') }}</span>
               </BButton>
             </div>
           </BCardHeader>

@@ -147,28 +147,38 @@ const syncPartner = async () => {
         </span>
         <span v-if="partner.auth_type_label" class="badge bg-light text-body border fs-13">{{ partner.auth_type_label }}</span>
         <span class="text-muted fs-13">{{ partner.orders_count ?? 0 }} {{ $t('partners.table.orders').toLowerCase() }}</span>
-        <div class="ms-auto hstack gap-2">
-          <Link :href="route('partners.index')" class="btn btn-sm btn-light">
-            <i class="ri-arrow-left-line align-bottom me-1"></i> {{ $t('common.back') }}
+        <!-- Labels collapse below `sm`; `title` is what still names the action
+             once only the icon is left. -->
+        <div class="ms-auto action-bar">
+          <Link :href="route('partners.index')" class="btn btn-sm btn-light" :title="$t('common.back')">
+            <i class="ri-arrow-left-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('common.back') }}</span>
           </Link>
-          <button v-if="can.test_connection" type="button" class="btn btn-sm btn-soft-info" :disabled="testingConnection" @click="testConnection">
-            <span v-if="testingConnection" class="spinner-border spinner-border-sm me-1"></span>
-            <i v-else class="ri-link-m align-bottom me-1"></i>
-            {{ testingConnection ? $t('partners.connection.testing') : $t('partners.connection.test_button') }}
+          <button v-if="can.test_connection" type="button" class="btn btn-sm btn-soft-info" :disabled="testingConnection" :title="$t('partners.connection.test_button')" @click="testConnection">
+            <span v-if="testingConnection" class="spinner-border spinner-border-sm"></span>
+            <i v-else class="ri-link-m align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">
+              {{ testingConnection ? $t('partners.connection.testing') : $t('partners.connection.test_button') }}
+            </span>
           </button>
-          <button v-if="can.sync" type="button" class="btn btn-sm btn-primary" :disabled="syncing" @click="syncPartner">
-            <span v-if="syncing" class="spinner-border spinner-border-sm me-1"></span>
-            <i v-else class="ri-refresh-line align-bottom me-1"></i>
-            {{ syncing ? $t('partners.sync.running') : $t('partners.sync.button') }}
+          <button v-if="can.sync" type="button" class="btn btn-sm btn-primary" :disabled="syncing" :title="$t('partners.sync.button')" @click="syncPartner">
+            <span v-if="syncing" class="spinner-border spinner-border-sm"></span>
+            <i v-else class="ri-refresh-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">
+              {{ syncing ? $t('partners.sync.running') : $t('partners.sync.button') }}
+            </span>
           </button>
-          <Link v-if="can.view_orders" :href="ordersUrl" class="btn btn-sm btn-soft-primary">
-            <i class="ri-shopping-basket-2-line align-bottom me-1"></i> {{ $t('partners.show.view_orders') }}
+          <Link v-if="can.view_orders" :href="ordersUrl" class="btn btn-sm btn-soft-primary" :title="$t('partners.show.view_orders')">
+            <i class="ri-shopping-basket-2-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('partners.show.view_orders') }}</span>
           </Link>
-          <Link v-if="can.update" :href="route('partners.edit', partner.id)" class="btn btn-sm btn-soft-warning">
-            <i class="ri-pencil-line align-bottom me-1"></i> {{ $t('common.edit') }}
+          <Link v-if="can.update" :href="route('partners.edit', partner.id)" class="btn btn-sm btn-soft-warning" :title="$t('common.edit')">
+            <i class="ri-pencil-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('common.edit') }}</span>
           </Link>
-          <button v-if="can.delete" class="btn btn-sm btn-soft-danger" @click="confirmDelete">
-            <i class="ri-delete-bin-line align-bottom me-1"></i> {{ $t('common.delete') }}
+          <button v-if="can.delete" class="btn btn-sm btn-soft-danger" :title="$t('common.delete')" @click="confirmDelete">
+            <i class="ri-delete-bin-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('common.delete') }}</span>
           </button>
         </div>
       </BCardBody>

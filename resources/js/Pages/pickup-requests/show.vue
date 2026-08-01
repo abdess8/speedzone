@@ -79,9 +79,11 @@ onMounted(() => {
         </span>
         <div class="vr"></div>
 
+        <!-- Labels collapse below `sm`; `title` still names the icon-only button. -->
         <div class="dropdown" v-if="allowedTransitions.length">
-          <button class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown">
-            <i class="ri-exchange-line align-bottom me-1"></i> {{ $t('orders.actions.update_status') }}
+          <button class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" :title="$t('orders.actions.update_status')">
+            <i class="ri-exchange-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('orders.actions.update_status') }}</span>
           </button>
           <ul class="dropdown-menu">
             <li v-for="trans in allowedTransitions" :key="trans.value">
@@ -92,18 +94,22 @@ onMounted(() => {
           </ul>
         </div>
 
-        <div class="ms-auto hstack gap-2">
-          <button v-if="can.scan" class="btn btn-sm btn-soft-primary" @click="showQrScanner = true">
-            <i class="ri-qr-scan-2-line align-bottom me-1"></i> {{ $t('pickups.qr_scan') }}
+        <div class="ms-auto action-bar">
+          <button v-if="can.scan" class="btn btn-sm btn-soft-primary" :title="$t('pickups.qr_scan')" @click="showQrScanner = true">
+            <i class="ri-qr-scan-2-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('pickups.qr_scan') }}</span>
           </button>
-          <button v-if="can.print" class="btn btn-sm btn-soft-secondary" @click="openPdf">
-            <i class="ri-printer-line align-bottom me-1"></i> {{ $t('pickups.show.delivery_note') }}
+          <button v-if="can.print" class="btn btn-sm btn-soft-secondary" :title="$t('pickups.show.delivery_note')" @click="openPdf">
+            <i class="ri-printer-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('pickups.show.delivery_note') }}</span>
           </button>
-          <button v-if="can.print" class="btn btn-sm btn-soft-secondary" @click="downloadPdf">
-            <i class="ri-download-2-line align-bottom me-1"></i> {{ $t('orders.actions.download_pdf') }}
+          <button v-if="can.print" class="btn btn-sm btn-soft-secondary" :title="$t('orders.actions.download_pdf')" @click="downloadPdf">
+            <i class="ri-download-2-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('orders.actions.download_pdf') }}</span>
           </button>
-          <Link :href="route('pickup-requests.index')" class="btn btn-sm btn-light">
-            <i class="ri-arrow-left-line align-bottom me-1"></i> {{ $t('pickups.show.back') }}
+          <Link :href="route('pickup-requests.index')" class="btn btn-sm btn-light" :title="$t('pickups.show.back')">
+            <i class="ri-arrow-left-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('pickups.show.back') }}</span>
           </Link>
         </div>
       </BCardBody>

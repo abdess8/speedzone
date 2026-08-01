@@ -7,6 +7,7 @@ import PageHeader from "@/Components/page-header.vue";
 import CreateTransferModal from "./Partials/CreateTransferModal.vue";
 import EntityLink from "@/Components/EntityLink.vue";
 import FilterPanel from "@/Components/FilterPanel.vue";
+import StatusPills from "@/Components/StatusPills.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
@@ -86,6 +87,11 @@ const resetFilters = () => {
   reload();
 };
 
+const selectStatus = (value) => {
+  filters.status = value;
+  reload();
+};
+
 watch(perPage, reload);
 
 const goToPage = (url) => {
@@ -160,6 +166,16 @@ onMounted(() => {
           <input v-model="filters.created_to" type="date" class="form-control" />
         </BCol>
       </FilterPanel>
+
+      <!-- One tap to the filter that matters most; the sheet keeps the rest. -->
+      <StatusPills
+        class="d-lg-none"
+        :model-value="filters.status"
+        :options="filterOptions.statuses ?? []"
+        :all-label="$t('common.all_statuses')"
+        :label="$t('common.status')"
+        @change="selectStatus"
+      />
 
       <BCardBody>
         <div class="d-lg-none">

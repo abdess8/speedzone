@@ -406,7 +406,9 @@ const breakdownShare = (count, total) =>
      cancel it to bleed to the screen edge, then pad it back so their first card
      still lines up with the cards above and below. */
   --mdash-gutter: 1.5rem;
-  --mdash-shadow: 0 1px 2px rgba(56, 65, 74, 0.06), 0 6px 18px rgba(56, 65, 74, 0.07);
+  /* Same elevation as every `.card` in the app, so these surfaces — which are
+     not Bootstrap cards — still belong to the same visual language. */
+  --mdash-shadow: var(--vz-card-shadow, 0 1px 2px rgba(13, 42, 77, 0.08), 0 6px 16px rgba(13, 42, 77, 0.07));
   --mdash-muted: var(--vz-secondary-color, #878a99);
 
   padding-top: 0.25rem;

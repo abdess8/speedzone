@@ -184,9 +184,9 @@ const whatsAppLink = computed(() =>
 </template>
 
 <style scoped>
+/* Elevation comes from the global `.card` rule; see EntityCard.vue. */
 .driver-card {
   border-radius: 0.85rem;
-  box-shadow: 0 1px 2px rgba(56, 65, 74, 0.08);
 }
 
 .driver-card-address {

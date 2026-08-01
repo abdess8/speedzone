@@ -621,10 +621,26 @@ body {
   color: #1f2937;
 }
 
+// Cards carry the entire burden of separating one block of content from the
+// next: the body is pure white, and `$card-border-width` is 0, so nothing but
+// the shadow marks where a card starts and ends.
+//
+// A single wide, faint shadow (the previous `0 10px 30px` at 8%) spreads its
+// ink over 30px and never resolves into an edge, which is why cards read as
+// floating text on white. Three layers, each doing one job, fix that: a hairline
+// ring that draws the boundary crisply whatever the card sits on, a tight
+// contact shadow, and a soft ambient one that lifts the card off the page.
+:root {
+  --#{$prefix}card-shadow:
+    0 0 0 1px rgba(13, 42, 77, 0.04),
+    0 1px 2px rgba(13, 42, 77, 0.06),
+    0 6px 16px rgba(13, 42, 77, 0.08);
+}
+
 .card {
   border: 0;
   border-radius: 0.9rem;
-  box-shadow: 0 10px 30px rgba(13, 74, 157, 0.08);
+  box-shadow: var(--#{$prefix}card-shadow);
 }
 
 .card-title,
@@ -888,6 +904,26 @@ h5.text-primary {
 // Capping it keeps the whole list visible where it opens.
 .sheet-body .multiselect-dropdown {
   max-height: 11rem;
+}
+
+// Row of actions at the top of a detail screen — Back, Edit, Sync, Delete.
+//
+// These were laid out with Bootstrap's `hstack`, which is `nowrap`: on a phone
+// the buttons had nowhere to go, so they first squeezed their labels onto two
+// lines and then ran off the card, taking the last action with them. Wrapping
+// is the safety net; the labels themselves collapse to icons below `sm` via the
+// `d-none d-sm-inline` span each button wraps its text in.
+.action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// A button allowed to shrink wraps its own label rather than yielding its place,
+// which is the two-line button in the middle of an otherwise single-line row.
+.action-bar .btn {
+  flex-shrink: 0;
 }
 
 // Sidebar section captions in the navigation panel.

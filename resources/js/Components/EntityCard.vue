@@ -95,9 +95,11 @@ const emit = defineEmits(['open', 'toggle-select']);
 </template>
 
 <style scoped>
+/* Elevation is deliberately left to the global `.card` rule: a scoped shadow
+   here outranks it on specificity and would quietly opt this card out of the
+   app-wide setting. */
 .entity-card {
   border-radius: 0.85rem;
-  box-shadow: 0 1px 2px rgba(56, 65, 74, 0.08);
 }
 
 .entity-card-clickable {

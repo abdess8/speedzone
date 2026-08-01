@@ -5,10 +5,10 @@ use App\Models\City;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\AlertService;
-use Illuminate\Support\Str;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia;
 
 beforeEach(function () {

@@ -21,6 +21,12 @@ const emit = defineEmits(["close", "created"]);
 const step = ref(1);
 const selectedOrderIds = ref([]);
 const eligibleOrders = ref([]);
+
+const steps = computed(() => [
+  { number: 1, label: t("transfers.form.step_cities") },
+  { number: 2, label: t("transfers.form.step_orders") },
+  { number: 3, label: t("pickups.modal.step_notes_confirm") },
+]);
 const loadingOrders = ref(false);
 
 const orderFilters = reactive({
@@ -170,20 +176,11 @@ const submit = () => {
 <template>
   <BottomSheet :show="show" :title="$t('transfers.create_modal_title')" size="xl" @close="close">
     <div class="mb-4">
-      <ul class="nav nav-pills nav-justified wizard-nav mb-3">
-        <li class="nav-item">
-          <span class="nav-link" :class="{ active: step === 1, done: step > 1 }">
-            <span class="step-number me-1">1</span> {{ $t('transfers.form.step_cities') }}
-          </span>
-        </li>
-        <li class="nav-item">
-          <span class="nav-link" :class="{ active: step === 2, done: step > 2 }">
-            <span class="step-number me-1">2</span> {{ $t('transfers.form.step_orders') }}
-          </span>
-        </li>
-        <li class="nav-item">
-          <span class="nav-link" :class="{ active: step === 3 }">
-            <span class="step-number me-1">3</span> {{ $t('pickups.modal.step_notes_confirm') }}
+      <ul class="nav nav-pills wizard-nav mb-3 flex-nowrap align-items-center gap-2">
+        <li v-for="s in steps" :key="s.number" class="nav-item" :class="{ 'flex-grow-1': step === s.number }">
+          <span class="nav-link" :class="{ active: step === s.number, done: step > s.number }">
+            <span class="step-number">{{ s.number }}</span>
+            <span v-if="step === s.number" class="step-label ms-2">{{ s.label }}</span>
           </span>
         </li>
       </ul>
@@ -343,7 +340,16 @@ const submit = () => {
 </template>
 
 <style scoped>
-.wizard-nav .nav-link { border-radius: 0.375rem; color: var(--vz-body-color); background: var(--vz-light); }
+.wizard-nav .nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 0.375rem;
+  color: var(--vz-body-color);
+  background: var(--vz-light);
+}
 .wizard-nav .nav-link.active { background: var(--vz-primary); color: #fff; }
 .wizard-nav .nav-link.done { background: rgba(var(--vz-success-rgb), 0.15); color: var(--vz-success); }
+.wizard-nav .step-label { overflow: hidden; text-overflow: ellipsis; }
 </style>

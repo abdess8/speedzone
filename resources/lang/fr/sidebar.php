@@ -52,6 +52,7 @@ return [
         'users' => 'Utilisateurs',
         'pending_sellers' => 'Vendeurs en attente',
         'roles_permissions' => 'Rôles & Permissions',
+        'alerts' => 'Annonces',
         'cities' => 'Villes',
         'partners' => 'Partenaires',
         'partner_assignments' => 'Affectation partenaires',

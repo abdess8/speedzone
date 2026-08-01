@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Enums\OrderStatus;
 use App\Enums\PickupRequestStatus;
+use App\Enums\ReturnStatus;
 use App\Enums\TransferStatus;
 use App\Models\OrderStatusHistory;
 use Illuminate\Http\Request;
@@ -74,9 +75,9 @@ class OrderStatusHistoryResource extends JsonResource
                 return [
                     'id' => $this->orderReturn->id,
                     'reference' => $this->orderReturn->reference,
-                    'status_label' => ($this->orderReturn->status instanceof \App\Enums\ReturnStatus
+                    'status_label' => ($this->orderReturn->status instanceof ReturnStatus
                         ? $this->orderReturn->status
-                        : \App\Enums\ReturnStatus::from($this->orderReturn->status))->label(),
+                        : ReturnStatus::from($this->orderReturn->status))->label(),
                 ];
             }),
         ];

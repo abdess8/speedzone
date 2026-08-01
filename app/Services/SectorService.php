@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Sector;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class SectorService
 {
@@ -49,9 +50,9 @@ class SectorService
     /**
      * Active sectors belonging to a city (used by the dependent dropdown).
      *
-     * @return \Illuminate\Support\Collection<int, Sector>
+     * @return Collection<int, Sector>
      */
-    public function activeForCity(int $cityId): \Illuminate\Support\Collection
+    public function activeForCity(int $cityId): Collection
     {
         return Sector::query()
             ->forCity($cityId)

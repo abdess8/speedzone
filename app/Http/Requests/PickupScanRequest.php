@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Models\PickupRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PickupScanRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('scan', \App\Models\PickupRequest::class) ?? false;
+        return $this->user()?->can('scan', PickupRequest::class) ?? false;
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Enums\InvoiceStatus;
+use App\Enums\OrderStatus;
 use App\Models\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -91,7 +92,7 @@ class InvoiceResource extends JsonResource
                     'return_fee' => (float) $line->return_fee,
                     'final_amount' => (float) $line->final_amount,
                     'order_status_at_invoice' => $line->order_status_at_invoice,
-                    'order_status_label' => $lineStatus?->label() ?? \App\Enums\OrderStatus::tryFrom((string) $line->order_status_at_invoice)?->label(),
+                    'order_status_label' => $lineStatus?->label() ?? OrderStatus::tryFrom((string) $line->order_status_at_invoice)?->label(),
                     // Delivered or returned on: snapshotted when the line was
                     // billed, with a fallback for invoices generated before the
                     // column existed and never backfilled.

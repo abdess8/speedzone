@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ReturnStatus;
 use App\Models\OrderReturn;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,8 +33,8 @@ class ReturnQueryService
             $query->where(function (Builder $q) use ($user): void {
                 $q->where('created_by', $user->id)
                     ->orWhereIn('status', [
-                        \App\Enums\ReturnStatus::CREATED->value,
-                        \App\Enums\ReturnStatus::IN_TRANSIT_TO_DEPOT->value,
+                        ReturnStatus::CREATED->value,
+                        ReturnStatus::IN_TRANSIT_TO_DEPOT->value,
                     ]);
             });
         } else {

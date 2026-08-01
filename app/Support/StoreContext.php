@@ -2,12 +2,13 @@
 
 namespace App\Support;
 
+use App\Http\Middleware\ResolveActiveStore;
 use App\Models\User;
 
 /**
  * The store the current request is looking at.
  *
- * Resolved once per request by {@see \App\Http\Middleware\ResolveActiveStore}
+ * Resolved once per request by {@see ResolveActiveStore}
  * and read by the `store` global scope, so no controller has to remember to
  * filter on store_id.
  *

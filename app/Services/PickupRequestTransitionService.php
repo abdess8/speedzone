@@ -2,12 +2,10 @@
 
 namespace App\Services;
 
-use App\Enums\OrderStatus;
 use App\Enums\PickupRequestStatus;
 use App\Models\PickupRequest;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class PickupRequestTransitionService

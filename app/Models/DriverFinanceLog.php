@@ -11,10 +11,15 @@ class DriverFinanceLog extends Model
     use HasFactory;
 
     public const ACTION_INVOICE_CREATED = 'invoice_created';
+
     public const ACTION_INVOICE_PAID = 'invoice_paid';
+
     public const ACTION_INVOICE_CANCELLED = 'invoice_cancelled';
+
     public const ACTION_INVOICE_DELETED = 'invoice_deleted';
+
     public const ACTION_TRANSACTION_CREATED = 'transaction_created';
+
     public const ACTION_ADJUSTMENT = 'adjustment';
 
     protected $fillable = [

@@ -9,6 +9,7 @@ use App\Enums\ReturnStatus;
 use App\Events\ReturnRequested;
 use App\Models\Order;
 use App\Models\OrderReturn;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -275,7 +276,7 @@ class ReturnService
     public function sellerOptions(): Collection
     {
         return User::query()
-            ->whereHas('roles', fn ($q) => $q->where('name', \App\Models\Role::SELLER))
+            ->whereHas('roles', fn ($q) => $q->where('name', Role::SELLER))
             ->orderBy('first_name')
             ->orderBy('name')
             ->get(['id', 'name', 'first_name', 'last_name', 'email']);

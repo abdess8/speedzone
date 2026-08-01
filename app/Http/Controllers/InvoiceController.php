@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\BillingFrequency;
 use App\Enums\InvoiceStatus;
 use App\Http\Requests\GenerateInvoiceRequest;
 use App\Http\Requests\MarkInvoicePaidRequest;
@@ -155,7 +156,7 @@ class InvoiceController extends Controller
             'billing' => [
                 'billing_enabled' => (bool) $seller->billing_enabled,
                 'billing_frequency' => $frequency,
-                'billing_frequency_label' => $seller->billing_frequency instanceof \App\Enums\BillingFrequency
+                'billing_frequency_label' => $seller->billing_frequency instanceof BillingFrequency
                     ? $seller->billing_frequency->label()
                     : null,
                 'next_billing_date' => $seller->next_billing_date?->toDateString(),

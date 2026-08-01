@@ -5,7 +5,6 @@ namespace App\Services\Partners;
 use App\Enums\PartnerAuthType;
 use App\Models\Partner;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 

@@ -2,11 +2,13 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\DriverInvoiceStatus;
+use App\Enums\InvoiceStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PickupRequestStatus;
+use App\Enums\ReturnStatus;
 use App\Enums\TransferStatus;
-use App\Enums\DriverInvoiceStatus;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -156,9 +158,9 @@ class OrderResource extends JsonResource
                     return null;
                 }
 
-                $status = $this->invoice->status instanceof \App\Enums\InvoiceStatus
+                $status = $this->invoice->status instanceof InvoiceStatus
                     ? $this->invoice->status
-                    : \App\Enums\InvoiceStatus::from($this->invoice->status);
+                    : InvoiceStatus::from($this->invoice->status);
 
                 return [
                     'id' => $this->invoice->id,
@@ -201,11 +203,11 @@ class OrderResource extends JsonResource
                     return null;
                 }
 
-                $status = $this->orderReturn->status instanceof \App\Enums\ReturnStatus
+                $status = $this->orderReturn->status instanceof ReturnStatus
                     ? $this->orderReturn->status
-                    : \App\Enums\ReturnStatus::from($this->orderReturn->status);
+                    : ReturnStatus::from($this->orderReturn->status);
 
-                if ($status === \App\Enums\ReturnStatus::CANCELLED) {
+                if ($status === ReturnStatus::CANCELLED) {
                     return null;
                 }
 

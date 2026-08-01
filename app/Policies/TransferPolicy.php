@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\TransferStatus;
 use App\Models\Transfer;
 use App\Models\User;
 
@@ -29,9 +30,9 @@ class TransferPolicy
             return false;
         }
 
-        $status = $transfer->status instanceof \App\Enums\TransferStatus
+        $status = $transfer->status instanceof TransferStatus
             ? $transfer->status
-            : \App\Enums\TransferStatus::from($transfer->status);
+            : TransferStatus::from($transfer->status);
 
         return $status->isEditable();
     }
@@ -42,9 +43,9 @@ class TransferPolicy
             return false;
         }
 
-        $status = $transfer->status instanceof \App\Enums\TransferStatus
+        $status = $transfer->status instanceof TransferStatus
             ? $transfer->status
-            : \App\Enums\TransferStatus::from($transfer->status);
+            : TransferStatus::from($transfer->status);
 
         return $status->canAssignStaff();
     }

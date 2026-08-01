@@ -20,6 +20,7 @@ class PermissionCatalog
             self::supportPermissions(),
             self::cityPermissions(),
             self::sectorPermissions(),
+            self::alertPermissions(),
             self::driverZonePermissions(),
             self::partnerPermissions(),
             self::storePermissions(),
@@ -247,6 +248,19 @@ class PermissionCatalog
             self::make('cities.read', 'cities', 'read', null, 'admin'),
             self::make('cities.update', 'cities', 'update', null, 'admin'),
             self::make('cities.delete', 'cities', 'delete', null, 'admin'),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, string|null>>
+     */
+    public static function alertPermissions(): array
+    {
+        return [
+            self::make('alerts.create', 'alerts', 'create', null, 'admin'),
+            self::make('alerts.read', 'alerts', 'read', null, 'admin'),
+            self::make('alerts.update', 'alerts', 'update', null, 'admin'),
+            self::make('alerts.delete', 'alerts', 'delete', null, 'admin'),
         ];
     }
 

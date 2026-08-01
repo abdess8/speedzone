@@ -19,8 +19,9 @@ use App\Services\PickupRequestQueryService;
 use App\Services\PickupRequestService;
 use App\Services\PickupRequestTransitionService;
 use App\Services\PickupScanService;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -300,7 +301,7 @@ class PickupRequestController extends Controller
             try {
                 $scanMode = $this->scanService->resolveScannerMode($user);
                 $scanTargetStatus = $this->scanService->targetPickupStatus($user)->value;
-            } catch (\Illuminate\Auth\Access\AuthorizationException) {
+            } catch (AuthorizationException) {
                 $canScan = false;
             }
         }

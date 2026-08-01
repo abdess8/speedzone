@@ -5,12 +5,12 @@ namespace App\Services;
 use App\Enums\SupportObjectType;
 use App\Enums\SupportTicketCategory;
 use App\Enums\SupportTicketStatus;
-use App\Models\SupportMessage;
-use App\Models\SupportTicket;
-use App\Models\User;
 use App\Events\TicketClosed;
 use App\Events\TicketCreated;
 use App\Events\TicketMessageCreated;
+use App\Models\SupportMessage;
+use App\Models\SupportTicket;
+use App\Models\User;
 use App\Notifications\SupportTicketAssignedNotification;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -158,5 +158,4 @@ class SupportTicketService
     {
         return sprintf('SUP-%d-%05d', ($ticket->created_at ?? now())->year, $ticket->id);
     }
-
 }

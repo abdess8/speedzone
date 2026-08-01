@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\OrderStatus;
 use App\Enums\PartnerOrderStatus;
 use App\Http\Requests\PartnerOrderBulkAssignDriverRequest;
 use App\Http\Requests\PartnerOrderBulkIdsRequest;
@@ -10,7 +9,6 @@ use App\Http\Requests\PartnerOrderBulkScanRequest;
 use App\Http\Requests\PartnerOrderScanRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\City;
-use App\Models\Order;
 use App\Models\Partner;
 use App\Services\PartnerOrderBulkService;
 use App\Services\PartnerOrderQueryService;

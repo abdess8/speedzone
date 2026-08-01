@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\BillingFrequency;
 use App\Enums\DriverInvoiceStatus;
 use App\Http\Requests\GenerateDriverInvoiceRequest;
 use App\Http\Requests\MarkDriverInvoicePaidRequest;
@@ -164,7 +165,7 @@ class DriverInvoiceController extends Controller
             'billing' => [
                 'billing_enabled' => (bool) $driver->billing_enabled,
                 'billing_frequency' => $frequency,
-                'billing_frequency_label' => $driver->billing_frequency instanceof \App\Enums\BillingFrequency
+                'billing_frequency_label' => $driver->billing_frequency instanceof BillingFrequency
                     ? $driver->billing_frequency->label()
                     : null,
                 'next_billing_date' => $driver->next_billing_date?->toDateString(),

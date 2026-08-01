@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\ActiveStoreController;
 use App\Http\Controllers\Admin\PendingUserController;
+use App\Http\Controllers\AlertController;
+use App\Http\Controllers\AlertDismissalController;
 use App\Http\Controllers\ApiIntegrationController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\DriverFinanceController;
@@ -140,6 +142,24 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::resource('sectors', SectorController::class)
         ->whereNumber('sector')
         ->middleware('permission:sectors.read');
+
+    // Announcements pushed to users as a banner or a sign-in modal
+    Route::get('alerts/users', [AlertController::class, 'searchUsers'])
+        ->middleware('permission:alerts.read')
+        ->name('alerts.users');
+    Route::patch('alerts/{alert}/toggle', [AlertController::class, 'toggle'])
+        ->whereNumber('alert')
+        ->middleware('permission:alerts.update')
+        ->name('alerts.toggle');
+    Route::resource('alerts', AlertController::class)
+        ->except('show')
+        ->whereNumber('alert')
+        ->middleware('permission:alerts.read');
+
+    // Dismissal belongs to the recipient, so it sits outside the admin gate.
+    Route::post('alerts/{alert}/dismiss', AlertDismissalController::class)
+        ->whereNumber('alert')
+        ->name('alerts.dismiss');
 
     // B2B partner integrations
     Route::post('partners/test-connection', [PartnerController::class, 'testConnectionDraft'])

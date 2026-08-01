@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\PartnerAuthType;
 use App\Models\Partner;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -28,7 +29,7 @@ class PartnerResource extends JsonResource
             'client_id' => $this->client_id,
             'has_client_secret' => filled($this->client_secret),
             'auth_type' => $this->auth_type?->value ?? $this->auth_type,
-            'auth_type_label' => $this->auth_type instanceof \App\Enums\PartnerAuthType
+            'auth_type_label' => $this->auth_type instanceof PartnerAuthType
                 ? $this->auth_type->label()
                 : null,
             'endpoint_statuses' => $this->endpoint_statuses,

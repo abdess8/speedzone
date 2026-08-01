@@ -52,6 +52,7 @@ return [
         'users' => 'Users',
         'pending_sellers' => 'Pending Sellers',
         'roles_permissions' => 'Roles & Permissions',
+        'alerts' => 'Announcements',
         'cities' => 'Cities',
         'partners' => 'Partners',
         'partner_assignments' => 'Partner Assignments',

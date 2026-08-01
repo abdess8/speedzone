@@ -3,11 +3,9 @@
 namespace App\Services;
 
 use App\Enums\UserStatus;
-use App\Events\NewSellerRegistered;
 use App\Events\SellerApproved;
 use App\Events\SellerRejected;
 use App\Models\Permission;
-use App\Models\Role;
 use App\Models\User;
 use App\Support\PermissionLabels;
 use App\Support\SellerRegistrationPermissions;

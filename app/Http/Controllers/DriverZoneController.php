@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AssignDriverSectorsRequest;
 use App\Http\Resources\DriverResource;
 use App\Models\City;
-use App\Models\Role;
 use App\Models\Sector;
 use App\Models\User;
 use App\Services\DriverZoneService;

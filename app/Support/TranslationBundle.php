@@ -42,6 +42,7 @@ final class TranslationBundle
         'stores',
         'team',
         'cities',
+        'alerts',
         'partners',
         'partner_auth_types',
         'sectors',

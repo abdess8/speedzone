@@ -15,12 +15,19 @@ class Role extends Model
     use HasFactory;
 
     public const ADMIN = 'Admin';
+
     public const DISPATCHER = 'Dispatcher';
+
     public const DRIVER = 'Driver';
+
     public const SELLER = 'Seller';
+
     public const SUPER_ADMIN = self::ADMIN;
+
     public const VENDEUR = self::SELLER;
+
     public const LIVREUR = self::DRIVER;
+
     public const PARTENAIRE = 'Partner';
 
     /**

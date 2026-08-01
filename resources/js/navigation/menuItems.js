@@ -222,6 +222,12 @@ export const menuItems = [
     permissions: ['sectors.read', 'driver_zones.read'],
     children: [
       {
+        key: 'cities',
+        labelKey: 'sidebar.settings.cities',
+        href: '/cities',
+        permissions: ['cities.read'],
+      },
+      {
         key: 'sectors',
         labelKey: 'sidebar.sectors',
         href: '/sectors',
@@ -267,10 +273,10 @@ export const menuItems = [
         permissions: ['roles.read'],
       },
       {
-        key: 'cities',
-        labelKey: 'sidebar.settings.cities',
-        href: '/cities',
-        permissions: ['cities.read'],
+        key: 'alerts',
+        labelKey: 'sidebar.settings.alerts',
+        href: '/alerts',
+        permissions: ['alerts.read'],
       },
       {
         key: 'partners',

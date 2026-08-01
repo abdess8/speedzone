@@ -5,6 +5,7 @@ namespace App\Enums;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\PickupRequest;
+use Illuminate\Database\Eloquent\Model;
 
 enum SupportObjectType: string
 {
@@ -37,7 +38,7 @@ enum SupportObjectType: string
     /**
      * Fully-qualified Eloquent model class backing this object type.
      *
-     * @return class-string<\Illuminate\Database\Eloquent\Model>
+     * @return class-string<Model>
      */
     public function modelClass(): string
     {

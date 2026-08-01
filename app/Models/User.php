@@ -469,6 +469,46 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Per-instance memo of the cities this user is attached to.
+     *
+     * @var array<int, int>|null
+     */
+    protected ?array $cityIdMemo = null;
+
+    /**
+     * Every city this user can be considered part of.
+     *
+     * There is no single answer in this schema. A seller carries a city on the
+     * profile but may run shops in several others; a driver usually has no
+     * profile city at all and is instead reachable through the sectors assigned
+     * to them. Targeting an announcement at "Tangier" has to find all of them,
+     * so this unions the three paths.
+     *
+     * @return array<int, int>
+     */
+    public function cityIds(): array
+    {
+        if ($this->cityIdMemo !== null) {
+            return $this->cityIdMemo;
+        }
+
+        $ids = collect([$this->city_id])
+            ->merge($this->stores()->pluck('stores.city_id'))
+            ->merge($this->sectors()->pluck('sectors.city_id'));
+
+        if ($this->isAccountOwner()) {
+            $ids = $ids->merge($this->ownedStores()->pluck('city_id'));
+        }
+
+        return $this->cityIdMemo = $ids
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
      * Whether the user holds the Driver role.
      */
     public function isDriver(): bool

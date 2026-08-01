@@ -15,10 +15,12 @@ use App\Policies\SupportTicketPolicy;
 use App\Services\SupportTicketQueryService;
 use App\Services\SupportTicketService;
 use App\Support\SupportPermissions;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -146,7 +148,7 @@ class SupportTicketController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => ['required', 'string', \Illuminate\Validation\Rule::in(SupportTicketStatus::values())],
+            'status' => ['required', 'string', Rule::in(SupportTicketStatus::values())],
         ]);
 
         $this->tickets->changeStatus($supportTicket, SupportTicketStatus::from($validated['status']), $request->user());
@@ -182,7 +184,7 @@ class SupportTicketController extends Controller
         $isStaff = $user->hasPermission(SupportPermissions::READ_ALL)
             || $user->hasPermission(SupportPermissions::MANAGE);
 
-        /** @var class-string<\Illuminate\Database\Eloquent\Model> $model */
+        /** @var class-string<Model> $model */
         $model = $type->modelClass();
         $reference = $type->referenceColumn();
 
@@ -263,7 +265,7 @@ class SupportTicketController extends Controller
                 continue;
             }
 
-            /** @var class-string<\Illuminate\Database\Eloquent\Model> $model */
+            /** @var class-string<Model> $model */
             $model = $type->modelClass();
             $reference = $type->referenceColumn();
             $ids = $group->pluck('object_id')->unique()->all();

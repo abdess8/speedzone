@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\TransferStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
@@ -56,7 +57,7 @@ class OrderController extends Controller
             'seller.city',
             'pickupRequest.createdBy.roles',
             'pickupRequest.assignedDriver.roles',
-            'transfers' => fn ($q) => $q->where('transfers.status', '!=', \App\Enums\TransferStatus::CANCELLED->value),
+            'transfers' => fn ($q) => $q->where('transfers.status', '!=', TransferStatus::CANCELLED->value),
             'statusHistories.user.roles',
             'statusHistories.pickupRequest',
             'statusHistories.transfer',

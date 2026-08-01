@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
-
     /**
      * Dashboard status buckets for charts (maps many enum values to one label).
      *

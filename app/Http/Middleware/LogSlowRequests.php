@@ -7,6 +7,7 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -36,7 +37,7 @@ class LogSlowRequests
             if ($slowQueryThreshold > 0 && $query->time >= $slowQueryThreshold && count($slowQueries) < 5) {
                 $slowQueries[] = [
                     'ms' => round($query->time, 1),
-                    'sql' => \Illuminate\Support\Str::limit(preg_replace('/\s+/', ' ', $query->sql), 300),
+                    'sql' => Str::limit(preg_replace('/\s+/', ' ', $query->sql), 300),
                 ];
             }
         });

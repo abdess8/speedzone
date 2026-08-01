@@ -30,7 +30,7 @@ class ResolveActiveStore
     public const CHOSEN_KEY = 'active_store_chosen';
 
     /**
-     * @param  \Closure(Request): Response  $next
+     * @param  Closure(Request): Response  $next
      */
     public function handle(Request $request, Closure $next): Response
     {

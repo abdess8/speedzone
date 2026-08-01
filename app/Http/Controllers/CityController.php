@@ -11,6 +11,7 @@ use App\Models\City;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\CityService;
+use App\Services\SectorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -118,7 +119,7 @@ class CityController extends Controller
      * JSON list of a city's active sectors — powers the dependent dropdown
      * on the order form (same-session, no token required).
      */
-    public function sectors(Request $request, City $city, \App\Services\SectorService $sectors): JsonResponse
+    public function sectors(Request $request, City $city, SectorService $sectors): JsonResponse
     {
         return response()->json([
             'data' => SectorResource::collection($sectors->activeForCity($city->id))->resolve($request),

@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Services\Partners\PartnerApiException;
 use App\Services\Partners\PartnerOutboundSyncService;
@@ -45,7 +46,7 @@ class SyncPartnerOrderStatusJob implements ShouldQueue
         }
 
         $targetStatus = $this->targetStatus ?? (
-            $order->status instanceof \App\Enums\OrderStatus
+            $order->status instanceof OrderStatus
                 ? $order->status->value
                 : (string) $order->status
         );

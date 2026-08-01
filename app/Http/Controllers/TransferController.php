@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\TransferStatus;
 use App\Http\Requests\AssignTransferStaffRequest;
-use App\Http\Requests\EligibleTransferOrdersRequest;
 use App\Http\Requests\ChangeTransferStatusRequest;
+use App\Http\Requests\EligibleTransferOrdersRequest;
 use App\Http\Requests\StoreTransferRequest;
 use App\Http\Requests\TransferBulkReceiveRequest;
 use App\Http\Requests\TransferScanRequest;

@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Transfer;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTransferRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', \App\Models\Transfer::class) ?? false;
+        return $this->user()?->can('create', Transfer::class) ?? false;
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Http\Requests\ReturnScanRequest;
 use App\Http\Requests\StoreReturnRequest;
 use App\Http\Requests\UpdateReturnCustomerDataRequest;
 use App\Http\Resources\OrderReturnResource;
+use App\Models\Order;
 use App\Models\OrderReturn;
 use App\Services\ReturnQueryService;
 use App\Services\ReturnScanService;
@@ -40,7 +41,7 @@ class ReturnController extends Controller
 
     public function store(StoreReturnRequest $request): JsonResponse
     {
-        $order = \App\Models\Order::query()->findOrFail($request->integer('order_id'));
+        $order = Order::query()->findOrFail($request->integer('order_id'));
         $role = WebReturnController::resolveInitiatorRoleForUser(
             $request->user(),
             $request->input('initiated_by_role')

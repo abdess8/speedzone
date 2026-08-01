@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Enums\UserStatus;
 use App\Models\Store;
+use App\Services\AlertService;
 use App\Support\StoreContext;
 use App\Support\TranslationBundle;
 use Illuminate\Http\Request;
@@ -64,6 +65,9 @@ class HandleInertiaRequests extends Middleware
                 'unread_count' => fn () => (int) ($request->user()?->unreadNotifications()->count() ?? 0),
             ],
             'store' => fn () => $this->resolveStoreContext($request),
+            // Not `alerts`: the management screen already ships a prop by that
+            // name, and a page prop shadows a shared one.
+            'announcements' => fn () => $this->resolveAlerts($request),
         ]);
 
         // The Vue i18n instance keeps merged messages for the lifetime of the
@@ -111,6 +115,23 @@ class HandleInertiaRequests extends Middleware
             'two_factor_enabled' => Features::enabled(Features::twoFactorAuthentication())
                 && ! is_null($user->two_factor_secret),
         ]);
+    }
+
+    /**
+     * Announcements on display for the current user, split into the banners
+     * that ride at the top of the page and the modals that open over it.
+     *
+     * @return array{banners: array<int, array<string, mixed>>, modals: array<int, array<string, mixed>>}
+     */
+    private function resolveAlerts(Request $request): array
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return ['banners' => [], 'modals' => []];
+        }
+
+        return app(AlertService::class)->forUser($user);
     }
 
     /**

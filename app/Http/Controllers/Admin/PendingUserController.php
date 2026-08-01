@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Enums\UserStatus;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\ApprovePendingUserRequest;
 use App\Http\Requests\RejectPendingUserRequest;
 use App\Models\Role;

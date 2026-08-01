@@ -4,8 +4,8 @@ namespace App\Http\Requests;
 
 use App\Enums\SupportObjectType;
 use App\Enums\SupportTicketCategory;
-use App\Models\User;
 use App\Support\SupportPermissions;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -50,7 +50,7 @@ class StoreSupportTicketRequest extends FormRequest
                 return;
             }
 
-            /** @var class-string<\Illuminate\Database\Eloquent\Model> $model */
+            /** @var class-string<Model> $model */
             $model = $type->modelClass();
             $record = $model::query()->find($objectId);
 

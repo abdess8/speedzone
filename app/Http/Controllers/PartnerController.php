@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\ApiLogResource;
 use App\Http\Requests\StorePartnerRequest;
 use App\Http\Requests\TestPartnerConnectionRequest;
 use App\Http\Requests\UpdatePartnerRequest;
+use App\Http\Resources\ApiLogResource;
 use App\Http\Resources\PartnerResource;
 use App\Models\Partner;
-use App\Services\PartnerService;
 use App\Services\Partners\PartnerApiException;
 use App\Services\Partners\PartnerApiService;
 use App\Services\Partners\PartnerDeliveryIngestionService;
+use App\Services\PartnerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

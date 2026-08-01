@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\DriverTransactionStatus;
 use App\Enums\DriverTransactionType;
 use App\Http\Resources\DriverInvoiceResource;
 use App\Models\DriverInvoice;
 use App\Models\DriverTransaction;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\DriverBillingService;
 use Illuminate\Http\Request;
@@ -50,9 +52,9 @@ class DriverFinanceController extends Controller
             'driverId' => $driver->id,
             'drivers' => $user->hasPermission('driver_invoices.read.all') ? $this->driverOptions() : [],
             'transactions' => $transactions->map(function (DriverTransaction $tx) {
-                $status = $tx->status instanceof \App\Enums\DriverTransactionStatus
+                $status = $tx->status instanceof DriverTransactionStatus
                     ? $tx->status
-                    : \App\Enums\DriverTransactionStatus::from($tx->status);
+                    : DriverTransactionStatus::from($tx->status);
 
                 return [
                     'id' => $tx->id,
@@ -82,7 +84,7 @@ class DriverFinanceController extends Controller
     private function driverOptions(): array
     {
         return User::query()
-            ->whereHas('roles', fn ($q) => $q->where('name', \App\Models\Role::DRIVER))
+            ->whereHas('roles', fn ($q) => $q->where('name', Role::DRIVER))
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->get(['id', 'first_name', 'last_name', 'name', 'email'])

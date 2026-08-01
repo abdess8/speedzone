@@ -8,7 +8,11 @@
 <body>
     @foreach ($labels as $index => $label)
         <div class="{{ $loop->last ? '' : 'page-break' }}">
-            @include('orders._label_body', ['order' => $label['order'], 'qrCode' => $label['qrCode']])
+            @include('orders._label_body', [
+                'order' => $label['order'],
+                'qrCode' => $label['qrCode'],
+                'barcode' => $label['barcode'],
+            ])
         </div>
     @endforeach
 </body>

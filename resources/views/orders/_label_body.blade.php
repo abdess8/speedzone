@@ -1,74 +1,116 @@
+@php
+    $cashCollection = $order->payment_method->requiresCashCollection();
+    $destination = $order->city?->name;
+    $zone = $order->sector?->name ?: $destination;
+@endphp
+
 <div class="label">
-    <table class="header" width="100%">
+    <table class="brand">
         <tr>
-            <td>
+            <td class="brand-icon-cell"><img src="{{ $icons['speed'] }}" class="brand-icon" alt=""></td>
+            <td class="brand-name">
                 @if ($logo)
-                    <img src="{{ $logo }}" class="logo" alt="logo">
+                    <img src="{{ $logo }}" class="brand-logo" alt="{{ $companyName }}">
                 @else
-                    <span class="company">{{ $companyName }}</span>
+                    {{ $companyName }}
                 @endif
             </td>
-            <td style="text-align: right;">
-                <span class="company">{{ $companyName }}</span><br>
-                <span class="meta">{{ $order->created_at?->format('Y-m-d H:i') }}</span>
-            </td>
+            <td class="brand-icon-cell"><img src="{{ $icons['speed'] }}" class="brand-icon" alt=""></td>
         </tr>
     </table>
+
+    <div class="rule"></div>
 
     <div class="tracking">{{ $order->tracking_number }}</div>
+    <div class="barcode"><img src="{{ $barcode }}" alt="{{ $order->tracking_number }}"></div>
 
-    <table class="qr-row" width="100%">
+    <table class="recipient-row">
         <tr>
-            <td class="qr">
+            <td class="qr-cell">
                 <img src="{{ $qrCode }}" alt="QR">
-                <div class="meta">{{ __('orders.label_pdf.scan_to_track') }}</div>
+                <div class="qr-caption">{{ __('orders.label_pdf.scan_to_track') }}</div>
             </td>
             <td>
-                <div class="section-title">{{ __('orders.label_pdf.deliver_to') }}</div>
-                <div class="name">{{ $order->customer_full_name }}</div>
-                <div class="phone">{{ $order->customer_phone }}</div>
-                <div class="address">{{ $order->customer_address }}</div>
-                <div class="city">{{ $order->city?->name }}@if ($order->sector) &middot; {{ $order->sector->name }}@endif</div>
+                <div class="recipient">
+                    <table class="recipient-head">
+                        <tr>
+                            <td>
+                                <div class="recipient-title">{{ __('orders.label_pdf.recipient_details') }}</div>
+                                <div class="recipient-name">{{ Str::limit($order->customer_full_name, 22) }}</div>
+                                <div class="recipient-line">{{ Str::limit($order->customer_phone, 24) }}</div>
+                                <div class="recipient-line">{{ Str::limit($order->customer_address, 48) }}</div>
+                            </td>
+                            @if ($destination)
+                                <td class="pin-cell">
+                                    <img src="{{ $icons['pin'] }}" alt="">
+                                    <div class="pin-label">{{ Str::limit($destination, 14) }}</div>
+                                </td>
+                            @endif
+                        </tr>
+                    </table>
+                    <div class="recipient-city">
+                        {{ Str::limit($destination.($order->sector ? ' · '.$order->sector->name : ''), 24) }}
+                    </div>
+                </div>
             </td>
         </tr>
     </table>
 
-    @if ($order->payment_method->requiresCashCollection())
-        <div class="collection cash-required">
-            <div class="collection-title">{{ __('orders.label_pdf.payment_required') }}</div>
-            <div class="collection-row">{{ __('orders.label_pdf.cash_collection') }}: <strong>{{ __('orders.label_pdf.yes') }}</strong></div>
-            <div class="collection-amount">
+    @if ($cashCollection)
+        <div class="collect">
+            <div class="collect-title">{{ __('orders.label_pdf.payment_required') }}</div>
+            <div class="collect-sub">
+                {{ __('orders.label_pdf.cash_collection') }}: <strong>{{ __('orders.label_pdf.yes') }}</strong>
+            </div>
+            <div class="collect-amount">
                 {{ __('orders.label_pdf.amount_to_collect') }}:
                 <strong>{{ number_format((float) $order->order_amount, 2) }} MAD</strong>
             </div>
         </div>
     @else
-        <div class="collection card-paid">
-            <div class="collection-title">{{ __('orders.label_pdf.already_paid') }}</div>
-            <div class="collection-row">{{ __('orders.label_pdf.cash_collection') }}: <strong>{{ __('orders.label_pdf.no') }}</strong></div>
+        <div class="collect paid">
+            <div class="collect-title">{{ __('orders.label_pdf.already_paid') }}</div>
+            <div class="collect-sub">
+                {{ __('orders.label_pdf.cash_collection') }}: <strong>{{ __('orders.label_pdf.no') }}</strong>
+            </div>
         </div>
     @endif
 
-    <table class="amounts">
-        <tr>
-            <td>{{ __('orders.label_pdf.payment_method') }}</td>
-            <td style="text-align:right;">
-                <span class="pay">{{ $order->payment_method->displayLabel() }}</span>
-            </td>
-        </tr>
-        @if ($order->order_value !== null)
+    <div class="details">
+        <div class="details-title">{{ __('orders.label_pdf.order_details') }}</div>
+        <table class="details-grid">
             <tr>
-                <td>{{ __('orders.label_pdf.order_value') }}</td>
-                <td style="text-align:right;">{{ number_format((float) $order->order_value, 2) }}</td>
+                <td class="first">
+                    <div class="details-label">{{ __('orders.label_pdf.order_date') }}</div>
+                    <div class="details-value">{{ $order->created_at?->format('Y-m-d') ?: '—' }}</div>
+                </td>
+                <td class="split">
+                    <div class="details-label">{{ __('orders.label_pdf.delivery_zone') }}</div>
+                    <div class="details-value">{{ Str::limit($zone ?: '—', 18) }}</div>
+                </td>
+                <td class="split last">
+                    <div class="details-label">{{ __('orders.label_pdf.notes') }}</div>
+                    <div class="details-value">{{ Str::limit($order->notes ?: '—', 30) }}</div>
+                </td>
             </tr>
-        @endif
+        </table>
+    </div>
+
+    <table class="totals">
         <tr>
-            <td>{{ __('orders.label_pdf.delivery_price') }}</td>
-            <td style="text-align:right;">{{ number_format((float) $order->delivery_price, 2) }}</td>
-        </tr>
-        <tr>
-            <td class="total">{{ __('orders.label_pdf.total') }}</td>
-            <td class="total" style="text-align:right;">{{ number_format((float) $order->total_amount, 2) }}</td>
+            <td>
+                <div class="totals-label">{{ __('orders.label_pdf.payment_method') }}</div>
+                <img src="{{ $cashCollection ? $icons['cash'] : $icons['card'] }}" class="pay-icon" alt="">
+                <span class="pay-name">{{ $order->payment_method->label() }}</span>
+            </td>
+            <td class="amount-cell">
+                @if ($cashCollection)
+                    <div class="amount-label">{{ __('orders.label_pdf.total') }}</div>
+                    <div class="amount-value">{{ number_format((float) $order->total_amount, 2) }} MAD</div>
+                @else
+                    <div class="amount-paid">{{ __('orders.label_pdf.already_paid') }}</div>
+                @endif
+            </td>
         </tr>
     </table>
 
@@ -76,17 +118,17 @@
         <span class="flag {{ $order->is_fragile ? 'on' : '' }}">
             {{ $order->is_fragile ? __('orders.label_pdf.fragile') : __('orders.label_pdf.not_fragile') }}
         </span>
-        <span class="flag {{ $order->can_be_opened ? 'on' : '' }}">
+        <span class="flag {{ $order->can_be_opened ? '' : 'on' }}">
             {{ $order->can_be_opened ? __('orders.label_pdf.openable') : __('orders.label_pdf.do_not_open') }}
         </span>
     </div>
 
-    @if ($order->notes)
-        <div class="section-title" style="margin-top:6px;">{{ __('orders.label_pdf.notes') }}</div>
-        <div class="notes">{{ $order->notes }}</div>
-    @endif
-
-    <div class="foot">
-        {{ __('orders.label_pdf.seller') }}: {{ $order->seller?->full_name }} &middot; {{ $order->trackingUrl() }}
-    </div>
+    <table class="foot">
+        <tr>
+            <td class="foot-icon-cell"><img src="{{ $icons['speed_muted'] }}" class="foot-icon" alt=""></td>
+            <td>
+                {{ __('orders.label_pdf.seller') }}: {{ $order->seller?->full_name }} &middot; {{ $order->trackingUrl() }}
+            </td>
+        </tr>
+    </table>
 </div>

@@ -9,7 +9,11 @@ use Illuminate\Support\Collection;
 
 class OrderLabelPdfService
 {
-    public function __construct(private readonly QrCodeService $qrCodeService) {}
+    public function __construct(
+        private readonly QrCodeService $qrCodeService,
+        private readonly BarcodeService $barcodeService,
+        private readonly LabelIconService $iconService,
+    ) {}
 
     /**
      * Build the thermal shipping-label PDF for an order.
@@ -24,6 +28,8 @@ class OrderLabelPdfService
         return Pdf::loadView('orders.label', [
             'order' => $order,
             'qrCode' => $this->qrCodeService->dataUri($order->trackingUrl(), 220, 4),
+            'barcode' => $this->barcodeService->code128DataUri((string) $order->tracking_number),
+            'icons' => $this->iconService->labelIcons(),
             'logo' => $this->logoDataUri(),
             'companyName' => config('orders.label.company_name', 'SpeedZone Express'),
         ])->setPaper([0, 0, $width, $height]);
@@ -44,10 +50,12 @@ class OrderLabelPdfService
         $labels = $orders->map(fn (Order $order) => [
             'order' => $order,
             'qrCode' => $this->qrCodeService->dataUri($order->trackingUrl(), 220, 4),
+            'barcode' => $this->barcodeService->code128DataUri((string) $order->tracking_number),
         ])->all();
 
         return Pdf::loadView('orders.labels', [
             'labels' => $labels,
+            'icons' => $this->iconService->labelIcons(),
             'logo' => $this->logoDataUri(),
             'companyName' => config('orders.label.company_name', 'SpeedZone Express'),
         ])->setPaper([0, 0, $width, $height]);

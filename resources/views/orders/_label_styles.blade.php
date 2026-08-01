@@ -1,110 +1,189 @@
 <style>
     @page { margin: 0; }
     * { box-sizing: border-box; }
+
     body {
         margin: 0;
-        padding: 8px;
+        padding: 7px;
         font-family: DejaVu Sans, sans-serif;
-        color: #000;
-        font-size: 11px;
-        line-height: 1.3;
+        color: #16334F;
+        font-size: 10px;
+        line-height: 1.25;
     }
-    .label { width: 100%; border: 2px solid #000; padding: 6px; }
+
+    /* dompdf ignores box-sizing, so the frame relies on auto width to keep
+       its padding and border inside the page. */
+    .label {
+        border: 1px solid #D5DDE6;
+        border-radius: 10px;
+        background: #FFFFFF;
+        padding: 9px 10px 8px;
+        page-break-inside: avoid;
+    }
+
     .page-break { page-break-after: always; }
-    .header {
-        width: 100%;
-        border-bottom: 2px solid #000;
-        padding-bottom: 4px;
-        margin-bottom: 6px;
-    }
-    .header td { vertical-align: middle; }
-    .logo { max-height: 34px; max-width: 120px; }
-    .company { font-size: 13px; font-weight: bold; }
-    .tracking {
-        text-align: center;
-        font-size: 17px;
-        font-weight: bold;
-        letter-spacing: 1px;
-        margin: 4px 0;
-        padding: 4px 0;
-        border-top: 1px dashed #000;
-        border-bottom: 1px dashed #000;
-    }
-    .qr-row td { vertical-align: top; }
-    .qr { width: 120px; text-align: center; }
-    .qr img { width: 110px; height: 110px; }
-    .meta { font-size: 10px; }
-    .section-title {
-        font-size: 9px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-weight: bold;
-        border-bottom: 1px solid #000;
-        margin: 6px 0 3px;
-        padding-bottom: 1px;
-    }
-    .name { font-size: 14px; font-weight: bold; }
-    .phone { font-size: 13px; font-weight: bold; }
-    .address { font-size: 11px; }
-    .city { font-size: 13px; font-weight: bold; text-transform: uppercase; }
-    .amounts { width: 100%; border-collapse: collapse; margin-top: 4px; }
-    .amounts td { padding: 2px 0; font-size: 11px; }
-    .amounts .total { font-size: 15px; font-weight: bold; border-top: 1px solid #000; padding-top: 3px; }
-    .pay {
-        display: inline-block;
-        border: 2px solid #000;
-        padding: 2px 8px;
-        font-weight: bold;
-        font-size: 13px;
-    }
-    .collection {
-        margin-top: 6px;
-        border: 3px solid #000;
-        padding: 6px 8px;
-        text-align: center;
-    }
-    .collection.cash-required {
-        background: #000;
-        color: #fff;
-    }
-    .collection.card-paid {
-        background: #f2f2f2;
-    }
-    .collection-title {
+
+    /* Header ------------------------------------------------------------- */
+    .brand { width: 100%; border-collapse: collapse; }
+    .brand td { vertical-align: middle; padding: 0; }
+    .brand-icon { width: 24px; }
+    .brand-icon-cell { width: 30px; }
+    .brand-name {
         font-size: 15px;
         font-weight: bold;
+        letter-spacing: 0.6px;
+        text-align: center;
+        text-transform: uppercase;
+    }
+    .brand-logo { max-height: 22px; max-width: 150px; }
+    .rule { border-bottom: 1.5px solid #16334F; margin: 6px 0 4px; }
+
+    /* Tracking + barcode -------------------------------------------------- */
+    .tracking {
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
         letter-spacing: 0.5px;
-        margin-bottom: 4px;
+        padding: 1px 0 3px;
     }
-    .collection-row {
+    .barcode { text-align: center; padding-bottom: 5px; }
+    .barcode img { width: 78%; height: 34px; }
+
+    /* Recipient ----------------------------------------------------------- */
+    .recipient-row { width: 100%; border-collapse: collapse; }
+    .recipient-row td { vertical-align: top; padding: 0; }
+    .qr-cell { width: 110px; text-align: center; }
+    .qr-cell img { width: 94px; height: 94px; }
+    .qr-caption {
+        font-size: 7.5px;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        color: #5A6B80;
+        padding-top: 2px;
+    }
+    .recipient {
+        border: 1px solid #BFD2E4;
+        border-radius: 4px;
+        padding: 5px 7px 6px;
+    }
+    .recipient-head { width: 100%; border-collapse: collapse; }
+    .recipient-head td { vertical-align: top; padding: 0; }
+    .recipient-title {
+        font-size: 8px;
+        font-weight: bold;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: #34557A;
+        padding-bottom: 2px;
+    }
+    .recipient-name { font-size: 13px; font-weight: bold; }
+    .recipient-line { font-size: 9.5px; color: #2A4360; }
+    .pin-cell { width: 42px; text-align: center; }
+    .pin-cell img { width: 14px; }
+    .pin-label {
+        font-size: 6.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        color: #5A6B80;
+    }
+    .recipient-city {
+        font-size: 15px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        padding-top: 3px;
+    }
+
+    /* Collection band ------------------------------------------------------ */
+    .collect {
+        margin-top: 7px;
+        background: #1E3A5C;
+        border-radius: 4px;
+        color: #FFFFFF;
+        padding: 6px 8px 7px;
+        text-align: center;
+    }
+    .collect.paid { background: #33556F; }
+    .collect-title {
+        font-size: 16px;
+        font-weight: bold;
+        letter-spacing: 0.6px;
+    }
+    .collect-sub { font-size: 10.5px; padding-top: 2px; }
+    .collect-amount {
+        font-size: 11px;
+        margin-top: 5px;
+        padding-top: 5px;
+        border-top: 1px solid #6E88A5;
+    }
+    .collect-amount strong { font-size: 12.5px; }
+
+    /* Order details -------------------------------------------------------- */
+    .details { margin-top: 7px; }
+    .details-title {
+        font-size: 8.5px;
+        font-weight: bold;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: #34557A;
+        padding-bottom: 3px;
+    }
+    .details-grid { width: 100%; border-collapse: collapse; }
+    .details-grid td { vertical-align: top; padding: 0 7px; }
+    .details-grid td.first { padding-left: 0; width: 32%; }
+    .details-grid td.split { border-left: 1px solid #D5DDE6; }
+    .details-grid td.last { width: 38%; padding-right: 0; }
+    .details-label {
+        font-size: 8px;
+        font-weight: bold;
+        color: #5A6B80;
+    }
+    .details-value { font-size: 9.5px; }
+
+    /* Totals --------------------------------------------------------------- */
+    .totals {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 7px;
+        border-top: 1px solid #D5DDE6;
+    }
+    .totals td { vertical-align: middle; padding: 6px 0 0; }
+    .totals-label { font-size: 8.5px; color: #5A6B80; padding-bottom: 3px; }
+    .pay-icon { width: 20px; }
+    .pay-name { font-size: 14px; font-weight: bold; padding-left: 4px; }
+    .amount-cell { text-align: right; }
+    .amount-label {
         font-size: 12px;
-        margin-bottom: 2px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
     }
-    .collection-amount {
-        font-size: 14px;
-        margin-top: 4px;
-        padding-top: 4px;
-        border-top: 1px dashed #fff;
-    }
-    .collection.card-paid .collection-amount {
-        border-top-color: #000;
-    }
-    .flags { margin-top: 6px; }
+    .amount-value { font-size: 14px; font-weight: bold; }
+    .amount-paid { font-size: 13px; font-weight: bold; }
+
+    /* Flags ---------------------------------------------------------------- */
+    .flags { text-align: right; padding-top: 5px; }
     .flag {
         display: inline-block;
-        border: 1.5px solid #000;
+        border: 1px solid #16334F;
+        border-radius: 3px;
         padding: 2px 6px;
+        font-size: 8px;
         font-weight: bold;
-        font-size: 10px;
-        margin-right: 4px;
+        letter-spacing: 0.3px;
+        margin-left: 4px;
     }
-    .flag.on { background: #000; color: #fff; }
-    .notes {
-        margin-top: 6px;
-        border: 1px solid #000;
-        padding: 4px;
-        font-size: 10px;
-        min-height: 28px;
+    .flag.on { background: #16334F; color: #FFFFFF; }
+
+    /* Footer --------------------------------------------------------------- */
+    .foot {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 7px;
+        border-top: 1px solid #D5DDE6;
+        font-size: 7.5px;
+        color: #5A6B80;
     }
-    .foot { margin-top: 6px; font-size: 9px; text-align: center; }
+    .foot td { vertical-align: middle; padding: 4px 0 0; }
+    .foot-icon { width: 14px; }
+    .foot-icon-cell { width: 18px; }
 </style>

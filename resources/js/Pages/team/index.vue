@@ -55,12 +55,20 @@ const lastActivityLabel = (member) => {
               <Link
                 v-if="can.manage_roles"
                 :href="route('team.roles.index')"
-                class="btn btn-light btn-sm"
+                class="btn btn-light btn-sm btn-icon"
+                :title="$t('team.manage_roles')"
+                :aria-label="$t('team.manage_roles')"
               >
-                <i class="ri-shield-user-line align-bottom me-1"></i> {{ $t('team.manage_roles') }}
+                <i class="ri-shield-user-line align-bottom"></i>
               </Link>
-              <Link v-if="can.create" :href="route('team.create')" class="btn btn-success btn-sm">
-                <i class="ri-user-add-line align-bottom me-1"></i> {{ $t('team.add') }}
+              <Link
+                v-if="can.create"
+                :href="route('team.create')"
+                class="btn btn-success btn-sm btn-icon"
+                :title="$t('team.add')"
+                :aria-label="$t('team.add')"
+              >
+                <i class="ri-user-add-line align-bottom"></i>
               </Link>
             </div>
           </BCardHeader>
@@ -118,7 +126,9 @@ const lastActivityLabel = (member) => {
                       <div class="hstack gap-1 justify-content-end">
                         <Link
                           :href="route('team.edit', member.id)"
-                          class="btn btn-sm btn-light"
+                          class="btn btn-sm btn-light btn-icon"
+                          :title="$t('common.edit')"
+                          :aria-label="$t('common.edit')"
                         >
                           <i class="ri-pencil-line align-bottom"></i>
                         </Link>
@@ -126,17 +136,23 @@ const lastActivityLabel = (member) => {
                           v-if="member.status === 'SUSPENDED'"
                           variant="soft-success"
                           size="sm"
+                          class="btn-icon"
+                          :title="$t('team.actions.reactivate')"
+                          :aria-label="$t('team.actions.reactivate')"
                           @click="reactivate(member)"
                         >
-                          {{ $t('team.actions.reactivate') }}
+                          <i class="ri-play-circle-line align-bottom"></i>
                         </BButton>
                         <BButton
                           v-else
                           variant="soft-danger"
                           size="sm"
+                          class="btn-icon"
+                          :title="$t('team.actions.suspend')"
+                          :aria-label="$t('team.actions.suspend')"
                           @click="askSuspend(member)"
                         >
-                          {{ $t('team.actions.suspend') }}
+                          <i class="ri-pause-circle-line align-bottom"></i>
                         </BButton>
                       </div>
                     </td>

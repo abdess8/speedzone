@@ -21,11 +21,21 @@ defineProps({
               <p class="text-muted mb-0 fs-13">{{ $t('team.roles.subtitle') }}</p>
             </div>
             <div class="hstack gap-2">
-              <Link :href="route('team.index')" class="btn btn-light btn-sm">
-                <i class="ri-arrow-left-line align-bottom me-1"></i> {{ $t('team.roles.back') }}
+              <Link
+                :href="route('team.index')"
+                class="btn btn-light btn-sm btn-icon"
+                :title="$t('team.roles.back')"
+                :aria-label="$t('team.roles.back')"
+              >
+                <i class="ri-arrow-left-line align-bottom"></i>
               </Link>
-              <Link :href="route('team.roles.create')" class="btn btn-success btn-sm">
-                <i class="ri-add-line align-bottom me-1"></i> {{ $t('team.roles.add') }}
+              <Link
+                :href="route('team.roles.create')"
+                class="btn btn-success btn-sm btn-icon"
+                :title="$t('team.roles.add')"
+                :aria-label="$t('team.roles.add')"
+              >
+                <i class="ri-add-line align-bottom"></i>
               </Link>
             </div>
           </BCardHeader>

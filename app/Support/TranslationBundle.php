@@ -58,6 +58,7 @@ final class TranslationBundle
         'dashboard',
         'order_statuses',
         'payment_methods',
+        'api_docs',
     ];
 
     /**

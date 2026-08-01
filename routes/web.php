@@ -364,7 +364,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->middleware('permission:support.read.all|support.read.own|support.manage');
 
     Route::get('api-integrations', [ApiIntegrationController::class, 'index'])
-        ->middleware('permission:partners.read')
+        ->middleware('permission:orders.create')
         ->name('api-integrations.index');
 
     Route::controller(VelzonRoutesController::class)->group(function () {

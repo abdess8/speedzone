@@ -288,7 +288,7 @@ export const menuItems = [
         key: 'api-integrations',
         labelKey: 'sidebar.settings.api_integrations',
         route: 'api-integrations.index',
-        permissions: ['partners.read'],
+        permissions: ['orders.create'],
       },
     ],
   },

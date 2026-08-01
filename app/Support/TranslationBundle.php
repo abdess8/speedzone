@@ -60,6 +60,7 @@ final class TranslationBundle
         'order_statuses',
         'payment_methods',
         'api_docs',
+        'chatbot',
     ];
 
     /**

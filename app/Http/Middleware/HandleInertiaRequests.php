@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Enums\UserStatus;
 use App\Models\Store;
 use App\Services\AlertService;
+use App\Services\Chatbot\ChatbotService;
 use App\Support\StoreContext;
 use App\Support\TranslationBundle;
 use Illuminate\Http\Request;
@@ -65,6 +66,12 @@ class HandleInertiaRequests extends Middleware
                 'unread_count' => fn () => (int) ($request->user()?->unreadNotifications()->count() ?? 0),
             ],
             'store' => fn () => $this->resolveStoreContext($request),
+            // Lets the floating assistant stay out of the DOM entirely when the
+            // feature is off or no API key is configured, rather than offering
+            // a launcher whose every message would fail.
+            'chatbot' => fn () => [
+                'enabled' => app(ChatbotService::class)->isEnabled(),
+            ],
             // Not `alerts`: the management screen already ships a prop by that
             // name, and a page prop shadows a shared one.
             'announcements' => fn () => $this->resolveAlerts($request),

@@ -5,9 +5,11 @@ import Layout from '@/Layouts/main.vue';
 import DesktopDashboard from '@/Components/Dashboard/desktop/DesktopDashboard.vue';
 import MobileDashboard from '@/Components/Dashboard/mobile/MobileDashboard.vue';
 import { useIsMobile } from '@/composables/useMediaQuery';
+import { useChatbotBus } from '@/composables/useChatbotBus';
 import { fetchDashboard, isCancelled } from '@/services/DashboardService';
 
 const { t } = useI18n();
+const { onDataChanged } = useChatbotBus();
 
 /**
  * The page owns the data and the period; the two views own their markup.
@@ -93,6 +95,10 @@ watch(customRange, (value) => {
     loadDashboard();
   }
 });
+
+// The assistant can change an order's status from anywhere on the page, and the
+// KPIs would otherwise keep showing the figures from before it did.
+onDataChanged(loadDashboard);
 
 onMounted(loadDashboard);
 </script>

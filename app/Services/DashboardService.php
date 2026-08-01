@@ -65,20 +65,45 @@ class DashboardService
     }
 
     /**
+     * Cache-busting stamp, per user. See {@see self::markStaleFor()}.
+     */
+    private const FRESHNESS_KEY = 'dashboard:freshness:%d';
+
+    /**
      * @return array<string, mixed>
      */
     public function get(User $user, DashboardDateRange $range): array
     {
         $cacheKey = sprintf(
-            'dashboard:%d:%s:%s',
+            'dashboard:%d:%s:%s:%s',
             $user->id,
             app()->getLocale(),
             $range->cacheKeySuffix(),
+            Cache::get(sprintf(self::FRESHNESS_KEY, $user->id), '0'),
         );
 
         $ttl = (int) config('performance.dashboard_cache_ttl', 300);
 
         return Cache::remember($cacheKey, $ttl, fn () => $this->build($user, $range));
+    }
+
+    /**
+     * Force this user's next dashboard read to be recomputed.
+     *
+     * The payload is cached for minutes at a time, which is right for a screen
+     * someone leaves open — and wrong the instant that same person changes an
+     * order themselves and watches the figures not move. Rather than dropping
+     * the TTL for everybody, or hunting every period/locale key this user might
+     * hold, the stamp is folded into the key: bumping it retires their whole
+     * set at once and leaves every other user's cache alone.
+     */
+    public static function markStaleFor(User $user): void
+    {
+        Cache::put(
+            sprintf(self::FRESHNESS_KEY, $user->id),
+            (string) now()->getTimestampMs(),
+            now()->addDay(),
+        );
     }
 
     /**

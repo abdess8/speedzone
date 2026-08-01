@@ -34,6 +34,15 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
+        // Each assistant turn can cost several OpenAI round-trips, so it gets a
+        // tighter budget than the rest of the API — per user, never per IP, so
+        // one office cannot exhaust another's quota.
+        RateLimiter::for('chatbot', function (Request $request) {
+            $perMinute = (int) config('ai.chatbot.rate_limit', 20);
+
+            return Limit::perMinute($perMinute)->by('chatbot:'.($request->user()?->id ?: $request->ip()));
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

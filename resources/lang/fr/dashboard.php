@@ -134,6 +134,61 @@ return [
     'unknown' => 'Inconnu',
 
     /*
+     * Écran bureau. Le résumé du haut ne pose que quatre questions — combien
+     * reste-t-il à encaisser, où en sont les commandes, quel est le rythme
+     * récent, que faut-il traiter — et tout le reste attend derrière le bouton
+     * « détails ». D'où un vocabulaire plus court que celui des indicateurs.
+     */
+    'desktop' => [
+        'title' => 'Tableau de bord',
+        'cash_headline' => 'Espèces à encaisser',
+        'refresh' => 'Actualiser',
+        'currency' => 'MAD',
+
+        'hero' => [
+            'delivered' => 'Livrées',
+            'in_transit' => 'En transit',
+            'returns' => 'Retours',
+        ],
+
+        'status' => [
+            'total' => 'Commandes sur la période',
+            'others' => 'Autres statuts',
+        ],
+
+        'success' => [
+            'label' => 'Taux de réussite livraison',
+        ],
+
+        'collected' => [
+            'label' => 'COD encaissé',
+            'caption' => 'sur :total attendus',
+        ],
+
+        'volume' => [
+            'title' => 'Volume de commandes',
+            'caption' => '7 derniers jours',
+            'footer_label' => 'Commandes livrées',
+            'footer_caption' => 'Sur la période',
+        ],
+
+        'tasks' => [
+            'title' => 'À traiter',
+            'pending_pickup' => 'En attente de ramassage',
+            'failed' => 'Livraisons échouées',
+            'transfers' => 'Transferts en attente',
+            'at_agency' => 'Colis en agence',
+            'empty' => 'Rien à traiter, tout est à jour.',
+        ],
+
+        'details' => [
+            'show' => 'Afficher les détails',
+            'hide' => 'Masquer les détails',
+            'caption' => 'Tous les indicateurs, graphiques et tableaux détaillés',
+        ],
+    ],
+
+    /*
      * Écran mobile. Le tableau de bord bureau empile 23 indicateurs et 8
      * graphiques : sur un téléphone cela devient un mur à faire défiler. La
      * version mobile ne garde que ce qui se lit d'un coup d'œil et ce sur quoi

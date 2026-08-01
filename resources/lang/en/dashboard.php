@@ -134,6 +134,61 @@ return [
     'unknown' => 'Unknown',
 
     /*
+     * Desktop screen. The summary at the top asks only four questions — how
+     * much is still owed, where the orders sit, what the recent rhythm is,
+     * what needs clearing — and everything else waits behind the details
+     * toggle. Hence a shorter vocabulary than the metric list's.
+     */
+    'desktop' => [
+        'title' => 'Dashboard',
+        'cash_headline' => 'Cash to collect',
+        'refresh' => 'Refresh',
+        'currency' => 'MAD',
+
+        'hero' => [
+            'delivered' => 'Delivered',
+            'in_transit' => 'In transit',
+            'returns' => 'Returns',
+        ],
+
+        'status' => [
+            'total' => 'Orders in period',
+            'others' => 'Other statuses',
+        ],
+
+        'success' => [
+            'label' => 'Delivery success rate',
+        ],
+
+        'collected' => [
+            'label' => 'COD collected',
+            'caption' => 'of :total expected',
+        ],
+
+        'volume' => [
+            'title' => 'Order volume',
+            'caption' => 'Last 7 days',
+            'footer_label' => 'Delivered orders',
+            'footer_caption' => 'In this period',
+        ],
+
+        'tasks' => [
+            'title' => 'Needs attention',
+            'pending_pickup' => 'Waiting for pickup',
+            'failed' => 'Failed deliveries',
+            'transfers' => 'Pending transfers',
+            'at_agency' => 'Parcels at agency',
+            'empty' => 'Nothing to handle, you are all caught up.',
+        ],
+
+        'details' => [
+            'show' => 'Show details',
+            'hide' => 'Hide details',
+            'caption' => 'Every metric, chart and detailed table',
+        ],
+    ],
+
+    /*
      * Mobile screen. The desktop dashboard stacks 23 metrics and 8 charts,
      * which on a phone is simply a wall to scroll past. The mobile version
      * keeps only what reads at a glance and what can be acted on, so it needs

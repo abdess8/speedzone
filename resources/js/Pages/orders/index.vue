@@ -303,20 +303,22 @@ onMounted(() => {
           <Link
             v-if="can.create"
             :href="route('orders.import')"
-            class="btn btn-soft-primary btn-icon"
+            class="btn btn-soft-primary text-nowrap"
             :title="$t('orders.import.menu')"
             :aria-label="$t('orders.import.menu')"
           >
             <i class="ri-file-upload-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('orders.import.menu') }}</span>
           </Link>
           <Link
             v-if="can.create"
             :href="route('orders.create')"
-            class="btn btn-success btn-icon"
+            class="btn btn-success text-nowrap"
             :title="$t('orders.new_order')"
             :aria-label="$t('orders.new_order')"
           >
             <i class="ri-add-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('orders.new_order') }}</span>
           </Link>
         </template>
 

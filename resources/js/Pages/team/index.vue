@@ -55,20 +55,22 @@ const lastActivityLabel = (member) => {
               <Link
                 v-if="can.manage_roles"
                 :href="route('team.roles.index')"
-                class="btn btn-light btn-sm btn-icon"
+                class="btn btn-light btn-sm text-nowrap"
                 :title="$t('team.manage_roles')"
                 :aria-label="$t('team.manage_roles')"
               >
                 <i class="ri-shield-user-line align-bottom"></i>
+                <span class="d-none d-sm-inline ms-1">{{ $t('team.manage_roles') }}</span>
               </Link>
               <Link
                 v-if="can.create"
                 :href="route('team.create')"
-                class="btn btn-success btn-sm btn-icon"
+                class="btn btn-success btn-sm text-nowrap"
                 :title="$t('team.add')"
                 :aria-label="$t('team.add')"
               >
                 <i class="ri-user-add-line align-bottom"></i>
+                <span class="d-none d-sm-inline ms-1">{{ $t('team.add') }}</span>
               </Link>
             </div>
           </BCardHeader>
@@ -136,23 +138,25 @@ const lastActivityLabel = (member) => {
                           v-if="member.status === 'SUSPENDED'"
                           variant="soft-success"
                           size="sm"
-                          class="btn-icon"
+                          class="text-nowrap"
                           :title="$t('team.actions.reactivate')"
                           :aria-label="$t('team.actions.reactivate')"
                           @click="reactivate(member)"
                         >
                           <i class="ri-play-circle-line align-bottom"></i>
+                          <span class="d-none d-sm-inline ms-1">{{ $t('team.actions.reactivate') }}</span>
                         </BButton>
                         <BButton
                           v-else
                           variant="soft-danger"
                           size="sm"
-                          class="btn-icon"
+                          class="text-nowrap"
                           :title="$t('team.actions.suspend')"
                           :aria-label="$t('team.actions.suspend')"
                           @click="askSuspend(member)"
                         >
                           <i class="ri-pause-circle-line align-bottom"></i>
+                          <span class="d-none d-sm-inline ms-1">{{ $t('team.actions.suspend') }}</span>
                         </BButton>
                       </div>
                     </td>

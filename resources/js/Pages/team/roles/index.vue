@@ -23,19 +23,21 @@ defineProps({
             <div class="hstack gap-2">
               <Link
                 :href="route('team.index')"
-                class="btn btn-light btn-sm btn-icon"
+                class="btn btn-light btn-sm text-nowrap"
                 :title="$t('team.roles.back')"
                 :aria-label="$t('team.roles.back')"
               >
                 <i class="ri-arrow-left-line align-bottom"></i>
+                <span class="d-none d-sm-inline ms-1">{{ $t('team.roles.back') }}</span>
               </Link>
               <Link
                 :href="route('team.roles.create')"
-                class="btn btn-success btn-sm btn-icon"
+                class="btn btn-success btn-sm text-nowrap"
                 :title="$t('team.roles.add')"
                 :aria-label="$t('team.roles.add')"
               >
                 <i class="ri-add-line align-bottom"></i>
+                <span class="d-none d-sm-inline ms-1">{{ $t('team.roles.add') }}</span>
               </Link>
             </div>
           </BCardHeader>

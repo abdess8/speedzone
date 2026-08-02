@@ -1,0 +1,45 @@
+{
+  "key": "team-member",
+  "route": "team.index",
+  "steps": [
+    { "id": "welcome", "kind": "welcome" },
+    {
+      "id": "roles",
+      "target": "[data-guide=\"team-roles\"]",
+      "placement": "bottom",
+      "padding": 10
+    },
+    {
+      "id": "create",
+      "target": "[data-guide=\"team-create\"]",
+      "placement": "bottom",
+      "padding": 10,
+      "require": { "signal": "app.route", "equals": "team.create" },
+      "autoAdvance": true
+    },
+    {
+      "id": "identity",
+      "target": "[data-guide=\"team-identity\"]",
+      "placement": "right"
+    },
+    {
+      "id": "access",
+      "target": "[data-guide=\"team-access\"]",
+      "placement": "right"
+    },
+    {
+      "id": "security",
+      "target": "[data-guide=\"team-security\"]",
+      "placement": "right"
+    },
+    {
+      "id": "submit",
+      "target": "[data-guide=\"team-submit\"]",
+      "placement": "top",
+      "padding": 10,
+      "require": { "signal": "app.route", "equals": "team.index" },
+      "autoAdvance": true
+    },
+    { "id": "done", "kind": "finish" }
+  ]
+}

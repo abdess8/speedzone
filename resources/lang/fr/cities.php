@@ -1,0 +1,47 @@
+<?php
+
+return [
+    'title' => 'Villes',
+    'list_title' => 'Liste des villes',
+    'new_city' => 'Nouvelle ville',
+    'create_title' => 'Créer une ville',
+    'edit_title' => 'Modifier :name',
+    'create_button' => 'Créer la ville',
+    'filters' => [
+        'search_placeholder' => 'Nom, code ou région…',
+    ],
+    'table' => [
+        'name' => 'Nom',
+        'code' => 'Code',
+        'region' => 'Région',
+        'sectors' => 'Secteurs',
+    ],
+    'show' => [
+        'info' => 'Informations ville',
+        'total_sectors' => 'Total secteurs',
+        'active_sectors' => ':count actif(s)',
+        'created' => 'Créé le',
+        'updated' => 'Dernière mise à jour',
+        'sectors_in' => 'Secteurs dans :name',
+        'add_sector' => 'Ajouter un secteur',
+        'no_sectors' => 'Aucun secteur pour cette ville.',
+        'add_first_sector' => 'Ajouter le premier secteur',
+        'sectors_count' => ':count secteur|:count secteurs',
+        'assigned_drivers' => 'Livreurs affectés à :name',
+        'driver' => 'Livreur',
+        'assigned_sectors' => 'Secteurs assignés',
+        'no_sectors_assigned' => 'Aucun secteur assigné',
+        'no_drivers' => 'Aucun livreur affecté à cette ville.',
+    ],
+    'form' => [
+        'info' => 'Informations ville',
+        'name_placeholder' => 'ex. Casablanca',
+        'code_placeholder' => 'ex. CASA',
+        'region_placeholder' => 'ex. Casablanca-Settat',
+    ],
+    'delete_confirm_title' => 'Supprimer cette ville ?',
+    'delete_confirm_text' => ':name sera supprimée. Les villes avec des secteurs actifs ne peuvent pas être supprimées.',
+    'sector_delete_confirm_title' => 'Supprimer ce secteur ?',
+    'sector_delete_confirm_text' => ':name sera supprimé de :city.',
+    'empty' => 'Aucune ville trouvée.',
+];

@@ -35,7 +35,7 @@ export default {
                                         <div class="toast-header">
                                             <img src="@assets/images/logo-sm.png" class="rounded me-2" alt="..."
                                                 height="20" />
-                                            <span class="fw-semibold me-auto">Velzon</span>
+                                            <span class="fw-semibold me-auto">SpeedZone Express</span>
                                             <small>06 mins ago</small>
                                             <button type="button" class="btn-close" data-bs-dismiss="toast"
                                                 aria-label="Close"></button>
@@ -57,7 +57,7 @@ export default {
                                                 <div class="toast-header">
                                                     <img src="@assets/images/logo-sm.png" class="rounded me-2" alt="..."
                                                         height="20" />
-                                                    <span class="fw-semibold me-auto">Velzon</span>
+                                                    <span class="fw-semibold me-auto">SpeedZone Express</span>
                                                     <small>11 mins ago</small>
                                                     <button type="button" class="btn-close" data-bs-dismiss="toast"
                                                         aria-label="Close"></button>
@@ -84,7 +84,7 @@ export default {
                                                 <div class="toast-header">
                                                     <img src="@assets/images/logo-sm.png" class="rounded me-2" alt="..."
                                                         height="20" />
-                                                    <span class="fw-semibold me-auto">Velzon</span>
+                                                    <span class="fw-semibold me-auto">SpeedZone Express</span>
                                                     <small>Just now</small>
                                                     <button type="button" class="btn-close" data-bs-dismiss="toast"
                                                         aria-label="Close"></button>
@@ -97,7 +97,7 @@ export default {
                                                 <div class="toast-header">
                                                     <img src="@assets/images/logo-sm.png" class="rounded me-2" alt="..."
                                                         height="20" />
-                                                    <span class="fw-semibold me-auto">Velzon</span>
+                                                    <span class="fw-semibold me-auto">SpeedZone Express</span>
                                                     <small>2 seconds ago</small>
                                                     <button type="button" class="btn-close" data-bs-dismiss="toast"
                                                         aria-label="Close"></button>
@@ -134,7 +134,7 @@ export default {
                                                     <div class="toast-header">
                                                         <img src="@assets/images/logo-sm.png" class="rounded me-2"
                                                             alt="..." height="20" />
-                                                        <span class="fw-semibold me-auto">Velzon</span>
+                                                        <span class="fw-semibold me-auto">SpeedZone Express</span>
                                                         <small>06 mins ago</small>
                                                         <button type="button" class="btn-close" data-bs-dismiss="toast"
                                                             aria-label="Close"></button>
@@ -163,7 +163,7 @@ export default {
                                                     <div class="toast-header">
                                                         <img src="@assets/images/logo-sm.png" class="rounded me-2"
                                                             alt="..." height="20" />
-                                                        <span class="fw-semibold me-auto">Velzon</span>
+                                                        <span class="fw-semibold me-auto">SpeedZone Express</span>
                                                         <small>11 mins ago</small>
                                                         <button type="button" class="btn-close" data-bs-dismiss="toast"
                                                             aria-label="Close"></button>
@@ -185,7 +185,7 @@ export default {
     &lt;div class=&quot;toast-header&quot;&gt;
         &lt;img src=&quot;assets/images/logo-sm.png&quot; class=&quot;rounded me-2&quot;
             alt=&quot;...&quot; height=&quot;20&quot;&gt;
-        &lt;span class=&quot;fw-semibold me-auto&quot;&gt;Velzon&lt;/span&gt;
+        &lt;span class=&quot;fw-semibold me-auto&quot;&gt;SpeedZone Express&lt;/span&gt;
         &lt;small&gt;06 mins ago&lt;/small&gt;
         &lt;button type=&quot;button&quot; class=&quot;btn-close&quot;
             data-bs-dismiss=&quot;toast&quot; aria-label=&quot;Close&quot;&gt;&lt;/button&gt;
@@ -202,7 +202,7 @@ export default {
         &lt;div class=&quot;toast-header&quot;&gt;
             &lt;img src=&quot;assets/images/logo-sm.png&quot; class=&quot;rounded me-2&quot;
                 alt=&quot;...&quot; height=&quot;20&quot;&gt;
-            &lt;span class=&quot;fw-semibold me-auto&quot;&gt;Velzon&lt;/span&gt;
+            &lt;span class=&quot;fw-semibold me-auto&quot;&gt;SpeedZone Express&lt;/span&gt;
             &lt;small&gt;11 mins ago&lt;/small&gt;
             &lt;button type=&quot;button&quot; class=&quot;btn-close&quot;
                 data-bs-dismiss=&quot;toast&quot; aria-label=&quot;Close&quot;&gt;&lt;/button&gt;
@@ -219,7 +219,7 @@ export default {
     &lt;div class=&quot;toast-header&quot;&gt;
         &lt;img src=&quot;assets/images/logo-sm.png&quot; class=&quot;rounded me-2&quot;
             alt=&quot;...&quot; height=&quot;20&quot;&gt;
-        &lt;span class=&quot;fw-semibold me-auto&quot;&gt;Velzon&lt;/span&gt;
+        &lt;span class=&quot;fw-semibold me-auto&quot;&gt;SpeedZone Express&lt;/span&gt;
         &lt;small&gt;Just now&lt;/small&gt;
         &lt;button type=&quot;button&quot; class=&quot;btn-close&quot;
             data-bs-dismiss=&quot;toast&quot; aria-label=&quot;Close&quot;&gt;&lt;/button&gt;
@@ -238,7 +238,7 @@ export default {
         &lt;div class=&quot;toast-header&quot;&gt;
             &lt;img src=&quot;assets/images/logo-sm.png&quot;
                 class=&quot;rounded me-2&quot; alt=&quot;...&quot; height=&quot;20&quot;&gt;
-            &lt;span class=&quot;fw-semibold me-auto&quot;&gt;Velzon&lt;/span&gt;
+            &lt;span class=&quot;fw-semibold me-auto&quot;&gt;SpeedZone Express&lt;/span&gt;
             &lt;small&gt;06 mins ago&lt;/small&gt;
             &lt;button type=&quot;button&quot; class=&quot;btn-close&quot;
                 data-bs-dismiss=&quot;toast&quot; aria-label=&quot;Close&quot;&gt;&lt;/button&gt;
@@ -258,7 +258,7 @@ export default {
         &lt;div class=&quot;toast-header&quot;&gt;
             &lt;img src=&quot;assets/images/logo-sm.png&quot;
                 class=&quot;rounded me-2&quot; alt=&quot;...&quot; height=&quot;20&quot;&gt;
-            &lt;span class=&quot;fw-semibold me-auto&quot;&gt;Velzon&lt;/span&gt;
+            &lt;span class=&quot;fw-semibold me-auto&quot;&gt;SpeedZone Express&lt;/span&gt;
             &lt;small&gt;11 mins ago&lt;/small&gt;
             &lt;button type=&quot;button&quot; class=&quot;btn-close&quot;
                 data-bs-dismiss=&quot;toast&quot; aria-label=&quot;Close&quot;&gt;&lt;/button&gt;

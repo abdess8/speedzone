@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserStatus;
+use App\Models\Role;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -20,16 +22,30 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $firstName = $this->faker->firstName();
+        $lastName = $this->faker->lastName();
+
         return [
-            'name' => $this->faker->name(),
+            'name' => $firstName . ' ' . $lastName,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
             'email' => $this->faker->unique()->safeEmail(),
             'email_verified_at' => now(),
+            'status' => UserStatus::Active,
             'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'remember_token' => Str::random(10),
             'profile_photo_path' => null,
             'current_team_id' => null,
+            'city_id' => null,
+            'address' => $this->faker->address(),
+            'phone_number' => $this->faker->phoneNumber(),
+            'cin' => strtoupper($this->faker->bothify('??######')),
+            'ice_number' => $this->faker->numerify('###############'),
+            'photo' => null,
+            'attached_files' => null,
+            'role_id' => Role::query()->inRandomOrder()->value('id'),
         ];
     }
 

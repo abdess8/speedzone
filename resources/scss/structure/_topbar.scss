@@ -11,7 +11,6 @@
     background-color: var(--#{$prefix}header-bg);
     transition: all 0.1s ease-out;
     border-bottom: 1px solid var(--#{$prefix}header-border);
-
     &.topbar-shadow {
         box-shadow: $box-shadow;
     }

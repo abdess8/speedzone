@@ -2,6 +2,7 @@
 import { ref, reactive, nextTick } from 'vue';
 import InputError from './InputError.vue';
 import TextInput from './TextInput.vue';
+import BottomSheet from './BottomSheet.vue';
 
 const emit = defineEmits(['confirmed']);
 
@@ -74,7 +75,7 @@ const closeModal = () => {
             <slot />
         </span>
 
-        <BModal v-model="confirmingPassword" :title="title" hide-footer header-class="bg-success-subtle p-3">
+        <BottomSheet :show="confirmingPassword" :title="title" @close="closeModal">
             <p class="text-muted fs-14 mb-3">{{ content }}</p>
             <div class="mb-3">
                 <TextInput
@@ -97,6 +98,6 @@ const closeModal = () => {
                 @click="confirmPassword">{{ button }}</BButton>
             </div>
 
-        </BModal>
+        </BottomSheet>
     </span>
 </template>

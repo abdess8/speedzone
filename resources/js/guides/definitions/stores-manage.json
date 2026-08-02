@@ -1,0 +1,45 @@
+{
+  "key": "stores-manage",
+  "route": "stores.index",
+  "steps": [
+    { "id": "welcome", "kind": "welcome" },
+    {
+      "id": "create",
+      "target": "[data-guide=\"store-create\"]",
+      "placement": "bottom",
+      "padding": 10,
+      "require": { "signal": "app.route", "equals": "stores.create" },
+      "autoAdvance": true
+    },
+    {
+      "id": "identity",
+      "target": "[data-guide=\"store-identity\"]",
+      "placement": "right"
+    },
+    {
+      "id": "branding",
+      "target": "[data-guide=\"store-branding\"]",
+      "placement": "right"
+    },
+    {
+      "id": "contact",
+      "target": "[data-guide=\"store-contact\"]",
+      "placement": "right"
+    },
+    {
+      "id": "submit",
+      "target": "[data-guide=\"store-submit\"]",
+      "placement": "top",
+      "padding": 10,
+      "require": { "signal": "app.route", "equals": "stores.index" },
+      "autoAdvance": true
+    },
+    {
+      "id": "switcher",
+      "target": "[data-guide=\"store-switcher\"]",
+      "placement": "bottom",
+      "padding": 6
+    },
+    { "id": "done", "kind": "finish" }
+  ]
+}

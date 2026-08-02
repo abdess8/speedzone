@@ -24,7 +24,7 @@ const unassigned = [{
 },
 {
     board_id: 2,
-    title: "Velzon - Admin Layout Design",
+    title: "SpeedZone Express - Admin Layout Design",
     description: "The dashboard is the front page of the Administration UI.",
     features: ["Layout", "Admin", "Dashboard"],
     users: [avatar7, avatar6, avatar1],
@@ -140,7 +140,7 @@ const newData = [{
 const allTask = [{
     id: 1,
     taskId: "#VLZ632",
-    project: "Velzon - v1.0.0",
+    project: "SpeedZone Express - v1.0.0",
     task: "Error message when placing an orders?",
     creater: "Robert McMahon",
     subItem: [{

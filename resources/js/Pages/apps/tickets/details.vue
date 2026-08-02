@@ -37,7 +37,7 @@ export default {
                                             </h4>
                                             <div class="hstack gap-3 flex-wrap">
                                                 <div class="text-muted"><i
-                                                        class="ri-building-line align-bottom me-1"></i> Themesbrand
+                                                        class="ri-building-line align-bottom me-1"></i> SpeedZone Express
                                                 </div>
                                                 <div class="vr"></div>
                                                 <div class="text-muted">Create Date : <span class="fw-medium">20 Dec,
@@ -244,11 +244,11 @@ app.appendChild(Wrapper.generate(&quot;button&quot;, &quot;Load&quot;).click(() 
                                     </tr>
                                     <tr>
                                         <td class="fw-medium">Client</td>
-                                        <td>Themesbrand</td>
+                                        <td>SpeedZone Express</td>
                                     </tr>
                                     <tr>
                                         <td class="fw-medium">Project</td>
-                                        <td>Velzon - Admin Dashboard</td>
+                                        <td>SpeedZone Express - Admin Dashboard</td>
                                     </tr>
                                     <tr>
                                         <td class="fw-medium">Assigned To:</td>
@@ -338,7 +338,7 @@ app.appendChild(Wrapper.generate(&quot;button&quot;, &quot;Load&quot;).click(() 
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="mb-1">
-                                    <BLink href="javascript:void(0);">Velzon-admin.zip</BLink>
+                                    <BLink href="javascript:void(0);">SpeedZone Express-admin.zip</BLink>
                                 </h6>
                                 <small class="text-muted">3.2 MB</small>
                             </div>
@@ -357,7 +357,7 @@ app.appendChild(Wrapper.generate(&quot;button&quot;, &quot;Load&quot;).click(() 
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="mb-1">
-                                    <BLink href="javascript:void(0);">Velzon-admin.ppt</BLink>
+                                    <BLink href="javascript:void(0);">SpeedZone Express-admin.ppt</BLink>
                                 </h6>
                                 <small class="text-muted">4.5 MB</small>
                             </div>

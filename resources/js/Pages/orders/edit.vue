@@ -1,0 +1,51 @@
+<script setup>
+import { Link, useForm } from "@inertiajs/vue3";
+import { useI18n } from "vue-i18n";
+import Layout from "@/Layouts/main.vue";
+import PageHeader from "@/Components/page-header.vue";
+import OrderForm from "./Partials/OrderForm.vue";
+
+const { t } = useI18n();
+
+const props = defineProps({
+  order: { type: Object, required: true },
+  cities: { type: Array, default: () => [] },
+  sectors: { type: Array, default: () => [] },
+  paymentMethods: { type: Array, default: () => [] },
+});
+
+const form = useForm({
+  customer_first_name: props.order.customer.first_name,
+  customer_last_name: props.order.customer.last_name,
+  customer_phone: props.order.customer.phone,
+  customer_address: props.order.customer.address,
+  city_id: props.order.city_id,
+  sector_id: props.order.sector_id,
+  payment_method: props.order.payment_method,
+  order_amount: props.order.order_amount ?? "",
+  order_value: props.order.order_value ?? "",
+  delivery_price: props.order.delivery_price,
+  notes: props.order.notes,
+  is_fragile: props.order.is_fragile,
+  can_be_opened: props.order.can_be_opened,
+  option_exchange: props.order.option_exchange,
+});
+
+const submit = () => form.put(route("orders.update", props.order.id));
+</script>
+
+<template>
+  <Layout>
+    <PageHeader :title="t('orders.edit_title', { tracking: order.tracking_number })" :pageTitle="$t('orders.page_title')" />
+    <form @submit.prevent="submit">
+      <OrderForm :form="form" :cities="cities" :sectors="sectors" :payment-methods="paymentMethods" />
+
+      <div class="hstack gap-2 justify-content-end mb-4">
+        <Link :href="route('orders.show', order.id)" class="btn btn-light">{{ $t('common.cancel') }}</Link>
+        <BButton type="submit" variant="primary" :disabled="form.processing">
+          <i class="ri-save-line align-bottom me-1"></i> {{ $t('orders.save_changes') }}
+        </BButton>
+      </div>
+    </form>
+  </Layout>
+</template>

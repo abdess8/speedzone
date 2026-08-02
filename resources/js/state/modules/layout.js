@@ -1,16 +1,31 @@
-const state = {
-  layoutType: 'semibox',
+export const STORAGE_KEY = 'theme-customizer';
+
+export const defaultState = {
+  layoutType: 'vertical',
   layoutWidth: 'fluid',
   sidebarSize: 'lg',
   topbar: 'light',
   mode: 'light',
   position: 'fixed',
   sidebarView: 'default',
-  sidebarColor: 'light',
+  sidebarColor: 'dark',
   sidebarImage: 'none',
   preloader: 'disable',
   visibility: 'show'
 };
+
+function getSavedState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return {};
+    const parsed = JSON.parse(saved);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+const state = { ...defaultState, ...getSavedState() };
 
 const mutations = {
   CHANGE_LAYOUT(state, layoutType) {

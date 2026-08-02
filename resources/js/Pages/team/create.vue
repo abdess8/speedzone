@@ -38,7 +38,12 @@ const submit = () => {
         <BCol xl="8" class="mx-auto">
           <div class="hstack gap-2 justify-content-end mb-4">
             <Link :href="route('team.index')" class="btn btn-light">{{ $t('common.cancel') }}</Link>
-            <BButton type="submit" variant="success" :disabled="form.processing">
+            <BButton
+              data-guide="team-submit"
+              type="submit"
+              variant="success"
+              :disabled="form.processing"
+            >
               <i class="ri-save-line align-bottom me-1"></i> {{ $t('common.create') }}
             </BButton>
           </div>

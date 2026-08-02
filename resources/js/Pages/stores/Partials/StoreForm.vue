@@ -23,7 +23,7 @@ const onLogoSelected = (event) => {
 <template>
   <BRow>
     <BCol xl="8" class="mx-auto">
-      <BCard no-body>
+      <BCard data-guide="store-identity" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('stores.form.identity') }}</h5>
         </BCardHeader>
@@ -86,7 +86,7 @@ const onLogoSelected = (event) => {
         </BCardBody>
       </BCard>
 
-      <BCard no-body>
+      <BCard data-guide="store-branding" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('stores.form.branding') }}</h5>
           <p class="text-muted mb-0 fs-13 mt-1">{{ $t('stores.form.branding_hint') }}</p>
@@ -113,7 +113,7 @@ const onLogoSelected = (event) => {
         </BCardBody>
       </BCard>
 
-      <BCard no-body>
+      <BCard data-guide="store-contact" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('stores.form.contact') }}</h5>
         </BCardHeader>

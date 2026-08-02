@@ -86,9 +86,15 @@ export default {
                 <h5 class="card-title mb-0">{{ $t('roles.list_title') }}</h5>
               </BCol>
               <BCol sm="auto">
-                <Link :href="route('roles.create')" class="btn btn-success add-btn">
-                  <i class="ri-add-line align-bottom me-1"></i> {{ $t('roles.create') }}
-                </Link>
+                <div class="hstack gap-2 justify-content-end">
+                  <Link :href="route('roles.guides.edit')" class="btn btn-light">
+                    <i class="ri-graduation-cap-line align-bottom me-1"></i>
+                    {{ $t('guides.access.title') }}
+                  </Link>
+                  <Link :href="route('roles.create')" class="btn btn-success add-btn">
+                    <i class="ri-add-line align-bottom me-1"></i> {{ $t('roles.create') }}
+                  </Link>
+                </div>
               </BCol>
             </BRow>
           </BCardHeader>

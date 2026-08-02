@@ -1,0 +1,35 @@
+{
+  "key": "orders-create",
+  "route": "orders.create",
+  "steps": [
+    { "id": "welcome", "kind": "welcome" },
+    {
+      "id": "customer",
+      "target": "[data-guide=\"order-customer\"]",
+      "placement": "right"
+    },
+    {
+      "id": "package",
+      "target": "[data-guide=\"order-package\"]",
+      "placement": "right"
+    },
+    {
+      "id": "payment",
+      "target": "[data-guide=\"order-payment\"]",
+      "placement": "left"
+    },
+    {
+      "id": "submit",
+      "target": "[data-guide=\"order-submit\"]",
+      "placement": "top",
+      "padding": 10,
+      "require": { "signal": "orders.created" },
+      "autoAdvance": true
+    },
+    {
+      "id": "done",
+      "kind": "finish",
+      "cta": { "route": "orders.index" }
+    }
+  ]
+}

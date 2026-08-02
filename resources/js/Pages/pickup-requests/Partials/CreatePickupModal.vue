@@ -4,8 +4,10 @@ import { useForm } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Swal from "sweetalert2";
 import BottomSheet from "@/Components/BottomSheet.vue";
+import { useGuideSignals } from "@/composables/useGuideSignals";
 
 const { t } = useI18n();
+const guide = useGuideSignals();
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -50,6 +52,12 @@ const toggleAll = () => {
 };
 
 const canProceedStep1 = computed(() => selectedOrderIds.value.length > 0);
+
+// The guide gates its steps on the wizard's own progress rather than on clicks,
+// so a reader who selects orders from the "select all" box is treated exactly
+// like one who ticked them row by row.
+guide.mirror("pickups.step", step);
+guide.mirror("pickups.has_selection", canProceedStep1);
 const canProceedStep2 = computed(() => !!form.pickup_address);
 const hasAddresses = computed(() => props.pickupAddresses.length > 0);
 
@@ -99,7 +107,7 @@ const submit = () => {
       </ul>
     </div>
 
-    <div v-show="step === 1">
+    <div v-show="step === 1" data-guide="pickup-orders">
       <div v-if="eligibleOrders.length === 0" class="alert alert-warning">
         {{ $t('pickups.modal.no_eligible_orders') }}
       </div>
@@ -138,7 +146,7 @@ const submit = () => {
       </div>
     </div>
 
-    <div v-show="step === 2">
+    <div v-show="step === 2" data-guide="pickup-address">
       <div v-if="!hasAddresses" class="alert alert-warning">
         {{ $t('pickups.modal.no_addresses') }}
       </div>
@@ -158,7 +166,7 @@ const submit = () => {
       <div v-if="form.errors.pickup_address" class="text-danger mt-2">{{ form.errors.pickup_address }}</div>
     </div>
 
-    <div v-show="step === 3">
+    <div v-show="step === 3" data-guide="pickup-summary">
       <div class="mb-3">
         <label class="form-label">{{ $t('pickups.modal.notes_optional') }}</label>
         <textarea v-model="form.notes" class="form-control" rows="3" :placeholder="$t('pickups.form.notes_placeholder')"></textarea>
@@ -194,6 +202,7 @@ const submit = () => {
         <button type="button" class="btn btn-light" @click="close">{{ $t('common.cancel') }}</button>
         <button
           v-if="step < 3"
+          data-guide="pickup-next"
           type="button"
           class="btn btn-primary"
           :disabled="(step === 1 && !canProceedStep1) || (step === 2 && !canProceedStep2)"
@@ -201,7 +210,14 @@ const submit = () => {
         >
           {{ $t('pickups.modal.next') }}
         </button>
-        <button v-else type="button" class="btn btn-success" :disabled="form.processing" @click="submit">
+        <button
+          v-else
+          data-guide="pickup-submit"
+          type="button"
+          class="btn btn-success"
+          :disabled="form.processing"
+          @click="submit"
+        >
           <span v-if="form.processing" class="spinner-border spinner-border-sm me-1"></span>
           {{ $t('pickups.create') }}
         </button>

@@ -39,6 +39,7 @@ return [
     'driver_finance' => 'Mes gains',
     'support' => 'Support',
     'support_center' => 'Centre de support',
+    'guides' => 'Guide d\'utilisation',
     'my_shop' => 'Ma boutique',
     'stores' => 'Mes boutiques',
     'team' => 'Mon équipe',

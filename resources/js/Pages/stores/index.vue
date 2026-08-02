@@ -30,7 +30,12 @@ const initials = (name) =>
         <BCard no-body>
           <BCardHeader class="d-flex align-items-center justify-content-between">
             <h5 class="card-title mb-0">{{ $t('stores.list_title') }}</h5>
-            <Link v-if="can.create" :href="route('stores.create')" class="btn btn-success btn-sm">
+            <Link
+              v-if="can.create"
+              data-guide="store-create"
+              :href="route('stores.create')"
+              class="btn btn-success btn-sm"
+            >
               <i class="ri-add-line align-bottom me-1"></i> {{ $t('stores.create_button') }}
             </Link>
           </BCardHeader>

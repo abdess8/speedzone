@@ -23,6 +23,7 @@ const initials = (name) =>
 <template>
   <BDropdown
     v-if="visible"
+    data-guide="store-switcher"
     variant="link"
     class="header-item store-switcher"
     toggle-class="arrow-none px-2"

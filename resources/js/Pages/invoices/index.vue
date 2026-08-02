@@ -131,7 +131,12 @@ onMounted(() => {
     <PageHeader :title="$t('invoices.title')" :pageTitle="$t('invoices.page_title')" />
 
     <BCard no-body>
-      <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
+      <FilterPanel
+        guide="invoices-filters"
+        :active-count="activeFilterCount"
+        @apply="applyFilters"
+        @reset="resetFilters"
+      >
         <template #title>
           <h5 class="card-title mb-0">{{ $t('invoices.list_title') }}</h5>
         </template>
@@ -168,7 +173,7 @@ onMounted(() => {
         </BCol>
       </FilterPanel>
 
-      <BCardBody>
+      <BCardBody data-guide="invoices-table">
         <div class="d-lg-none">
           <EntityCard
             v-for="inv in rows"

@@ -12,6 +12,7 @@ import FilterPanel from "@/Components/FilterPanel.vue";
 import StatusPills from "@/Components/StatusPills.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
+import { useGuideSignals } from "@/composables/useGuideSignals";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -35,6 +36,8 @@ const filters = reactive({
 
 const perPage = ref(props.filters.per_page ?? 15);
 const showCreateModal = ref(false);
+
+useGuideSignals().mirror("pickups.create_open", showCreateModal);
 const showQrScanner = ref(false);
 /** Row whose mobile detail sheet is open. */
 const selectedPickup = ref(null);
@@ -133,7 +136,13 @@ onMounted(() => {
             <i class="ri-qr-scan-2-line align-bottom"></i>
             <span class="d-none d-sm-inline ms-1">{{ $t('pickups.qr_scan') }}</span>
           </button>
-          <button v-if="can.create" type="button" class="btn btn-success" @click="showCreateModal = true">
+          <button
+            v-if="can.create"
+            data-guide="pickup-create-open"
+            type="button"
+            class="btn btn-success"
+            @click="showCreateModal = true"
+          >
             <i class="ri-add-line align-bottom"></i>
             <span class="d-none d-sm-inline ms-1">{{ $t('pickups.create') }}</span>
           </button>

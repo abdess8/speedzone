@@ -1,0 +1,46 @@
+{
+  "key": "pickups-create",
+  "route": "pickup-requests.index",
+  "steps": [
+    { "id": "welcome", "kind": "welcome" },
+    {
+      "id": "open",
+      "target": "[data-guide=\"pickup-create-open\"]",
+      "placement": "bottom",
+      "padding": 10,
+      "require": { "signal": "pickups.create_open" },
+      "autoAdvance": true
+    },
+    {
+      "id": "orders",
+      "target": "[data-guide=\"pickup-orders\"]",
+      "placement": "top",
+      "require": { "signal": "pickups.has_selection" }
+    },
+    {
+      "id": "address",
+      "target": "[data-guide=\"pickup-address\"]",
+      "pendingTarget": "[data-guide=\"pickup-next\"]",
+      "placement": "top",
+      "require": { "signal": "pickups.step", "equals": 2 },
+      "autoAdvance": true
+    },
+    {
+      "id": "summary",
+      "target": "[data-guide=\"pickup-summary\"]",
+      "pendingTarget": "[data-guide=\"pickup-next\"]",
+      "placement": "top",
+      "require": { "signal": "pickups.step", "equals": 3 },
+      "autoAdvance": true
+    },
+    {
+      "id": "submit",
+      "target": "[data-guide=\"pickup-submit\"]",
+      "placement": "top",
+      "padding": 10,
+      "require": { "signal": "app.route", "equals": "pickup-requests.show" },
+      "autoAdvance": true
+    },
+    { "id": "done", "kind": "finish" }
+  ]
+}

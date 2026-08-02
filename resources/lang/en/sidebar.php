@@ -39,6 +39,7 @@ return [
     'driver_finance' => 'My Earnings',
     'support' => 'Support',
     'support_center' => 'Support Center',
+    'guides' => 'User guide',
     'my_shop' => 'My shop',
     'stores' => 'My stores',
     'team' => 'My team',

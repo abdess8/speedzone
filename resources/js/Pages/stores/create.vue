@@ -40,7 +40,12 @@ const submit = () => {
         <BCol xl="8" class="mx-auto">
           <div class="hstack gap-2 justify-content-end mb-4">
             <Link :href="route('stores.index')" class="btn btn-light">{{ $t('common.cancel') }}</Link>
-            <BButton type="submit" variant="success" :disabled="form.processing">
+            <BButton
+              data-guide="store-submit"
+              type="submit"
+              variant="success"
+              :disabled="form.processing"
+            >
               <i class="ri-save-line align-bottom me-1"></i> {{ $t('stores.create_button') }}
             </BButton>
           </div>

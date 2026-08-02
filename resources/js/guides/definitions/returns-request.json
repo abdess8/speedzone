@@ -1,0 +1,37 @@
+{
+  "key": "returns-request",
+  "route": "returns.index",
+  "steps": [
+    { "id": "welcome", "kind": "welcome" },
+    {
+      "id": "open",
+      "target": "[data-guide=\"return-create-open\"]",
+      "placement": "bottom",
+      "padding": 10,
+      "require": { "signal": "returns.create_open" },
+      "autoAdvance": true
+    },
+    {
+      "id": "order",
+      "target": "[data-guide=\"return-order\"]",
+      "placement": "top",
+      "require": { "signal": "returns.order_selected" },
+      "autoAdvance": true
+    },
+    {
+      "id": "reason",
+      "target": "[data-guide=\"return-reason\"]",
+      "placement": "top",
+      "require": { "signal": "returns.reason_selected" }
+    },
+    {
+      "id": "submit",
+      "target": "[data-guide=\"return-submit\"]",
+      "placement": "top",
+      "padding": 10,
+      "require": { "signal": "app.route", "equals": "returns.show" },
+      "autoAdvance": true
+    },
+    { "id": "done", "kind": "finish" }
+  ]
+}

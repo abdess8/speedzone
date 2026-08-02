@@ -70,7 +70,7 @@ function select(key, value) {
 <template>
   <BRow class="g-4">
     <BCol xl="8">
-      <BCard no-body>
+      <BCard data-guide="import-mapping" no-body>
         <BCardHeader class="d-flex flex-wrap align-items-center gap-2">
           <h5 class="card-title mb-0 flex-grow-1">{{ $t('orders.import.mapping.title') }}</h5>
           <span class="badge bg-primary-subtle text-primary">

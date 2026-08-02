@@ -182,6 +182,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * History with the interactive guides of the Help Center.
+     */
+    public function guideProgress(): HasMany
+    {
+        return $this->hasMany(UserGuideProgress::class);
+    }
+
+    /**
      * Id of the account that owns the data — this user, or the vendor he works
      * for. Every `.own` permission scope resolves through this, which is what
      * lets a team member read his employer's orders without owning them.

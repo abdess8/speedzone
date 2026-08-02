@@ -54,6 +54,7 @@ const lastActivityLabel = (member) => {
             <div class="hstack gap-2">
               <Link
                 v-if="can.manage_roles"
+                data-guide="team-roles"
                 :href="route('team.roles.index')"
                 class="btn btn-light btn-sm text-nowrap"
                 :title="$t('team.manage_roles')"
@@ -64,6 +65,7 @@ const lastActivityLabel = (member) => {
               </Link>
               <Link
                 v-if="can.create"
+                data-guide="team-create"
                 :href="route('team.create')"
                 class="btn btn-success btn-sm text-nowrap"
                 :title="$t('team.add')"

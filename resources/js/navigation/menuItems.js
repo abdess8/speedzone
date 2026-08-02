@@ -242,6 +242,15 @@ export const menuItems = [
     ],
   },
   {
+    key: 'guides',
+    labelKey: 'sidebar.guides',
+    icon: 'ri-graduation-cap-line',
+    href: '/guides',
+    footer: true,
+    // The catalog filters itself per role, so the entry is offered to everyone.
+    permissions: [],
+  },
+  {
     key: 'settings',
     labelKey: 'sidebar.settings.title',
     icon: 'ri-settings-3-line',

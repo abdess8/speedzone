@@ -274,6 +274,11 @@ export default {
               <span class="align-middle">{{ $t('common.chat') }}</span>
             </Link>
 
+            <Link class="dropdown-item" :href="route('guides.index')">
+              <i class="mdi mdi-school-outline text-muted fs-16 align-middle me-1"></i>
+              <span class="align-middle">{{ $t('sidebar.guides') }}</span>
+            </Link>
+
             <div class="dropdown-divider"></div>
 
             <h6 class="dropdown-header">{{ $t('navbar.language') }}</h6>

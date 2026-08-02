@@ -7,6 +7,7 @@ import TwoColumns from "./twocolumn.vue";
 import AlertBanner from "@/Components/AlertBanner.vue";
 import AlertModal from "@/Components/AlertModal.vue";
 import ChatbotWidget from "@/Components/Chatbot/ChatbotWidget.vue";
+import GuideHost from "@/Components/Guide/GuideHost.vue";
 
 export default {
     components: {
@@ -15,7 +16,8 @@ export default {
         TwoColumns,
         AlertBanner,
         AlertModal,
-        ChatbotWidget
+        ChatbotWidget,
+        GuideHost
     },
     data() {
         return {};
@@ -53,5 +55,9 @@ export default {
         <!-- Sibling of every layout variant, like AlertModal: the assistant has
              to be reachable from any screen, in any layout mode. -->
         <ChatbotWidget />
+
+        <!-- Same reason, plus one of its own: a guide outlives the page it
+             started on, so its overlay cannot live inside one. -->
+        <GuideHost />
     </div>
 </template>

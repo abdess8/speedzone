@@ -202,7 +202,7 @@ onMounted(() => {
           </BCardBody>
         </BCard>
 
-        <BCard no-body>
+        <BCard no-body v-if="transfer.orders?.length">
           <BCardHeader><h5 class="card-title mb-0">{{ $t('transfers.show.orders_count', { count: transfer.orders?.length ?? 0 }) }}</h5></BCardHeader>
           <BCardBody>
             <div class="table-responsive">
@@ -232,13 +232,56 @@ onMounted(() => {
                       </span>
                     </td>
                   </tr>
-                  <tr v-if="!(transfer.orders?.length)">
-                    <td colspan="6" class="text-center text-muted py-3">{{ $t('orders.no_orders_linked') }}</td>
+                </tbody>
+              </table>
+            </div>
+          </BCardBody>
+        </BCard>
+
+        <!-- Returns ride the same manifest but travel the delivery leg
+             backwards, so they are listed against their seller, not a customer. -->
+        <BCard no-body v-if="transfer.returns?.length">
+          <BCardHeader>
+            <h5 class="card-title mb-0">
+              {{ $t('transfers.show.returns_count', { count: transfer.returns.length }) }}
+            </h5>
+          </BCardHeader>
+          <BCardBody>
+            <div class="table-responsive">
+              <table class="table align-middle table-nowrap mb-0">
+                <thead class="table-light text-muted">
+                  <tr>
+                    <th>{{ $t('transfers.form.return_reference') }}</th>
+                    <th>{{ $t('orders.table.tracking_number') }}</th>
+                    <th>{{ $t('transfers.form.return_seller') }}</th>
+                    <th>{{ $t('transfers.form.return_reason') }}</th>
+                    <th>{{ $t('common.status') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="orderReturn in transfer.returns" :key="orderReturn.id">
+                    <td>
+                      <Link :href="route('returns.show', orderReturn.id)" class="fw-medium">
+                        {{ orderReturn.reference }}
+                      </Link>
+                    </td>
+                    <td>{{ orderReturn.order?.tracking_number ?? empty() }}</td>
+                    <td>{{ orderReturn.order?.seller?.full_name ?? orderReturn.order?.seller?.name ?? empty() }}</td>
+                    <td>{{ orderReturn.reason_label }}</td>
+                    <td>
+                      <span class="badge" :class="`bg-${orderReturn.status_color}-subtle text-${orderReturn.status_color}`">
+                        {{ orderReturn.status_label }}
+                      </span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </BCardBody>
+        </BCard>
+
+        <BCard no-body v-if="!transfer.orders?.length && !transfer.returns?.length">
+          <BCardBody class="text-center text-muted py-4">{{ $t('orders.no_orders_linked') }}</BCardBody>
         </BCard>
       </BCol>
 

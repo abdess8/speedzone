@@ -10,9 +10,12 @@ use App\Models\Order;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ReturnService;
+use App\Services\ReturnTransitionService;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Validation\ValidationException;
 
 beforeEach(function () {
     $this->seed([
@@ -58,10 +61,11 @@ function returnTestOrder(User $seller, City $city, OrderStatus $status): Order
     ]);
 }
 
-test('driver can create return and advance to depot', function () {
+test('driver opens the return and the hub signs it in', function () {
     $city = returnTestCity();
     $seller = returnTestUser(Role::SELLER);
     $driver = returnTestUser(Role::DRIVER);
+    $hub = returnTestUser(Role::DISPATCHER);
     $order = returnTestOrder($seller, $city, OrderStatus::OUT_FOR_DELIVERY);
 
     $return = app(ReturnService::class)->create(
@@ -77,15 +81,77 @@ test('driver can create return and advance to depot', function () {
         ->and($return->status)->toBe(ReturnStatus::CREATED)
         ->and($order->return_id)->toBe($return->id);
 
-    app(\App\Services\ReturnTransitionService::class)->moveToDepot($return->fresh(), $driver);
+    app(ReturnTransitionService::class)->receiveAtHub($return->fresh(), $hub);
 
     $order->refresh();
     $return->refresh();
 
     expect($order->status)->toBe(OrderStatus::RETURN_IN_PROGRESS)
-        ->and($return->status)->toBe(ReturnStatus::IN_TRANSIT_TO_DEPOT)
+        ->and($return->status)->toBe(ReturnStatus::RECEIVED_AT_HUB)
         ->and($return->statusHistories()->count())->toBeGreaterThan(1);
 });
+
+test('a driver may not sign a return into the hub', function () {
+    $city = returnTestCity();
+    $seller = returnTestUser(Role::SELLER);
+    $driver = returnTestUser(Role::DRIVER);
+    $order = returnTestOrder($seller, $city, OrderStatus::OUT_FOR_DELIVERY);
+
+    $return = app(ReturnService::class)->create(
+        $order,
+        $driver,
+        ReturnInitiatedByRole::DRIVER,
+        ReturnReason::CUSTOMER_REFUSED->value,
+    );
+
+    app(ReturnTransitionService::class)->receiveAtHub($return->fresh(), $driver);
+})->throws(AuthorizationException::class);
+
+test('the return walks the six steps back to the vendor', function () {
+    $city = returnTestCity();
+    $seller = returnTestUser(Role::SELLER);
+    $driver = returnTestUser(Role::DRIVER);
+    $admin = returnTestUser(Role::ADMIN);
+    $order = returnTestOrder($seller, $city, OrderStatus::OUT_FOR_DELIVERY);
+
+    $return = app(ReturnService::class)->create(
+        $order,
+        $driver,
+        ReturnInitiatedByRole::DRIVER,
+        ReturnReason::CUSTOMER_REFUSED->value,
+    );
+
+    $transitions = app(ReturnTransitionService::class);
+
+    foreach (array_slice(ReturnStatus::pipeline(), 1) as $status) {
+        $transitions->transition($return->fresh(), $status, $admin);
+    }
+
+    $order->refresh();
+
+    expect($return->fresh()->status)->toBe(ReturnStatus::DELIVERED_TO_VENDOR)
+        ->and($order->status)->toBe(OrderStatus::RETURNED)
+        ->and($order->is_returned)->toBeTrue()
+        ->and($order->returned_at)->not->toBeNull();
+});
+
+test('the return workflow refuses to skip a step', function () {
+    $city = returnTestCity();
+    $seller = returnTestUser(Role::SELLER);
+    $driver = returnTestUser(Role::DRIVER);
+    $admin = returnTestUser(Role::ADMIN);
+    $order = returnTestOrder($seller, $city, OrderStatus::OUT_FOR_DELIVERY);
+
+    $return = app(ReturnService::class)->create(
+        $order,
+        $driver,
+        ReturnInitiatedByRole::DRIVER,
+        ReturnReason::CUSTOMER_REFUSED->value,
+    );
+
+    app(ReturnTransitionService::class)
+        ->transition($return->fresh(), ReturnStatus::ARRIVED_VENDOR_HUB, $admin);
+})->throws(ValidationException::class);
 
 test('seller can request return for delivered order', function () {
     $city = returnTestCity();
@@ -199,4 +265,4 @@ test('one order cannot have two non-cancelled returns', function () {
         ReturnInitiatedByRole::SELLER,
         ReturnReason::SELLER_REQUESTED->value,
     );
-})->throws(\Illuminate\Validation\ValidationException::class);
+})->throws(ValidationException::class);

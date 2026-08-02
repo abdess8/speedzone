@@ -138,18 +138,18 @@ class ReturnController extends Controller
         return back()->with('success', 'Return customer information updated successfully.');
     }
 
-    public function moveToDepot(Request $request, OrderReturn $return): RedirectResponse
+    public function receiveAtHub(Request $request, OrderReturn $return): RedirectResponse
     {
         $this->authorize('updateStatus', $return);
 
-        $this->transitions->moveToDepot(
+        $this->transitions->receiveAtHub(
             $return,
             $request->user(),
             $request->input('comment'),
             $request->input('current_location_city_id'),
         );
 
-        return back()->with('success', 'Return marked as in transit to depot.');
+        return back()->with('success', 'Return received at the delivery city hub.');
     }
 
     public function scan(ReturnScanRequest $request): JsonResponse

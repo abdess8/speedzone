@@ -184,6 +184,14 @@ class PermissionCatalog
             self::make('returns.manage', 'returns', 'manage', null, 'resource'),
             self::make('returns.update_status', 'returns', 'update_status', null, 'resource'),
             self::make('returns.edit_customer_data', 'returns', 'edit_customer_data', null, 'resource'),
+            // Per-step grants, so a hub manager can stamp arrivals without also
+            // being able to close the return at the seller's door. The blanket
+            // `returns.update_status` still satisfies all of them.
+            self::make('returns.transition.to_received_at_hub', 'returns', 'transition', null, 'workflow_transition'),
+            self::make('returns.transition.to_in_transit_to_depot', 'returns', 'transition', null, 'workflow_transition'),
+            self::make('returns.transition.to_arrived_vendor_hub', 'returns', 'transition', null, 'workflow_transition'),
+            self::make('returns.transition.to_in_delivery_to_vendor', 'returns', 'transition', null, 'workflow_transition'),
+            self::make('returns.transition.to_delivered_to_vendor', 'returns', 'transition', null, 'workflow_transition'),
         ];
     }
 

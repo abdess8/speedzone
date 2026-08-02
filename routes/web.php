@@ -11,6 +11,7 @@ use App\Http\Controllers\DriverInvoiceController;
 use App\Http\Controllers\DriverZoneController;
 use App\Http\Controllers\GuideAccessController;
 use App\Http\Controllers\GuideController;
+use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LocaleController;
@@ -281,6 +282,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     // Inter-city transfers — QR scan URL must be registered before numeric {transfer} routes
     Route::get('transfers/eligible-orders', [TransferController::class, 'eligibleOrders'])
         ->name('transfers.eligible-orders');
+    Route::get('transfers/eligible-returns', [TransferController::class, 'eligibleReturns'])
+        ->name('transfers.eligible-returns');
     Route::get('transfers/{reference}', [TransferController::class, 'track'])
         ->where('reference', 'TRF-[0-9]{4}-[0-9]+')
         ->name('transfers.track');
@@ -323,9 +326,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('returns/{return}/change-status', [ReturnController::class, 'changeStatus'])
         ->whereNumber('return')
         ->name('returns.change-status');
-    Route::post('returns/{return}/move-to-depot', [ReturnController::class, 'moveToDepot'])
+    Route::post('returns/{return}/receive-at-hub', [ReturnController::class, 'receiveAtHub'])
         ->whereNumber('return')
-        ->name('returns.move-to-depot');
+        ->name('returns.receive-at-hub');
     Route::put('returns/{return}/customer-data', [ReturnController::class, 'updateCustomerData'])
         ->whereNumber('return')
         ->name('returns.update-customer-data');
@@ -394,6 +397,14 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('api-integrations', [ApiIntegrationController::class, 'index'])
         ->middleware('permission:orders.create')
         ->name('api-integrations.index');
+
+    // Help Center. No permission guard: both pages document rules the reader is
+    // already subject to, and hiding the contract from the people it binds
+    // helps nobody.
+    Route::get('help/partnership', [HelpCenterController::class, 'partnership'])
+        ->name('help.partnership');
+    Route::get('help/processes', [HelpCenterController::class, 'processes'])
+        ->name('help.processes');
 
     // Interactive guides. No permission guard on the Help Center itself: the
     // catalog is already filtered per reader, and an empty list is a fine page.

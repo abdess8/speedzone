@@ -28,14 +28,12 @@ class ReturnQueryService
             // full access
         } elseif ($user->hasPermission('returns.read.own')) {
             $query->ownedBySeller($user->accountOwnerId());
-        } elseif ($user->hasPermission('returns.update_status') || $user->hasPermission('returns.create')) {
-            // Drivers see returns they created or that are in processable statuses
+        } elseif ($user->canUpdateReturnStatus() || $user->hasPermission('returns.create')) {
+            // Field agents see the returns they opened, plus the ones sitting in
+            // a status their own permissions let them advance.
             $query->where(function (Builder $q) use ($user): void {
                 $q->where('created_by', $user->id)
-                    ->orWhereIn('status', [
-                        ReturnStatus::CREATED->value,
-                        ReturnStatus::IN_TRANSIT_TO_DEPOT->value,
-                    ]);
+                    ->orWhereIn('status', $this->processableStatuses($user));
             });
         } else {
             $query->whereRaw('1 = 0');
@@ -44,6 +42,37 @@ class ReturnQueryService
         $this->applyFilters($query, $request);
 
         return $query->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    /**
+     * Statuses this user can personally move forward, i.e. the ones whose next
+     * step he holds a permission for. A driver therefore sees the returns
+     * waiting at the vendor hub but not those still sitting in a manifest.
+     *
+     * @return array<int, string>
+     */
+    private function processableStatuses(User $user): array
+    {
+        $pipeline = ReturnStatus::pipeline();
+        $statuses = [];
+
+        foreach ($pipeline as $index => $status) {
+            $next = $pipeline[$index + 1] ?? null;
+
+            if ($next === null) {
+                continue;
+            }
+
+            foreach ($next->allowedBy() as $permission) {
+                if ($user->hasPermission($permission)) {
+                    $statuses[] = $status->value;
+
+                    break;
+                }
+            }
+        }
+
+        return $statuses;
     }
 
     public function perPage(Request $request): int

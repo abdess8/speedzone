@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Enums\OrderStatus;
+use App\Enums\ReturnStatus;
+use App\Enums\TransferContentType;
 use App\Enums\TransferStatus;
 use App\Models\Order;
+use App\Models\OrderReturn;
 use App\Models\Transfer;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -19,10 +22,12 @@ class TransferService
         private readonly TransferReferenceGenerator $references,
         private readonly OrderStatusService $orderStatus,
         private readonly OrderDriverAutoAssignmentService $driverAutoAssignment,
+        private readonly ReturnService $returns,
     ) {}
 
     /**
      * @param  array<int, int>  $orderIds
+     * @param  array<int, int>  $returnIds
      *
      * @throws ValidationException
      */
@@ -32,7 +37,9 @@ class TransferService
         int $toCityId,
         array $orderIds,
         ?string $notes = null,
-        ?int $assignedTo = null
+        ?int $assignedTo = null,
+        TransferContentType $contentType = TransferContentType::ORDERS,
+        array $returnIds = [],
     ): Transfer {
         if (! $actor->hasPermission('transfers.create')) {
             throw new AuthorizationException('Missing permission: transfers.create');
@@ -44,9 +51,29 @@ class TransferService
             ]);
         }
 
-        $orders = $this->resolveEligibleOrders($orderIds, $fromCityId, $toCityId);
+        $orders = $contentType->includesOrders()
+            ? $this->resolveEligibleOrders($orderIds, $fromCityId, $toCityId, required: ! $contentType->includesReturns())
+            : collect();
 
-        return DB::transaction(function () use ($actor, $fromCityId, $toCityId, $orders, $notes, $assignedTo): Transfer {
+        $returns = $contentType->includesReturns()
+            ? $this->resolveEligibleReturns($returnIds, $fromCityId, $toCityId, required: ! $contentType->includesOrders())
+            : collect();
+
+        if ($orders->isEmpty() && $returns->isEmpty()) {
+            throw ValidationException::withMessages([
+                'order_ids' => 'Select at least one parcel for the transfer.',
+            ]);
+        }
+
+        return DB::transaction(function () use (
+            $actor,
+            $fromCityId,
+            $toCityId,
+            $orders,
+            $returns,
+            $notes,
+            $assignedTo
+        ): Transfer {
             $totalAmount = round((float) $orders->sum('order_amount'), 2);
 
             $transfer = Transfer::create([
@@ -56,7 +83,12 @@ class TransferService
                 'created_by' => $actor->id,
                 'assigned_to' => $assignedTo,
                 'status' => TransferStatus::CREATED,
-                'number_of_packages' => $orders->count(),
+                // Recomputed from what was actually selected, so a manifest
+                // started as "mixed" and filled with returns only reports the
+                // truth to everyone reading it downstream.
+                'content_type' => TransferContentType::fromCounts($orders->count(), $returns->count()),
+                'number_of_packages' => $orders->count() + $returns->count(),
+                'number_of_returns' => $returns->count(),
                 'total_amount' => $totalAmount,
                 'notes' => $notes,
             ]);
@@ -64,6 +96,7 @@ class TransferService
             $transfer->recordStatus(TransferStatus::CREATED, $actor, null, 'Transfer created.');
 
             $this->attachOrders($transfer, $orders, OrderStatus::TRANSFER_CREATED, $actor);
+            $this->attachReturns($transfer, $returns);
 
             return $transfer->load([
                 'fromCity',
@@ -73,6 +106,7 @@ class TransferService
                 'orders.city',
                 'orders.sector',
                 'orders.seller.city',
+                'returns.order.seller.city',
             ]);
         });
     }
@@ -157,13 +191,20 @@ class TransferService
             $transfer->recordStatus($toStatus, $actor, $from, $comment);
 
             $orders = $transfer->orders()->get();
+            $returns = $transfer->returns()->with('order')->get();
 
             if ($toStatus === TransferStatus::CANCELLED) {
                 $this->releaseOrders($orders, $actor, $comment);
+                $this->releaseReturns($transfer);
             } else {
                 $orderStatus = $toStatus->orderStatus();
                 if ($orderStatus) {
                     $this->syncOrderStatuses($orders, $orderStatus, $actor, $transfer, $comment);
+                }
+
+                $returnStatus = $toStatus->returnStatus();
+                if ($returnStatus) {
+                    $this->syncReturnStatuses($returns, $returnStatus, $actor, $transfer, $comment);
                 }
             }
 
@@ -175,6 +216,7 @@ class TransferService
                 'orders.city',
                 'orders.sector',
                 'orders.seller.city',
+                'returns.order.seller.city',
                 'statusHistories.changedBy',
             ]);
         });
@@ -224,17 +266,95 @@ class TransferService
     }
 
     /**
+     * Returns waiting at the origin hub for a ride back to their seller's city.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Collection<int, OrderReturn>
+     */
+    public function getEligibleReturns(int $fromCityId, int $toCityId, array $filters = []): Collection
+    {
+        $query = OrderReturn::query()
+            ->eligibleForTransfer($fromCityId, $toCityId)
+            ->with(['order.city', 'order.seller.city', 'currentLocationCity'])
+            ->orderByDesc('created_at');
+
+        if (! empty($filters['search'])) {
+            $search = (string) $filters['search'];
+            $query->where(function (Builder $q) use ($search): void {
+                $q->where('reference', 'like', '%'.$search.'%')
+                    ->orWhereHas('order', fn (Builder $oq) => $oq->where('tracking_number', 'like', '%'.$search.'%'));
+            });
+        }
+
+        if (! empty($filters['customer'])) {
+            $customer = (string) $filters['customer'];
+            $query->whereHas('order', fn (Builder $oq) => $oq->where(function (Builder $q) use ($customer): void {
+                $q->where('customer_first_name', 'like', '%'.$customer.'%')
+                    ->orWhere('customer_last_name', 'like', '%'.$customer.'%')
+                    ->orWhereRaw("CONCAT(customer_first_name, ' ', customer_last_name) LIKE ?", ['%'.$customer.'%']);
+            }));
+        }
+
+        if (! empty($filters['created_from'])) {
+            $query->whereDate('created_at', '>=', $filters['created_from']);
+        }
+
+        if (! empty($filters['created_to'])) {
+            $query->whereDate('created_at', '<=', $filters['created_to']);
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * @param  array<int, int>  $returnIds
+     * @return Collection<int, OrderReturn>
+     */
+    public function resolveEligibleReturns(array $returnIds, int $fromCityId, int $toCityId, bool $required = true): Collection
+    {
+        $returnIds = array_values(array_unique(array_map('intval', $returnIds)));
+
+        if ($returnIds === []) {
+            if ($required) {
+                throw ValidationException::withMessages([
+                    'return_ids' => 'Select at least one return for the transfer.',
+                ]);
+            }
+
+            return collect();
+        }
+
+        $returns = OrderReturn::query()
+            ->eligibleForTransfer($fromCityId, $toCityId)
+            ->with(['order.seller.city', 'currentLocationCity'])
+            ->whereIn('id', $returnIds)
+            ->get();
+
+        if ($returns->count() !== count($returnIds)) {
+            throw ValidationException::withMessages([
+                'return_ids' => 'One or more returns are invalid, not waiting at the origin hub, already on a transfer, or do not belong to a seller in the destination city.',
+            ]);
+        }
+
+        return $returns;
+    }
+
+    /**
      * @param  array<int, int>  $orderIds
      * @return Collection<int, Order>
      */
-    public function resolveEligibleOrders(array $orderIds, int $fromCityId, int $toCityId): Collection
+    public function resolveEligibleOrders(array $orderIds, int $fromCityId, int $toCityId, bool $required = true): Collection
     {
         $orderIds = array_values(array_unique(array_map('intval', $orderIds)));
 
         if ($orderIds === []) {
-            throw ValidationException::withMessages([
-                'order_ids' => 'Select at least one order for the transfer.',
-            ]);
+            if ($required) {
+                throw ValidationException::withMessages([
+                    'order_ids' => 'Select at least one order for the transfer.',
+                ]);
+            }
+
+            return collect();
         }
 
         $orders = Order::query()
@@ -294,6 +414,66 @@ class TransferService
                 transferId: $transfer->id,
             );
         }
+    }
+
+    /**
+     * Returns keep their RECEIVED_AT_HUB status while the manifest is filled;
+     * they only move once the truck leaves.
+     *
+     * @param  Collection<int, OrderReturn>  $returns
+     */
+    private function attachReturns(Transfer $transfer, Collection $returns): void
+    {
+        foreach ($returns as $return) {
+            $transfer->transferReturns()->create([
+                'return_id' => $return->id,
+                'created_at' => now(),
+            ]);
+        }
+    }
+
+    /**
+     * Walk the manifest's returns to the status matching the transfer leg.
+     *
+     * Dispatch puts them on the road, receipt lands them at the seller's hub.
+     * The statuses are applied directly rather than through the return
+     * transition service: authorising the transfer leg is what authorises this,
+     * and the driver who signs a manifest in holds `transfers.receive` without
+     * necessarily holding the per-step return grants. Order statuses on the
+     * same manifest are synced the same way.
+     *
+     * @param  Collection<int, OrderReturn>  $returns
+     */
+    private function syncReturnStatuses(
+        Collection $returns,
+        ReturnStatus $toStatus,
+        User $actor,
+        Transfer $transfer,
+        ?string $comment = null
+    ): void {
+        foreach ($returns as $return) {
+            if ($return->status === $toStatus) {
+                continue;
+            }
+
+            $this->returns->applyStatus(
+                $return,
+                $toStatus,
+                $actor,
+                $comment ?? "Transfer {$transfer->reference}: {$toStatus->label()}.",
+                locationCityId: $toStatus === ReturnStatus::ARRIVED_VENDOR_HUB ? $transfer->to_city_id : null,
+            );
+        }
+    }
+
+    /**
+     * Dropping the pivot rows is what puts the parcels back in the pool. Their
+     * own status is untouched: a manifest can only be cancelled before it is
+     * dispatched, so the returns never left RECEIVED_AT_HUB.
+     */
+    private function releaseReturns(Transfer $transfer): void
+    {
+        $transfer->transferReturns()->delete();
     }
 
     /**

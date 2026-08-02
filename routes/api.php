@@ -148,9 +148,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('returns/{return}/change-status', [ReturnController::class, 'changeStatus'])
         ->whereNumber('return')
         ->name('api.returns.change-status');
-    Route::post('returns/{return}/move-to-depot', [ReturnController::class, 'moveToDepot'])
+    Route::post('returns/{return}/receive-at-hub', [ReturnController::class, 'receiveAtHub'])
         ->whereNumber('return')
-        ->name('api.returns.move-to-depot');
+        ->name('api.returns.receive-at-hub');
     Route::put('returns/{return}/customer-data', [ReturnController::class, 'updateCustomerData'])
         ->whereNumber('return')
         ->name('api.returns.update-customer-data');

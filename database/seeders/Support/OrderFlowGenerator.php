@@ -611,14 +611,14 @@ class OrderFlowGenerator
         $target = $this->ctx->faker->pick([
             ReturnStatus::CREATED,
             ReturnStatus::CREATED,
+            ReturnStatus::RECEIVED_AT_HUB,
             ReturnStatus::IN_TRANSIT_TO_DEPOT,
-            ReturnStatus::IN_TRANSIT_TO_DEPOT,
-            ReturnStatus::RECEIVED_AT_DEPOT,
-            ReturnStatus::RECEIVED_AT_DEPOT,
-            ReturnStatus::IN_TRANSIT_TO_SELLER,
-            ReturnStatus::DELIVERED_TO_SELLER,
-            ReturnStatus::DELIVERED_TO_SELLER,
-            ReturnStatus::DELIVERED_TO_SELLER,
+            ReturnStatus::ARRIVED_VENDOR_HUB,
+            ReturnStatus::ARRIVED_VENDOR_HUB,
+            ReturnStatus::IN_DELIVERY_TO_VENDOR,
+            ReturnStatus::DELIVERED_TO_VENDOR,
+            ReturnStatus::DELIVERED_TO_VENDOR,
+            ReturnStatus::DELIVERED_TO_VENDOR,
         ]);
 
         if ($target === ReturnStatus::CREATED) {
@@ -629,10 +629,11 @@ class OrderFlowGenerator
         $cursor = $openedAt;
 
         foreach ([
+            ReturnStatus::RECEIVED_AT_HUB,
             ReturnStatus::IN_TRANSIT_TO_DEPOT,
-            ReturnStatus::RECEIVED_AT_DEPOT,
-            ReturnStatus::IN_TRANSIT_TO_SELLER,
-            ReturnStatus::DELIVERED_TO_SELLER,
+            ReturnStatus::ARRIVED_VENDOR_HUB,
+            ReturnStatus::IN_DELIVERY_TO_VENDOR,
+            ReturnStatus::DELIVERED_TO_VENDOR,
         ] as $status) {
             $at = $this->ctx->after($cursor, 3, 34);
             if (! $at) {
@@ -641,20 +642,22 @@ class OrderFlowGenerator
             $cursor = $at;
 
             $location = match ($status) {
-                ReturnStatus::IN_TRANSIT_TO_SELLER, ReturnStatus::DELIVERED_TO_SELLER => $sellerCityId,
+                ReturnStatus::ARRIVED_VENDOR_HUB,
+                ReturnStatus::IN_DELIVERY_TO_VENDOR,
+                ReturnStatus::DELIVERED_TO_VENDOR => $sellerCityId,
                 default => null,
             };
 
             $this->advanceReturn($return, $status, $this->ctx->dispatcher(), $at, "Retour : {$status->value}.", $location);
 
             $orderStatus = match ($status) {
-                ReturnStatus::IN_TRANSIT_TO_DEPOT => OrderStatus::RETURN_IN_PROGRESS,
-                ReturnStatus::DELIVERED_TO_SELLER => OrderStatus::RETURNED,
+                ReturnStatus::RECEIVED_AT_HUB => OrderStatus::RETURN_IN_PROGRESS,
+                ReturnStatus::DELIVERED_TO_VENDOR => OrderStatus::RETURNED,
                 default => null,
             };
 
             if ($orderStatus) {
-                $extra = $status === ReturnStatus::DELIVERED_TO_SELLER
+                $extra = $status === ReturnStatus::DELIVERED_TO_VENDOR
                     ? ['is_returned' => true, 'returned_at' => $at]
                     : [];
 
@@ -668,7 +671,7 @@ class OrderFlowGenerator
                     ['return' => $return->id],
                 );
 
-                if ($status === ReturnStatus::DELIVERED_TO_SELLER) {
+                if ($status === ReturnStatus::DELIVERED_TO_VENDOR) {
                     $this->ctx->bump('returned_orders');
                 }
             }

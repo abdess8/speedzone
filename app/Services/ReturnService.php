@@ -146,7 +146,7 @@ class ReturnService
 
         if (! $return->canEditCustomerData()) {
             throw ValidationException::withMessages([
-                'return' => 'Customer data can only be updated when the return is CREATED or IN_TRANSIT_TO_SELLER.',
+                'return' => 'Customer data can only be updated while the return is CREATED or IN_DELIVERY_TO_VENDOR.',
             ]);
         }
 
@@ -291,8 +291,8 @@ class ReturnService
         }
 
         $orderStatus = match ($toStatus) {
-            ReturnStatus::IN_TRANSIT_TO_DEPOT => OrderStatus::RETURN_IN_PROGRESS,
-            ReturnStatus::DELIVERED_TO_SELLER => OrderStatus::RETURNED,
+            ReturnStatus::RECEIVED_AT_HUB => OrderStatus::RETURN_IN_PROGRESS,
+            ReturnStatus::DELIVERED_TO_VENDOR => OrderStatus::RETURNED,
             ReturnStatus::CANCELLED => $this->resolveCancelOrderStatus($order),
             default => null,
         };
@@ -305,7 +305,7 @@ class ReturnService
 
         // The parcel is back in the seller's hands: stamp the date the invoice
         // will quote for this line.
-        if ($toStatus === ReturnStatus::DELIVERED_TO_SELLER) {
+        if ($toStatus === ReturnStatus::DELIVERED_TO_VENDOR) {
             $orderUpdates['is_returned'] = true;
             $orderUpdates['returned_at'] = now();
         }

@@ -35,6 +35,41 @@ const RETURN_READ = [
 ];
 const SUPPORT_READ = ['support.read.all', 'support.read.own', 'support.manage'];
 
+/**
+ * Reverse logistics pipeline, in the order the parcel travels it. Mirrors
+ * `App\Enums\ReturnStatus::pipeline()`; the values are the ones the returns
+ * index filters on, so a mismatch shows up as an empty list rather than a
+ * silent wrong result.
+ */
+const RETURN_STATUS_VIEWS = [
+  { key: 'created', status: 'CREATED' },
+  { key: 'received_at_hub', status: 'RECEIVED_AT_HUB' },
+  { key: 'in_transit_to_depot', status: 'IN_TRANSIT_TO_DEPOT' },
+  { key: 'arrived_vendor_hub', status: 'ARRIVED_VENDOR_HUB' },
+  { key: 'in_delivery_to_vendor', status: 'IN_DELIVERY_TO_VENDOR' },
+  { key: 'delivered_to_vendor', status: 'DELIVERED_TO_VENDOR' },
+];
+
+/** Sidebar children filtering the returns list down to one workflow step. */
+const returnStatusChildren = () => [
+  {
+    key: 'returns-all',
+    labelKey: 'sidebar.returns_views.all',
+    href: '/returns',
+    permissions: RETURN_READ,
+  },
+  ...RETURN_STATUS_VIEWS.map(({ key, status }) => ({
+    key: `returns-${key}`,
+    labelKey: `sidebar.returns_views.${key}`,
+    href: `/returns?status=${status}`,
+    permissions: RETURN_READ,
+  })),
+];
+
+/** The seller shortcut is resolved server side in canAccessReturnsModule(). */
+const canSeeReturns = ({ canAny, user }) =>
+  user?.can_view_returns === true || canAny(RETURN_READ);
+
 export const menuItems = [
   {
     key: 'dashboard',
@@ -121,10 +156,9 @@ export const menuItems = [
     key: 'returns',
     labelKey: 'sidebar.returns',
     icon: 'ri-arrow-go-back-line',
-    href: '/returns',
     permissions: RETURN_READ,
-    // The server already resolves the seller shortcut in canAccessReturnsModule().
-    visible: ({ canAny, user }) => user?.can_view_returns === true || canAny(RETURN_READ),
+    visible: canSeeReturns,
+    children: returnStatusChildren(),
   },
   {
     key: 'invoices',
@@ -249,6 +283,28 @@ export const menuItems = [
     footer: true,
     // The catalog filters itself per role, so the entry is offered to everyone.
     permissions: [],
+  },
+  {
+    key: 'help-center',
+    labelKey: 'sidebar.help_center',
+    icon: 'ri-book-open-line',
+    footer: true,
+    // Both pages document rules the reader already lives under.
+    permissions: [],
+    children: [
+      {
+        key: 'help-partnership',
+        labelKey: 'sidebar.help_views.partnership',
+        route: 'help.partnership',
+        permissions: [],
+      },
+      {
+        key: 'help-processes',
+        labelKey: 'sidebar.help_views.processes',
+        route: 'help.processes',
+        permissions: [],
+      },
+    ],
   },
   {
     key: 'settings',
@@ -381,9 +437,9 @@ export const mobileTabs = [
         key: 'returns',
         labelKey: 'sidebar.returns',
         icon: 'ri-arrow-go-back-line',
-        href: '/returns',
         permissions: RETURN_READ,
-        visible: ({ canAny, user }) => user?.can_view_returns === true || canAny(RETURN_READ),
+        visible: canSeeReturns,
+        children: returnStatusChildren(),
       },
     ],
   },
@@ -448,31 +504,36 @@ function isVisible(item, context) {
 }
 
 /**
+ * Prune a branch against the permission context, at any depth.
+ *
+ * Returns null when the entry itself is hidden, or when it is a group left
+ * without a single reachable destination — a collapse or a sheet with nothing
+ * inside is a dead end the user can still tap.
+ */
+function pruneItem(item, context) {
+  if (!isVisible(item, context)) {
+    return null;
+  }
+
+  if (!item.children) {
+    return item;
+  }
+
+  const children = item.children
+    .map((child) => pruneItem(child, context))
+    .filter(Boolean);
+
+  return children.length > 0 ? { ...item, children } : null;
+}
+
+/**
  * Filter the tree down to what the current user may see.
  *
  * @param {object} context result of `usePermissions()` flattened to plain values
  * @returns {Array} the visible menu items, children already pruned
  */
 export function resolveMenuItems(context) {
-  return menuItems.reduce((visible, item) => {
-    if (!isVisible(item, context)) {
-      return visible;
-    }
-
-    if (!item.children) {
-      visible.push(item);
-
-      return visible;
-    }
-
-    const children = item.children.filter((child) => isVisible(child, context));
-
-    if (children.length > 0) {
-      visible.push({ ...item, children });
-    }
-
-    return visible;
-  }, []);
+  return menuItems.map((item) => pruneItem(item, context)).filter(Boolean);
 }
 
 /**
@@ -535,10 +596,10 @@ export function resolveMobileTabs(context) {
     }
 
     if (tab.children) {
-      const children = tab.children.filter((child) => isVisible(child, context));
+      const pruned = pruneItem(tab, context);
 
-      if (children.length > 0) {
-        visible.push({ ...tab, children });
+      if (pruned) {
+        visible.push(pruned);
       }
 
       return visible;

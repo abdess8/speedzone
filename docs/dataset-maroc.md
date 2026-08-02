@@ -102,10 +102,11 @@ Le statut « injoignable » n'est pas un statut distinct en base : il est porté
 | Libellé métier | Valeur en base |
 | --- | --- |
 | retour demandé | `CREATED` |
-| retour en cours (vers le dépôt) | `IN_TRANSIT_TO_DEPOT` |
-| retour reçu au hub | `RECEIVED_AT_DEPOT` |
-| retour en route vers le vendeur | `IN_TRANSIT_TO_SELLER` |
-| retour restitué au vendeur | `DELIVERED_TO_SELLER` |
+| retour reçu au dépôt de la ville de livraison | `RECEIVED_AT_HUB` |
+| retour en transit vers le hub du vendeur | `IN_TRANSIT_TO_DEPOT` |
+| retour arrivé au hub du vendeur | `ARRIVED_VENDOR_HUB` |
+| retour en cours de restitution | `IN_DELIVERY_TO_VENDOR` |
+| retour restitué au vendeur | `DELIVERED_TO_VENDOR` |
 | retour annulé | `CANCELLED` |
 
 ### Ramassages (`pickup_requests.status`)

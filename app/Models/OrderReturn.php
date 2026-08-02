@@ -4,11 +4,13 @@ namespace App\Models;
 
 use App\Enums\ReturnInitiatedByRole;
 use App\Enums\ReturnStatus;
+use App\Enums\TransferStatus;
 use App\Models\Concerns\BelongsToStore;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrderReturn extends Model
@@ -162,10 +164,44 @@ class OrderReturn extends Model
         return $query->whereHas('order', fn (Builder $q) => $q->where('seller_id', $sellerId));
     }
 
+    public function transfers(): BelongsToMany
+    {
+        return $this->belongsToMany(Transfer::class, 'transfer_returns', 'return_id', 'transfer_id')
+            ->withPivot('created_at');
+    }
+
+    /**
+     * Returns ready to ride an inter-city transfer back to their seller.
+     *
+     * The parcel travels the delivery leg in reverse, so the manifest's origin
+     * is the hub currently holding it and its destination is the seller's own
+     * city — the mirror image of {@see Order::scopeEligibleForTransfer()}.
+     */
+    public function scopeEligibleForTransfer(Builder $query, ?int $fromCityId = null, ?int $toCityId = null): Builder
+    {
+        $query->where('status', ReturnStatus::RECEIVED_AT_HUB->value)
+            ->whereDoesntHave('transfers', fn (Builder $q) => $q->where(
+                'transfers.status',
+                '!=',
+                TransferStatus::CANCELLED->value
+            ))
+            ->whereHas('order.seller', fn (Builder $q) => $q->whereNotNull('city_id'));
+
+        if ($fromCityId) {
+            $query->where('current_location_city_id', $fromCityId);
+        }
+
+        if ($toCityId) {
+            $query->whereHas('order.seller', fn (Builder $q) => $q->where('city_id', $toCityId));
+        }
+
+        return $query;
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->whereNotIn('status', [
-            ReturnStatus::DELIVERED_TO_SELLER->value,
+            ReturnStatus::DELIVERED_TO_VENDOR->value,
             ReturnStatus::CANCELLED->value,
         ]);
     }

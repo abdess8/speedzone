@@ -34,7 +34,7 @@ class OrderReturnPolicy
         }
 
         return $user->hasPermission('returns.manage')
-            || ($user->hasPermission('returns.update_status') && $user->hasReturnScopePermission('update_status', $return));
+            || ($user->canUpdateReturnStatus() && $user->hasReturnScopePermission('update_status', $return));
     }
 
     public function changeStatus(User $user, OrderReturn $return): bool
@@ -62,9 +62,8 @@ class OrderReturnPolicy
             return false;
         }
 
-        return $user->hasPermission('returns.update_status')
-            || $user->hasPermission('returns.create')
-            || $user->hasPermission('returns.manage');
+        return $user->canUpdateReturnStatus()
+            || $user->hasPermission('returns.create');
     }
 
     public function printQr(User $user, OrderReturn $return): bool

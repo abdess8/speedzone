@@ -198,6 +198,9 @@ return [
         'title' => 'Mon activité',
         'subtitle' => 'SpeedZone Express',
         'cash_headline' => 'Espèces à encaisser',
+        // Titre pour un rôle qui n'a pas accès aux montants : le panneau doit
+        // quand même annoncer quelque chose de vrai, il compte donc les colis.
+        'orders_headline' => 'Commandes sur la période',
         'refresh' => 'Actualiser',
         'previous_period' => 'Période précédente',
         'next_period' => 'Période suivante',

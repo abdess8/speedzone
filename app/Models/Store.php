@@ -31,6 +31,7 @@ class Store extends Model
         'contact_phone',
         'contact_email',
         'city_id',
+        'stock_hub_city_id',
         'address',
         'pickup_address_1',
         'pickup_address_2',
@@ -55,6 +56,18 @@ class Store extends Model
     public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);
+    }
+
+    /**
+     * The depot holding this shop's stock.
+     *
+     * Unrelated to {@see self::city()}, which is where the vendor himself sits:
+     * a Marrakech shop may warehouse in Casablanca. One depot per shop, so a
+     * stock order always has exactly one city to ship out of.
+     */
+    public function stockHubCity(): BelongsTo
+    {
+        return $this->belongsTo(City::class, 'stock_hub_city_id');
     }
 
     /**

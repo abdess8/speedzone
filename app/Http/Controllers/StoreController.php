@@ -47,6 +47,7 @@ class StoreController extends Controller
 
         return Inertia::render('stores/create', [
             'cities' => $this->cityOptions(),
+            'hubCities' => City::hubOptions(),
         ]);
     }
 
@@ -69,11 +70,12 @@ class StoreController extends Controller
     {
         $this->authorize('update', $store);
 
-        $store->load('city');
+        $store->load('city', 'stockHubCity');
 
         return Inertia::render('stores/edit', [
             'store' => StoreResource::make($store)->resolve($request),
             'cities' => $this->cityOptions(),
+            'hubCities' => City::hubOptions(),
             'can' => [
                 'delete' => $request->user()->can('delete', $store) && $this->stores->canDelete($store),
             ],

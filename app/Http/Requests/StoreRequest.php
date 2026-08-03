@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Product;
+use App\Models\Store;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -52,11 +55,45 @@ class StoreRequest extends FormRequest
             'contact_phone' => ['nullable', 'string', 'max:50'],
             'contact_email' => ['nullable', 'email', 'max:255'],
             'city_id' => ['nullable', 'integer', Rule::exists('cities', 'id')],
+            // Only a city we actually warehouse in: the vendor's goods have to
+            // land somewhere a hub agent can count them.
+            'stock_hub_city_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('cities', 'id')
+                    ->where('is_stock_hub', true)
+                    ->where('is_active', true)
+                    ->whereNull('deleted_at'),
+                fn (string $attribute, mixed $value, Closure $fail) => $this->assertDepotMovable($store, $value, $fail),
+            ],
             'address' => ['nullable', 'string', 'max:255'],
             'pickup_address_1' => ['nullable', 'string', 'max:255'],
             'pickup_address_2' => ['nullable', 'string', 'max:255'],
             'is_active' => ['boolean'],
             'is_default' => ['boolean'],
         ];
+    }
+
+    /**
+     * Refuse to move a shop's depot while goods are still on its shelves.
+     *
+     * The column is the only record of where the stock physically is, so
+     * rewriting it would teleport every unit on hand to a warehouse that has
+     * never seen them. Emptying the shop first — by selling out or by counting
+     * the stock down — is the honest way through.
+     */
+    private function assertDepotMovable(?Store $store, mixed $value, Closure $fail): void
+    {
+        if ($store === null || (int) $value === (int) $store->stock_hub_city_id) {
+            return;
+        }
+
+        $onHand = (int) Product::acrossStores()
+            ->where('store_id', $store->id)
+            ->sum('stock_quantity');
+
+        if ($onHand > 0) {
+            $fail(__('stores.errors.depot_not_empty', ['units' => $onHand]));
+        }
     }
 }

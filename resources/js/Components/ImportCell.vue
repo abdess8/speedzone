@@ -1,12 +1,16 @@
 <script setup>
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, ref, useId } from 'vue';
 
 /**
- * One editable cell of the import review table.
+ * One editable cell of a bulk import review table.
  *
  * Free text opens on click so a 12 column grid stays readable, while pickers
- * and switches are always live: an unresolved city is the most common reason a
- * row is red, and making the seller click twice to fix it would be needless.
+ * and switches are always live: an unresolved reference is the most common
+ * reason a row is red, and making the user click twice to fix it would be
+ * needless.
+ *
+ * Shared by the order and product import wizards; the `type` values it does not
+ * recognise fall back to a plain text input.
  */
 
 const props = defineProps({
@@ -15,6 +19,8 @@ const props = defineProps({
   error: { type: String, default: '' },
   /** @type {Array<{value: string|number, label: string}>} */
   options: { type: Array, default: () => [] },
+  /** Free-text suggestions offered through a datalist, without constraining. */
+  suggestions: { type: Array, default: () => [] },
   /** Original spreadsheet text, shown when the value could not be resolved. */
   raw: { type: String, default: '' },
   disabled: { type: Boolean, default: false },
@@ -26,9 +32,11 @@ const emit = defineEmits(['update:modelValue', 'change']);
 
 const editing = ref(false);
 const input = ref(null);
+const listId = `import-cell-${useId()}`;
 
 const isSelect = computed(() => ['city', 'sector', 'payment'].includes(props.type));
 const isBoolean = computed(() => props.type === 'boolean');
+const isNumeric = computed(() => ['amount', 'integer'].includes(props.type));
 
 const selectedLabel = computed(() => {
   const match = props.options.find((option) => String(option.value) === String(props.modelValue));
@@ -102,25 +110,30 @@ function stopEdit() {
       @keydown.esc="stopEdit"
     ></textarea>
 
-    <input
-      v-else-if="editing"
-      ref="input"
-      class="form-control form-control-sm import-cell__control"
-      :type="type === 'amount' ? 'number' : 'text'"
-      :step="type === 'amount' ? '0.01' : undefined"
-      :inputmode="type === 'amount' ? 'decimal' : undefined"
-      :value="modelValue"
-      @input="update($event.target.value)"
-      @blur="stopEdit"
-      @keydown.enter="stopEdit"
-      @keydown.esc="stopEdit"
-    />
+    <template v-else-if="editing">
+      <input
+        ref="input"
+        class="form-control form-control-sm import-cell__control"
+        :type="isNumeric ? 'number' : 'text'"
+        :step="type === 'amount' ? '0.01' : type === 'integer' ? '1' : undefined"
+        :inputmode="type === 'amount' ? 'decimal' : type === 'integer' ? 'numeric' : undefined"
+        :list="suggestions.length ? listId : undefined"
+        :value="modelValue"
+        @input="update($event.target.value)"
+        @blur="stopEdit"
+        @keydown.enter="stopEdit"
+        @keydown.esc="stopEdit"
+      />
+      <datalist v-if="suggestions.length" :id="listId">
+        <option v-for="suggestion in suggestions" :key="suggestion" :value="suggestion"></option>
+      </datalist>
+    </template>
 
     <button
       v-else
       type="button"
       class="import-cell__value"
-      :class="{ 'text-end w-100': type === 'amount' }"
+      :class="{ 'text-end w-100': isNumeric }"
       :title="display"
       @click="startEdit"
     >
@@ -129,7 +142,7 @@ function stopEdit() {
     </button>
 
     <!-- The file said something the system could not resolve: showing it keeps
-         the seller from having to reopen his spreadsheet to know what to fix. -->
+         the user from having to reopen his spreadsheet to know what to fix. -->
     <small v-if="error && raw && isSelect" class="import-cell__raw" :title="raw">« {{ raw }} »</small>
 
     <small v-if="error" class="import-cell__error" :title="error">{{ error }}</small>

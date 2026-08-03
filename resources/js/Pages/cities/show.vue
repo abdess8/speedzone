@@ -165,6 +165,17 @@ const confirmDeleteSector = (sector) => {
               <div class="fw-semibold">{{ city.region || $t('common.empty_value') }}</div>
             </div>
             <div class="mb-3">
+              <div class="text-muted fs-13">{{ $t('cities.table.stock_hub') }}</div>
+              <div class="fw-semibold">
+                <span
+                  class="badge"
+                  :class="city.is_stock_hub ? 'bg-info-subtle text-info' : 'bg-light text-body border'"
+                >
+                  {{ city.is_stock_hub ? $t('common.yes') : $t('common.no') }}
+                </span>
+              </div>
+            </div>
+            <div class="mb-3">
               <div class="text-muted fs-13">{{ $t('cities.show.total_sectors') }}</div>
               <div class="fw-semibold">
                 {{ city.sectors_count ?? sectorsList.length }}

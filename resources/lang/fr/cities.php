@@ -15,6 +15,7 @@ return [
         'code' => 'Code',
         'region' => 'Région',
         'sectors' => 'Secteurs',
+        'stock_hub' => 'Hub de stock',
     ],
     'show' => [
         'info' => 'Informations ville',
@@ -38,6 +39,10 @@ return [
         'name_placeholder' => 'ex. Casablanca',
         'code_placeholder' => 'ex. CASA',
         'region_placeholder' => 'ex. Casablanca-Settat',
+        'stock_hub' => 'Hub de stock',
+        'stock_hub_on' => 'Cette ville possède un hub de stock',
+        'stock_hub_off' => 'Aucun hub de stock dans cette ville',
+        'stock_hub_hint' => 'Les vendeurs ne peuvent envoyer leur stock que vers les villes cochées ici.',
     ],
     'delete_confirm_title' => 'Supprimer cette ville ?',
     'delete_confirm_text' => ':name sera supprimée. Les villes avec des secteurs actifs ne peuvent pas être supprimées.',

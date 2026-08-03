@@ -29,9 +29,15 @@ class TrackingNumberGenerator
         return $candidate;
     }
 
+    /**
+     * The store boundary is lifted on purpose: the unique index is global, so a
+     * number already carried by another shop's parcel is taken here too. Asking
+     * the scoped query would let the candidate through and turn the collision the
+     * loop above exists to absorb into a failed insert.
+     */
     private function exists(string $trackingNumber): bool
     {
-        return Order::query()
+        return Order::acrossStores()
             ->where('tracking_number', $trackingNumber)
             ->exists();
     }

@@ -9,8 +9,10 @@ use App\Models\Order;
 use App\Models\OrderReturn;
 use App\Models\Partner;
 use App\Models\PickupRequest;
+use App\Models\Product;
 use App\Models\Role;
 use App\Models\Sector;
+use App\Models\StockReception;
 use App\Models\Store;
 use App\Models\SupportTicket;
 use App\Models\Transfer;
@@ -23,8 +25,10 @@ use App\Policies\OrderReturnPolicy;
 use App\Policies\PartnerDeliveryPolicy;
 use App\Policies\PartnerPolicy;
 use App\Policies\PickupRequestPolicy;
+use App\Policies\ProductPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\SectorPolicy;
+use App\Policies\StockReceptionPolicy;
 use App\Policies\StorePolicy;
 use App\Policies\SupportTicketPolicy;
 use App\Policies\TeamPolicy;
@@ -54,6 +58,8 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         Role::class => RolePolicy::class,
         Store::class => StorePolicy::class,
+        Product::class => ProductPolicy::class,
+        StockReception::class => StockReceptionPolicy::class,
     ];
 
     /**

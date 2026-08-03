@@ -26,6 +26,7 @@ class NotificationPreferenceController extends Controller
             'ticket_message' => ['sometimes', 'boolean'],
             'ticket_closed' => ['sometimes', 'boolean'],
             'return_requested' => ['sometimes', 'boolean'],
+            'stock_pickup_requested' => ['sometimes', 'boolean'],
             'system_notifications' => ['sometimes', 'boolean'],
         ]);
 

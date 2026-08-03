@@ -6,14 +6,18 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Models\Order;
 use App\Models\Sector;
+use App\Models\Store;
 use App\Models\User;
+use App\Support\StoreContext;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class OrderService
 {
     public function __construct(
         private readonly TrackingNumberGenerator $trackingNumbers,
         private readonly OrderAuditService $auditService,
+        private readonly OrderStockService $stockService,
     ) {}
 
     /**
@@ -23,27 +27,78 @@ class OrderService
      * member is billed to — and stays readable by — his employer. The store is
      * filled in automatically by BelongsToStore from the active store.
      *
+     * When the payload carries catalog lines, they are written and their stock
+     * debited in the same transaction: an order that cannot be served must not
+     * exist, and stock that left the shelf must always have an order to point at.
+     *
+     * Those same lines also decide where the order starts. Goods already sitting
+     * in our depot have nothing to be collected from the vendor, so the parcel
+     * skips the pickup leg and lands in the preparation queue instead.
+     *
      * @param  array<string, mixed>  $data  Validated order payload.
      */
     public function create(array $data, User $seller): Order
     {
         return DB::transaction(function () use ($data, $seller): Order {
+            $items = $data['items'] ?? [];
+            unset($data['items']);
+
             $data['delivery_price'] = $this->resolveDeliveryPrice($data);
+            $fromStock = $items !== [];
 
             $order = new Order($data);
             $order->seller_id = $seller->accountOwnerId();
             $order->tracking_number = $this->trackingNumbers->generate();
-            $order->status = OrderStatus::CREATED->value;
+            $order->status = $fromStock
+                ? OrderStatus::AWAITING_PREPARATION->value
+                : OrderStatus::CREATED->value;
+
+            if ($fromStock) {
+                $order->stock_hub_city_id = $this->resolveStockHubCityId();
+            }
+
             $order->save();
 
+            if ($fromStock) {
+                $this->stockService->attach($order, $items, $seller);
+            }
+
             $order->recordStatus(
-                OrderStatus::CREATED,
+                $order->status,
                 $seller,
-                'Order created.'
+                $fromStock ? 'Order created from stock.' : 'Order created.'
             );
 
-            return $order->load(['city', 'sector', 'seller']);
+            return $order->load(['city', 'sector', 'seller', 'items']);
         });
+    }
+
+    /**
+     * The depot a stock order ships out of.
+     *
+     * Snapshotted onto the order rather than read back through the shop: the
+     * shop may be moved to another depot once it is empty, and a parcel already
+     * in flight has to keep leaving from where it was actually picked.
+     *
+     * A shop with stock but no depot is reachable — importing a catalog credits
+     * opening quantities without any inbound shipment — so this fails loudly
+     * rather than guessing a city the goods are not in.
+     */
+    private function resolveStockHubCityId(): int
+    {
+        $storeId = app(StoreContext::class)->id();
+
+        $hubCityId = $storeId === null
+            ? null
+            : Store::query()->whereKey($storeId)->value('stock_hub_city_id');
+
+        if ($hubCityId === null) {
+            throw ValidationException::withMessages([
+                'items' => __('stock.errors.no_depot'),
+            ]);
+        }
+
+        return (int) $hubCityId;
     }
 
     /**

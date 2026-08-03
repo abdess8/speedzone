@@ -13,6 +13,10 @@ return [
         'users' => 'Users',
         'roles' => 'Roles',
         'permissions' => 'Permissions',
+        'stock' => 'Stock & Catalog',
+        'stores' => 'Shops',
+        'team' => 'Vendor Team',
+        'dashboard' => 'Dashboard',
     ],
 
     'names' => [
@@ -25,6 +29,7 @@ return [
 
         'orders.read.assigned' => 'View assigned orders',
         'orders.update.assigned' => 'Update status of assigned orders',
+        'orders.transition.to_prepared' => 'Prepare the order',
 
         'users.read' => 'View users',
         'users.create' => 'Create users',
@@ -40,6 +45,22 @@ return [
         'support.update_status' => 'Update ticket status',
         'support.close' => 'Close tickets',
         'support.manage' => 'Manage support (full access)',
+
+        'stock.view' => 'View catalog and stock levels',
+        'stock.create_product' => 'Add / import products',
+        'stock.create_inbound' => 'Create inbound shipments',
+        'stock.adjust' => 'Run inventories and correct stock',
+        'orders.create_with_stock' => 'Create orders from stock',
+        'stock.collect_inbound' => 'Collect stock from the vendor',
+        'stock.receive_inbound' => 'Receive stock at the depot',
+        'stock.admin_override' => 'Audit and block stock (all vendors)',
+
+        'dashboard.view' => 'Open the dashboard',
+        'dashboard.view_financials' => 'See amounts and revenue',
+        'dashboard.view_operations' => 'See order pipeline and pending work',
+        'dashboard.view_performance' => 'See success rates and delivery times',
+        'dashboard.view_customers' => 'See top customers',
+        'dashboard.view_network' => 'See active sellers and drivers',
     ],
 
     'scopes' => [
@@ -57,6 +78,7 @@ return [
         'partners.deliveries.manage' => 'Update and mass-scan deliveries belonging to assigned partners.',
         'orders.read.assigned' => 'View only orders assigned to the current user (driver).',
         'orders.update.assigned' => 'Advance the status of orders assigned to the driver. Does not allow editing the order content.',
+        'orders.transition.to_prepared' => 'Declare a stock order picked and packed, one at a time or in bulk with the QR scanner. The order then rejoins the normal flow: straight to delivery when the depot is in the customer\'s city, on an inter-city transfer otherwise.',
         'users.read' => 'Access the user list and user detail pages.',
         'users.create' => 'Create user accounts (sellers, drivers, staff).',
         'users.update' => 'Edit a user account.',
@@ -70,5 +92,21 @@ return [
         'support.update_status' => 'Change ticket status (Open, In Progress, Waiting Seller, Resolved, Closed).',
         'support.close' => 'Close a ticket. Sellers can close their own tickets after resolution; staff can close any ticket.',
         'support.manage' => 'Full support operations: view all tickets, assign, change status, reply, and close. Intended for support agents.',
+
+        'stock.view' => 'View the product catalog, stock levels and inbound shipment slips of the shop.',
+        'stock.create_product' => 'Create, edit and archive product sheets, including through the Excel/CSV import.',
+        'stock.create_inbound' => 'Prepare a slip and declare a stock shipment towards our depot.',
+        'stock.adjust' => 'Correct stock quantities during an inventory. Every gap requires a reason and is kept in an immutable audit trail.',
+        'orders.create_with_stock' => 'Build an order from catalog products: stock is debited and the amount computed automatically.',
+        'stock.collect_inbound' => 'Drive to vendors in your cities, count the load in front of them and send it on to the depot. That count becomes the reference for the rest of the journey but credits no stock. Hub-side permission: it cannot be delegated to a vendor team, because the whole point of the count is that somebody other than the vendor makes it.',
+        'stock.receive_inbound' => 'Physically count stock arriving at the depot and credit the quantities actually received. Limited to shipments addressed to a depot in your cities. Hub-side permission: it cannot be delegated to a vendor team.',
+        'stock.admin_override' => 'Audit every stock movement across all shops and block a defective product. Sensitive permission, reserved for administration.',
+
+        'dashboard.view' => 'Open the dashboard. The figures stay limited to the active store and to the orders the user is allowed to read.',
+        'dashboard.view_financials' => 'See cash to collect, COD collected, revenue and average order value. Withhold it from a role that packs parcels without needing to know what the shop makes.',
+        'dashboard.view_operations' => 'See the order breakdown by status and by city, pending transfers and the work waiting to be cleared.',
+        'dashboard.view_performance' => 'See the delivery success rate, average delivery times and the driver ranking.',
+        'dashboard.view_customers' => 'See the top customers and how many new customers the period brought in.',
+        'dashboard.view_network' => 'See volume per seller and the count of active sellers and drivers.',
     ],
 ];

@@ -141,6 +141,7 @@ class TransferController extends Controller
             'orders.sector',
             'orders.seller.roles',
             'orders.seller.city',
+            'orders.stockHubCity',
             'returns.order.seller.city',
             'returns.order.city',
             'returns.currentLocationCity',

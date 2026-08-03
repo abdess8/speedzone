@@ -13,6 +13,7 @@ const form = useForm({
   code: props.city.code,
   region: props.city.region,
   is_active: props.city.is_active,
+  is_stock_hub: props.city.is_stock_hub,
 });
 
 const submit = () => {

@@ -9,6 +9,7 @@ import StoreForm from './Partials/StoreForm.vue';
 const props = defineProps({
   store: { type: Object, required: true },
   cities: { type: Array, default: () => [] },
+  hubCities: { type: Array, default: () => [] },
   can: { type: Object, default: () => ({}) },
 });
 
@@ -26,6 +27,7 @@ const form = useForm({
   contact_phone: props.store.contact_phone ?? '',
   contact_email: props.store.contact_email ?? '',
   city_id: props.store.city_id ?? null,
+  stock_hub_city_id: props.store.stock_hub_city_id ?? null,
   address: props.store.address ?? '',
   pickup_address_1: props.store.pickup_address_1 ?? '',
   pickup_address_2: props.store.pickup_address_2 ?? '',
@@ -59,7 +61,12 @@ const confirmDelete = () => {
     <PageHeader :title="store.name" :pageTitle="$t('stores.title')" />
 
     <form @submit.prevent="submit">
-      <StoreForm :form="form" :cities="cities" :current-logo-url="store.logo_url" />
+      <StoreForm
+        :form="form"
+        :cities="cities"
+        :hub-cities="hubCities"
+        :current-logo-url="store.logo_url"
+      />
 
       <BRow>
         <BCol xl="8" class="mx-auto">

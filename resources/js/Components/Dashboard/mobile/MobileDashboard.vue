@@ -26,10 +26,19 @@ import { formatMoneyRounded } from '@/common/formatMoney';
  */
 const props = defineProps({
   dashboard: { type: Object, default: null },
+  widgets: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
   error: { type: String, default: '' },
   period: { type: String, required: true },
 });
+
+/**
+ * Whether a family of panels is open to this role.
+ *
+ * The server decides and also omits the matching figures, so this only spares
+ * the reader an empty card — it is not what keeps the numbers private.
+ */
+const shows = (section) => props.widgets?.[section] === true;
 
 const emit = defineEmits(['update:period', 'refresh']);
 
@@ -78,51 +87,81 @@ function step(offset) {
  * delta: the API returns one window at a time, so a trend arrow here would be
  * fabricated.
  */
-const stats = computed(() => [
-  {
-    key: 'delivered',
-    label: t('dashboard.mobile.stats.delivered'),
-    value: String(number(summary.value.delivered_orders)),
-    caption: t('dashboard.mobile.stats.success_caption', {
-      rate: number(summary.value.delivery_success_rate),
-    }),
-    tone: 'success',
-    icon: 'ri-checkbox-circle-line',
-    href: '/orders?status_group=delivered',
-  },
-  {
-    key: 'in_transit',
-    label: t('dashboard.mobile.stats.in_transit'),
-    value: String(number(summary.value.in_transit)),
-    caption: t('dashboard.mobile.stats.out_for_delivery_caption', {
-      count: number(summary.value.out_for_delivery),
-    }),
-    tone: 'primary',
-    icon: 'ri-truck-line',
-    href: '/orders?status_group=delivery',
-  },
-  {
-    key: 'returns',
-    label: t('dashboard.mobile.stats.returns'),
-    value: String(number(summary.value.returned_orders)),
-    caption: t('dashboard.mobile.stats.failed_caption', {
-      count: number(summary.value.failed_deliveries),
-    }),
-    tone: 'danger',
-    icon: 'ri-arrow-go-back-line',
-    href: '/orders?status_group=failed',
-  },
-  {
-    key: 'collected',
-    label: t('dashboard.mobile.stats.collected'),
-    value: formatMoneyRounded(summary.value.cod_collected),
-    caption: t('dashboard.mobile.stats.orders_caption', {
-      count: number(summary.value.orders_in_period),
-    }),
-    tone: 'warning',
-    icon: 'ri-hand-coin-line',
-  },
-]);
+const stats = computed(() =>
+  [
+    {
+      key: 'delivered',
+      label: t('dashboard.mobile.stats.delivered'),
+      value: String(number(summary.value.delivered_orders)),
+      caption: t('dashboard.mobile.stats.success_caption', {
+        rate: number(summary.value.delivery_success_rate),
+      }),
+      tone: 'success',
+      icon: 'ri-checkbox-circle-line',
+      href: '/orders?status_group=delivered',
+      section: 'performance',
+    },
+    {
+      key: 'in_transit',
+      label: t('dashboard.mobile.stats.in_transit'),
+      value: String(number(summary.value.in_transit)),
+      caption: t('dashboard.mobile.stats.out_for_delivery_caption', {
+        count: number(summary.value.out_for_delivery),
+      }),
+      tone: 'primary',
+      icon: 'ri-truck-line',
+      href: '/orders?status_group=delivery',
+      section: 'operations',
+    },
+    {
+      key: 'returns',
+      label: t('dashboard.mobile.stats.returns'),
+      value: String(number(summary.value.returned_orders)),
+      caption: t('dashboard.mobile.stats.failed_caption', {
+        count: number(summary.value.failed_deliveries),
+      }),
+      tone: 'danger',
+      icon: 'ri-arrow-go-back-line',
+      href: '/orders?status_group=failed',
+      section: 'operations',
+    },
+    {
+      key: 'collected',
+      label: t('dashboard.mobile.stats.collected'),
+      value: formatMoneyRounded(summary.value.cod_collected),
+      caption: t('dashboard.mobile.stats.orders_caption', {
+        count: number(summary.value.orders_in_period),
+      }),
+      tone: 'warning',
+      icon: 'ri-hand-coin-line',
+      section: 'financials',
+    },
+  ].filter((stat) => shows(stat.section))
+);
+
+/**
+ * The hero's one figure.
+ *
+ * Cash owed is the number this screen exists for, but the panel also carries the
+ * period stepper and the refresh button — so a role without the money grant
+ * cannot simply lose it. It gets the parcel count instead: a real figure in the
+ * same place, rather than a blanked-out panel or a total it may not read.
+ */
+const hero = computed(() => {
+  if (shows('financials')) {
+    return {
+      amount: summary.value.cash_to_collect,
+      currency: t('dashboard.mobile.currency'),
+      label: t('dashboard.mobile.cash_headline'),
+    };
+  }
+
+  return {
+    amount: number(summary.value.orders_in_period),
+    currency: '',
+    label: t('dashboard.mobile.orders_headline'),
+  };
+});
 
 /*
  * Work waiting on someone. An empty bucket is dropped rather than shown as a
@@ -294,9 +333,9 @@ const breakdownShare = (count, total) =>
       :user="user"
       :title="t('dashboard.mobile.title')"
       :subtitle="t('dashboard.mobile.subtitle')"
-      :amount="summary.cash_to_collect"
-      :currency="t('dashboard.mobile.currency')"
-      :label="t('dashboard.mobile.cash_headline')"
+      :amount="hero.amount"
+      :currency="hero.currency"
+      :label="hero.label"
       :period-label="periodLabel"
       :loading="loading"
       :refresh-label="t('dashboard.mobile.refresh')"
@@ -311,11 +350,11 @@ const breakdownShare = (count, total) =>
 
     <!-- The lift lives on a wrapper: setting it on the strip itself would race
          the strip's own `margin` shorthand, which resets the top margin. -->
-    <div class="mdash-strip-overlap">
+    <div v-if="stats.length" class="mdash-strip-overlap">
       <StatStrip :items="stats" :loading="loading" />
     </div>
 
-    <section v-if="!loading" class="mdash-section">
+    <section v-if="!loading && shows('operations')" class="mdash-section">
       <h2 class="mdash-section-title">{{ t('dashboard.mobile.tasks.title') }}</h2>
 
       <TaskCarousel
@@ -333,6 +372,7 @@ const breakdownShare = (count, total) =>
     </section>
 
     <OverviewCard
+      v-if="shows('operations')"
       class="mdash-section"
       :title="t('dashboard.mobile.overview.title')"
       href="/orders"
@@ -379,6 +419,7 @@ const breakdownShare = (count, total) =>
     />
 
     <BreakdownCard
+      v-if="shows('operations')"
       class="mdash-section"
       :title="t('dashboard.mobile.breakdown.title')"
       :total-label="t('dashboard.mobile.breakdown.total')"

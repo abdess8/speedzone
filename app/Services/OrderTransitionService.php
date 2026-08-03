@@ -30,6 +30,21 @@ class OrderTransitionService
             OrderStatus::REJECTED->value,
             OrderStatus::CANCELED->value,
         ],
+        // Stock orders skip the pickup leg entirely: the goods are already on our
+        // shelves, so the only thing left is for the depot to pick and pack them.
+        OrderStatus::AWAITING_PREPARATION->value => [
+            OrderStatus::PREPARED->value,
+            OrderStatus::REJECTED->value,
+            OrderStatus::CANCELED->value,
+        ],
+        // A packed parcel sits exactly where a picked-up one does after it
+        // reaches the depot, so it rejoins the normal flow here: straight to the
+        // delivery city when the depot is already there, on a transfer otherwise.
+        OrderStatus::PREPARED->value => [
+            OrderStatus::IN_DELIVERY_CITY->value,
+            OrderStatus::TRANSFER_CREATED->value,
+            OrderStatus::CANCELED->value,
+        ],
         OrderStatus::PICKUP_REQUESTED->value => [
             OrderStatus::WAITING_PICKUP->value,
             OrderStatus::CANCELED->value,
@@ -145,6 +160,10 @@ class OrderTransitionService
                 $this->orderStatus->handleAutoCityDeliveryTransition($order);
             }
 
+            if ($toStatus === OrderStatus::PREPARED->value) {
+                $this->orderStatus->handlePreparedRouting($order);
+            }
+
             if ($toStatus === OrderStatus::RECEIVED_IN_DESTINATION->value) {
                 $this->driverAutoAssignment->assignBySector($order->refresh());
             }
@@ -215,7 +234,16 @@ class OrderTransitionService
             ]);
         }
 
-        $permission = 'orders.transition.to_'.strtolower($toStatus);
+        // The enum owns the naming so the catalog, the help matrix and this check
+        // can never drift apart. A null permission marks a status that is only
+        // ever stamped as a side effect, which this service must refuse to set.
+        $permission = OrderStatus::tryFrom($toStatus)?->transitionPermission();
+
+        if ($permission === null) {
+            throw ValidationException::withMessages([
+                'to_status' => "Status {$toStatus} cannot be set by hand.",
+            ]);
+        }
 
         if (! $actor->hasPermission($permission)) {
             throw new AuthorizationException("Missing required permission: {$permission}");

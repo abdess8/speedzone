@@ -18,6 +18,22 @@ use Illuminate\Validation\ValidationException;
 
 class TransferService
 {
+    /**
+     * Relations every manifest view needs on the parcels it carries.
+     *
+     * `stockHubCity` travels with `seller.city` because a parcel's origin is one
+     * or the other — see {@see Order::originCity()} — and loading half of that
+     * pair turns a manifest of a hundred parcels into a hundred extra queries.
+     *
+     * @var array<int, string>
+     */
+    private const ORDER_RELATIONS = [
+        'orders.city',
+        'orders.sector',
+        'orders.seller.city',
+        'orders.stockHubCity',
+    ];
+
     public function __construct(
         private readonly TransferReferenceGenerator $references,
         private readonly OrderStatusService $orderStatus,
@@ -103,9 +119,7 @@ class TransferService
                 'toCity',
                 'creator',
                 'assignee',
-                'orders.city',
-                'orders.sector',
-                'orders.seller.city',
+                ...self::ORDER_RELATIONS,
                 'returns.order.seller.city',
             ]);
         });
@@ -140,9 +154,7 @@ class TransferService
             'toCity',
             'creator',
             'assignee',
-            'orders.city',
-            'orders.sector',
-            'orders.seller.city',
+            ...self::ORDER_RELATIONS,
             'statusHistories.changedBy',
         ]);
     }
@@ -170,9 +182,7 @@ class TransferService
             'toCity',
             'creator.roles',
             'assignee.roles',
-            'orders.city',
-            'orders.sector',
-            'orders.seller.city',
+            ...self::ORDER_RELATIONS,
             'statusHistories.changedBy',
         ]);
     }
@@ -213,9 +223,7 @@ class TransferService
                 'toCity',
                 'creator',
                 'assignee',
-                'orders.city',
-                'orders.sector',
-                'orders.seller.city',
+                ...self::ORDER_RELATIONS,
                 'returns.order.seller.city',
                 'statusHistories.changedBy',
             ]);
@@ -223,8 +231,12 @@ class TransferService
     }
 
     /**
-     * Retrieve orders eligible for a transfer.
-     * IN_DEPOT + pickup city (seller) = fromCity + delivery city = toCity.
+     * Parcels a manifest from this city to that one may pick up.
+     *
+     * Waiting in a hub with nothing left but the journey: collected and signed
+     * into the depot (IN_DEPOT), or picked from stock and packed (PREPARED). The
+     * origin is the depot for the second kind and the vendor's city for the
+     * first — see {@see Order::scopeEligibleForTransfer()}.
      *
      * @param  array<string, mixed>  $filters
      * @return Collection<int, Order>
@@ -233,7 +245,7 @@ class TransferService
     {
         $query = Order::query()
             ->eligibleForTransfer($fromCityId, $toCityId)
-            ->with(['city', 'sector', 'seller.city'])
+            ->with(['city', 'sector', 'seller.city', 'stockHubCity'])
             ->orderByDesc('created_at');
 
         if (! empty($filters['status'])) {
@@ -359,24 +371,26 @@ class TransferService
 
         $orders = Order::query()
             ->eligibleForTransfer($fromCityId, $toCityId)
-            ->with(['seller.city', 'city'])
+            ->with(['seller.city', 'city', 'stockHubCity'])
             ->whereIn('id', $orderIds)
             ->get();
 
         if ($orders->count() !== count($orderIds)) {
             throw ValidationException::withMessages([
-                'order_ids' => 'One or more orders are invalid, not in depot, already assigned to a transfer, or do not match the selected pickup and destination cities.',
+                'order_ids' => 'One or more orders are invalid, not waiting in a hub, already assigned to a transfer, or do not match the selected origin and destination cities.',
             ]);
         }
 
-        $pickupCityIds = $orders
-            ->map(fn (Order $order) => $order->seller?->city_id)
+        // The origin is the depot for a stock order and the vendor's city for a
+        // collected parcel, so the two flows are compared on the same footing.
+        $originCityIds = $orders
+            ->map(fn (Order $order) => $order->originCityId())
             ->filter()
             ->unique();
 
-        if ($pickupCityIds->count() > 1 || ($pickupCityIds->first() && (int) $pickupCityIds->first() !== $fromCityId)) {
+        if ($originCityIds->count() > 1 || ($originCityIds->first() && (int) $originCityIds->first() !== $fromCityId)) {
             throw ValidationException::withMessages([
-                'order_ids' => 'All orders must have the same pickup city as the transfer origin.',
+                'order_ids' => 'All orders must start from the same city as the transfer origin.',
             ]);
         }
 
@@ -506,18 +520,34 @@ class TransferService
     }
 
     /**
+     * Put the parcels of a cancelled manifest back on the shelf they came from.
+     *
+     * A collected parcel goes back to IN_DEPOT; one picked from stock goes back
+     * to PREPARED, because it never was in the depot in that sense — it is a
+     * packed box waiting for a ride, and sending it to IN_DEPOT would offer it
+     * to a pickup flow it does not belong to.
+     *
      * @param  Collection<int, Order>  $orders
      */
     private function releaseOrders(Collection $orders, User $actor, ?string $comment = null): void
     {
         foreach ($orders as $order) {
-            $order->update(['status' => OrderStatus::IN_DEPOT->value]);
+            $shelf = $order->stock_hub_city_id ? OrderStatus::PREPARED : OrderStatus::IN_DEPOT;
+
+            $order->update(['status' => $shelf->value]);
             $order->recordStatus(
-                OrderStatus::IN_DEPOT,
+                $shelf,
                 $actor,
                 $comment ?? 'Transfer cancelled — order returned to depot.',
                 pickupRequestId: $order->pickup_request_id,
             );
+
+            if ($shelf === OrderStatus::PREPARED) {
+                $this->orderStatus->handlePreparedRouting($order);
+
+                continue;
+            }
+
             $this->orderStatus->handleAutoCityDeliveryTransition($order);
         }
     }

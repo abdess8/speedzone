@@ -14,8 +14,10 @@ class StoreCityRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('is_active')) {
-            $this->merge(['is_active' => $this->boolean('is_active')]);
+        foreach (['is_active', 'is_stock_hub'] as $flag) {
+            if ($this->has($flag)) {
+                $this->merge([$flag => $this->boolean($flag)]);
+            }
         }
     }
 
@@ -29,6 +31,7 @@ class StoreCityRequest extends FormRequest
             'code' => ['nullable', 'string', 'max:50', Rule::unique('cities', 'code')->whereNull('deleted_at')],
             'region' => ['nullable', 'string', 'max:255'],
             'is_active' => ['boolean'],
+            'is_stock_hub' => ['boolean'],
         ];
     }
 }

@@ -63,6 +63,11 @@ final class TranslationBundle
         'chatbot',
         'guides',
         'help',
+        'stock',
+        'preparation',
+        'stock_adjustment_reasons',
+        'stock_movement_sources',
+        'stock_reception_statuses',
     ];
 
     /**

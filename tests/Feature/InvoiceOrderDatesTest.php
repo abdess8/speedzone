@@ -15,6 +15,7 @@ use App\Services\BillingService;
 use App\Services\InvoiceGeneratorService;
 use App\Services\ReturnService;
 use App\Services\ReturnTransitionService;
+use Carbon\CarbonImmutable;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -151,4 +152,68 @@ test('a pending billing preview carries the completion date', function () {
     $preview = app(BillingService::class)->preview($this->seller);
 
     expect($preview['lines'][0]['completed_at'])->toStartWith(now()->subDays(4)->toDateString());
+});
+
+test('a dated billing run selects orders on their delivery and return dates', function () {
+    $delivered = invoiceDatesOrder($this->seller, $this->city, $this->sector, OrderStatus::DELIVERED);
+    $delivered->forceFill(['delivered_at' => '2026-03-10 09:00:00'])->save();
+
+    $returned = invoiceDatesOrder($this->seller, $this->city, $this->sector, OrderStatus::RETURNED);
+    $returned->forceFill(['returned_at' => '2026-03-31 18:00:00', 'is_returned' => true])->save();
+
+    $nextMonth = invoiceDatesOrder($this->seller, $this->city, $this->sector, OrderStatus::DELIVERED);
+    $nextMonth->forceFill(['delivered_at' => '2026-04-01 08:00:00'])->save();
+
+    $ids = app(BillingService::class)
+        ->billableOrdersQuery(
+            $this->seller,
+            CarbonImmutable::parse('2026-03-01'),
+            CarbonImmutable::parse('2026-03-31'),
+        )
+        ->pluck('id');
+
+    expect($ids)->toContain($delivered->id)
+        ->toContain($returned->id)
+        ->not->toContain($nextMonth->id);
+});
+
+// The whole point of reading the order's own stamp: a status replayed or
+// corrected weeks later must not drag the order onto the wrong month's invoice.
+test('a delivery recorded late is billed on the day it happened', function () {
+    $order = invoiceDatesOrder($this->seller, $this->city, $this->sector, OrderStatus::DELIVERED);
+    $order->forceFill(['delivered_at' => '2026-03-12 11:00:00'])->save();
+    $order->statusHistories()
+        ->create(['status' => OrderStatus::DELIVERED->value, 'user_id' => $this->admin->id])
+        ->forceFill(['created_at' => '2026-05-20 10:00:00'])
+        ->save();
+
+    $billing = app(BillingService::class);
+
+    expect($billing->billableOrdersQuery(
+        $this->seller,
+        CarbonImmutable::parse('2026-03-01'),
+        CarbonImmutable::parse('2026-03-31'),
+    )->pluck('id'))->toContain($order->id);
+
+    expect($billing->billableOrdersQuery(
+        $this->seller,
+        CarbonImmutable::parse('2026-05-01'),
+        CarbonImmutable::parse('2026-05-31'),
+    )->pluck('id'))->not->toContain($order->id);
+});
+
+// An order whose stamp never landed stays billable, but a run that names a
+// period cannot honestly claim it belongs to that period.
+test('an order without a completion date is left to the undated run', function () {
+    $order = invoiceDatesOrder($this->seller, $this->city, $this->sector, OrderStatus::DELIVERED);
+
+    $billing = app(BillingService::class);
+
+    expect($billing->billableOrdersQuery(
+        $this->seller,
+        CarbonImmutable::parse('2026-03-01'),
+        CarbonImmutable::parse('2026-03-31'),
+    )->pluck('id'))->not->toContain($order->id);
+
+    expect($billing->billableOrdersQuery($this->seller)->pluck('id'))->toContain($order->id);
 });

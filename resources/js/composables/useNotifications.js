@@ -184,6 +184,7 @@ export function notificationIcon(type) {
         ticket_message: 'bx-message-dots',
         ticket_closed: 'bx-check-circle',
         return_requested: 'bx-undo',
+        stock_pickup_requested: 'bx-package',
         system_notifications: 'bx-cog',
     };
 

@@ -7,10 +7,12 @@ use App\Events\NewSellerRegistered;
 use App\Events\ReturnRequested;
 use App\Events\SellerApproved;
 use App\Events\SellerRejected;
+use App\Events\StockPickupRequested;
 use App\Events\TicketClosed;
 use App\Events\TicketCreated;
 use App\Events\TicketMessageCreated;
 use App\Listeners\NotifyAdminOfNewSellerRegistration;
+use App\Listeners\NotifyCollectorsOfStockPickup;
 use App\Listeners\SendInvoiceNotification;
 use App\Listeners\SendReturnNotification;
 use App\Listeners\SendSellerApprovedEmail;
@@ -60,6 +62,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         ReturnRequested::class => [
             SendReturnNotification::class,
+        ],
+        StockPickupRequested::class => [
+            NotifyCollectorsOfStockPickup::class,
         ],
     ];
 

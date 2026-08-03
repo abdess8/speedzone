@@ -157,6 +157,7 @@ return [
         'driver' => 'Driver',
         'payment_details' => 'Payment Details',
         'generated_on' => 'Generated on',
+        'page_of' => 'Page :page / :total',
         'period' => 'Period',
         'bank' => 'Bank',
         'order' => 'Order #',

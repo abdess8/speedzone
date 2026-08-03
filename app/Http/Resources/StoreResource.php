@@ -31,6 +31,11 @@ class StoreResource extends JsonResource
                 'id' => $this->city->id,
                 'name' => $this->city->name,
             ]),
+            'stock_hub_city_id' => $this->stock_hub_city_id,
+            'stock_hub_city' => $this->whenLoaded('stockHubCity', fn () => $this->stockHubCity ? [
+                'id' => $this->stockHubCity->id,
+                'name' => $this->stockHubCity->name,
+            ] : null),
             'address' => $this->address,
             'pickup_address_1' => $this->pickup_address_1,
             'pickup_address_2' => $this->pickup_address_2,

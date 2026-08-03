@@ -15,7 +15,11 @@ class PickupReferenceGenerator
         $year = (int) date('Y');
         $digits = max(4, (int) config('pickup.reference_sequence_digits', 6));
 
-        $latest = PickupRequest::query()
+        // Across every shop, both here and in the collision check below: the
+        // reference is sequential behind a global unique index, so reading only
+        // the active store would restart the numbering at 1 for the second vendor
+        // and collide with the first one's references on every insert.
+        $latest = PickupRequest::acrossStores()
             ->where('reference', 'like', "{$prefix}-{$year}-%")
             ->orderByDesc('id')
             ->value('reference');
@@ -29,7 +33,7 @@ class PickupReferenceGenerator
         do {
             $candidate = sprintf('%s-%d-%s', $prefix, $year, str_pad((string) $sequence, $digits, '0', STR_PAD_LEFT));
             $sequence++;
-        } while (PickupRequest::query()->where('reference', $candidate)->exists());
+        } while (PickupRequest::acrossStores()->where('reference', $candidate)->exists());
 
         return $candidate;
     }

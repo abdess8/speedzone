@@ -7,6 +7,10 @@ use App\Services\OrderTransitionService;
 enum OrderStatus: string
 {
     case CREATED = 'CREATED';
+    // The stock entry point: an order picked from the vendor's shelves in our
+    // depot never goes through a pickup, so it starts here instead of CREATED.
+    case AWAITING_PREPARATION = 'AWAITING_PREPARATION';
+    case PREPARED = 'PREPARED';
     case PICKUP_REQUESTED = 'PICKUP_REQUESTED';
     case WAITING_PICKUP = 'WAITING_PICKUP';
     case PICKED_UP = 'PICKED_UP';
@@ -47,8 +51,8 @@ enum OrderStatus: string
     {
         return match ($this) {
             self::CREATED => 'secondary',
-            self::PICKUP_REQUESTED, self::WAITING_PICKUP => 'info',
-            self::PICKED_UP, self::IN_DEPOT, self::TRANSFER_CREATED, self::IN_TRANSIT, self::RECEIVED_IN_DESTINATION, self::IN_DELIVERY_CITY => 'primary',
+            self::AWAITING_PREPARATION, self::PICKUP_REQUESTED, self::WAITING_PICKUP => 'info',
+            self::PREPARED, self::PICKED_UP, self::IN_DEPOT, self::TRANSFER_CREATED, self::IN_TRANSIT, self::RECEIVED_IN_DESTINATION, self::IN_DELIVERY_CITY => 'primary',
             self::OUT_FOR_DELIVERY => 'warning',
             self::DELIVERED => 'success',
             self::FAILED, self::REJECTED => 'danger',
@@ -66,6 +70,8 @@ enum OrderStatus: string
     {
         return match ($this) {
             self::CREATED => 'ri-file-add-line',
+            self::AWAITING_PREPARATION => 'ri-inbox-line',
+            self::PREPARED => 'ri-box-3-line',
             self::PICKUP_REQUESTED => 'ri-hand-heart-line',
             self::WAITING_PICKUP => 'ri-time-line',
             self::PICKED_UP => 'ri-hand-coin-line',
@@ -104,14 +110,17 @@ enum OrderStatus: string
     /**
      * Permission that authorises moving an order *into* this status.
      *
-     * Mirrors the name {@see OrderTransitionService} derives at
-     * runtime. The return statuses are absent: they are set by the returns
-     * module as a side effect, never chosen by hand.
+     * Read by {@see OrderTransitionService} rather than mirrored there, so the
+     * catalog and the runtime check can never disagree.
+     *
+     * Null means the status is never *chosen*: the return statuses are set by
+     * the returns module as a side effect, and awaiting-preparation is stamped
+     * at creation on any order picked from stock.
      */
     public function transitionPermission(): ?string
     {
         return match ($this) {
-            self::RETURN_REQUESTED, self::RETURN_IN_PROGRESS => null,
+            self::RETURN_REQUESTED, self::RETURN_IN_PROGRESS, self::AWAITING_PREPARATION => null,
             default => 'orders.transition.to_'.strtolower($this->value),
         };
     }

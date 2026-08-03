@@ -11,6 +11,7 @@ class PermissionCatalog
     {
         return array_merge(
             self::adminPermissions(),
+            self::dashboardPermissions(),
             self::orderPermissions(),
             self::pickupRequestPermissions(),
             self::transferPermissions(),
@@ -24,8 +25,54 @@ class PermissionCatalog
             self::driverZonePermissions(),
             self::partnerPermissions(),
             self::storePermissions(),
-            self::teamPermissions()
+            self::teamPermissions(),
+            self::stockPermissions()
         );
+    }
+
+    /**
+     * Dashboard panels, one grant per family of widgets.
+     *
+     * All of them are read-only and all of them are inside the seller ceiling:
+     * whether a warehouse employee sees the shop's turnover next to the parcels
+     * he has to pack is the account owner's decision, not ours.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    public static function dashboardPermissions(): array
+    {
+        return [
+            self::make(DashboardPermissions::VIEW, 'dashboard', 'view', null, 'resource'),
+            self::make(DashboardPermissions::VIEW_FINANCIALS, 'dashboard', 'view_financials', null, 'resource'),
+            self::make(DashboardPermissions::VIEW_OPERATIONS, 'dashboard', 'view_operations', null, 'resource'),
+            self::make(DashboardPermissions::VIEW_PERFORMANCE, 'dashboard', 'view_performance', null, 'resource'),
+            self::make(DashboardPermissions::VIEW_CUSTOMERS, 'dashboard', 'view_customers', null, 'resource'),
+            self::make(DashboardPermissions::VIEW_NETWORK, 'dashboard', 'view_network', null, 'resource'),
+        ];
+    }
+
+    /**
+     * Vendor fulfilment: catalog, inbound shipments, inventory.
+     *
+     * The five vendor grants are inside the seller ceiling — delegating them to
+     * a warehouse employee is the point of the module. The three hub grants are
+     * not: collecting stock from a shop, counting it in at the depot and auditing
+     * every vendor's movements are our operations on someone else's goods.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    public static function stockPermissions(): array
+    {
+        return [
+            self::make(StockPermissions::VIEW, 'stock', 'view', null, 'resource'),
+            self::make(StockPermissions::CREATE_PRODUCT, 'stock', 'create_product', null, 'resource'),
+            self::make(StockPermissions::CREATE_INBOUND, 'stock', 'create_inbound', null, 'resource'),
+            self::make(StockPermissions::ADJUST, 'stock', 'adjust', null, 'resource'),
+            self::make(StockPermissions::ORDERS_CREATE_WITH_STOCK, 'orders', 'create_with_stock', null, 'resource'),
+            self::make(StockPermissions::COLLECT_INBOUND, 'stock', 'collect_inbound', null, 'resource'),
+            self::make(StockPermissions::RECEIVE_INBOUND, 'stock', 'receive_inbound', null, 'resource'),
+            self::make(StockPermissions::ADMIN_OVERRIDE, 'stock', 'admin_override', null, 'admin'),
+        ];
     }
 
     /**
@@ -123,6 +170,10 @@ class PermissionCatalog
             self::make('orders.delete.all', 'orders', 'delete', 'all', 'resource'),
             self::make('orders.export', 'orders', 'export', null, 'resource'),
             self::make('orders.print', 'orders', 'print', null, 'resource'),
+            // Picking and packing a stock order at the depot. There is no
+            // matching grant for AWAITING_PREPARATION: that status is stamped at
+            // creation, never chosen.
+            self::make('orders.transition.to_prepared', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_pickup_requested', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_waiting_pickup', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_picked_up', 'orders', 'transition', null, 'workflow_transition'),

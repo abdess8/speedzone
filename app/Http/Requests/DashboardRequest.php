@@ -2,20 +2,29 @@
 
 namespace App\Http\Requests;
 
+use App\Support\DashboardPermissions;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class DashboardRequest extends FormRequest
 {
+    /**
+     * Two conditions, because they answer two different questions: `dashboard.view`
+     * says the screen is open to this actor, and the order-read scope says which
+     * rows it may aggregate. A role holding one without the other has nothing to
+     * show, so it is turned away rather than served an empty dashboard.
+     */
     public function authorize(): bool
     {
         $user = $this->user();
 
-        return $user && (
-            $user->hasPermission('orders.read.all')
+        if (! $user || ! $user->hasPermission(DashboardPermissions::VIEW)) {
+            return false;
+        }
+
+        return $user->hasPermission('orders.read.all')
             || $user->hasPermission('orders.read.own')
-            || $user->hasPermission('orders.read.assigned')
-        );
+            || $user->hasPermission('orders.read.assigned');
     }
 
     /**

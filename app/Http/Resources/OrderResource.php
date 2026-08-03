@@ -53,11 +53,16 @@ class OrderResource extends JsonResource
             ] : null),
             'city_id' => $this->city_id,
 
+            // Where the parcel starts: the depot it was packed in for a stock
+            // order, the vendor's own city for one we collect from him. Naming it
+            // after the seller would put a transfer's origin in the wrong city
+            // whenever the vendor warehouses away from home.
             'pickup_city' => $this->when(
-                $this->relationLoaded('seller') && $this->seller?->relationLoaded('city'),
-                fn () => $this->seller?->city ? [
-                    'id' => $this->seller->city->id,
-                    'name' => $this->seller->city->name,
+                $this->relationLoaded('stockHubCity')
+                    || ($this->relationLoaded('seller') && $this->seller?->relationLoaded('city')),
+                fn () => $this->originCity() ? [
+                    'id' => $this->originCity()->id,
+                    'name' => $this->originCity()->name,
                 ] : null
             ),
 

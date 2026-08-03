@@ -20,6 +20,7 @@ class NotificationPreferenceService
             'ticket_message' => true,
             'ticket_closed' => true,
             'return_requested' => true,
+            'stock_pickup_requested' => true,
             'system_notifications' => true,
         ];
     }

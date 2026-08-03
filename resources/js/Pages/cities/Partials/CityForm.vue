@@ -63,6 +63,22 @@ defineProps({
                 </label>
               </div>
             </BCol>
+            <BCol md="12">
+              <label class="form-label d-block">{{ $t('cities.form.stock_hub') }}</label>
+              <div class="form-check form-switch fs-15">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  role="switch"
+                  id="cityStockHub"
+                  v-model="form.is_stock_hub"
+                />
+                <label class="form-check-label" for="cityStockHub">
+                  {{ form.is_stock_hub ? $t('cities.form.stock_hub_on') : $t('cities.form.stock_hub_off') }}
+                </label>
+              </div>
+              <p class="text-muted fs-12 mb-0 mt-1">{{ $t('cities.form.stock_hub_hint') }}</p>
+            </BCol>
           </BRow>
         </BCardBody>
       </BCard>

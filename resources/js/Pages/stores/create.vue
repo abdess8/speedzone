@@ -6,6 +6,7 @@ import StoreForm from './Partials/StoreForm.vue';
 
 defineProps({
   cities: { type: Array, default: () => [] },
+  hubCities: { type: Array, default: () => [] },
 });
 
 const form = useForm({
@@ -17,6 +18,7 @@ const form = useForm({
   contact_phone: '',
   contact_email: '',
   city_id: null,
+  stock_hub_city_id: null,
   address: '',
   pickup_address_1: '',
   pickup_address_2: '',
@@ -34,7 +36,7 @@ const submit = () => {
     <PageHeader :title="$t('stores.create_title')" :pageTitle="$t('stores.title')" />
 
     <form @submit.prevent="submit">
-      <StoreForm :form="form" :cities="cities" />
+      <StoreForm :form="form" :cities="cities" :hub-cities="hubCities" />
 
       <BRow>
         <BCol xl="8" class="mx-auto">

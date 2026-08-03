@@ -1,10 +1,11 @@
 <script setup>
-import { onMounted } from "vue";
+import { computed, onMounted } from "vue";
 import { Link, useForm, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import OrderForm from "./Partials/OrderForm.vue";
+import OrderPicklist from "./Partials/OrderPicklist.vue";
 import { useGuideSignals } from "@/composables/useGuideSignals";
 import Swal from "sweetalert2";
 
@@ -16,6 +17,9 @@ const props = defineProps({
   sectors: { type: Array, default: () => [] },
   paymentMethods: { type: Array, default: () => [] },
   cloneData: { type: Object, default: null },
+  /** True when the seller holds orders.create_with_stock. */
+  canUseStock: { type: Boolean, default: false },
+  products: { type: Array, default: () => [] },
 });
 
 const emptyForm = () => ({
@@ -33,6 +37,8 @@ const emptyForm = () => ({
   is_fragile: false,
   can_be_opened: false,
   option_exchange: false,
+  items: [],
+  discount_amount: "",
 });
 
 const buildFormState = (data = null) => {
@@ -52,10 +58,19 @@ const buildFormState = (data = null) => {
     is_fragile: Boolean(data.is_fragile),
     can_be_opened: Boolean(data.can_be_opened),
     option_exchange: Boolean(data.option_exchange),
+    // A clone reproduces the parcel, not the stock movement: re-picking the
+    // products is deliberate, since the original units are long gone.
+    items: [],
+    discount_amount: "",
   };
 };
 
 const form = useForm(buildFormState(props.cloneData));
+
+const isCashPayment = computed(() => form.payment_method === "CASH");
+
+/** True while the basket owns the amount, so the manual field steps aside. */
+const stockDriven = computed(() => (form.items ?? []).length > 0);
 
 // Both paths pulse the same signal: the guide's closing step is about the order
 // existing, not about which button was used to get there — and "create and new"
@@ -90,7 +105,20 @@ onMounted(() => {
   <Layout>
     <PageHeader :title="$t('orders.create_title')" :pageTitle="$t('orders.page_title')" />
     <form @submit.prevent="submit">
-      <OrderForm :form="form" :cities="cities" :sectors="sectors" :payment-methods="paymentMethods" />
+      <OrderPicklist
+        v-if="canUseStock"
+        :form="form"
+        :products="products"
+        :is-cash-payment="isCashPayment"
+      />
+
+      <OrderForm
+        :form="form"
+        :cities="cities"
+        :sectors="sectors"
+        :payment-methods="paymentMethods"
+        :stock-driven="stockDriven"
+      />
 
       <div data-guide="order-submit" class="hstack gap-2 justify-content-center mb-4">
         <Link :href="route('orders.index')" class="btn btn-light">{{ $t('common.cancel') }}</Link>

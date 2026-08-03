@@ -26,6 +26,7 @@ class DashboardResource extends JsonResource
             'paymentMethods' => $this->resource['paymentMethods'] ?? [],
             'deliveryPerformance' => $this->resource['deliveryPerformance'] ?? [],
             'meta' => $this->resource['meta'] ?? [],
+            'widgets' => $this->resource['widgets'] ?? [],
             'limitations' => $this->resource['limitations'] ?? [],
         ];
     }

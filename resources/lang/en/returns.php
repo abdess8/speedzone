@@ -57,7 +57,7 @@ return [
         'qr_code' => 'Return QR Code',
         'qr_hint' => 'Scan at depot, warehouse, or during return processing',
         'back' => 'Back',
-        'move_to_depot' => 'Move to Depot',
+        'receive_at_hub' => 'Receive at Hub',
         'edit_customer' => 'Update Customer Info',
         'save_customer' => 'Save Customer Info',
         'name' => 'Name',
@@ -100,7 +100,7 @@ return [
         'failed_delivery' => 'Initiate Failed Delivery Return',
     ],
     'swal' => [
-        'move_to_depot_confirm' => 'Mark this return as picked up and in transit to depot?',
+        'receive_at_hub_confirm' => 'Confirm this parcel was received at the delivery city hub?',
         'status_confirm' => 'Move return to {label}?',
         'optional_comment' => 'Comment (optional)',
         'confirm' => 'Confirm',

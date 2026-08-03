@@ -192,7 +192,7 @@ function isDisabled(field, row) {
       {{ $t('orders.import.review.all_valid', { count: rows.length }) }}
     </div>
 
-    <BCard no-body>
+    <BCard data-guide="import-review" no-body>
       <BCardHeader class="d-flex flex-wrap align-items-center gap-2">
         <div class="search-box">
           <input

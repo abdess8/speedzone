@@ -34,9 +34,9 @@ const customerForm = useForm({
 const formatDate = (value) => (value ? new Date(value).toLocaleString() : t("common.empty_value"));
 const empty = () => t("common.empty_value");
 
-const moveToDepot = () => {
+const receiveAtHub = () => {
   Swal.fire({
-    title: t("returns.swal.move_to_depot_confirm"),
+    title: t("returns.swal.receive_at_hub_confirm"),
     input: "textarea",
     inputLabel: t("returns.swal.optional_comment"),
     showCancelButton: true,
@@ -44,7 +44,7 @@ const moveToDepot = () => {
     cancelButtonText: t("common.cancel"),
   }).then((result) => {
     if (!result.isConfirmed) return;
-    router.post(route("returns.move-to-depot", props.orderReturn.id), { comment: result.value }, { preserveScroll: true });
+    router.post(route("returns.receive-at-hub", props.orderReturn.id), { comment: result.value }, { preserveScroll: true });
   });
 };
 
@@ -99,11 +99,11 @@ onMounted(() => {
         <button
           v-if="can.update_status && orderReturn.status === 'CREATED'"
           class="btn btn-sm btn-primary"
-          :title="$t('returns.show.move_to_depot')"
-          @click="moveToDepot"
+          :title="$t('returns.show.receive_at_hub')"
+          @click="receiveAtHub"
         >
-          <i class="ri-truck-line align-bottom"></i>
-          <span class="d-none d-sm-inline ms-1">{{ $t('returns.show.move_to_depot') }}</span>
+          <i class="ri-store-3-line align-bottom"></i>
+          <span class="d-none d-sm-inline ms-1">{{ $t('returns.show.receive_at_hub') }}</span>
         </button>
 
         <div class="dropdown" v-if="allowedTransitions.length">

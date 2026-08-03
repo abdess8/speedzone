@@ -12,6 +12,7 @@ import FilterPanel from "@/Components/FilterPanel.vue";
 import StatusPills from "@/Components/StatusPills.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
+import { useGuideSignals } from "@/composables/useGuideSignals";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -35,6 +36,8 @@ const filters = reactive({
 
 const perPage = ref(props.filters.per_page ?? 15);
 const showCreateModal = ref(false);
+
+useGuideSignals().mirror("returns.create_open", showCreateModal);
 const showQrScanner = ref(false);
 /** Row whose mobile detail sheet is open. */
 const selectedReturn = ref(null);
@@ -125,7 +128,13 @@ onMounted(() => {
             <i class="ri-qr-scan-2-line align-bottom"></i>
             <span class="d-none d-sm-inline ms-1">{{ $t('returns.qr_scan') }}</span>
           </button>
-          <button v-if="can.create_request" type="button" class="btn btn-success" @click="showCreateModal = true">
+          <button
+            v-if="can.create_request"
+            data-guide="return-create-open"
+            type="button"
+            class="btn btn-success"
+            @click="showCreateModal = true"
+          >
             <i class="ri-add-line align-bottom"></i>
             <span class="d-none d-sm-inline ms-1">{{ $t('returns.create') }}</span>
           </button>

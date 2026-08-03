@@ -10,6 +10,7 @@ return [
     'search' => 'Rechercher',
     'select' => 'Sélectionner',
     'status' => 'Statut',
+    'type' => 'Type',
     'all' => 'Tous',
     'all_statuses' => 'Tous les statuts',
     'none' => 'Aucune',

@@ -11,23 +11,30 @@ use Illuminate\Validation\ValidationException;
 class ReturnTransitionService
 {
     /**
+     * The reverse logistics graph. Strictly linear: a return never skips a hub,
+     * because each step is the physical hand-over that the next actor signs for.
+     *
      * @var array<string, array<int, string>>
      */
     private const ALLOWED_TRANSITIONS = [
         ReturnStatus::CREATED->value => [
+            ReturnStatus::RECEIVED_AT_HUB->value,
+            ReturnStatus::CANCELLED->value,
+        ],
+        ReturnStatus::RECEIVED_AT_HUB->value => [
             ReturnStatus::IN_TRANSIT_TO_DEPOT->value,
             ReturnStatus::CANCELLED->value,
         ],
         ReturnStatus::IN_TRANSIT_TO_DEPOT->value => [
-            ReturnStatus::RECEIVED_AT_DEPOT->value,
+            ReturnStatus::ARRIVED_VENDOR_HUB->value,
         ],
-        ReturnStatus::RECEIVED_AT_DEPOT->value => [
-            ReturnStatus::IN_TRANSIT_TO_SELLER->value,
+        ReturnStatus::ARRIVED_VENDOR_HUB->value => [
+            ReturnStatus::IN_DELIVERY_TO_VENDOR->value,
         ],
-        ReturnStatus::IN_TRANSIT_TO_SELLER->value => [
-            ReturnStatus::DELIVERED_TO_SELLER->value,
+        ReturnStatus::IN_DELIVERY_TO_VENDOR->value => [
+            ReturnStatus::DELIVERED_TO_VENDOR->value,
         ],
-        ReturnStatus::DELIVERED_TO_SELLER->value => [],
+        ReturnStatus::DELIVERED_TO_VENDOR->value => [],
         ReturnStatus::CANCELLED->value => [],
     ];
 
@@ -60,19 +67,16 @@ class ReturnTransitionService
     }
 
     /**
-     * Driver shortcut: CREATED → IN_TRANSIT_TO_DEPOT.
+     * Hub shortcut: the destination hub signs for the parcel the driver just
+     * dropped off. CREATED → RECEIVED_AT_HUB.
      */
-    public function moveToDepot(OrderReturn $return, User $actor, ?string $comment = null, ?int $cityId = null): OrderReturn
+    public function receiveAtHub(OrderReturn $return, User $actor, ?string $comment = null, ?int $cityId = null): OrderReturn
     {
-        if (! $actor->hasPermission('returns.update_status')) {
-            throw new AuthorizationException('Missing permission: returns.update_status');
-        }
-
         return $this->transition(
             $return,
-            ReturnStatus::IN_TRANSIT_TO_DEPOT,
+            ReturnStatus::RECEIVED_AT_HUB,
             $actor,
-            $comment ?? 'Picked up by driver — in transit to depot.',
+            $comment ?? 'Dropped off at the delivery city hub.',
             $cityId,
         );
     }
@@ -87,7 +91,7 @@ class ReturnTransitionService
         $next = [];
 
         foreach ($allowed as $status) {
-            if ($this->canTransitionTo($return, $status, $actor)) {
+            if ($this->canTransitionTo($status, $actor)) {
                 $next[] = $status;
             }
         }
@@ -115,26 +119,27 @@ class ReturnTransitionService
             ]);
         }
 
-        if (! $this->canTransitionTo($return, $to, $actor)) {
+        if (! $this->canTransitionTo($to, $actor)) {
             throw new AuthorizationException('You are not allowed to perform this return status transition.');
         }
     }
 
-    private function canTransitionTo(OrderReturn $return, string $to, User $actor): bool
+    /**
+     * Each step names the permissions that unlock it, so a hub manager who may
+     * sign parcels in cannot also close the return on the seller's doorstep.
+     */
+    private function canTransitionTo(string $to, User $actor): bool
     {
         if ($actor->hasPermission('returns.manage')) {
             return true;
         }
 
-        if ($to === ReturnStatus::CANCELLED->value) {
-            return $actor->hasPermission('returns.manage');
+        foreach (ReturnStatus::from($to)->allowedBy() as $permission) {
+            if ($actor->hasPermission($permission)) {
+                return true;
+            }
         }
 
-        if ($to === ReturnStatus::IN_TRANSIT_TO_DEPOT->value) {
-            return $actor->hasPermission('returns.update_status')
-                || $actor->hasPermission('returns.create');
-        }
-
-        return $actor->hasPermission('returns.update_status');
+        return false;
     }
 }

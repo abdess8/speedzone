@@ -68,6 +68,7 @@ function download() {
       <BCard no-body class="h-100">
         <BCardBody>
           <div
+            data-guide="import-dropzone"
             class="upload-zone"
             :class="{ 'upload-zone--active': dragging, 'upload-zone--filled': !!file }"
             @dragover.prevent="dragging = true"
@@ -128,7 +129,12 @@ function download() {
         <BCardBody class="d-flex flex-column">
           <p class="text-muted">{{ $t('orders.import.upload.template_hint') }}</p>
 
-          <button type="button" class="btn btn-soft-primary w-100 mb-4" @click="download">
+          <button
+            data-guide="import-template"
+            type="button"
+            class="btn btn-soft-primary w-100 mb-4"
+            @click="download"
+          >
             <i class="ri-download-2-line align-bottom me-1"></i>
             {{ $t('orders.import.upload.download_template') }}
           </button>

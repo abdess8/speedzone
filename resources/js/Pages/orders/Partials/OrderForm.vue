@@ -93,7 +93,7 @@ watch(
 <template>
   <BRow>
     <BCol xl="8">
-      <BCard no-body>
+      <BCard data-guide="order-customer" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('orders.form.customer_info') }}</h5>
         </BCardHeader>
@@ -155,7 +155,7 @@ watch(
         </BCardBody>
       </BCard>
 
-      <BCard no-body>
+      <BCard data-guide="order-package" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('orders.form.package_info') }}</h5>
         </BCardHeader>
@@ -202,7 +202,7 @@ watch(
     </BCol>
 
     <BCol xl="4">
-      <BCard no-body>
+      <BCard data-guide="order-payment" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('orders.form.payment_amounts') }}</h5>
         </BCardHeader>

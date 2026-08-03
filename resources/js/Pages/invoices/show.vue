@@ -106,7 +106,7 @@ onMounted(() => {
               </span>
             </h5>
             <!-- Labels collapse below `sm`; `title` still names the icon-only button. -->
-            <div class="action-bar">
+            <div data-guide="invoice-pdf" class="action-bar">
               <BButton v-if="inv.pdf_url || true" variant="soft-secondary" size="sm" :title="$t('invoices.actions.view_pdf')" @click="openPdf">
                 <i class="ri-eye-line align-bottom"></i>
                 <span class="d-none d-sm-inline ms-1">{{ $t('invoices.actions.view_pdf') }}</span>
@@ -117,7 +117,7 @@ onMounted(() => {
               </BButton>
             </div>
           </BCardHeader>
-          <BCardBody>
+          <BCardBody data-guide="invoice-summary">
             <BRow class="g-3">
               <BCol md="3" cols="6">
                 <p class="text-muted mb-1">{{ $t('invoices.summary.total_orders') }}</p>
@@ -145,7 +145,7 @@ onMounted(() => {
         </BCard>
 
         <!-- Lines -->
-        <BCard no-body>
+        <BCard data-guide="invoice-orders" no-body>
           <BCardHeader>
             <h5 class="card-title mb-0">{{ $t('invoices.detail.orders_title') }}</h5>
           </BCardHeader>

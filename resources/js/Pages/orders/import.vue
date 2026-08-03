@@ -10,6 +10,7 @@ import StepMapping from './Partials/import/StepMapping.vue';
 import StepReview from './Partials/import/StepReview.vue';
 import { isSupportedFile, MAX_FILE_SIZE, readSpreadsheet } from '@/common/spreadsheet';
 import { MAX_IMPORT_ROWS, useOrderImport } from '@/composables/useOrderImport';
+import { useGuideSignals } from '@/composables/useGuideSignals';
 
 /**
  * Bulk order import wizard.
@@ -61,6 +62,22 @@ const steps = computed(() => [
   { number: 2, label: t('orders.import.steps.mapping') },
   { number: 3, label: t('orders.import.steps.review') },
 ]);
+
+/*
+ * What the interactive guide is allowed to know about this screen.
+ *
+ * The wizard does not know a tour exists; it just publishes the two facts a
+ * guided step can wait on — where the wizard stands, and whether a file has
+ * actually been parsed — plus the one event that outlives the page, because the
+ * closing step is shown after the redirect to the order list.
+ */
+const guide = useGuideSignals();
+
+guide.mirror('orders.import.step', step);
+guide.mirror(
+  'orders.import.file_ready',
+  computed(() => Boolean(file.value) && rawRows.value.length > 0)
+);
 
 /* ------------------------------------------------------------- step 1 */
 
@@ -192,6 +209,7 @@ async function save() {
     {
       // The batch is rebuilt from the table on every attempt, so nothing is
       // lost by letting Inertia replace the page on success.
+      onSuccess: () => guide.pulse('orders.import.saved'),
       onError: (serverErrors) => {
         const mapped = applyServerErrors(serverErrors);
 
@@ -269,6 +287,7 @@ async function save() {
       <div class="hstack gap-2">
         <BButton
           v-if="step < 3"
+          data-guide="wizard-next"
           type="button"
           variant="primary"
           :disabled="!canGoNext"
@@ -283,7 +302,13 @@ async function save() {
             <i class="ri-shield-check-line align-bottom me-1"></i>
             {{ $t('orders.import.verify') }}
           </BButton>
-          <BButton type="button" variant="success" :disabled="!canSave || saving" @click="save">
+          <BButton
+            data-guide="import-save"
+            type="button"
+            variant="success"
+            :disabled="!canSave || saving"
+            @click="save"
+          >
             <span v-if="saving" class="spinner-border spinner-border-sm me-1"></span>
             <i v-else class="ri-save-3-line align-bottom me-1"></i>
             {{ $t('orders.import.save', { count: rows.length }) }}

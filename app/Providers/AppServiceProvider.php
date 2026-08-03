@@ -4,6 +4,10 @@ namespace App\Providers;
 
 use App\Models\Order;
 use App\Observers\OrderObserver;
+use App\Services\Chatbot\ChatDriverException;
+use App\Services\Chatbot\Contracts\ChatDriver;
+use App\Services\Chatbot\Drivers\GeminiDriver;
+use App\Services\Chatbot\Drivers\OpenAiDriver;
 use App\Support\StoreContext;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
@@ -20,6 +24,26 @@ class AppServiceProvider extends ServiceProvider
         // instances between jobs, so a job can never inherit the store of
         // whatever ran before it.
         $this->app->scoped(StoreContext::class);
+
+        $this->registerChatDriver();
+    }
+
+    /**
+     * Resolve the assistant's AI provider from configuration.
+     *
+     * Bound by contract rather than by class so the chatbot never names a
+     * vendor: swapping AI_DRIVER is the only change needed to move the whole
+     * assistant from Gemini to OpenAI or back.
+     */
+    private function registerChatDriver(): void
+    {
+        $this->app->bind(ChatDriver::class, function (): ChatDriver {
+            return match ((string) config('ai.driver')) {
+                'gemini' => $this->app->make(GeminiDriver::class),
+                'openai' => $this->app->make(OpenAiDriver::class),
+                default => throw ChatDriverException::unknownDriver((string) config('ai.driver')),
+            };
+        });
     }
 
     /**

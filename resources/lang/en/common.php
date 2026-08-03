@@ -10,6 +10,7 @@ return [
     'search' => 'Search',
     'select' => 'Select',
     'status' => 'Status',
+    'type' => 'Type',
     'all' => 'All',
     'all_statuses' => 'All statuses',
     'none' => 'None',

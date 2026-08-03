@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BillingFrequency;
+use App\Enums\ReturnStatus;
 use App\Enums\SellerPaymentMethod;
 use App\Enums\UserStatus;
 use App\Notifications\VerifySpeedZoneAccountEmail;
@@ -179,6 +180,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function ownedStores(): HasMany
     {
         return $this->hasMany(Store::class, 'owner_id');
+    }
+
+    /**
+     * History with the interactive guides of the Help Center.
+     */
+    public function guideProgress(): HasMany
+    {
+        return $this->hasMany(UserGuideProgress::class);
     }
 
     /**
@@ -651,6 +660,31 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Whether the user may advance a return through at least one of its steps.
+     *
+     * The workflow grants can be held one step at a time — a hub manager signs
+     * parcels in, a driver closes them at the seller's door — so the coarse
+     * "can this user touch return statuses?" question has to consider both the
+     * blanket permission and the per-step ones.
+     */
+    public function canUpdateReturnStatus(): bool
+    {
+        if ($this->hasPermission('returns.update_status') || $this->hasPermission('returns.manage')) {
+            return true;
+        }
+
+        foreach (ReturnStatus::pipeline() as $status) {
+            foreach ($status->allowedBy() as $permission) {
+                if (str_starts_with($permission, 'returns.transition.') && $this->hasPermission($permission)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Whether the returns module should appear in navigation.
      */
     public function canAccessReturnsModule(): bool
@@ -662,9 +696,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasRolePermission('returns.read.all')
             || $this->hasRolePermission('returns.read.own')
             || $this->hasRolePermission('returns.create_request')
-            || $this->hasRolePermission('returns.update_status')
             || $this->hasRolePermission('returns.create')
-            || $this->hasRolePermission('returns.manage');
+            || $this->hasRolePermission('returns.manage')
+            || $this->canUpdateReturnStatus();
     }
 
     /**
@@ -759,7 +793,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return in_array($action, ['read', 'update_status', 'scan'], true);
         }
 
-        if ($this->hasPermission('returns.update_status') || $this->hasPermission('returns.create')) {
+        if ($this->canUpdateReturnStatus() || $this->hasPermission('returns.create')) {
             return in_array($action, ['read', 'update_status', 'scan'], true);
         }
 

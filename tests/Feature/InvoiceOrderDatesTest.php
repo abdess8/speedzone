@@ -85,10 +85,11 @@ test('an order stamps the day it comes back to the seller', function () {
     expect($order->fresh()->returned_at)->toBeNull();
 
     $transitions = app(ReturnTransitionService::class);
-    $transitions->moveToDepot($return->fresh(), $this->admin);
-    $transitions->transition($return->fresh(), ReturnStatus::RECEIVED_AT_DEPOT, $this->admin);
-    $transitions->transition($return->fresh(), ReturnStatus::IN_TRANSIT_TO_SELLER, $this->admin);
-    $transitions->transition($return->fresh(), ReturnStatus::DELIVERED_TO_SELLER, $this->admin);
+    $transitions->receiveAtHub($return->fresh(), $this->admin);
+    $transitions->transition($return->fresh(), ReturnStatus::IN_TRANSIT_TO_DEPOT, $this->admin);
+    $transitions->transition($return->fresh(), ReturnStatus::ARRIVED_VENDOR_HUB, $this->admin);
+    $transitions->transition($return->fresh(), ReturnStatus::IN_DELIVERY_TO_VENDOR, $this->admin);
+    $transitions->transition($return->fresh(), ReturnStatus::DELIVERED_TO_VENDOR, $this->admin);
 
     $order->refresh();
 

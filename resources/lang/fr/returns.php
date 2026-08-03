@@ -57,7 +57,7 @@ return [
         'qr_code' => 'QR Code retour',
         'qr_hint' => 'Scanner au dépôt, entrepôt ou lors du traitement du retour',
         'back' => 'Retour',
-        'move_to_depot' => 'Vers le dépôt',
+        'receive_at_hub' => 'Réceptionner au dépôt',
         'edit_customer' => 'Modifier infos client',
         'save_customer' => 'Enregistrer infos client',
         'name' => 'Nom',
@@ -100,7 +100,7 @@ return [
         'failed_delivery' => 'Initier retour échec livraison',
     ],
     'swal' => [
-        'move_to_depot_confirm' => 'Marquer ce retour comme ramassé et en transit vers le dépôt ?',
+        'receive_at_hub_confirm' => 'Confirmer la réception de ce colis au dépôt de la ville de livraison ?',
         'status_confirm' => 'Passer le retour à {label} ?',
         'optional_comment' => 'Commentaire (optionnel)',
         'confirm' => 'Confirmer',

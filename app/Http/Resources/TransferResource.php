@@ -18,6 +18,7 @@ class TransferResource extends JsonResource
     public function toArray(Request $request): array
     {
         $status = $this->status instanceof TransferStatus ? $this->status : TransferStatus::from($this->status);
+        $contentType = $this->contentType();
 
         return [
             'id' => $this->id,
@@ -25,7 +26,12 @@ class TransferResource extends JsonResource
             'status' => $status->value,
             'status_label' => $status->label(),
             'status_color' => $status->color(),
+            'content_type' => $contentType->value,
+            'content_type_label' => $contentType->label(),
+            'content_type_color' => $contentType->color(),
+            'content_type_icon' => $contentType->icon(),
             'number_of_packages' => (int) $this->number_of_packages,
+            'number_of_returns' => (int) $this->number_of_returns,
             'total_amount' => (float) $this->total_amount,
             'notes' => $this->notes,
             'from_city_id' => $this->from_city_id,
@@ -53,6 +59,11 @@ class TransferResource extends JsonResource
             'orders' => $this->whenLoaded(
                 'orders',
                 fn () => OrderResource::collection($this->orders)->resolve($request)
+            ),
+            'returns_count' => $this->whenCounted('returns'),
+            'returns' => $this->whenLoaded(
+                'returns',
+                fn () => OrderReturnResource::collection($this->returns)->resolve($request)
             ),
             'status_history' => $this->whenLoaded(
                 'statusHistories',

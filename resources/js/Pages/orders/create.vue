@@ -5,9 +5,11 @@ import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import OrderForm from "./Partials/OrderForm.vue";
+import { useGuideSignals } from "@/composables/useGuideSignals";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
+const guide = useGuideSignals();
 
 const props = defineProps({
   cities: { type: Array, default: () => [] },
@@ -55,12 +57,19 @@ const buildFormState = (data = null) => {
 
 const form = useForm(buildFormState(props.cloneData));
 
-const submit = () => form.post(route("orders.store"));
+// Both paths pulse the same signal: the guide's closing step is about the order
+// existing, not about which button was used to get there — and "create and new"
+// stays on this page, so a route change alone would never announce it.
+const submit = () =>
+  form.post(route("orders.store"), {
+    onSuccess: () => guide.pulse("orders.created"),
+  });
 
 const submitAndNew = () => {
   form.post(route("orders.store-and-new"), {
     preserveState: false,
     onSuccess: () => {
+      guide.pulse("orders.created");
       form.defaults(emptyForm());
       form.reset();
     },
@@ -83,7 +92,7 @@ onMounted(() => {
     <form @submit.prevent="submit">
       <OrderForm :form="form" :cities="cities" :sectors="sectors" :payment-methods="paymentMethods" />
 
-      <div class="hstack gap-2 justify-content-center mb-4">
+      <div data-guide="order-submit" class="hstack gap-2 justify-content-center mb-4">
         <Link :href="route('orders.index')" class="btn btn-light">{{ $t('common.cancel') }}</Link>
         <BButton type="button" variant="soft-success" :disabled="form.processing" @click="submitAndNew">
           <i class="ri-add-line align-bottom me-1"></i>

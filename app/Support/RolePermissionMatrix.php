@@ -99,6 +99,11 @@ class RolePermissionMatrix
             'returns.manage',
             'returns.update_status',
             'returns.edit_customer_data',
+            'returns.transition.to_received_at_hub',
+            'returns.transition.to_in_transit_to_depot',
+            'returns.transition.to_arrived_vendor_hub',
+            'returns.transition.to_in_delivery_to_vendor',
+            'returns.transition.to_delivered_to_vendor',
             'invoices.read.all',
             'invoices.print',
             'driver_invoices.read.all',
@@ -130,7 +135,10 @@ class RolePermissionMatrix
             'orders.transition.to_delivered',
             'orders.transition.to_failed',
             'returns.create',
-            'returns.update_status',
+            // The hand-back leg only: signing a parcel into a hub belongs to
+            // the hub manager, not to the driver who dropped it there.
+            'returns.transition.to_in_delivery_to_vendor',
+            'returns.transition.to_delivered_to_vendor',
             'driver_invoices.read.own',
             'driver_invoices.print',
         ];

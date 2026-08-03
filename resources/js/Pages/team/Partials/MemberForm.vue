@@ -22,7 +22,7 @@ const toggle = (list, id) => {
 <template>
   <BRow>
     <BCol xl="8" class="mx-auto">
-      <BCard no-body>
+      <BCard data-guide="team-identity" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('team.sections.identity') }}</h5>
         </BCardHeader>
@@ -79,7 +79,7 @@ const toggle = (list, id) => {
         </BCardBody>
       </BCard>
 
-      <BCard no-body>
+      <BCard data-guide="team-access" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('team.sections.access') }}</h5>
         </BCardHeader>
@@ -146,7 +146,7 @@ const toggle = (list, id) => {
         </BCardBody>
       </BCard>
 
-      <BCard no-body>
+      <BCard data-guide="team-security" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('team.sections.security') }}</h5>
         </BCardHeader>

@@ -22,7 +22,7 @@ class ReturnScanService
      */
     public function validateScan(User $actor, string $input): array
     {
-        if (! $actor->hasPermission('returns.update_status') && ! $actor->hasPermission('returns.create')) {
+        if (! $actor->canUpdateReturnStatus() && ! $actor->hasPermission('returns.create')) {
             throw new AuthorizationException('Missing permission to scan returns.');
         }
 
@@ -55,10 +55,10 @@ class ReturnScanService
         $status = $return->status instanceof ReturnStatus ? $return->status : ReturnStatus::from($return->status);
 
         $nextAction = match ($status) {
-            ReturnStatus::CREATED => 'move_to_depot',
-            ReturnStatus::IN_TRANSIT_TO_DEPOT => 'receive_at_depot',
-            ReturnStatus::RECEIVED_AT_DEPOT => 'send_to_seller',
-            ReturnStatus::IN_TRANSIT_TO_SELLER => 'deliver_to_seller',
+            ReturnStatus::CREATED => 'receive_at_hub',
+            ReturnStatus::IN_TRANSIT_TO_DEPOT => 'arrive_vendor_hub',
+            ReturnStatus::ARRIVED_VENDOR_HUB => 'start_delivery_to_vendor',
+            ReturnStatus::IN_DELIVERY_TO_VENDOR => 'deliver_to_vendor',
             default => null,
         };
 
@@ -84,25 +84,28 @@ class ReturnScanService
         $return = OrderReturn::query()->findOrFail($validation['return']['id']);
         $status = $return->status instanceof ReturnStatus ? $return->status : ReturnStatus::from($return->status);
 
+        // RECEIVED_AT_HUB has no scan action on purpose: the parcel leaves the
+        // hub inside a transfer manifest, and dispatching that manifest is what
+        // moves the return on.
         return match ($status) {
-            ReturnStatus::CREATED => $this->transitions->moveToDepot($return, $actor, $comment),
+            ReturnStatus::CREATED => $this->transitions->receiveAtHub($return, $actor, $comment),
             ReturnStatus::IN_TRANSIT_TO_DEPOT => $this->transitions->transition(
                 $return,
-                ReturnStatus::RECEIVED_AT_DEPOT,
+                ReturnStatus::ARRIVED_VENDOR_HUB,
                 $actor,
-                $comment ?? 'Received at depot.',
+                $comment ?? 'Received at the vendor hub.',
             ),
-            ReturnStatus::RECEIVED_AT_DEPOT => $this->transitions->transition(
+            ReturnStatus::ARRIVED_VENDOR_HUB => $this->transitions->transition(
                 $return,
-                ReturnStatus::IN_TRANSIT_TO_SELLER,
+                ReturnStatus::IN_DELIVERY_TO_VENDOR,
                 $actor,
-                $comment ?? 'Sent back to seller.',
+                $comment ?? 'Out for hand-back to the vendor.',
             ),
-            ReturnStatus::IN_TRANSIT_TO_SELLER => $this->transitions->transition(
+            ReturnStatus::IN_DELIVERY_TO_VENDOR => $this->transitions->transition(
                 $return,
-                ReturnStatus::DELIVERED_TO_SELLER,
+                ReturnStatus::DELIVERED_TO_VENDOR,
                 $actor,
-                $comment ?? 'Delivered to seller.',
+                $comment ?? 'Handed back to the vendor.',
             ),
             default => throw ValidationException::withMessages([
                 'scan' => 'No scan action available for the current return status.',

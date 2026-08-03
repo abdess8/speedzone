@@ -54,6 +54,7 @@ const leg = (transfer) =>
   `${transfer.from_city?.name ?? t("common.empty_value")} → ${transfer.to_city?.name ?? t("common.empty_value")}`;
 
 const cardRows = (transfer) => [
+  { label: t("common.type"), value: transfer.content_type_label },
   { label: t("transfers.table.packages"), value: transfer.number_of_packages },
   { label: t("transfers.table.total_amount"), value: money(transfer.total_amount), emphasis: true },
   { label: t("transfers.table.created"), value: formatDate(transfer.created_at) },
@@ -210,6 +211,13 @@ onMounted(() => {
               <tr v-for="transfer in rows" :key="transfer.id">
                 <td>
                   <EntityLink type="transfer" :entity="transfer" :show-status="false" size="sm" />
+                  <span
+                    class="badge ms-1"
+                    :class="`bg-${transfer.content_type_color}-subtle text-${transfer.content_type_color}`"
+                    :title="transfer.content_type_label"
+                  >
+                    <i :class="transfer.content_type_icon"></i>
+                  </span>
                 </td>
                 <td>{{ transfer.from_city?.name ?? $t('common.empty_value') }}</td>
                 <td>{{ transfer.to_city?.name ?? $t('common.empty_value') }}</td>
@@ -258,6 +266,7 @@ onMounted(() => {
     <CreateTransferModal
       :show="showCreateModal"
       :cities="filterOptions.cities ?? []"
+      :content-types="filterOptions.contentTypes ?? []"
       :default-from-city-id="filterOptions.defaultFromCityId"
       :staff="staff"
       @close="showCreateModal = false"

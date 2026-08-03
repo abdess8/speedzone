@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ChatbotController;
 use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DriverZoneController;
@@ -33,6 +34,16 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('dashboard', DashboardController::class)->name('api.dashboard');
+
+    // AI assistant. Every capability it can invoke re-checks the caller's own
+    // policies, so no extra route permission is layered on top; the throttle is
+    // there to cap the cost of a runaway client.
+    Route::post('chatbot/message', [ChatbotController::class, 'message'])
+        ->middleware('throttle:chatbot')
+        ->name('api.chatbot.message');
+    Route::get('chatbot/orders/{order}/invoice', [ChatbotController::class, 'orderInvoice'])
+        ->whereNumber('order')
+        ->name('api.chatbot.orders.invoice');
 
     Route::get('permissions', [PermissionController::class, 'index'])->middleware('permission:permissions.read');
     Route::post('permissions', [PermissionController::class, 'store'])->middleware('permission:permissions.create');
@@ -137,9 +148,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('returns/{return}/change-status', [ReturnController::class, 'changeStatus'])
         ->whereNumber('return')
         ->name('api.returns.change-status');
-    Route::post('returns/{return}/move-to-depot', [ReturnController::class, 'moveToDepot'])
+    Route::post('returns/{return}/receive-at-hub', [ReturnController::class, 'receiveAtHub'])
         ->whereNumber('return')
-        ->name('api.returns.move-to-depot');
+        ->name('api.returns.receive-at-hub');
     Route::put('returns/{return}/customer-data', [ReturnController::class, 'updateCustomerData'])
         ->whereNumber('return')
         ->name('api.returns.update-customer-data');

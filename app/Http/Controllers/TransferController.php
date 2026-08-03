@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransferContentType;
 use App\Enums\TransferStatus;
 use App\Http\Requests\AssignTransferStaffRequest;
 use App\Http\Requests\ChangeTransferStatusRequest;
@@ -11,6 +12,7 @@ use App\Http\Requests\TransferBulkReceiveRequest;
 use App\Http\Requests\TransferScanRequest;
 use App\Http\Requests\UpdateTransferRequest;
 use App\Http\Resources\OrderResource;
+use App\Http\Resources\OrderReturnResource;
 use App\Http\Resources\TransferResource;
 use App\Models\City;
 use App\Models\Transfer;
@@ -52,6 +54,7 @@ class TransferController extends Controller
             ]),
             'filterOptions' => [
                 'statuses' => TransferStatus::options(),
+                'contentTypes' => TransferContentType::options(),
                 'cities' => City::query()->active()->orderBy('name')->get(['id', 'name', 'code']),
                 'pageSizes' => [10, 15, 25, 50],
                 'defaultFromCityId' => $this->defaultFromCityId(),
@@ -87,6 +90,24 @@ class TransferController extends Controller
         ]);
     }
 
+    public function eligibleReturns(EligibleTransferOrdersRequest $request): JsonResponse
+    {
+        $returns = $this->transfers->getEligibleReturns(
+            $request->integer('from_city_id'),
+            $request->integer('to_city_id'),
+            $request->only([
+                'search',
+                'customer',
+                'created_from',
+                'created_to',
+            ])
+        );
+
+        return response()->json([
+            'data' => OrderReturnResource::collection($returns)->resolve($request),
+        ]);
+    }
+
     public function store(StoreTransferRequest $request): RedirectResponse
     {
         $this->authorize('create', Transfer::class);
@@ -97,7 +118,9 @@ class TransferController extends Controller
             $request->integer('to_city_id'),
             $request->input('order_ids', []),
             $request->input('notes'),
-            $request->input('assigned_to')
+            $request->input('assigned_to'),
+            $request->contentType(),
+            $request->input('return_ids', []),
         );
 
         return redirect()
@@ -118,6 +141,9 @@ class TransferController extends Controller
             'orders.sector',
             'orders.seller.roles',
             'orders.seller.city',
+            'returns.order.seller.city',
+            'returns.order.city',
+            'returns.currentLocationCity',
             'statusHistories.changedBy.roles',
         ]);
 

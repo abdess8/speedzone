@@ -28,6 +28,13 @@ const props = defineProps({
   title: { type: String, default: '' },
   /** Below this width the fields move into a bottom sheet. */
   desktopBreakpoint: { type: Number, default: 992 },
+  /**
+   * Name under which an interactive guide can spotlight this toolbar.
+   *
+   * An explicit prop because the component renders a fragment, and a plain
+   * `data-guide` attribute on the tag would be silently dropped.
+   */
+  guide: { type: String, default: null },
 });
 
 const emit = defineEmits(['apply', 'reset']);
@@ -79,7 +86,7 @@ function reset() {
 </script>
 
 <template>
-  <div class="card-header border-bottom-dashed">
+  <div class="card-header border-bottom-dashed" :data-guide="guide">
     <div class="d-flex flex-wrap align-items-center gap-2">
       <div class="flex-grow-1 min-w-0">
         <slot name="title"></slot>

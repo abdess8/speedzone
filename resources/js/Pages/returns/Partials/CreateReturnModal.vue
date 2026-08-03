@@ -4,8 +4,10 @@ import { useForm } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import axios from "axios";
 import BottomSheet from "@/Components/BottomSheet.vue";
+import { useGuideSignals } from "@/composables/useGuideSignals";
 
 const { t } = useI18n();
+const guide = useGuideSignals();
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -29,6 +31,11 @@ const canSubmit = computed(() => {
   if (props.preselectedOrderId) return true;
   return eligibleOrders.value.length > 0;
 });
+
+// Watched on the model rather than on the select, so an order arriving
+// preselected from an order sheet satisfies the guide just the same.
+guide.mirror("returns.order_selected", () => Boolean(form.order_id));
+guide.mirror("returns.reason_selected", () => Boolean(form.reason));
 
 watch(
   () => props.show,
@@ -84,7 +91,7 @@ const submit = () => {
         />
       </div>
 
-      <div v-else class="mb-3">
+      <div v-else data-guide="return-order" class="mb-3">
         <label class="form-label">{{ $t('returns.form.select_order') }}</label>
         <select v-model="form.order_id" class="form-select" required>
           <option value="" disabled>{{ $t('returns.form.select_order') }}</option>
@@ -97,7 +104,7 @@ const submit = () => {
         <div v-if="form.errors.order_id" class="text-danger small mt-1">{{ form.errors.order_id }}</div>
       </div>
 
-      <div class="mb-3">
+      <div data-guide="return-reason" class="mb-3">
         <label class="form-label">{{ $t('returns.form.reason') }}</label>
         <select v-model="form.reason" class="form-select" required>
           <option value="" disabled>{{ $t('returns.form.select_reason') }}</option>
@@ -113,7 +120,14 @@ const submit = () => {
 
       <div class="text-end">
         <button type="button" class="btn btn-light me-2" @click="emit('close')">{{ $t('returns.modal.cancel') }}</button>
-        <button type="submit" class="btn btn-success" :disabled="form.processing">{{ $t('returns.modal.submit') }}</button>
+        <button
+          data-guide="return-submit"
+          type="submit"
+          class="btn btn-success"
+          :disabled="form.processing"
+        >
+          {{ $t('returns.modal.submit') }}
+        </button>
       </div>
     </form>
   </BottomSheet>

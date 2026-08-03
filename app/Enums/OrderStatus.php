@@ -2,6 +2,8 @@
 
 namespace App\Enums;
 
+use App\Services\OrderTransitionService;
+
 enum OrderStatus: string
 {
     case CREATED = 'CREATED';
@@ -81,6 +83,89 @@ enum OrderStatus: string
             self::RETURN_IN_PROGRESS => 'ri-truck-line',
             self::RETURNED => 'ri-arrow-go-back-line',
         };
+    }
+
+    /**
+     * What the step means on the ground, for the Help Center.
+     */
+    public function description(): string
+    {
+        return __('order_statuses.descriptions.'.$this->value);
+    }
+
+    /**
+     * Human name of the role expected to stamp this status.
+     */
+    public function actorLabel(): string
+    {
+        return __('order_statuses.actors.'.$this->value);
+    }
+
+    /**
+     * Permission that authorises moving an order *into* this status.
+     *
+     * Mirrors the name {@see OrderTransitionService} derives at
+     * runtime. The return statuses are absent: they are set by the returns
+     * module as a side effect, never chosen by hand.
+     */
+    public function transitionPermission(): ?string
+    {
+        return match ($this) {
+            self::RETURN_REQUESTED, self::RETURN_IN_PROGRESS => null,
+            default => 'orders.transition.to_'.strtolower($this->value),
+        };
+    }
+
+    /**
+     * The straight line from a placed order to a paid seller.
+     *
+     * @return array<int, self>
+     */
+    public static function successPath(): array
+    {
+        return [
+            self::CREATED,
+            self::PICKED_UP,
+            self::IN_TRANSIT,
+            self::OUT_FOR_DELIVERY,
+            self::DELIVERED,
+        ];
+    }
+
+    /**
+     * The same line up to the point the delivery fails for good, where the
+     * reverse logistics workflow takes over.
+     *
+     * @return array<int, self>
+     */
+    public static function failurePath(): array
+    {
+        return [
+            self::CREATED,
+            self::PICKED_UP,
+            self::IN_TRANSIT,
+            self::OUT_FOR_DELIVERY,
+            self::FAILED,
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public static function matrix(): array
+    {
+        return array_map(
+            static fn (self $status) => [
+                'value' => $status->value,
+                'label' => $status->label(),
+                'description' => $status->description(),
+                'color' => $status->color(),
+                'icon' => $status->icon(),
+                'actor' => $status->actorLabel(),
+                'permissions' => array_filter([$status->transitionPermission()]),
+            ],
+            self::cases()
+        );
     }
 
     /**

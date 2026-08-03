@@ -102,11 +102,11 @@ class ReturnController extends Controller
         ]);
     }
 
-    public function moveToDepot(Request $request, OrderReturn $return): JsonResponse
+    public function receiveAtHub(Request $request, OrderReturn $return): JsonResponse
     {
         $this->authorize('updateStatus', $return);
 
-        $return = $this->transitions->moveToDepot(
+        $return = $this->transitions->receiveAtHub(
             $return,
             $request->user(),
             $request->input('comment'),

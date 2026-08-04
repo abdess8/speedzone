@@ -144,7 +144,7 @@ onMounted(() => {
               </span>
             </div>
 
-            <div class="hstack gap-2">
+            <div data-guide="reception-actions" class="hstack gap-2">
               <Link
                 v-if="can.update"
                 :href="route('stock-receptions.edit', reception.id)"
@@ -247,7 +247,7 @@ onMounted(() => {
         <ReceptionCollectSheet v-if="can.collect" :reception="reception" />
         <ReceptionCountSheet v-if="can.receive" :reception="reception" />
 
-        <BCard no-body>
+        <BCard data-guide="reception-timeline" no-body>
           <BCardHeader>
             <h5 class="card-title mb-0">{{ $t('stock.receptions.sections.history') }}</h5>
           </BCardHeader>

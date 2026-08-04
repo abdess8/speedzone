@@ -1,0 +1,43 @@
+{
+  "key": "stock-inventory",
+  "route": "stock.inventory",
+  "steps": [
+    { "id": "welcome", "kind": "welcome" },
+    {
+      "id": "summary",
+      "target": "[data-guide=\"inventory-summary\"]",
+      "placement": "bottom",
+      "padding": 10
+    },
+    {
+      "id": "filters",
+      "target": "[data-guide=\"inventory-filters\"]",
+      "placement": "bottom"
+    },
+    {
+      "id": "sheet",
+      "target": "[data-guide=\"inventory-sheet\"]",
+      "placement": "top"
+    },
+    {
+      "id": "match_all",
+      "target": "[data-guide=\"inventory-match-all\"]",
+      "placement": "bottom",
+      "padding": 10
+    },
+    {
+      "id": "reason",
+      "target": "[data-guide=\"inventory-sheet\"]",
+      "placement": "top",
+      "require": { "signal": "stock.inventory.gaps" },
+      "autoAdvance": true
+    },
+    {
+      "id": "save",
+      "target": "[data-guide=\"inventory-bar\"]",
+      "placement": "top",
+      "padding": 10
+    },
+    { "id": "done", "kind": "finish", "cta": { "route": "products.index" } }
+  ]
+}

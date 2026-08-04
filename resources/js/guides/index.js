@@ -3,6 +3,9 @@ import ordersCreate from './definitions/orders-create.json';
 import ordersImport from './definitions/orders-import.json';
 import pickupsCreate from './definitions/pickups-create.json';
 import returnsRequest from './definitions/returns-request.json';
+import stockCatalog from './definitions/stock-catalog.json';
+import stockInventory from './definitions/stock-inventory.json';
+import stockShipment from './definitions/stock-shipment.json';
 import storesManage from './definitions/stores-manage.json';
 import teamMember from './definitions/team-member.json';
 
@@ -57,6 +60,9 @@ const DEFINITIONS = [
   pickupsCreate,
   returnsRequest,
   invoicesRead,
+  stockCatalog,
+  stockShipment,
+  stockInventory,
   storesManage,
   teamMember,
 ];

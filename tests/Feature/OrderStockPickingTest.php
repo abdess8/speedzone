@@ -10,6 +10,7 @@ use App\Models\StockAdjustment;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use Inertia\Testing\AssertableInertia;
 use Tests\Support\StockFixtures;
 
 beforeEach(function () {
@@ -231,6 +232,57 @@ test('deleting an order puts its units back on the shelf', function () {
         // Restored, not un-journalled: the debit and the credit both stay on the
         // ledger so the movement can still be explained afterwards.
         ->and(StockAdjustment::acrossStores()->where('product_id', $product->id)->count())->toBe(2);
+});
+
+test('the order sheet carries the picked lines, at the price they were sold', function () {
+    $seller = StockFixtures::user(Role::SELLER);
+    $store = StockFixtures::store($seller);
+    $product = StockFixtures::product($seller, $store, [
+        'name' => 'Lampe',
+        'sku' => 'LMP-001',
+        'unit_price' => 120,
+        'stock_quantity' => 6,
+    ]);
+
+    $this->actingAs($seller)->post('/orders', pickingPayload(
+        $this->city,
+        $this->sector,
+        [['product_id' => $product->id, 'quantity' => 2]],
+        ['discount_amount' => 40]
+    ));
+
+    $order = Order::acrossStores()->latest('id')->firstOrFail();
+
+    // The catalog moves on after the sale; the sheet must not.
+    $product->update(['name' => 'Lampe (ancien modèle)', 'unit_price' => 150]);
+
+    $this->actingAs($seller)
+        ->get("/orders/{$order->id}")
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('order.discount_amount', 40)
+            ->has('order.items', 1)
+            ->where('order.items.0.name', 'Lampe')
+            ->where('order.items.0.sku', 'LMP-001')
+            ->where('order.items.0.unit_price', 120)
+            ->where('order.items.0.quantity', 2)
+            ->where('order.items.0.line_total', 240)
+        );
+});
+
+test('a parcel-only order carries no lines to display', function () {
+    $seller = StockFixtures::user(Role::SELLER);
+    StockFixtures::store($seller);
+
+    $this->actingAs($seller)
+        ->post('/orders', pickingPayload($this->city, $this->sector, [], ['order_amount' => 320]));
+
+    $order = Order::acrossStores()->latest('id')->firstOrFail();
+
+    $this->actingAs($seller)
+        ->get("/orders/{$order->id}")
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->has('order.items', 0));
 });
 
 test('an order without items keeps the amount the vendor typed', function () {

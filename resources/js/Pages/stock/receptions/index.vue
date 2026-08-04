@@ -137,7 +137,12 @@ onMounted(() => {
         </template>
 
         <template #actions>
-          <Link v-if="can.create" :href="route('stock-receptions.create')" class="btn btn-success">
+          <Link
+            v-if="can.create"
+            data-guide="reception-create"
+            :href="route('stock-receptions.create')"
+            class="btn btn-success"
+          >
             <i class="ri-truck-line align-bottom"></i>
             <span class="d-none d-sm-inline ms-1">{{ $t('stock.receptions.create_button') }}</span>
           </Link>

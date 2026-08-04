@@ -35,7 +35,7 @@ const submit = () => form.post(route('products.store'));
     <form @submit.prevent="submit">
       <ProductForm :form="form" :categories="categories" />
 
-      <div class="hstack gap-2 justify-content-center mb-4">
+      <div data-guide="product-submit" class="hstack gap-2 justify-content-center mb-4">
         <Link :href="route('products.index')" class="btn btn-light">{{ $t('common.cancel') }}</Link>
         <BButton type="submit" variant="success" :disabled="form.processing">
           <span v-if="form.processing" class="spinner-border spinner-border-sm me-1"></span>

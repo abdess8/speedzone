@@ -9,6 +9,7 @@ import FilterPanel from '@/Components/FilterPanel.vue';
 import ProductThumb from '../Partials/ProductThumb.vue';
 import ReasonSheet from './Partials/ReasonSheet.vue';
 import { formatMoneyRounded } from '@/common/formatMoney';
+import { useGuideSignals } from '@/composables/useGuideSignals';
 
 /**
  * Mass inventory: count a shelf, record what was found.
@@ -106,6 +107,14 @@ const pendingLines = computed(() =>
 const adjustedLines = computed(() => pendingLines.value.filter((line) => line.delta !== 0));
 
 const linesMissingReason = computed(() => adjustedLines.value.filter((line) => line.reason === ''));
+
+// The inventory guide holds its "a gap owes a motive" step until the reader has
+// actually produced one: reading about the reason column is not the same as
+// watching it turn red on a line you just typed.
+useGuideSignals().mirror(
+  'stock.inventory.gaps',
+  computed(() => adjustedLines.value.length > 0)
+);
 
 const canSubmit = computed(
   () => props.can.adjust && pendingLines.value.length > 0 && linesMissingReason.value.length === 0 && !submitting.value
@@ -411,7 +420,7 @@ onMounted(() => {
   <Layout>
     <PageHeader :title="$t('stock.inventory.title')" :pageTitle="$t('stock.page_title')" />
 
-    <BRow class="g-2 g-lg-3 mb-1">
+    <BRow data-guide="inventory-summary" class="g-2 g-lg-3 mb-1">
       <BCol v-for="stat in stats" :key="stat.key" cols="6" lg="3">
         <BCard no-body class="h-100">
           <BCardBody class="p-3">
@@ -432,7 +441,12 @@ onMounted(() => {
     </BRow>
 
     <BCard no-body>
-      <FilterPanel :active-count="activeFilterCount" @apply="reload" @reset="resetFilters">
+      <FilterPanel
+        guide="inventory-filters"
+        :active-count="activeFilterCount"
+        @apply="reload"
+        @reset="resetFilters"
+      >
         <template #title>
           <h5 class="card-title mb-0">{{ $t('stock.inventory.table_title') }}</h5>
           <p class="text-muted fs-13 mb-0">{{ $t('stock.inventory.subtitle') }}</p>
@@ -445,6 +459,7 @@ onMounted(() => {
           </Link>
           <button
             v-if="can.adjust"
+            data-guide="inventory-match-all"
             type="button"
             class="btn btn-soft-primary"
             :title="$t('stock.inventory.match_all_hint')"
@@ -475,7 +490,7 @@ onMounted(() => {
         </BCol>
       </FilterPanel>
 
-      <BCardBody>
+      <BCardBody data-guide="inventory-sheet">
         <p class="text-muted fs-13 d-none d-lg-block">
           <i class="ri-information-line align-bottom me-1"></i>
           {{ $t('stock.inventory.hint_desktop') }}
@@ -683,7 +698,7 @@ onMounted(() => {
          where the counter's hand already is. -->
     <Transition name="count-bar">
       <div v-if="pendingLines.length > 0" class="count-bar">
-        <div class="count-bar__inner">
+        <div data-guide="inventory-bar" class="count-bar__inner">
           <div class="min-w-0">
             <p class="mb-0 fw-semibold">{{ $t('stock.inventory.pending_lines', { count: pendingLines.length }) }}</p>
             <p v-if="linesMissingReason.length > 0" class="mb-0 fs-12 text-danger">

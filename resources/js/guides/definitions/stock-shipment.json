@@ -1,0 +1,45 @@
+{
+  "key": "stock-shipment",
+  "route": "stock-receptions.index",
+  "steps": [
+    { "id": "welcome", "kind": "welcome" },
+    {
+      "id": "create",
+      "target": "[data-guide=\"reception-create\"]",
+      "placement": "bottom",
+      "padding": 10,
+      "require": { "signal": "app.route", "equals": "stock-receptions.create" },
+      "autoAdvance": true
+    },
+    {
+      "id": "items",
+      "target": "[data-guide=\"reception-items\"]",
+      "placement": "right"
+    },
+    {
+      "id": "shipping",
+      "target": "[data-guide=\"reception-shipping\"]",
+      "placement": "left"
+    },
+    {
+      "id": "submit",
+      "target": "[data-guide=\"reception-submit\"]",
+      "placement": "top",
+      "padding": 10,
+      "require": { "signal": "app.route", "equals": "stock-receptions.show" },
+      "autoAdvance": true
+    },
+    {
+      "id": "actions",
+      "target": "[data-guide=\"reception-actions\"]",
+      "placement": "bottom",
+      "padding": 10
+    },
+    {
+      "id": "timeline",
+      "target": "[data-guide=\"reception-timeline\"]",
+      "placement": "top"
+    },
+    { "id": "done", "kind": "finish", "cta": { "route": "stock-receptions.index" } }
+  ]
+}

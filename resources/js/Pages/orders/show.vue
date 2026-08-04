@@ -12,10 +12,13 @@ import UserAvatar from "@/Components/UserAvatar.vue";
 import RelatedOperationsLookups from "@/Components/RelatedOperationsLookups.vue";
 import SupportTicketsPanel from "@/Components/SupportTicketsPanel.vue";
 import EntityLink from "@/Components/EntityLink.vue";
+import ProductThumb from "../stock/Partials/ProductThumb.vue";
 import CreateReturnModal from "../returns/Partials/CreateReturnModal.vue";
 import Swal from "sweetalert2";
+import { usePermissions } from "@/composables/usePermissions";
 
 const { t } = useI18n();
+const { canAny } = usePermissions();
 
 const props = defineProps({
   order: { type: Object, required: true },
@@ -101,6 +104,20 @@ const formatDate = (value) => (value ? new Date(value).toLocaleString() : t("com
 const empty = () => t("common.empty_value");
 
 const isPartnerDelivery = computed(() => Boolean(props.order.is_partner_delivery || props.order.partner_id));
+
+/**
+ * The catalog lines of a stock order.
+ *
+ * Empty for the parcel-only flow, where the seller declares an amount without
+ * saying what is in the box — the card then stays out of the way entirely.
+ */
+const items = computed(() => props.order.items ?? []);
+const canOpenProduct = computed(() =>
+  canAny('stock.view', 'stock.receive_inbound', 'stock.admin_override')
+);
+const itemsTotal = computed(() => items.value.reduce((sum, line) => sum + Number(line.line_total ?? 0), 0));
+const totalUnits = computed(() => items.value.reduce((sum, line) => sum + Number(line.quantity ?? 0), 0));
+const discount = computed(() => Number(props.order.discount_amount ?? 0));
 
 const openPdf = () => window.open(route("orders.pdf", props.order.id), "_blank");
 const downloadPdf = () => window.open(route("orders.pdf", { order: props.order.id, download: 1 }), "_blank");
@@ -505,6 +522,76 @@ onMounted(() => {
             </div>
             <div class="text-muted fs-13">{{ $t('orders.show.notes') }}</div>
             <div>{{ order.notes || empty() }}</div>
+          </BCardBody>
+        </BCard>
+
+        <BCard v-if="items.length" no-body>
+          <BCardHeader class="d-flex align-items-center justify-content-between">
+            <h5 class="card-title mb-0">{{ $t('stock.picklist.title') }}</h5>
+            <span class="badge bg-primary-subtle text-primary">
+              {{ $t('orders.show.units', { count: totalUnits }) }}
+            </span>
+          </BCardHeader>
+          <BCardBody>
+            <div class="table-responsive">
+              <table class="table align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>{{ $t('stock.products.columns.product') }}</th>
+                    <th class="text-end">{{ $t('stock.picklist.unit_price') }}</th>
+                    <th class="text-center" style="width: 80px">{{ $t('stock.picklist.quantity') }}</th>
+                    <th class="text-end">{{ $t('stock.picklist.line_total') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="line in items" :key="line.id">
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <ProductThumb
+                          :name="line.name"
+                          :photo-url="line.photo_url"
+                          :initials="line.initials"
+                          :size="36"
+                        />
+                        <div class="min-w-0">
+                          <Link
+                            v-if="line.product_id && canOpenProduct"
+                            :href="route('products.show', line.product_id)"
+                            class="d-block fw-medium text-truncate"
+                          >
+                            {{ line.name }}
+                          </Link>
+                          <span v-else class="d-block fw-medium text-truncate">{{ line.name }}</span>
+                          <span class="d-block text-muted fs-12">{{ line.sku }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-end">{{ money(line.unit_price) }}</td>
+                    <td class="text-center">{{ line.quantity }}</td>
+                    <td class="text-end fw-semibold">{{ money(line.line_total) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <BRow class="border-top mt-3 pt-3 justify-content-end">
+              <BCol md="6">
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-muted">{{ $t('stock.picklist.items_total') }}</span>
+                  <span class="fw-medium">{{ money(itemsTotal) }}</span>
+                </div>
+                <div v-if="discount > 0" class="d-flex justify-content-between text-danger">
+                  <span>{{ $t('stock.picklist.discount') }}</span>
+                  <span>&minus; {{ money(discount) }}</span>
+                </div>
+                <div class="d-flex justify-content-between border-top mt-2 pt-2">
+                  <span class="fw-medium">
+                    {{ order.cash_collection_required ? $t('orders.form.order_amount') : $t('orders.form.order_value') }}
+                  </span>
+                  <span class="fs-16 fw-bold text-primary">{{ money(itemsTotal - discount) }}</span>
+                </div>
+              </BCol>
+            </BRow>
           </BCardBody>
         </BCard>
 

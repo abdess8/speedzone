@@ -206,6 +206,7 @@ return [
         'pickup_request' => 'Demande de ramassage',
         'customer' => 'Informations client',
         'package' => 'Informations colis',
+        'units' => '{count} article | {count} articles',
         'financial' => 'Informations financières',
         'modification_history' => 'Historique des modifications',
         'tracking_timeline' => 'Suivi de livraison',

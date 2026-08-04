@@ -113,7 +113,7 @@ function lineError(position, field) {
 <template>
   <BRow>
     <BCol xl="8">
-      <BCard no-body>
+      <BCard data-guide="reception-items" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('stock.receptions.sections.items') }}</h5>
         </BCardHeader>
@@ -243,7 +243,7 @@ function lineError(position, field) {
     </BCol>
 
     <BCol xl="4">
-      <BCard no-body>
+      <BCard data-guide="reception-shipping" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('stock.receptions.sections.shipping') }}</h5>
         </BCardHeader>

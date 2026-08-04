@@ -101,7 +101,7 @@ watch(
 <template>
   <BRow>
     <BCol xl="8">
-      <BCard no-body>
+      <BCard data-guide="product-identity" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('stock.products.form.identity') }}</h5>
         </BCardHeader>
@@ -192,7 +192,7 @@ watch(
         </BCardBody>
       </BCard>
 
-      <BCard no-body>
+      <BCard data-guide="product-logistics" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('stock.products.form.logistics') }}</h5>
         </BCardHeader>
@@ -306,7 +306,7 @@ watch(
     </BCol>
 
     <BCol xl="4">
-      <BCard no-body>
+      <BCard data-guide="product-pricing" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('stock.products.form.pricing') }}</h5>
         </BCardHeader>
@@ -361,7 +361,7 @@ watch(
         </BCardBody>
       </BCard>
 
-      <BCard no-body>
+      <BCard data-guide="product-media" no-body>
         <BCardHeader>
           <h5 class="card-title mb-0">{{ $t('stock.products.form.media') }}</h5>
         </BCardHeader>

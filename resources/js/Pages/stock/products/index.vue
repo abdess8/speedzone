@@ -197,7 +197,7 @@ onMounted(() => {
   <Layout>
     <PageHeader :title="$t('stock.products.title')" :pageTitle="$t('stock.page_title')" />
 
-    <BRow class="g-2 g-lg-3 mb-1">
+    <BRow data-guide="stock-summary" class="g-2 g-lg-3 mb-1">
       <BCol v-for="stat in stats" :key="stat.key" cols="6" lg>
         <BCard no-body class="h-100">
           <BCardBody class="p-3">
@@ -218,7 +218,12 @@ onMounted(() => {
     </BRow>
 
     <BCard no-body>
-      <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
+      <FilterPanel
+        guide="stock-list"
+        :active-count="activeFilterCount"
+        @apply="applyFilters"
+        @reset="resetFilters"
+      >
         <template #title>
           <h5 class="card-title mb-0">{{ $t('stock.products.list_title') }}</h5>
         </template>
@@ -237,11 +242,16 @@ onMounted(() => {
             <i class="ri-list-check-2 align-bottom"></i>
             <span class="d-none d-sm-inline ms-1">{{ $t('stock.inventory.title') }}</span>
           </Link>
-          <Link v-if="can.import" :href="route('products.import')" class="btn btn-soft-primary">
+          <Link
+            v-if="can.import"
+            data-guide="stock-import"
+            :href="route('products.import')"
+            class="btn btn-soft-primary"
+          >
             <i class="ri-file-excel-2-line align-bottom"></i>
             <span class="d-none d-sm-inline ms-1">{{ $t('stock.products.import_button') }}</span>
           </Link>
-          <Link v-if="can.create" :href="route('products.create')" class="btn btn-success">
+          <Link v-if="can.create" data-guide="stock-create" :href="route('products.create')" class="btn btn-success">
             <i class="ri-add-line align-bottom"></i>
             <span class="d-none d-sm-inline ms-1">{{ $t('stock.products.create_button') }}</span>
           </Link>

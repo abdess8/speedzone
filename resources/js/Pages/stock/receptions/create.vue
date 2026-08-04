@@ -47,7 +47,7 @@ const submit = (status) => {
         :shop-depot-city-id="shopDepotCityId"
       />
 
-      <div class="hstack gap-2 justify-content-center flex-wrap mb-4">
+      <div data-guide="reception-submit" class="hstack gap-2 justify-content-center flex-wrap mb-4">
         <Link :href="route('stock-receptions.index')" class="btn btn-light">{{ $t('common.cancel') }}</Link>
         <BButton type="submit" variant="soft-primary" :disabled="form.processing || !hasItems">
           <i class="ri-draft-line align-bottom me-1"></i>

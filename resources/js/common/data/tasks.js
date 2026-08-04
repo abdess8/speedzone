@@ -24,7 +24,7 @@ const unassigned = [{
 },
 {
     board_id: 2,
-    title: "SpeedZone Express - Admin Layout Design",
+    title: "OWL Delivery - Admin Layout Design",
     description: "The dashboard is the front page of the Administration UI.",
     features: ["Layout", "Admin", "Dashboard"],
     users: [avatar7, avatar6, avatar1],
@@ -140,7 +140,7 @@ const newData = [{
 const allTask = [{
     id: 1,
     taskId: "#VLZ632",
-    project: "SpeedZone Express - v1.0.0",
+    project: "OWL Delivery - v1.0.0",
     task: "Error message when placing an orders?",
     creater: "Robert McMahon",
     subItem: [{

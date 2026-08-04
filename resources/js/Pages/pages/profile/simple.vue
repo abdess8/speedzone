@@ -48,7 +48,7 @@ export default {
                 States
               </div>
               <div>
-                <i class="ri-building-line me-1 text-white text-opacity-75 fs-16 align-middle"></i>SpeedZone Express
+                <i class="ri-building-line me-1 text-white text-opacity-75 fs-16 align-middle"></i>OWL Delivery
               </div>
             </div>
           </div>
@@ -692,7 +692,7 @@ export default {
                                           </div>
                                           <div class="flex-grow-1 ms-3">
                                             <h6 class="fs-14 mb-1">
-                                              SpeedZone Express admin dashboard templates
+                                              OWL Delivery admin dashboard templates
                                               layout upload
                                             </h6>
                                             <small class="text-muted">We talked about a project on
@@ -1672,7 +1672,7 @@ export default {
                           <div class="d-flex">
                             <div class="flex-grow-1 text-muted overflow-hidden">
                               <h5 class="fs-14 text-truncate">
-                                <BLink href="#" class="text-body">SpeedZone Express Project</BLink>
+                                <BLink href="#" class="text-body">OWL Delivery Project</BLink>
                               </h5>
                               <p class="text-muted text-truncate mb-0">
                                 Last Update :
@@ -2365,7 +2365,7 @@ export default {
                                   </div>
                                   <div class="ms-3 flex-grow-1">
                                     <h6 class="fs-15 mb-0">
-                                      <BLink href="javascript:void(0);">SpeedZone Express-logo.png</BLink>
+                                      <BLink href="javascript:void(0);">OWL Delivery-logo.png</BLink>
                                     </h6>
                                   </div>
                                 </div>

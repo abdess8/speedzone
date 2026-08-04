@@ -58,7 +58,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Public marketing site (SpeedZone landing) — registered first so it wins
+| Public marketing site (OWL Delivery landing) — registered first so it wins
 | over the authenticated "/" dashboard route below. Fully independent from
 | the dashboard; guests and authenticated users can both reach it.
 |--------------------------------------------------------------------------

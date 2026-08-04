@@ -615,10 +615,31 @@ File: Custom Css File
   }
 }
 
-// SpeedZone Express global brand system
+// ---------------------------------------------------------------------------
+// OWL Delivery global brand system
+//
+// Navy and orange are lifted straight from the OWL Delivery mark, so the logo
+// never sits on a surface it has to fight. Everything downstream references
+// these two custom properties rather than repeating the hexes, which is what
+// the marketing site does too (see the token block in Pages/landing/Home.vue) —
+// one palette across the public site and the dashboard behind the login.
+// ---------------------------------------------------------------------------
+:root {
+  --owl-navy: #0d4a9d;
+  --owl-navy-dark: #0a3877;
+  --owl-navy-soft: #eef4fc;
+  --owl-orange: #f15a24;
+  --owl-orange-dark: #d1471a;
+  --owl-orange-soft: #fdeee8;
+  --owl-ink: #1f2937;
+  // Navy carries the field, orange only warms the trailing corner: an even
+  // split turns the photographic auth background muddy where the two meet.
+  --owl-gradient: linear-gradient(135deg, #0d4a9d 0%, #0f3f85 42%, #123a78 68%, #f15a24 128%);
+}
+
 body {
   background-color: #ffffff;
-  color: #1f2937;
+  color: var(--owl-ink);
 }
 
 // Cards carry the entire burden of separating one block of content from the
@@ -684,10 +705,12 @@ h5.text-primary {
   min-height: 44px;
 }
 
+// The focus ring is navy, not orange: an orange halo on a field sits close
+// enough to the danger red that a focused input reads as a rejected one.
 .form-control:focus,
 .form-select:focus {
   border-color: $primary;
-  box-shadow: 0 0 0 0.2rem rgba(241, 90, 36, 0.2);
+  box-shadow: 0 0 0 0.2rem rgba(13, 74, 157, 0.18);
 }
 
 .table-responsive {
@@ -742,23 +765,23 @@ h5.text-primary {
   color: #dc2626;
 }
 
-.speedzone-spinner {
+.owl-spinner {
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 50%;
   border: 0.3rem solid rgba(13, 74, 157, 0.12);
   border-top-color: #0d4a9d;
   border-right-color: #f15a24;
-  animation: speedzone-spin 0.8s linear infinite;
+  animation: owl-spin 0.8s linear infinite;
 }
 
-@keyframes speedzone-spin {
+@keyframes owl-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-.speedzone-skeleton {
+.owl-skeleton {
   border-radius: 0.5rem;
   background: linear-gradient(
     90deg,
@@ -767,10 +790,10 @@ h5.text-primary {
     rgba(167, 169, 172, 0.2) 75%
   );
   background-size: 300% 100%;
-  animation: speedzone-skeleton 1.3s infinite linear;
+  animation: owl-skeleton 1.3s infinite linear;
 }
 
-@keyframes speedzone-skeleton {
+@keyframes owl-skeleton {
   0% {
     background-position: 100% 0;
   }
@@ -801,44 +824,50 @@ h5.text-primary {
 }
 
 .auth-logo img {
-  max-height: 52px;
+  max-height: 58px;
   width: auto;
 }
 
 .auth-one-bg {
   .bg-overlay {
-    background: linear-gradient(135deg, #0d4a9d 0%, #123a78 55%, #f15a24 100%);
+    background: var(--owl-gradient);
     opacity: 0.96;
   }
 }
 
-// Position-aware logo sizing
+// Logo sizing. The lockup is horizontal (owl left, wordmark right) at roughly
+// 2.9:1, so height is what these rules control and width follows; the brand box
+// is only ~70px tall, which the previous 120px logo overflowed.
 .brand-logo-full {
   width: auto;
-  height: 120px;
+  height: 36px;
   object-fit: contain;
 }
 
 .brand-logo-icon {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
 }
 
 .footer-brand-logo {
   width: auto;
-  height: 40px;
+  height: 24px;
   object-fit: contain;
 }
 
 @media (max-width: 767.98px) {
+  .brand-logo-full {
+    height: 30px;
+  }
+
   .brand-logo-icon {
     width: 30px;
     height: 30px;
   }
 
   .footer-brand-logo {
-    height: 32px;
+    height: 20px;
   }
 }
 

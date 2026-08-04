@@ -201,7 +201,7 @@ export default {
       <BCol lg="3" md="6" id="job-widget" style="display: block;">
         <BCard no-body class="card-height-100 bg-info bg-job">
           <BCardBody class="p-5">
-            <h2 class="lh-base text-white">SpeedZone Express invites young professionals for an Internship!</h2>
+            <h2 class="lh-base text-white">OWL Delivery invites young professionals for an Internship!</h2>
             <p class="text-white text-opacity-75 mb-0 fs-14">Don't miss your opportunity to improve your skills!</p>
             <div class="mt-5 pt-2">
               <BButton type="button" variant="light" class="w-100">

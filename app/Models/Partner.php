@@ -69,7 +69,7 @@ class Partner extends Model
     */
 
     /**
-     * Hub city where the partner drops off packages for speedZone to deliver.
+     * Hub city where the partner drops off packages for OWL Delivery to deliver.
      */
     public function receptionCity(): BelongsTo
     {

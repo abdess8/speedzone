@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'title' => 'Assistant SpeedZone',
+    'title' => 'Assistant OWL Delivery',
     'open' => 'Ouvrir l\'assistant',
     'close' => 'Fermer l\'assistant',
     'reset' => 'Effacer la conversation',
@@ -66,7 +66,7 @@ return [
         'seller' => 'Vendeur',
         'recipient' => 'Destinataire',
         'currency' => 'MAD',
-        'footer' => 'Document généré par l\'assistant SpeedZone.',
+        'footer' => 'Document généré par l\'assistant OWL Delivery.',
 
         'columns' => [
             'description' => 'Désignation',

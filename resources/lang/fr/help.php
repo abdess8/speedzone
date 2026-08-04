@@ -5,13 +5,13 @@ return [
 
     'partnership' => [
         'page_title' => 'Contrat & Conditions de partenariat',
-        'intro' => 'Les règles de collaboration entre SpeedZone Express et ses vendeurs partenaires. Elles s\'appliquent à toute commande confiée à la plateforme.',
+        'intro' => 'Les règles de collaboration entre OWL Delivery et ses vendeurs partenaires. Elles s\'appliquent à toute commande confiée à la plateforme.',
 
         'scope' => [
             'title' => 'Objet du partenariat',
-            'summary' => 'Ce que SpeedZone prend en charge, et ce qui reste à la main du vendeur.',
+            'summary' => 'Ce que OWL Delivery prend en charge, et ce qui reste à la main du vendeur.',
             'points' => [
-                'SpeedZone assure le ramassage chez le vendeur, l\'acheminement inter-villes, la livraison au client final et l\'encaissement du montant à la livraison.',
+                'OWL Delivery assure le ramassage chez le vendeur, l\'acheminement inter-villes, la livraison au client final et l\'encaissement du montant à la livraison.',
                 'Le vendeur reste responsable du contenu du colis, de sa conformité à la commande et de son emballage.',
                 'Chaque colis doit porter l\'étiquette générée par la plateforme : un colis non étiqueté peut être refusé au ramassage.',
                 'Le partenariat est sans engagement de volume et sans durée minimale.',
@@ -56,7 +56,7 @@ return [
             'title' => 'Responsabilité en cas de perte ou de casse',
             'summary' => 'La couverture applicable et ses limites.',
             'points' => [
-                'SpeedZone est responsable du colis à compter de sa prise en charge au ramassage et jusqu\'à sa remise au client ou sa restitution au vendeur.',
+                'OWL Delivery est responsable du colis à compter de sa prise en charge au ramassage et jusqu\'à sa remise au client ou sa restitution au vendeur.',
                 'En cas de perte avérée, le colis est indemnisé à hauteur de la valeur déclarée sur la commande, dans la limite du plafond contractuel.',
                 'La casse est indemnisée sur présentation de la commande et du constat établi à la livraison, sauf emballage manifestement insuffisant.',
                 'Les denrées périssables, les produits fragiles non signalés et les objets de valeur non déclarés sont exclus de la couverture.',
@@ -69,7 +69,7 @@ return [
             'summary' => 'Ce que chaque partie garantit à l\'autre.',
             'points' => [
                 'Le vendeur s\'engage à fournir des coordonnées client exactes : une adresse ou un téléphone erroné est la première cause d\'échec de livraison.',
-                'SpeedZone s\'engage à tenir informé le vendeur de chaque changement de statut, en temps réel dans l\'application.',
+                'OWL Delivery s\'engage à tenir informé le vendeur de chaque changement de statut, en temps réel dans l\'application.',
                 'Les deux parties peuvent mettre fin au partenariat à tout moment, sous réserve du traitement des colis déjà en circulation.',
                 'Tout litige est traité en premier lieu par le support ; à défaut d\'accord, il relève des tribunaux compétents.',
             ],

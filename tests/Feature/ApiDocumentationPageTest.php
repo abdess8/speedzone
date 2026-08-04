@@ -105,12 +105,12 @@ it('keeps the canonical url once deployed, whatever host was used to arrive', fu
     $seller = apiDocsUser(Role::SELLER);
 
     app()['env'] = 'production';
-    config(['app.url' => 'https://app.speedzone.ma']);
+    config(['app.url' => 'https://delivery.oowlmedia.com']);
 
     $this->actingAs($seller)
         ->get('http://10.0.0.4'.route('api-integrations.index', absolute: false))
         ->assertOk()
-        ->assertInertia(fn (AssertableInertia $page) => $page->where('apiBaseUrl', 'https://app.speedzone.ma'));
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('apiBaseUrl', 'https://delivery.oowlmedia.com'));
 });
 
 it('seeds the Postman collection with a city and one of its own sectors', function () {

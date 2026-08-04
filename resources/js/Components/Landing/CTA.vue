@@ -7,23 +7,23 @@ defineProps({
 </script>
 
 <template>
-    <section class="sz-cta-wrap">
-        <div class="sz-container">
-            <div class="sz-cta" data-aos="zoom-in">
-                <div class="sz-cta__glow" aria-hidden="true"></div>
-                <div class="sz-cta__content">
-                    <span class="sz-cta__badge">
+    <section class="owl-cta-wrap">
+        <div class="owl-container">
+            <div class="owl-cta" data-aos="zoom-in">
+                <div class="owl-cta__glow" aria-hidden="true"></div>
+                <div class="owl-cta__content">
+                    <span class="owl-cta__badge">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
                         </svg>
                         Prêt à accélérer ?
                     </span>
-                    <h2 class="sz-cta__title">Prêt à améliorer vos livraisons ?</h2>
-                    <p class="sz-cta__text">
-                        Rejoignez les centaines d'entreprises qui font déjà confiance à SpeedZone
+                    <h2 class="owl-cta__title">Prêt à améliorer vos livraisons ?</h2>
+                    <p class="owl-cta__text">
+                        Rejoignez les centaines d'entreprises qui font déjà confiance à OWL Delivery
                         pour livrer plus vite et plus sereinement.
                     </p>
-                    <div class="sz-cta__actions">
+                    <div class="owl-cta__actions">
                         <LandingButton v-if="authenticated" href="/dashboard" variant="light" size="lg">
                             Ouvrir le tableau de bord
                         </LandingButton>
@@ -41,35 +41,35 @@ defineProps({
 </template>
 
 <style scoped>
-.sz-cta-wrap {
+.owl-cta-wrap {
     padding: 2rem 1.5rem 5rem;
-    background: var(--sz-bg);
+    background: var(--owl-bg);
 }
-.sz-container {
+.owl-container {
     max-width: 1200px;
     margin: 0 auto;
 }
-.sz-cta {
+.owl-cta {
     position: relative;
-    border-radius: var(--sz-radius-lg);
-    background: var(--sz-gradient);
+    border-radius: var(--owl-radius-lg);
+    background: var(--owl-gradient-warm);
     padding: 4rem 2rem;
     text-align: center;
     overflow: hidden;
-    box-shadow: var(--sz-shadow-lg);
+    box-shadow: var(--owl-shadow-lg);
 }
-.sz-cta__glow {
+.owl-cta__glow {
     position: absolute;
     inset: 0;
     background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.22), transparent 40%),
-        radial-gradient(circle at 80% 90%, rgba(16, 185, 129, 0.35), transparent 45%);
+        radial-gradient(circle at 80% 90%, rgba(241, 90, 36, 0.35), transparent 45%);
 }
-.sz-cta__content {
+.owl-cta__content {
     position: relative;
     max-width: 660px;
     margin: 0 auto;
 }
-.sz-cta__badge {
+.owl-cta__badge {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -81,20 +81,20 @@ defineProps({
     border-radius: 999px;
     margin-bottom: 1.2rem;
 }
-.sz-cta__title {
+.owl-cta__title {
     margin: 0;
     font-size: clamp(1.9rem, 4vw, 2.8rem);
     font-weight: 800;
     letter-spacing: -0.02em;
     color: #fff;
 }
-.sz-cta__text {
+.owl-cta__text {
     margin: 1rem auto 2rem;
     font-size: 1.1rem;
     color: rgba(255, 255, 255, 0.9);
     max-width: 540px;
 }
-.sz-cta__actions {
+.owl-cta__actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.9rem;
@@ -102,7 +102,7 @@ defineProps({
 }
 
 @media (max-width: 620px) {
-    .sz-cta {
+    .owl-cta {
         padding: 3rem 1.3rem;
     }
 }

@@ -42,7 +42,7 @@ export default {
           </div>
           <BCardBody class="p-4">
             <div>
-              <h5>Welcome to SpeedZone Express!</h5>
+              <h5>Welcome to OWL Delivery!</h5>
               <p class="text-muted">These terms and conditions outline the rules and regulations for the use of Company
                 Name's Website, located at Website.com.</p>
               <p class="text-muted">By accessing this website we assume you accept these terms and conditions. Do not

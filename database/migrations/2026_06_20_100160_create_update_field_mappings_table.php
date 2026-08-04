@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Maps speedZone outbound status-update payload fields to partner API keys.
+ * Maps OWL Delivery outbound status-update payload fields to partner API keys.
  */
 return new class extends Migration
 {

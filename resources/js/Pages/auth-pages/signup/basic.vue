@@ -151,7 +151,7 @@ export default {
 
                                         <div class="mb-4">
                                             <p class="mb-0 fs-12 text-muted fst-italic">By registering you agree to the
-                                                SpeedZone Express <BLink href="#" class="text-primary text-decoration-underline fst-normal fw-medium">
+                                                OWL Delivery <BLink href="#" class="text-primary text-decoration-underline fst-normal fw-medium">
                                                     Terms
                                                     of Use</BLink>
                                             </p>
@@ -204,7 +204,7 @@ export default {
                 <BRow>
                     <BCol lg="12">
                         <div class="text-center">
-                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} SpeedZone Express. Crafted with <i class="mdi mdi-heart text-danger"></i> by SpeedZone Express</p>
+                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} OWL Delivery. Crafted with <i class="mdi mdi-heart text-danger"></i> by OWL Delivery</p>
                         </div>
                     </BCol>
                 </BRow>

@@ -1,6 +1,6 @@
 # Jeu de données logistique Maroc
 
-Générateur de données de démonstration ultra-réalistes pour le dashboard SpeedZone :
+Générateur de données de démonstration ultra-réalistes pour le dashboard OWL Delivery :
 commandes marocaines sur les 31 derniers jours, cycle de vie complet (vendeur →
 dispatcheur → livreur), documents d'agrégation (ramassages, bordereaux, factures,
 décharges de caisse) et réclamations avec fils de discussion.

@@ -117,8 +117,8 @@ export default {
           <BCol lg="12">
             <div class="text-center">
               <p class="mb-0 text-muted">
-                &copy; {{ new Date().getFullYear() }} SpeedZone Express. Crafted with
-                <i class="mdi mdi-heart text-danger"></i> by SpeedZone Express
+                &copy; {{ new Date().getFullYear() }} OWL Delivery. Crafted with
+                <i class="mdi mdi-heart text-danger"></i> by OWL Delivery
               </p>
             </div>
           </BCol>

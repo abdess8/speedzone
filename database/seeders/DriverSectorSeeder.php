@@ -31,7 +31,7 @@ class DriverSectorSeeder extends Seeder
         // Prefer the demo driver created by DemoUsersSeeder.
         $drivers = User::query()
             ->whereHas('roles', fn ($q) => $q->where('name', Role::DRIVER))
-            ->orderByRaw("CASE WHEN email = 'driver@speedzone.ma' THEN 0 ELSE 1 END")
+            ->orderByRaw("CASE WHEN email = 'driver@oowlmedia.com' THEN 0 ELSE 1 END")
             ->get();
 
         if ($drivers->isEmpty()) {

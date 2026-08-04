@@ -285,7 +285,7 @@ class MoroccanDatasetSeeder extends Seeder
      */
     private function ensureStaff(): bool
     {
-        $admin = User::query()->where('email', 'superadmin@speedzone.ma')->first()
+        $admin = User::query()->where('email', 'superadmin@oowlmedia.com')->first()
             ?? User::query()->whereHas('roles', fn ($query) => $query->where('name', Role::ADMIN))->first();
 
         if (! $admin) {
@@ -299,8 +299,8 @@ class MoroccanDatasetSeeder extends Seeder
         $dispatcherRole = Role::query()->where('name', Role::DISPATCHER)->first();
 
         foreach ([
-            ['dispatcher.casa@speedzone.ma', 'Casablanca'],
-            ['dispatcher.rabat@speedzone.ma', 'Rabat'],
+            ['dispatcher.casa@oowlmedia.com', 'Casablanca'],
+            ['dispatcher.rabat@oowlmedia.com', 'Rabat'],
         ] as [$email, $cityName]) {
             $city = $this->ctx->cities->firstWhere('name', $cityName) ?? $this->ctx->anyCity();
             $person = $this->ctx->faker->person(false);
@@ -373,7 +373,7 @@ class MoroccanDatasetSeeder extends Seeder
             'name' => "{$person['first_name']} {$person['last_name']}",
             'first_name' => $person['first_name'],
             'last_name' => $person['last_name'],
-            'email' => "livreur.{$slug}@speedzone.ma",
+            'email' => "livreur.{$slug}@oowlmedia.com",
             'password' => Hash::make('12345678'),
             'phone_number' => $this->ctx->faker->phone(),
             'cin' => $this->ctx->faker->cin(),

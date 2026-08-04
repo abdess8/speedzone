@@ -107,7 +107,7 @@ export default {
             }
         });
 
-        document.querySelector('.currentyear').innerHTML = new Date().getFullYear() + " © SpeedZone Express - SpeedZone Express";
+        document.querySelector('.currentyear').innerHTML = new Date().getFullYear() + " © OWL Delivery - OWL Delivery";
     },
 };
 </script>
@@ -167,9 +167,9 @@ export default {
                     <BCol lg="8" sm="10">
                         <div class="text-center mt-lg-5 pt-5">
                             <h1 class="display-6 fw-semibold mb-3 lh-base">The better way to manage your website with
-                                <span class="text-secondary">SpeedZone Express </span>
+                                <span class="text-secondary">OWL Delivery </span>
                             </h1>
-                            <p class="lead text-muted lh-base">SpeedZone Express is a fully responsive, multipurpose and premium
+                            <p class="lead text-muted lh-base">OWL Delivery is a fully responsive, multipurpose and premium
                                 Bootstrap 5 Admin & Dashboard Template built in multiple frameworks.</p>
 
                             <div class="d-flex gap-2 justify-content-center mt-4">
@@ -536,7 +536,7 @@ export default {
                 <BRow class="align-items-center gy-4">
                     <BCol sm>
                         <div>
-                            <h4 class="text-white mb-0 fw-semibold">Build your web App/SaaS with SpeedZone Express dashboard</h4>
+                            <h4 class="text-white mb-0 fw-semibold">Build your web App/SaaS with OWL Delivery dashboard</h4>
                         </div>
                     </BCol>
                     <BCol sm="auto">
@@ -1650,7 +1650,7 @@ export default {
                 <BRow class="align-items-center gy-4">
                     <BCol sm>
                         <div>
-                            <h4 class="text-white mb-0 fw-semibold">Build your web App/SaaS with SpeedZone Express dashboard</h4>
+                            <h4 class="text-white mb-0 fw-semibold">Build your web App/SaaS with OWL Delivery dashboard</h4>
                         </div>
                     </BCol>
                     <BCol sm="auto">
@@ -1676,7 +1676,7 @@ export default {
                                 <p>Premium Multipurpose Admin & Dashboard Template</p>
                                 <p class="ff-secondary">You can build any type of web application like eCommerce, CRM,
                                     CMS, Project
-                                    management apps, Admin Panels, etc using SpeedZone Express.</p>
+                                    management apps, Admin Panels, etc using OWL Delivery.</p>
                             </div>
                         </div>
                     </BCol>
@@ -1745,8 +1745,8 @@ export default {
                     <BCol sm="6">
 
                         <div>
-                            <p class="copy-rights mb-0 currentyear">{{ new Date().getFullYear() }} © SpeedZone Express -
-                                SpeedZone Express
+                            <p class="copy-rights mb-0 currentyear">{{ new Date().getFullYear() }} © OWL Delivery -
+                                OWL Delivery
                             </p>
                         </div>
                     </BCol>

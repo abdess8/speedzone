@@ -8,14 +8,14 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class SpeedZoneSmtpTestMail extends Mailable
+class OwlDeliverySmtpTestMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Speed Zone SMTP Test',
+            subject: 'OWL Delivery SMTP Test',
         );
     }
 

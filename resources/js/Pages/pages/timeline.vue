@@ -138,7 +138,7 @@ export default {
                             <i class="icon ri-user-smile-line"></i>
                             <div class="date">10 Feb 2021</div>
                             <div class="content">
-                                <h5>SpeedZone Express admin dashboard templates layout upload</h5>
+                                <h5>OWL Delivery admin dashboard templates layout upload</h5>
                                 <p class="text-muted">Powerful, clean & modern responsive bootstrap 5 admin template.
                                     The maximum file size for uploads in this demo :</p>
                                 <BRow class="border border-dashed rounded gx-2 p-2">
@@ -260,7 +260,7 @@ export default {
                                 <BCol cols="12">
                                     <div class="timeline-box">
                                         <div class="timeline-text">
-                                            <h5>SpeedZone Express - Project Discussion</h5>
+                                            <h5>OWL Delivery - Project Discussion</h5>
                                             <p class="text-muted mb-0">The purpose of the discussion is to interpret and
                                                 describe the significance of your findings in light of what was already
                                                 known about the research problem being investigated, and to explain any

@@ -11,26 +11,26 @@ const steps = [
 </script>
 
 <template>
-    <section class="sz-section sz-process">
-        <div class="sz-container">
+    <section class="owl-section owl-process">
+        <div class="owl-container">
             <SectionHeading
                 eyebrow="Comment ça marche"
                 title="De la commande au paiement, en 5 étapes"
                 subtitle="Un processus fluide et entièrement traçable, du premier clic jusqu'au reversement."
             />
 
-            <div class="sz-process__track">
-                <div class="sz-process__line" aria-hidden="true"></div>
+            <div class="owl-process__track">
+                <div class="owl-process__line" aria-hidden="true"></div>
                 <div
                     v-for="(step, index) in steps"
                     :key="step.title"
-                    class="sz-step"
+                    class="owl-step"
                     data-aos="fade-up"
                     :data-aos-delay="index * 120"
                 >
-                    <div class="sz-step__badge">
-                        <span class="sz-step__num">{{ index + 1 }}</span>
-                        <span class="sz-step__icon">
+                    <div class="owl-step__badge">
+                        <span class="owl-step__num">{{ index + 1 }}</span>
+                        <span class="owl-step__icon">
                             <svg v-if="step.icon === 'order'" viewBox="0 0 24 24" fill="none" width="24" height="24">
                                 <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.8" />
                                 <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
@@ -53,8 +53,8 @@ const steps = [
                             </svg>
                         </span>
                     </div>
-                    <h3 class="sz-step__title">{{ step.title }}</h3>
-                    <p class="sz-step__desc">{{ step.desc }}</p>
+                    <h3 class="owl-step__title">{{ step.title }}</h3>
+                    <p class="owl-step__desc">{{ step.desc }}</p>
                 </div>
             </div>
         </div>
@@ -62,99 +62,99 @@ const steps = [
 </template>
 
 <style scoped>
-.sz-section {
+.owl-section {
     padding: 5.5rem 1.5rem;
 }
-.sz-container {
+.owl-container {
     max-width: 1200px;
     margin: 0 auto;
 }
-.sz-process {
+.owl-process {
     background: #fff;
 }
-.sz-process__track {
+.owl-process__track {
     position: relative;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 1.5rem;
 }
-.sz-process__line {
+.owl-process__line {
     position: absolute;
     top: 42px;
     left: 10%;
     right: 10%;
     height: 2px;
-    background: repeating-linear-gradient(90deg, var(--sz-border) 0 10px, transparent 10px 20px);
+    background: repeating-linear-gradient(90deg, var(--owl-border) 0 10px, transparent 10px 20px);
 }
-.sz-step {
+.owl-step {
     text-align: center;
     position: relative;
     z-index: 1;
 }
-.sz-step__badge {
+.owl-step__badge {
     position: relative;
     width: 84px;
     height: 84px;
     margin: 0 auto 1.2rem;
     border-radius: 26px;
     background: #fff;
-    border: 1px solid var(--sz-border);
-    box-shadow: var(--sz-shadow);
+    border: 1px solid var(--owl-border);
+    box-shadow: var(--owl-shadow);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--sz-primary);
+    color: var(--owl-primary);
     transition: transform 0.35s ease, box-shadow 0.35s ease, color 0.35s ease;
 }
-.sz-step:hover .sz-step__badge {
+.owl-step:hover .owl-step__badge {
     transform: translateY(-6px);
-    box-shadow: var(--sz-shadow-lg);
+    box-shadow: var(--owl-shadow-lg);
     color: #fff;
-    background: var(--sz-gradient);
+    background: var(--owl-gradient);
     border-color: transparent;
 }
-.sz-step__num {
+.owl-step__num {
     position: absolute;
     top: -10px;
     right: -10px;
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: var(--sz-accent);
+    background: var(--owl-accent);
     color: #fff;
     font-size: 0.8rem;
     font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 14px rgba(16, 185, 129, 0.35);
+    box-shadow: 0 6px 14px rgba(241, 90, 36, 0.35);
 }
-.sz-step__title {
+.owl-step__title {
     margin: 0 0 0.4rem;
     font-size: 1.05rem;
     font-weight: 700;
-    color: var(--sz-dark);
+    color: var(--owl-dark);
 }
-.sz-step__desc {
+.owl-step__desc {
     margin: 0;
     font-size: 0.88rem;
-    color: var(--sz-slate);
+    color: var(--owl-slate);
 }
 
 @media (max-width: 860px) {
-    .sz-process__track {
+    .owl-process__track {
         grid-template-columns: 1fr 1fr;
         gap: 2.5rem 1.5rem;
     }
-    .sz-process__line {
+    .owl-process__line {
         display: none;
     }
 }
 @media (max-width: 620px) {
-    .sz-section {
+    .owl-section {
         padding: 4rem 1.1rem;
     }
-    .sz-process__track {
+    .owl-process__track {
         grid-template-columns: 1fr;
     }
 }

@@ -25,7 +25,7 @@ import {
  */
 
 /** Survives a hard reload between "start this guide" and the target screen. */
-const PENDING_KEY = 'speedzone.guide.pending';
+const PENDING_KEY = 'owl.guide.pending';
 
 const activeGuide = shallowRef(null);
 const stepIndex = ref(0);

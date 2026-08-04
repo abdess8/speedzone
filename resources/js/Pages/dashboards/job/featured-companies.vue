@@ -169,7 +169,7 @@
                                                 <img src="@assets/images/companies/img-5.png" alt="" height="16">
                                             </div>
                                         </div>
-                                        <h6 class="mb-0">SpeedZone Express</h6>
+                                        <h6 class="mb-0">OWL Delivery</h6>
                                     </div>
                                 </td>
                                 <td>

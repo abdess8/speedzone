@@ -3,9 +3,9 @@
 return [
     'register' => [
         'title' => 'Inscription vendeur',
-        'subtitle' => 'Rejoignez Speed Zone en tant que vendeur',
+        'subtitle' => 'Rejoignez OWL Delivery en tant que vendeur',
         'heading' => 'Créez votre compte vendeur',
-        'description' => 'Inscrivez-vous pour expédier avec Speed Zone Express.',
+        'description' => 'Inscrivez-vous pour expédier avec OWL Delivery Express.',
         'first_name' => 'Prénom',
         'last_name' => 'Nom',
         'email' => 'E-mail',
@@ -29,7 +29,7 @@ return [
     'pending' => [
         'title' => 'Compte en attente d\'approbation',
         'heading' => 'Inscription en cours de validation',
-        'message' => 'Votre inscription est en cours de validation. L\'équipe Speed Zone vérifie votre compte.',
+        'message' => 'Votre inscription est en cours de validation. L\'équipe OWL Delivery vérifie votre compte.',
         'review_note' => 'Vous recevrez un e-mail une fois votre compte approuvé.',
         'contact_support' => 'Contacter le support',
         'sign_out' => 'Se déconnecter',
@@ -62,13 +62,13 @@ return [
     ],
 
     'emails' => [
-        'verification_subject' => 'Vérifiez votre compte Speed Zone',
-        'approved_subject' => 'Votre compte Speed Zone est approuvé',
+        'verification_subject' => 'Vérifiez votre compte OWL Delivery',
+        'approved_subject' => 'Votre compte OWL Delivery est approuvé',
         'approved_heading' => 'Votre compte est approuvé',
-        'approved_body' => 'Bonjour :name, votre compte vendeur Speed Zone a été approuvé. Vous pouvez maintenant accéder à la plateforme.',
-        'approved_button' => 'Se connecter à Speed Zone',
+        'approved_body' => 'Bonjour :name, votre compte vendeur OWL Delivery a été approuvé. Vous pouvez maintenant accéder à la plateforme.',
+        'approved_button' => 'Se connecter à OWL Delivery',
         'approved_footer' => 'Si vous n\'avez pas demandé ce compte, veuillez contacter le support.',
-        'rejected_subject' => 'Votre inscription Speed Zone a été rejetée',
+        'rejected_subject' => 'Votre inscription OWL Delivery a été rejetée',
         'rejected_heading' => 'Inscription non approuvée',
         'rejected_body' => 'Bonjour :name, votre demande d\'inscription a été rejetée.',
         'rejected_reason_label' => 'Motif',

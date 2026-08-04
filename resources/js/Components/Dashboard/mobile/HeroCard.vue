@@ -94,7 +94,7 @@ const formattedAmount = computed(() => formatMoneyRounded(props.amount));
      read as one object the way a card peeking out from under another does. */
   padding: 1.125rem 1.25rem 3.5rem;
   border-radius: var(--mdash-radius-lg);
-  background: linear-gradient(140deg, #1b62c4 0%, #0d4a9d 52%, #08356f 100%);
+  background: linear-gradient(140deg, #1b62c4 0%, #df2222 52%, #08356f 100%);
   color: #fff;
 }
 
@@ -105,7 +105,7 @@ const formattedAmount = computed(() => formatMoneyRounded(props.amount));
   right: -25%;
   width: 17rem;
   height: 17rem;
-  background: radial-gradient(circle, rgba(241, 90, 36, 0.38) 0%, rgba(241, 90, 36, 0) 68%);
+  background: radial-gradient(circle, rgba(223, 34, 34, 0.38) 0%, rgba(223, 34, 34, 0) 68%);
   border-radius: 50%;
   content: '';
   pointer-events: none;

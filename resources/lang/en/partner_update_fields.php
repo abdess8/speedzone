@@ -2,7 +2,7 @@
 
 return [
     'external_tracking_code' => 'Partner reference (external code)',
-    'tracking_number' => 'speedZone tracking number',
+    'tracking_number' => 'OWL Delivery tracking number',
     'partner_status' => 'Partner status (mapped)',
     'status_comment' => 'Status change comment',
     'proof_image' => 'Delivery proof image',

@@ -48,24 +48,24 @@ const services = [
 </script>
 
 <template>
-    <section id="services" class="sz-section sz-services">
-        <div class="sz-container">
+    <section id="services" class="owl-section owl-services">
+        <div class="owl-container">
             <SectionHeading
                 eyebrow="Nos services"
                 title="Tout ce qu'il vous faut pour livrer en toute sérénité"
                 subtitle="Une suite complète de services logistiques conçue pour les e-commerçants et les entreprises marocaines."
             />
 
-            <div class="sz-services__grid">
+            <div class="owl-services__grid">
                 <article
                     v-for="(service, index) in services"
                     :key="service.title"
-                    class="sz-scard"
-                    :class="`sz-scard--${service.color}`"
+                    class="owl-scard"
+                    :class="`owl-scard--${service.color}`"
                     data-aos="fade-up"
                     :data-aos-delay="index * 80"
                 >
-                    <div class="sz-scard__icon">
+                    <div class="owl-scard__icon">
                         <!-- pickup -->
                         <svg v-if="service.icon === 'pickup'" viewBox="0 0 24 24" fill="none" width="26" height="26">
                             <path d="M3 7l9-4 9 4-9 4-9-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
@@ -97,9 +97,9 @@ const services = [
                             <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
                         </svg>
                     </div>
-                    <h3 class="sz-scard__title">{{ service.title }}</h3>
-                    <p class="sz-scard__desc">{{ service.description }}</p>
-                    <span class="sz-scard__link">
+                    <h3 class="owl-scard__title">{{ service.title }}</h3>
+                    <p class="owl-scard__desc">{{ service.description }}</p>
+                    <span class="owl-scard__link">
                         En savoir plus
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -112,109 +112,109 @@ const services = [
 </template>
 
 <style scoped>
-.sz-section {
+.owl-section {
     padding: 5.5rem 1.5rem;
 }
-.sz-container {
+.owl-container {
     max-width: 1200px;
     margin: 0 auto;
 }
-.sz-services {
+.owl-services {
     background: #fff;
 }
-.sz-services__grid {
+.owl-services__grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
 }
-.sz-scard {
+.owl-scard {
     position: relative;
     background: #fff;
-    border: 1px solid var(--sz-border);
-    border-radius: var(--sz-radius);
+    border: 1px solid var(--owl-border);
+    border-radius: var(--owl-radius);
     padding: 2rem 1.8rem;
-    box-shadow: var(--sz-shadow-sm);
+    box-shadow: var(--owl-shadow-sm);
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     overflow: hidden;
 }
-.sz-scard::before {
+.owl-scard::before {
     content: '';
     position: absolute;
     inset: 0 0 auto 0;
     height: 4px;
-    background: var(--sz-c, var(--sz-primary));
+    background: var(--owl-c, var(--owl-primary));
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.35s ease;
 }
-.sz-scard:hover {
+.owl-scard:hover {
     transform: translateY(-8px);
-    box-shadow: var(--sz-shadow-lg);
+    box-shadow: var(--owl-shadow-lg);
     border-color: transparent;
 }
-.sz-scard:hover::before {
+.owl-scard:hover::before {
     transform: scaleX(1);
 }
-.sz-scard__icon {
+.owl-scard__icon {
     width: 58px;
     height: 58px;
     border-radius: 18px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--sz-c, var(--sz-primary));
-    background: var(--sz-c-soft, rgba(29, 78, 216, 0.1));
+    color: var(--owl-c, var(--owl-primary));
+    background: var(--owl-c-soft, rgba(13, 74, 157, 0.1));
     margin-bottom: 1.3rem;
     transition: transform 0.35s ease;
 }
-.sz-scard:hover .sz-scard__icon {
+.owl-scard:hover .owl-scard__icon {
     transform: scale(1.08) rotate(-4deg);
 }
-.sz-scard__title {
+.owl-scard__title {
     margin: 0 0 0.6rem;
     font-size: 1.2rem;
     font-weight: 700;
-    color: var(--sz-dark);
+    color: var(--owl-dark);
 }
-.sz-scard__desc {
+.owl-scard__desc {
     margin: 0;
     font-size: 0.95rem;
-    color: var(--sz-slate);
+    color: var(--owl-slate);
     line-height: 1.65;
 }
-.sz-scard__link {
+.owl-scard__link {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
     margin-top: 1.2rem;
     font-size: 0.88rem;
     font-weight: 700;
-    color: var(--sz-c, var(--sz-primary));
+    color: var(--owl-c, var(--owl-primary));
     opacity: 0;
     transform: translateX(-6px);
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
-.sz-scard:hover .sz-scard__link {
+.owl-scard:hover .owl-scard__link {
     opacity: 1;
     transform: translateX(0);
 }
 
-.sz-scard--blue { --sz-c: #1d4ed8; --sz-c-soft: rgba(29, 78, 216, 0.1); }
-.sz-scard--green { --sz-c: #059669; --sz-c-soft: rgba(16, 185, 129, 0.12); }
-.sz-scard--violet { --sz-c: #7c3aed; --sz-c-soft: rgba(124, 58, 237, 0.1); }
-.sz-scard--amber { --sz-c: #d97706; --sz-c-soft: rgba(245, 158, 11, 0.14); }
-.sz-scard--rose { --sz-c: #e11d48; --sz-c-soft: rgba(225, 29, 72, 0.1); }
+.owl-scard--blue { --owl-c: #0d4a9d; --owl-c-soft: rgba(13, 74, 157, 0.1); }
+.owl-scard--green { --owl-c: #d1471a; --owl-c-soft: rgba(241, 90, 36, 0.12); }
+.owl-scard--violet { --owl-c: #7c3aed; --owl-c-soft: rgba(124, 58, 237, 0.1); }
+.owl-scard--amber { --owl-c: #d97706; --owl-c-soft: rgba(245, 158, 11, 0.14); }
+.owl-scard--rose { --owl-c: #e11d48; --owl-c-soft: rgba(225, 29, 72, 0.1); }
 
 @media (max-width: 992px) {
-    .sz-services__grid {
+    .owl-services__grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 @media (max-width: 620px) {
-    .sz-section {
+    .owl-section {
         padding: 4rem 1.1rem;
     }
-    .sz-services__grid {
+    .owl-services__grid {
         grid-template-columns: 1fr;
     }
 }

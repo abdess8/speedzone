@@ -2,7 +2,7 @@
 
 return [
     'greeting' => 'Good morning, :name!',
-    'subtitle' => 'SpeedZone Express logistics overview — live data from your operations.',
+    'subtitle' => 'OWL Delivery logistics overview — live data from your operations.',
     'default_team' => 'Operations Team',
 
     'periods' => [
@@ -196,7 +196,7 @@ return [
      */
     'mobile' => [
         'title' => 'My activity',
-        'subtitle' => 'SpeedZone Express',
+        'subtitle' => 'OWL Delivery',
         'cash_headline' => 'Cash to collect',
         // Headline for a role that may not read the money figures: the hero panel
         // still has to say something true, so it counts parcels instead.

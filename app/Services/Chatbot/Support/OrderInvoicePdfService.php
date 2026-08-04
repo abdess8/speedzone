@@ -31,7 +31,7 @@ class OrderInvoicePdfService
             'line' => $this->line($order),
             'proforma' => ! $this->isBillable($order),
             'logo' => $this->logoDataUri(),
-            'companyName' => config('orders.label.company_name', 'SpeedZone Express'),
+            'companyName' => config('orders.label.company_name', 'OWL Delivery'),
         ])->setPaper('a4');
     }
 

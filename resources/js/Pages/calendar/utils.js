@@ -104,7 +104,7 @@ export const INITIAL_EVENTS = [
     },
     {
         id: 456,
-        title: 'SpeedZone Express Project Discussion with Team',
+        title: 'OWL Delivery Project Discussion with Team',
         start: new Date(y, m, d + 23, 20, 0),
         end: new Date(y, m, d + 24, 16, 0),
         allDay: false,

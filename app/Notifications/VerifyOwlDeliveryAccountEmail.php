@@ -5,7 +5,7 @@ namespace App\Notifications;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class VerifySpeedZoneAccountEmail extends VerifyEmail
+class VerifyOwlDeliveryAccountEmail extends VerifyEmail
 {
     public function toMail($notifiable): MailMessage
     {

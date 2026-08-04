@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Mail\SpeedZoneSmtpTestMail;
+use App\Mail\OwlDeliverySmtpTestMail;
 use App\Services\MailDeliveryService;
 use Illuminate\Console\Command;
 
@@ -41,7 +41,7 @@ class TestMailCommand extends Command
 
         $this->info("Sending test email to {$recipient}...");
 
-        $sent = $mail->send($recipient, new SpeedZoneSmtpTestMail);
+        $sent = $mail->send($recipient, new OwlDeliverySmtpTestMail);
 
         if (! $sent) {
             $this->error('Test email failed. Check storage/logs/laravel.log for details.');

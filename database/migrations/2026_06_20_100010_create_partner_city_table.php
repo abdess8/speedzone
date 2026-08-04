@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Cities a partner delegates to speedZone. We only ingest deliveries whose
+ * Cities a partner delegates to OWL Delivery. We only ingest deliveries whose
  * destination district matches one of these cities.
  */
 return new class extends Migration

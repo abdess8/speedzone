@@ -41,7 +41,7 @@ return [
     'label' => [
         // Absolute path or public-relative path to the company logo printed on labels.
         'logo_path' => env('ORDER_LABEL_LOGO', public_path('images/logo-dark.png')),
-        'company_name' => env('ORDER_LABEL_COMPANY', 'SpeedZone Express'),
+        'company_name' => env('ORDER_LABEL_COMPANY', 'OWL Delivery'),
         // Thermal label dimensions in points (100mm x 150mm ~ 283x425pt).
         'paper_width' => 283,
         'paper_height' => 425,

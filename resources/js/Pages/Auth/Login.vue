@@ -57,10 +57,10 @@ export default {
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
                                 <Link href="/" class="d-inline-block auth-logo">
-                                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="52">
+                                <img src="@assets/images/logo-light.png" alt="OWL Delivery" height="58">
                                 </Link>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">Logistics & Delivery Management Platform</p>
+                            <p class="mt-3 fs-15 fw-medium">Logistics &amp; Delivery Management Platform</p>
                         </div>
                     </BCol>
                 </BRow>
@@ -72,7 +72,7 @@ export default {
                             <BCardBody class="p-4">
                                 <div class="text-center mt-2">
                                     <h5 class="text-primary">Welcome back</h5>
-                                    <p class="text-muted">Sign in to continue to SpeedZone Express.</p>
+                                    <p class="text-muted">Sign in to continue to OWL Delivery.</p>
                                 </div>
                                 <div v-if="status" class="alert alert-success text-success">
                                     {{ status }}
@@ -110,18 +110,6 @@ export default {
                                         <div class="mt-4">
                                             <BButton variant="primary" class="w-100" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Sign In</BButton>
                                         </div>
-
-                                        <div class="mt-4 text-center">
-                                            <div class="signin-other-title">
-                                                <h5 class="fs-13 mb-4 title">Sign In with</h5>
-                                            </div>
-                                            <div>
-                                                <BButton type="button" variant="primary" class="btn-icon"><i class="ri-facebook-fill fs-16"></i></BButton>
-                                                <BButton type="button" variant="danger" class="btn-icon ms-1"><i class="ri-google-fill fs-16"></i></BButton>
-                                                <BButton type="button" variant="dark" class="btn-icon ms-1"><i class="ri-github-fill fs-16"></i></BButton>
-                                                <BButton type="button" variant="info" class="btn-icon ms-1"><i class="ri-twitter-fill fs-16"></i></BButton>
-                                            </div>
-                                        </div>
                                     </form>
                                 </div>
                             </BCardBody>
@@ -143,7 +131,7 @@ export default {
                 <BRow>
                     <BCol lg="12">
                         <div class="text-center">
-                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} SpeedZone Express. Built for reliable logistics operations.</p>
+                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} OWL Delivery &mdash; une société OWL Media.</p>
                         </div>
                     </BCol>
                 </BRow>

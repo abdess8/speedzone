@@ -42,7 +42,7 @@ class DriverPdfService
             'driver' => $invoice->driver,
             'lines' => $lines,
             'logo' => $this->logoDataUri(),
-            'companyName' => config('orders.label.company_name', 'SpeedZone Express'),
+            'companyName' => config('orders.label.company_name', 'OWL Delivery'),
         ])->setPaper('a4');
 
         return PdfPageNumbering::stamp($pdf, 'driver_invoices.pdf.page_of');

@@ -23,20 +23,20 @@ const pins = [
 </script>
 
 <template>
-    <section id="zones" class="sz-section sz-coverage">
-        <div class="sz-container">
+    <section id="zones" class="owl-section owl-coverage">
+        <div class="owl-container">
             <SectionHeading
                 eyebrow="Zones couvertes"
                 title="Nous livrons là où vous êtes"
                 subtitle="Une couverture dense sur l'axe Rabat – Kénitra – Gharb, et une expansion continue vers tout le Maroc."
             />
 
-            <div class="sz-coverage__grid">
-                <div class="sz-coverage__map" data-aos="fade-right">
-                    <svg viewBox="0 0 400 340" class="sz-coverage__svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
+            <div class="owl-coverage__grid">
+                <div class="owl-coverage__map" data-aos="fade-right">
+                    <svg viewBox="0 0 400 340" class="owl-coverage__svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
                         <defs>
                             <linearGradient id="szMap" x1="0" y1="0" x2="1" y2="1">
-                                <stop offset="0%" stop-color="#dbeafe" />
+                                <stop offset="0%" stop-color="#d9e6f7" />
                                 <stop offset="100%" stop-color="#eff6ff" />
                             </linearGradient>
                         </defs>
@@ -60,23 +60,23 @@ const pins = [
                     <span
                         v-for="pin in pins"
                         :key="pin.name"
-                        class="sz-pin"
+                        class="owl-pin"
                         :style="{ left: pin.x + '%', top: pin.y + '%' }"
                     >
-                        <span class="sz-pin__dot"></span>
-                        <span class="sz-pin__ring"></span>
-                        <span class="sz-pin__label">{{ pin.name }}</span>
+                        <span class="owl-pin__dot"></span>
+                        <span class="owl-pin__ring"></span>
+                        <span class="owl-pin__label">{{ pin.name }}</span>
                     </span>
                 </div>
 
-                <div class="sz-coverage__panel" data-aos="fade-left">
-                    <div class="sz-coverage__block">
-                        <div class="sz-coverage__block-head">
-                            <span class="sz-legend sz-legend--active"></span>
+                <div class="owl-coverage__panel" data-aos="fade-left">
+                    <div class="owl-coverage__block">
+                        <div class="owl-coverage__block-head">
+                            <span class="owl-legend owl-legend--active"></span>
                             <h3>Zones actives</h3>
                         </div>
-                        <div class="sz-chips">
-                            <span v-for="city in activeCities" :key="city" class="sz-chip sz-chip--active">
+                        <div class="owl-chips">
+                            <span v-for="city in activeCities" :key="city" class="owl-chip owl-chip--active">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                                     <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
@@ -85,13 +85,13 @@ const pins = [
                         </div>
                     </div>
 
-                    <div class="sz-coverage__block">
-                        <div class="sz-coverage__block-head">
-                            <span class="sz-legend sz-legend--soon"></span>
+                    <div class="owl-coverage__block">
+                        <div class="owl-coverage__block-head">
+                            <span class="owl-legend owl-legend--soon"></span>
                             <h3>Bientôt disponible</h3>
                         </div>
-                        <div class="sz-chips">
-                            <span v-for="city in comingSoon" :key="city" class="sz-chip sz-chip--soon">
+                        <div class="owl-chips">
+                            <span v-for="city in comingSoon" :key="city" class="owl-chip owl-chip--soon">
                                 {{ city }}
                             </span>
                         </div>
@@ -103,52 +103,52 @@ const pins = [
 </template>
 
 <style scoped>
-.sz-section {
+.owl-section {
     padding: 5.5rem 1.5rem;
 }
-.sz-container {
+.owl-container {
     max-width: 1200px;
     margin: 0 auto;
 }
-.sz-coverage {
-    background: var(--sz-bg);
+.owl-coverage {
+    background: var(--owl-bg);
 }
-.sz-coverage__grid {
+.owl-coverage__grid {
     display: grid;
     grid-template-columns: 1.1fr 1fr;
     gap: 3rem;
     align-items: center;
 }
-.sz-coverage__map {
+.owl-coverage__map {
     position: relative;
     background: #fff;
-    border: 1px solid var(--sz-border);
-    border-radius: var(--sz-radius);
+    border: 1px solid var(--owl-border);
+    border-radius: var(--owl-radius);
     padding: 1.5rem;
-    box-shadow: var(--sz-shadow);
+    box-shadow: var(--owl-shadow);
     overflow: hidden;
 }
-.sz-coverage__svg {
+.owl-coverage__svg {
     width: 100%;
     height: auto;
     display: block;
 }
-.sz-pin {
+.owl-pin {
     position: absolute;
     transform: translate(-50%, -50%);
 }
-.sz-pin__dot {
+.owl-pin__dot {
     display: block;
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: var(--sz-primary);
+    background: var(--owl-primary);
     border: 3px solid #fff;
-    box-shadow: 0 4px 10px rgba(29, 78, 216, 0.45);
+    box-shadow: 0 4px 10px rgba(13, 74, 157, 0.45);
     position: relative;
     z-index: 2;
 }
-.sz-pin__ring {
+.owl-pin__ring {
     position: absolute;
     left: 50%;
     top: 50%;
@@ -156,10 +156,10 @@ const pins = [
     height: 14px;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(29, 78, 216, 0.4);
-    animation: sz-ring 2.4s ease-out infinite;
+    background: rgba(13, 74, 157, 0.4);
+    animation: owl-ring 2.4s ease-out infinite;
 }
-.sz-pin__label {
+.owl-pin__label {
     position: absolute;
     left: 50%;
     top: -26px;
@@ -167,50 +167,50 @@ const pins = [
     white-space: nowrap;
     font-size: 0.7rem;
     font-weight: 700;
-    color: var(--sz-dark);
+    color: var(--owl-dark);
     background: #fff;
-    border: 1px solid var(--sz-border);
+    border: 1px solid var(--owl-border);
     border-radius: 999px;
     padding: 0.15rem 0.55rem;
-    box-shadow: var(--sz-shadow-sm);
+    box-shadow: var(--owl-shadow-sm);
     opacity: 0;
     transition: opacity 0.25s ease, transform 0.25s ease;
 }
-.sz-pin:hover .sz-pin__label {
+.owl-pin:hover .owl-pin__label {
     opacity: 1;
     transform: translateX(-50%) translateY(-2px);
 }
 
-.sz-coverage__panel {
+.owl-coverage__panel {
     display: flex;
     flex-direction: column;
     gap: 2rem;
 }
-.sz-coverage__block-head {
+.owl-coverage__block-head {
     display: flex;
     align-items: center;
     gap: 0.6rem;
     margin-bottom: 1rem;
 }
-.sz-coverage__block-head h3 {
+.owl-coverage__block-head h3 {
     margin: 0;
     font-size: 1.05rem;
     font-weight: 700;
-    color: var(--sz-dark);
+    color: var(--owl-dark);
 }
-.sz-legend {
+.owl-legend {
     width: 12px;
     height: 12px;
     border-radius: 50%;
 }
-.sz-legend--active { background: var(--sz-primary); }
-.sz-legend--soon { background: #cbd5e1; }
-.sz-chips {
+.owl-legend--active { background: var(--owl-primary); }
+.owl-legend--soon { background: #cbd5e1; }
+.owl-chips {
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
 }
-.sz-chip {
+.owl-chip {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
@@ -218,49 +218,49 @@ const pins = [
     font-weight: 600;
     padding: 0.5rem 0.9rem;
     border-radius: 999px;
-    border: 1px solid var(--sz-border);
+    border: 1px solid var(--owl-border);
     transition: transform 0.2s ease;
 }
-.sz-chip:hover {
+.owl-chip:hover {
     transform: translateY(-2px);
 }
-.sz-chip--active {
-    background: rgba(29, 78, 216, 0.07);
-    color: var(--sz-primary-dark);
-    border-color: rgba(29, 78, 216, 0.2);
+.owl-chip--active {
+    background: rgba(13, 74, 157, 0.07);
+    color: var(--owl-primary-dark);
+    border-color: rgba(13, 74, 157, 0.2);
 }
-.sz-chip--active svg {
-    color: var(--sz-accent-dark);
+.owl-chip--active svg {
+    color: var(--owl-accent-dark);
 }
-.sz-chip--soon {
+.owl-chip--soon {
     background: #fff;
-    color: var(--sz-muted);
+    color: var(--owl-muted);
     border-style: dashed;
 }
 
-@keyframes sz-ring {
+@keyframes owl-ring {
     0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
     100% { transform: translate(-50%, -50%) scale(3.6); opacity: 0; }
 }
 
 @media (max-width: 992px) {
-    .sz-coverage__grid {
+    .owl-coverage__grid {
         grid-template-columns: 1fr;
         gap: 2.5rem;
     }
-    .sz-coverage__map {
+    .owl-coverage__map {
         max-width: 460px;
         margin: 0 auto;
         width: 100%;
     }
 }
 @media (max-width: 620px) {
-    .sz-section {
+    .owl-section {
         padding: 4rem 1.1rem;
     }
 }
 @media (prefers-reduced-motion: reduce) {
-    .sz-pin__ring {
+    .owl-pin__ring {
         animation: none;
     }
 }

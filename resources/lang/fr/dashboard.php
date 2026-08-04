@@ -2,7 +2,7 @@
 
 return [
     'greeting' => 'Bonjour, :name !',
-    'subtitle' => 'Vue d\'ensemble logistique SpeedZone Express — données en direct de vos opérations.',
+    'subtitle' => 'Vue d\'ensemble logistique OWL Delivery — données en direct de vos opérations.',
     'default_team' => 'Équipe opérations',
 
     'periods' => [
@@ -196,7 +196,7 @@ return [
      */
     'mobile' => [
         'title' => 'Mon activité',
-        'subtitle' => 'SpeedZone Express',
+        'subtitle' => 'OWL Delivery',
         'cash_headline' => 'Espèces à encaisser',
         // Titre pour un rôle qui n'a pas accès aux montants : le panneau doit
         // quand même annoncer quelque chose de vrai, il compte donc les colis.

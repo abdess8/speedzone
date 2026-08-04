@@ -27,28 +27,28 @@ const bindings = computed(() => {
     <component
         :is="componentType"
         v-bind="bindings"
-        class="sz-btn"
-        :class="[`sz-btn--${variant}`, `sz-btn--${size}`, { 'sz-btn--block': block }]"
+        class="owl-btn"
+        :class="[`owl-btn--${variant}`, `owl-btn--${size}`, { 'owl-btn--block': block }]"
     >
-        <span class="sz-btn__icon sz-btn__icon--left" v-if="$slots.iconLeft">
+        <span class="owl-btn__icon owl-btn__icon--left" v-if="$slots.iconLeft">
             <slot name="iconLeft" />
         </span>
-        <span class="sz-btn__label"><slot /></span>
-        <span class="sz-btn__icon sz-btn__icon--right" v-if="$slots.iconRight">
+        <span class="owl-btn__label"><slot /></span>
+        <span class="owl-btn__icon owl-btn__icon--right" v-if="$slots.iconRight">
             <slot name="iconRight" />
         </span>
     </component>
 </template>
 
 <style scoped>
-.sz-btn {
+.owl-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.55rem;
     border: 1px solid transparent;
     border-radius: 999px;
-    font-family: var(--sz-font);
+    font-family: var(--owl-font);
     font-weight: 700;
     font-size: 0.95rem;
     line-height: 1;
@@ -60,86 +60,86 @@ const bindings = computed(() => {
     will-change: transform;
 }
 
-.sz-btn--sm {
+.owl-btn--sm {
     padding: 0.6rem 1.1rem;
     font-size: 0.85rem;
 }
-.sz-btn--md {
+.owl-btn--md {
     padding: 0.85rem 1.6rem;
 }
-.sz-btn--lg {
+.owl-btn--lg {
     padding: 1.05rem 2rem;
     font-size: 1rem;
 }
-.sz-btn--block {
+.owl-btn--block {
     width: 100%;
 }
 
-.sz-btn__icon {
+.owl-btn__icon {
     display: inline-flex;
     font-size: 1.15em;
 }
 
-.sz-btn--primary {
-    background: var(--sz-gradient);
+.owl-btn--primary {
+    background: var(--owl-gradient);
     color: #fff;
-    box-shadow: var(--sz-shadow-primary);
+    box-shadow: var(--owl-shadow-primary);
 }
-.sz-btn--primary:hover {
+.owl-btn--primary:hover {
     transform: translateY(-3px);
-    box-shadow: 0 24px 48px rgba(29, 78, 216, 0.36);
+    box-shadow: 0 24px 48px rgba(13, 74, 157, 0.36);
     color: #fff;
 }
 
-.sz-btn--accent {
-    background: var(--sz-accent);
+.owl-btn--accent {
+    background: var(--owl-accent);
     color: #fff;
-    box-shadow: 0 16px 32px rgba(16, 185, 129, 0.28);
+    box-shadow: 0 16px 32px rgba(241, 90, 36, 0.28);
 }
-.sz-btn--accent:hover {
+.owl-btn--accent:hover {
     transform: translateY(-3px);
-    background: var(--sz-accent-dark);
+    background: var(--owl-accent-dark);
     color: #fff;
 }
 
-.sz-btn--outline {
+.owl-btn--outline {
     background: transparent;
-    color: var(--sz-primary);
-    border-color: rgba(29, 78, 216, 0.35);
+    color: var(--owl-primary);
+    border-color: rgba(13, 74, 157, 0.35);
 }
-.sz-btn--outline:hover {
+.owl-btn--outline:hover {
     transform: translateY(-3px);
-    border-color: var(--sz-primary);
-    background: rgba(29, 78, 216, 0.06);
-    color: var(--sz-primary);
+    border-color: var(--owl-primary);
+    background: rgba(13, 74, 157, 0.06);
+    color: var(--owl-primary);
 }
 
-.sz-btn--light {
+.owl-btn--light {
     background: #fff;
-    color: var(--sz-dark);
-    box-shadow: var(--sz-shadow);
-    border-color: var(--sz-border);
+    color: var(--owl-dark);
+    box-shadow: var(--owl-shadow);
+    border-color: var(--owl-border);
 }
-.sz-btn--light:hover {
+.owl-btn--light:hover {
     transform: translateY(-3px);
-    color: var(--sz-primary);
-    border-color: rgba(29, 78, 216, 0.3);
+    color: var(--owl-primary);
+    border-color: rgba(13, 74, 157, 0.3);
 }
 
-.sz-btn--ghost {
+.owl-btn--ghost {
     background: rgba(255, 255, 255, 0.12);
     color: #fff;
     border-color: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(6px);
 }
-.sz-btn--ghost:hover {
+.owl-btn--ghost:hover {
     transform: translateY(-3px);
     background: rgba(255, 255, 255, 0.2);
     color: #fff;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .sz-btn:hover {
+    .owl-btn:hover {
         transform: none;
     }
 }

@@ -46,8 +46,8 @@ beforeEach(function () {
 test('the seeder gives both demo shops a depot in a hub city', function () {
     $stores = Store::query()
         ->whereHas('owner', fn ($query) => $query->whereIn('email', [
-            'stock1@speedzone.ma',
-            'stock2@speedzone.ma',
+            'stock1@oowlmedia.com',
+            'stock2@oowlmedia.com',
         ]))
         ->with('stockHubCity')
         ->get();

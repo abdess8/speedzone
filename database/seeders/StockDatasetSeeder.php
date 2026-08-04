@@ -71,8 +71,8 @@ class StockDatasetSeeder extends Seeder
         // Shop names deliberately absent from MoroccanLocaleFaker's pool: the wider
         // dataset draws its shops from there, and two "Atlas Cosmétique" in the
         // admin list would make the stock demo impossible to pick out.
-        ['stock1@speedzone.ma', 'Yasmine', 'Berrada', 'Dar Argania', 'Cosmétique', 'Casablanca', 'Casablanca'],
-        ['stock2@speedzone.ma', 'Anas', 'Sekkat', 'Medina Tech', 'Électronique', 'Rabat', 'Marrakech'],
+        ['stock1@oowlmedia.com', 'Yasmine', 'Berrada', 'Dar Argania', 'Cosmétique', 'Casablanca', 'Casablanca'],
+        ['stock2@oowlmedia.com', 'Anas', 'Sekkat', 'Medina Tech', 'Électronique', 'Rabat', 'Marrakech'],
     ];
 
     private const DEMO_PASSWORD = '12345678';
@@ -1287,7 +1287,7 @@ class StockDatasetSeeder extends Seeder
 
         $this->command?->newLine();
         $this->command?->table(['Jeu de données stock', 'Volume'], $rows);
-        $this->command?->info('Comptes vendeurs : stock1@speedzone.ma / stock2@speedzone.ma (mot de passe : '.self::DEMO_PASSWORD.')');
+        $this->command?->info('Comptes vendeurs : stock1@oowlmedia.com / stock2@oowlmedia.com (mot de passe : '.self::DEMO_PASSWORD.')');
         $this->command?->info('Équipe : magasinier@dar-argania.ma (inventaire) · comptoir@medina-tech.ma (commandes)');
     }
 }

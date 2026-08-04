@@ -91,7 +91,7 @@ export default {
                 {
                     id: '10',
                     position: 'Project Manager',
-                    c_name: 'SpeedZone Express',
+                    c_name: 'OWL Delivery',
                     location: 'California, US',
                     salary: '$400 - $600',
                     experience: '3+ year',

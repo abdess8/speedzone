@@ -62,7 +62,7 @@ export default {
                     <BCol lg="12">
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <Link href="/" class="d-inline-block auth-logo">
-                                <img src="@assets/images/logo-light.png" alt="Speed Zone Express" height="52">
+                                <img src="@assets/images/logo-light.png" alt="OWL Delivery" height="58">
                             </Link>
                             <p class="mt-3 fs-15 fw-medium">{{ $t('seller_registration.register.subtitle') }}</p>
                         </div>
@@ -232,7 +232,7 @@ export default {
         <footer class="footer">
             <BContainer>
                 <div class="text-center">
-                    <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} SpeedZone Express.</p>
+                    <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} OWL Delivery &mdash; une société OWL Media.</p>
                 </div>
             </BContainer>
         </footer>

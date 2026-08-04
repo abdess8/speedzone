@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Sectors a partner delegates to speedZone within their delegated cities.
+ * Sectors a partner delegates to OWL Delivery within their delegated cities.
  */
 return new class extends Migration
 {

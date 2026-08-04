@@ -44,7 +44,7 @@ class DemoDataSeeder extends Seeder
             return;
         }
 
-        $driver = User::query()->where('email', 'driver@speedzone.ma')->first();
+        $driver = User::query()->where('email', 'driver@oowlmedia.com')->first();
         $sellers = User::query()
             ->whereHas('roles', fn ($q) => $q->where('name', Role::SELLER))
             ->orderBy('email')
@@ -64,7 +64,7 @@ class DemoDataSeeder extends Seeder
 
         $tracking = app(TrackingNumberGenerator::class);
         $references = app(PickupReferenceGenerator::class);
-        $superAdmin = User::query()->where('email', 'superadmin@speedzone.ma')->first() ?? $sellers->first();
+        $superAdmin = User::query()->where('email', 'superadmin@oowlmedia.com')->first() ?? $sellers->first();
 
         // Standalone orders (not linked to pickup requests) — 21 orders across delivery lifecycle.
         $standalonePlans = [

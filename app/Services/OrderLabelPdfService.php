@@ -71,7 +71,7 @@ class OrderLabelPdfService
      * Name and logo printed on the label.
      *
      * The order's store wins over the platform defaults, so a package leaves
-     * the depot branded with the shop that sold it. Falls back to the SpeedZone
+     * the depot branded with the shop that sold it. Falls back to the OWL Delivery
      * identity for orders with no store (partner ingestion, legacy rows).
      *
      * @return array{logo: string|null, companyName: string}
@@ -82,7 +82,7 @@ class OrderLabelPdfService
 
         return [
             'logo' => $this->storeLogoDataUri($store?->logo_path) ?? $this->logoDataUri(),
-            'companyName' => $store?->name ?: config('orders.label.company_name', 'SpeedZone Express'),
+            'companyName' => $store?->name ?: config('orders.label.company_name', 'OWL Delivery'),
         ];
     }
 

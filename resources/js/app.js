@@ -36,7 +36,7 @@ AOS.init({
 });
 
 createInertiaApp({
-    title: title => title ? `${title} | SpeedZone Express` : 'SpeedZone Express',
+    title: title => title ? `${title} | OWL Delivery` : 'OWL Delivery',
     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
     setup({ el, App, props, plugin }) {
         syncLocaleFromPage(props.initialPage?.props);

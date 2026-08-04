@@ -108,7 +108,7 @@ const [accent] = getChartColorsArray('["--vz-secondary"]');
   flex-direction: column;
   padding: 1.375rem 1.5rem 1.25rem;
   border-radius: var(--ddash-radius, 1.25rem);
-  background: linear-gradient(140deg, #1b62c4 0%, #0d4a9d 52%, #08356f 100%);
+  background: linear-gradient(140deg, #1b62c4 0%, #df2222 52%, #08356f 100%);
   color: #fff;
 }
 
@@ -120,7 +120,7 @@ const [accent] = getChartColorsArray('["--vz-secondary"]');
   width: 20rem;
   height: 20rem;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--ddash-hero-glow, #f15a24) 0%, rgba(241, 90, 36, 0) 68%);
+  background: radial-gradient(circle, var(--ddash-hero-glow, #293742) 0%, rgba(223, 34, 34, 0) 68%);
   content: '';
   opacity: 0.38;
   pointer-events: none;

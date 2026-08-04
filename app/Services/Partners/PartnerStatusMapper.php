@@ -8,11 +8,11 @@ use App\Models\StatusMapping;
 use Illuminate\Support\Collection;
 
 /**
- * Translates statuses between speedZone (App\Enums\OrderStatus) and a partner's
+ * Translates statuses between OWL Delivery (App\Enums\OrderStatus) and a partner's
  * own vocabulary using the per-partner status_mappings table.
  *
- *  - Outbound (push):     speedZone OrderStatus -> partner status string
- *  - Inbound (ingestion): partner status string -> speedZone OrderStatus
+ *  - Outbound (push):     OWL Delivery OrderStatus -> partner status string
+ *  - Inbound (ingestion): partner status string -> OWL Delivery OrderStatus
  */
 class PartnerStatusMapper
 {

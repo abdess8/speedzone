@@ -10,7 +10,7 @@ use Inertia\Response;
 class LandingController extends Controller
 {
     /**
-     * Public SpeedZone marketing landing page.
+     * Public OWL Delivery marketing landing page.
      *
      * Rendered for both guests and authenticated users. The page itself is
      * completely independent from the dashboard layout.

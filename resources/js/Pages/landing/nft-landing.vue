@@ -1033,7 +1033,7 @@ export default {
                                 <p>Premium Multipurpose Admin & Dashboard Template</p>
                                 <p>You can build any type of web application like eCommerce, CRM,
                                     CMS, Project
-                                    management apps, Admin Panels, etc using SpeedZone Express.</p>
+                                    management apps, Admin Panels, etc using OWL Delivery.</p>
                             </div>
                         </div>
                     </BCol>
@@ -1103,8 +1103,8 @@ export default {
                     <BCol sm="6">
 
                         <div>
-                            <p class="copy-rights mb-0 currentyear">{{ new Date().getFullYear() }} © SpeedZone Express -
-                                SpeedZone Express
+                            <p class="copy-rights mb-0 currentyear">{{ new Date().getFullYear() }} © OWL Delivery -
+                                OWL Delivery
                             </p>
                         </div>
                     </BCol>

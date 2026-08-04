@@ -185,7 +185,7 @@ return [
     'driver' => [
         'call' => 'Appeler',
         'whatsapp' => 'WhatsApp',
-        'whatsapp_message' => 'Bonjour :name, je suis votre livreur SpeedZone. '
+        'whatsapp_message' => 'Bonjour :name, je suis votre livreur OWL Delivery. '
             .'Je passe livrer votre colis :tracking. Êtes-vous disponible ?',
         'already_paid' => 'Déjà payé',
         'navigate' => 'Itinéraire',

@@ -75,7 +75,7 @@ export default {
                                     </tr>
                                     <tr>
                                         <td class="fw-medium">Project Name</td>
-                                        <td>SpeedZone Express - Admin Dashboard</td>
+                                        <td>OWL Delivery - Admin Dashboard</td>
                                     </tr>
                                     <tr>
                                         <td class="fw-medium">Priority</td>
@@ -255,7 +255,7 @@ export default {
                                     <div class="flex-grow-1 overflow-hidden">
                                         <h5 class="fs-13 mb-1">
                                             <BLink href="javascript:void(0);" class="text-body text-truncate d-block">
-                                                SpeedZone Express admin.ppt</BLink>
+                                                OWL Delivery admin.ppt</BLink>
                                         </h5>
                                         <div>2.4MB</div>
                                     </div>
@@ -571,7 +571,7 @@ export default {
                                                         </div>
                                                         <div class="ms-3 flex-grow-1">
                                                             <h6 class="fs-15 mb-0">
-                                                                <BLink href="javascript:void(0);">SpeedZone Express
+                                                                <BLink href="javascript:void(0);">OWL Delivery
                                                                     admin.ppt</BLink>
                                                             </h6>
                                                         </div>

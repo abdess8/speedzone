@@ -236,7 +236,7 @@ export default {
                                 <div style="text-align: center; margin: 28px auto 0px auto;">
                                     <p
                                         style="font-family: 'Roboto', sans-serif; font-size: 14px;color: #98a6ad; margin: 0px;">
-                                        2022 SpeedZone Express. Design & Develop by SpeedZone Express</p>
+                                        2022 OWL Delivery. Design & Develop by OWL Delivery</p>
                                 </div>
                             </div>
                         </td>
@@ -332,7 +332,7 @@ export default {
                                 <div style="text-align: center; margin: 28px auto 0px auto;">
                                     <p
                                         style="font-family: 'Roboto', sans-serif; font-size: 14px;color: #98a6ad; margin: 0px;">
-                                        2022 SpeedZone Express. Design & Develop by SpeedZone Express</p>
+                                        2022 OWL Delivery. Design & Develop by OWL Delivery</p>
                                 </div>
                             </div>
                         </td>
@@ -474,7 +474,7 @@ export default {
                                 <div style="text-align: center; margin: 28px auto 0px auto;">
                                     <p
                                         style="font-family: 'Roboto', sans-serif; font-size: 14px;color: #98a6ad; margin: 0px;">
-                                        2022 SpeedZone Express. Design & Develop by SpeedZone Express</p>
+                                        2022 OWL Delivery. Design & Develop by OWL Delivery</p>
                                 </div>
                             </div>
                         </td>

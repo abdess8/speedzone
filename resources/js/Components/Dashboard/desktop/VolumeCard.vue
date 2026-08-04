@@ -117,8 +117,8 @@ const chartOptions = computed(() => ({
   align-items: center;
   justify-content: center;
   border-radius: 0.75rem;
-  background-color: var(--vz-secondary-bg-subtle, rgba(241, 90, 36, 0.1));
-  color: var(--vz-secondary, #f15a24);
+  background-color: var(--vz-secondary-bg-subtle, rgba(223, 34, 34, 0.1));
+  color: var(--vz-secondary, #293742);
   font-size: 1.0625rem;
 }
 

@@ -6,7 +6,7 @@ use App\Enums\BillingFrequency;
 use App\Enums\ReturnStatus;
 use App\Enums\SellerPaymentMethod;
 use App\Enums\UserStatus;
-use App\Notifications\VerifySpeedZoneAccountEmail;
+use App\Notifications\VerifyOwlDeliveryAccountEmail;
 use App\Support\StoreContext;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -658,7 +658,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new VerifySpeedZoneAccountEmail);
+        $this->notify(new VerifyOwlDeliveryAccountEmail);
     }
 
     /**

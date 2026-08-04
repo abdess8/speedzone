@@ -141,10 +141,10 @@ class FakeMoroccanDataSeeder extends Seeder
         $this->ensureSectorReturnPrices();
         $cities = $cities->fresh(['sectors' => fn ($q) => $q->where('is_active', true)]);
 
-        $admin = User::query()->where('email', 'superadmin@speedzone.ma')->first()
+        $admin = User::query()->where('email', 'superadmin@oowlmedia.com')->first()
             ?? User::query()->whereHas('roles', fn ($q) => $q->where('name', Role::ADMIN))->first();
 
-        $driver = User::query()->where('email', 'driver@speedzone.ma')->first()
+        $driver = User::query()->where('email', 'driver@oowlmedia.com')->first()
             ?? User::query()->whereHas('roles', fn ($q) => $q->where('name', Role::DRIVER))->first();
 
         if (! $admin) {

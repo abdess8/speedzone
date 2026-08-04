@@ -39,7 +39,9 @@
         text-align: center;
         text-transform: uppercase;
     }
-    .brand-logo { max-height: 22px; max-width: 150px; }
+    /* The lockup is ~3.3:1, so height binds well before width. 22px left the
+       "DELIVERY" line under a pixel tall once dompdf rasterised it. */
+    .brand-logo { max-height: 32px; max-width: 170px; }
     .rule { border-bottom: 1.5px solid #16334F; margin: 6px 0 4px; }
 
     /* Tracking + barcode -------------------------------------------------- */

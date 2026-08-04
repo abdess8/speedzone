@@ -47,7 +47,7 @@ export default {
               <BCardBody class="p-4">
                 <div class="text-center mt-2">
                   <h5 class="text-primary">Welcome Back !</h5>
-                  <p class="text-muted">Sign in to continue to SpeedZone Express.</p>
+                  <p class="text-muted">Sign in to continue to OWL Delivery.</p>
                 </div>
                 <div class="p-2 mt-4">
                   <form>
@@ -112,7 +112,7 @@ export default {
         <BRow>
           <BCol lg="12">
             <div class="text-center">
-              <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} SpeedZone Express. Crafted with <i class="mdi mdi-heart text-danger"></i> by SpeedZone Express</p>
+              <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} OWL Delivery. Crafted with <i class="mdi mdi-heart text-danger"></i> by OWL Delivery</p>
             </div>
           </BCol>
         </BRow>

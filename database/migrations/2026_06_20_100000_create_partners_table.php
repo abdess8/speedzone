@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * B2B delivery partners (e.g. "Sendit") that delegate last-mile deliveries to
- * speedZone in cities they do not cover. Each partner owns the API credentials
+ * OWL Delivery in cities they do not cover. Each partner owns the API credentials
  * used to pull deliveries from and push status updates back to their platform.
  */
 return new class extends Migration
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('ice_number')->nullable();
             $table->boolean('is_active')->default(true);
 
-            // Hub city where this partner drops off packages for speedZone.
+            // Hub city where this partner drops off packages for OWL Delivery.
             $table->foreignId('reception_city_id')->nullable()->constrained('cities')->nullOnDelete();
 
             // Partner API integration credentials.

@@ -37,9 +37,9 @@ export default {
                                         </BCol>
                                         <BCol md>
                                             <div>
-                                                <h4 class="fw-bold">SpeedZone Express - Admin & Dashboard</h4>
+                                                <h4 class="fw-bold">OWL Delivery - Admin & Dashboard</h4>
                                                 <div class="hstack gap-3 flex-wrap">
-                                                    <div><i class="ri-building-line align-bottom me-1"></i> SpeedZone Express
+                                                    <div><i class="ri-building-line align-bottom me-1"></i> OWL Delivery
                                                     </div>
                                                     <div class="vr"></div>
                                                     <div>Create Date : <span class="fw-medium">15 Sep, 2021</span></div>
@@ -196,7 +196,7 @@ export default {
                                                                     <h5 class="fs-13 mb-1">
                                                                         <BLink href="#"
                                                                             class="text-body text-truncate d-block">
-                                                                            SpeedZone Express
+                                                                            OWL Delivery
                                                                             admin.ppt</BLink>
                                                                     </h5>
                                                                     <div>2.4MB</div>
@@ -698,7 +698,7 @@ export default {
                                                     <div class="flex-grow-1 overflow-hidden">
                                                         <h5 class="fs-13 mb-1">
                                                             <BLink href="#" class="text-body text-truncate d-block">
-                                                                SpeedZone Express-admin.ppt</BLink>
+                                                                OWL Delivery-admin.ppt</BLink>
                                                         </h5>
                                                         <div>2.4MB</div>
                                                     </div>
@@ -1053,7 +1053,7 @@ export default {
                                                             <div class="ms-3 flex-grow-1">
                                                                 <h5 class="fs-14 mb-0">
                                                                     <BLink href="javascript:void(0);" class="text-body">
-                                                                        SpeedZone Express-logo.png</BLink>
+                                                                        OWL Delivery-logo.png</BLink>
                                                                 </h5>
                                                             </div>
                                                         </div>

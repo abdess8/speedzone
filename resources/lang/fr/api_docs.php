@@ -2,7 +2,7 @@
 
 return [
     'title' => 'Documentation API',
-    'subtitle' => 'Connectez votre boutique, votre ERP ou votre plateforme e-commerce à SpeedZone et pilotez vos expéditions par programmation.',
+    'subtitle' => 'Connectez votre boutique, votre ERP ou votre plateforme e-commerce à OWL Delivery et pilotez vos expéditions par programmation.',
     'page_title' => 'Intégrations API',
 
     'search' => [
@@ -23,10 +23,10 @@ return [
     // Les noms de variables sont écrits sans leurs accolades à dessein : le
     // compilateur de messages Vue i18n lit `{…}` comme un placeholder.
     'postman' => [
-        'collection_name' => 'API SpeedZone',
+        'collection_name' => 'API OWL Delivery',
         'hint' => 'Importez-la dans Postman pour éprouver chaque endpoint sur votre propre compte. Les requêtes sont enchaînées : une seule exécution de la collection crée une commande, la relit, la modifie et programme son ramassage.',
         'token_embedded' => 'Le jeton collé ci-dessus sera inscrit dans le fichier téléchargé. Traitez ce fichier comme un mot de passe.',
-        'description' => "Requêtes prêtes à l'emploi pour l'API de livraison SpeedZone.\n\n### Avant de commencer\n\n1. Ouvrez les variables de la collection et collez votre jeton personnel dans `token`. Vous en créez un depuis votre compte SpeedZone, rubrique jetons API.\n2. Vérifiez que `baseUrl` pointe bien vers l'environnement visé.\n3. Compte multi-boutiques ? Renseignez `storeId` avec la boutique sur laquelle agir. Laissez vide pour utiliser votre boutique par défaut.\n\n### Exécuter toute la collection\n\nLes dossiers sont ordonnés pour qu'une exécution complète aboutisse. Les requêtes de référence renseignent `cityId` et `sectorId`, la création de commande enregistre son `orderId` et son `trackingNumber`, et toutes les requêtes suivantes les réutilisent.\n\nLa suppression de commande est branchée sur sa propre variable `deletableOrderId`, volontairement laissée vide, pour qu'une exécution de la collection ne détruise jamais la commande que les autres requêtes utilisent encore. Renseignez-la à la main quand vous voulez tester la suppression.\n\n### Limites\n\nLes appels sont plafonnés à :limit requêtes par minute, comptées par jeton. Chaque réponse indique le quota restant dans `X-RateLimit-Remaining`.",
+        'description' => "Requêtes prêtes à l'emploi pour l'API de livraison OWL Delivery.\n\n### Avant de commencer\n\n1. Ouvrez les variables de la collection et collez votre jeton personnel dans `token`. Vous en créez un depuis votre compte OWL Delivery, rubrique jetons API.\n2. Vérifiez que `baseUrl` pointe bien vers l'environnement visé.\n3. Compte multi-boutiques ? Renseignez `storeId` avec la boutique sur laquelle agir. Laissez vide pour utiliser votre boutique par défaut.\n\n### Exécuter toute la collection\n\nLes dossiers sont ordonnés pour qu'une exécution complète aboutisse. Les requêtes de référence renseignent `cityId` et `sectorId`, la création de commande enregistre son `orderId` et son `trackingNumber`, et toutes les requêtes suivantes les réutilisent.\n\nLa suppression de commande est branchée sur sa propre variable `deletableOrderId`, volontairement laissée vide, pour qu'une exécution de la collection ne détruise jamais la commande que les autres requêtes utilisent encore. Renseignez-la à la main quand vous voulez tester la suppression.\n\n### Limites\n\nLes appels sont plafonnés à :limit requêtes par minute, comptées par jeton. Chaque réponse indique le quota restant dans `X-RateLimit-Remaining`.",
     ],
 
     'console' => [
@@ -76,7 +76,7 @@ return [
     'sections' => [
         'introduction' => [
             'title' => 'Introduction',
-            'lead' => 'L\'API SpeedZone est une API REST en HTTPS. Elle consomme et renvoie du JSON, et vous permet de créer des expéditions, de les suivre tout au long du circuit de livraison et d\'en récupérer le statut sans jamais ouvrir le tableau de bord.',
+            'lead' => 'L\'API OWL Delivery est une API REST en HTTPS. Elle consomme et renvoie du JSON, et vous permet de créer des expéditions, de les suivre tout au long du circuit de livraison et d\'en récupérer le statut sans jamais ouvrir le tableau de bord.',
             'conventions_title' => 'Conventions',
             'conventions' => [
                 'json' => 'Tous les corps de requête sont en JSON, toutes les réponses le sont également.',

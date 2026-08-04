@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Per-partner translation table between speedZone order statuses and the
+ * Per-partner translation table between OWL Delivery order statuses and the
  * partner's own status vocabulary. Used both for ingestion (partner -> us)
  * and outbound pushes (us -> partner).
  */
@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('status_mappings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('partner_id')->constrained('partners')->cascadeOnDelete();
-            // speedZone status value (matches App\Enums\OrderStatus values).
+            // OWL Delivery status value (matches App\Enums\OrderStatus values).
             $table->string('speedzone_status');
             // The partner's equivalent status string (e.g. "DISTRIBUTED").
             $table->string('partner_status');

@@ -43,25 +43,25 @@ const socials = [
 </script>
 
 <template>
-    <footer id="contact" class="sz-footer">
-        <div class="sz-container">
-            <div class="sz-footer__top">
-                <div class="sz-footer__brand-col">
-                    <a href="#accueil" class="sz-footer__brand">
+    <footer id="contact" class="owl-footer">
+        <div class="owl-container">
+            <div class="owl-footer__top">
+                <div class="owl-footer__brand-col">
+                    <a href="#accueil" class="owl-footer__brand">
                         <img
-                            src="@assets/images/logo-brand-full.png"
-                            alt="SpeedZone Express"
-                            class="sz-footer__logo"
-                            width="180"
-                            height="54"
+                            src="@assets/images/logo-brand-full-light.png"
+                            alt="OWL Delivery"
+                            class="owl-footer__logo"
+                            width="150"
+                            height="46"
                         />
                     </a>
-                    <p class="sz-footer__tagline">Livraison rapide. Confiance assurée.</p>
-                    <p class="sz-footer__desc">
+                    <p class="owl-footer__tagline">Livraison rapide. Confiance assurée.</p>
+                    <p class="owl-footer__desc">
                         La plateforme de livraison la plus fiable au Maroc, de Rabat au Gharb.
                     </p>
-                    <div class="sz-footer__socials">
-                        <a v-for="s in socials" :key="s.icon" href="#" :aria-label="s.label" class="sz-social">
+                    <div class="owl-footer__socials">
+                        <a v-for="s in socials" :key="s.icon" href="#" :aria-label="s.label" class="owl-social">
                             <svg v-if="s.icon === 'facebook'" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
                                 <path d="M14 9h3V6h-3c-2.2 0-4 1.8-4 4v2H7v3h3v6h3v-6h3l1-3h-4v-2c0-.6.4-1 1-1z" />
                             </svg>
@@ -80,7 +80,7 @@ const socials = [
                     </div>
                 </div>
 
-                <div v-for="col in columns" :key="col.title" class="sz-footer__col">
+                <div v-for="col in columns" :key="col.title" class="owl-footer__col">
                     <h4>{{ col.title }}</h4>
                     <ul>
                         <li v-for="link in col.links" :key="link.label">
@@ -89,32 +89,32 @@ const socials = [
                     </ul>
                 </div>
 
-                <div class="sz-footer__col sz-footer__contact">
+                <div class="owl-footer__col owl-footer__contact">
                     <h4>Contact</h4>
                     <ul>
                         <li>
-                            <span class="sz-footer__ci">📍</span>
+                            <span class="owl-footer__ci">📍</span>
                             <span>Rabat, Maroc</span>
                         </li>
                         <li>
-                            <span class="sz-footer__ci">📞</span>
+                            <span class="owl-footer__ci">📞</span>
                             <a href="tel:+212500000000">+212 5 00 00 00 00</a>
                         </li>
                         <li>
-                            <span class="sz-footer__ci">✉️</span>
-                            <a href="mailto:contact@speedzone.ma">contact@speedzone.ma</a>
+                            <span class="owl-footer__ci">✉️</span>
+                            <a href="mailto:contact@oowlmedia.com">contact@oowlmedia.com</a>
                         </li>
                         <li>
-                            <span class="sz-footer__ci">🌐</span>
-                            <span>www.speedzone.ma</span>
+                            <span class="owl-footer__ci">🌐</span>
+                            <span>www.oowlmedia.com</span>
                         </li>
                     </ul>
                 </div>
             </div>
 
-            <div class="sz-footer__bottom">
-                <p>© {{ year }} SpeedZone. Tous droits réservés.</p>
-                <div class="sz-footer__legal">
+            <div class="owl-footer__bottom">
+                <p>© {{ year }} OWL Delivery. Tous droits réservés.</p>
+                <div class="owl-footer__legal">
                     <a href="#contact">Conditions générales</a>
                     <a href="#contact">Politique de confidentialité</a>
                 </div>
@@ -124,50 +124,50 @@ const socials = [
 </template>
 
 <style scoped>
-.sz-footer {
-    background: var(--sz-dark);
+.owl-footer {
+    background: var(--owl-dark);
     color: rgba(255, 255, 255, 0.7);
     padding: 4.5rem 1.5rem 2rem;
 }
-.sz-container {
+.owl-container {
     max-width: 1200px;
     margin: 0 auto;
 }
-.sz-footer__top {
+.owl-footer__top {
     display: grid;
     grid-template-columns: 1.6fr 1fr 1fr 1fr 1.2fr;
     gap: 2.5rem;
     padding-bottom: 3rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-.sz-footer__brand {
+.owl-footer__brand {
     display: inline-flex;
     align-items: center;
     text-decoration: none;
     margin-bottom: 1rem;
 }
-.sz-footer__logo {
+.owl-footer__logo {
     display: block;
     width: auto;
-    height: 54px;
+    height: 46px;
     max-width: 180px;
     object-fit: contain;
 }
-.sz-footer__tagline {
+.owl-footer__tagline {
     margin: 0 0 0.5rem;
     color: #fff;
     font-weight: 600;
 }
-.sz-footer__desc {
+.owl-footer__desc {
     margin: 0 0 1.3rem;
     font-size: 0.9rem;
     max-width: 280px;
 }
-.sz-footer__socials {
+.owl-footer__socials {
     display: flex;
     gap: 0.6rem;
 }
-.sz-social {
+.owl-social {
     width: 38px;
     height: 38px;
     border-radius: 11px;
@@ -178,19 +178,19 @@ const socials = [
     justify-content: center;
     transition: background 0.25s ease, transform 0.25s ease;
 }
-.sz-social:hover {
-    background: var(--sz-primary);
+.owl-social:hover {
+    background: var(--owl-primary);
     transform: translateY(-3px);
     color: #fff;
 }
 
-.sz-footer__col h4 {
+.owl-footer__col h4 {
     margin: 0 0 1.1rem;
     color: #fff;
     font-size: 0.95rem;
     font-weight: 700;
 }
-.sz-footer__col ul {
+.owl-footer__col ul {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -198,26 +198,26 @@ const socials = [
     flex-direction: column;
     gap: 0.7rem;
 }
-.sz-footer__col a {
+.owl-footer__col a {
     color: rgba(255, 255, 255, 0.68);
     text-decoration: none;
     font-size: 0.9rem;
     transition: color 0.2s ease;
 }
-.sz-footer__col a:hover {
+.owl-footer__col a:hover {
     color: #fff;
 }
-.sz-footer__contact li {
+.owl-footer__contact li {
     display: flex;
     align-items: center;
     gap: 0.55rem;
     font-size: 0.9rem;
 }
-.sz-footer__ci {
+.owl-footer__ci {
     font-size: 0.9rem;
 }
 
-.sz-footer__bottom {
+.owl-footer__bottom {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -225,37 +225,37 @@ const socials = [
     padding-top: 1.8rem;
     flex-wrap: wrap;
 }
-.sz-footer__bottom p {
+.owl-footer__bottom p {
     margin: 0;
     font-size: 0.85rem;
 }
-.sz-footer__legal {
+.owl-footer__legal {
     display: flex;
     gap: 1.5rem;
 }
-.sz-footer__legal a {
+.owl-footer__legal a {
     color: rgba(255, 255, 255, 0.68);
     text-decoration: none;
     font-size: 0.85rem;
 }
-.sz-footer__legal a:hover {
+.owl-footer__legal a:hover {
     color: #fff;
 }
 
 @media (max-width: 992px) {
-    .sz-footer__top {
+    .owl-footer__top {
         grid-template-columns: 1fr 1fr;
         gap: 2rem;
     }
-    .sz-footer__brand-col {
+    .owl-footer__brand-col {
         grid-column: 1 / -1;
     }
 }
 @media (max-width: 560px) {
-    .sz-footer__top {
+    .owl-footer__top {
         grid-template-columns: 1fr;
     }
-    .sz-footer__bottom {
+    .owl-footer__bottom {
         flex-direction: column;
         text-align: center;
     }

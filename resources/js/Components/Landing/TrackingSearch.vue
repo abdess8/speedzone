@@ -25,9 +25,9 @@ const submit = () => {
 </script>
 
 <template>
-    <form class="sz-track" :class="`sz-track--${variant}`" @submit.prevent="submit">
-        <div class="sz-track__field">
-            <span class="sz-track__icon" aria-hidden="true">
+    <form class="owl-track" :class="`owl-track--${variant}`" @submit.prevent="submit">
+        <div class="owl-track__field">
+            <span class="owl-track__icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
                     <path d="M3.3 7L12 12l8.7-5M12 22V12" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
@@ -36,61 +36,61 @@ const submit = () => {
             <input
                 v-model="trackingNumber"
                 type="text"
-                class="sz-track__input"
+                class="owl-track__input"
                 placeholder="Entrez votre numéro de suivi"
                 aria-label="Numéro de suivi"
                 autocomplete="off"
             />
         </div>
-        <button type="submit" class="sz-track__btn" :disabled="!canSubmit || loading">
+        <button type="submit" class="owl-track__btn" :disabled="!canSubmit || loading">
             <span v-if="!loading">Suivre</span>
-            <span v-else class="sz-track__spinner" aria-hidden="true"></span>
+            <span v-else class="owl-track__spinner" aria-hidden="true"></span>
         </button>
     </form>
 </template>
 
 <style scoped>
-.sz-track {
+.owl-track {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     background: #fff;
-    border: 1px solid var(--sz-border);
+    border: 1px solid var(--owl-border);
     border-radius: 999px;
     padding: 0.4rem 0.4rem 0.4rem 0.5rem;
-    box-shadow: var(--sz-shadow);
+    box-shadow: var(--owl-shadow);
     max-width: 460px;
 }
-.sz-track__field {
+.owl-track__field {
     display: flex;
     align-items: center;
     gap: 0.6rem;
     flex: 1;
     padding-left: 0.6rem;
 }
-.sz-track__icon {
-    color: var(--sz-primary);
+.owl-track__icon {
+    color: var(--owl-primary);
     display: inline-flex;
 }
-.sz-track__input {
+.owl-track__input {
     flex: 1;
     border: none;
     outline: none;
     background: transparent;
-    font-family: var(--sz-font);
+    font-family: var(--owl-font);
     font-size: 0.95rem;
-    color: var(--sz-dark);
+    color: var(--owl-dark);
     min-width: 0;
 }
-.sz-track__input::placeholder {
-    color: var(--sz-muted);
+.owl-track__input::placeholder {
+    color: var(--owl-muted);
 }
-.sz-track__btn {
+.owl-track__btn {
     border: none;
     cursor: pointer;
-    background: var(--sz-gradient);
+    background: var(--owl-gradient);
     color: #fff;
-    font-family: var(--sz-font);
+    font-family: var(--owl-font);
     font-weight: 700;
     font-size: 0.95rem;
     padding: 0.75rem 1.6rem;
@@ -101,41 +101,41 @@ const submit = () => {
     min-width: 108px;
     transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
-.sz-track__btn:hover:not(:disabled) {
+.owl-track__btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: var(--sz-shadow-primary);
+    box-shadow: var(--owl-shadow-primary);
 }
-.sz-track__btn:disabled {
+.owl-track__btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
-.sz-track__spinner {
+.owl-track__spinner {
     width: 18px;
     height: 18px;
     border: 2.5px solid rgba(255, 255, 255, 0.5);
     border-top-color: #fff;
     border-radius: 50%;
-    animation: sz-spin 0.7s linear infinite;
+    animation: owl-spin 0.7s linear infinite;
 }
-@keyframes sz-spin {
+@keyframes owl-spin {
     to {
         transform: rotate(360deg);
     }
 }
 
 @media (max-width: 520px) {
-    .sz-track {
+    .owl-track {
         flex-direction: column;
-        border-radius: var(--sz-radius-sm);
+        border-radius: var(--owl-radius-sm);
         padding: 0.7rem;
         gap: 0.7rem;
     }
-    .sz-track__field {
+    .owl-track__field {
         width: 100%;
         padding: 0.5rem 0.6rem;
     }
-    .sz-track__btn {
+    .owl-track__btn {
         width: 100%;
     }
 }

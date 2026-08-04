@@ -59,7 +59,7 @@ class City extends Model
     }
 
     /**
-     * Partners that delegate deliveries to speedZone in this city.
+     * Partners that delegate deliveries to OWL Delivery in this city.
      */
     public function partners(): BelongsToMany
     {

@@ -24,7 +24,7 @@ class DemoUsersSeeder extends Seeder
         $sellerRole = Role::query()->where('name', Role::SELLER)->firstOrFail();
 
         $superAdmin = User::updateOrCreate(
-            ['email' => 'superadmin@speedzone.ma'],
+            ['email' => 'superadmin@oowlmedia.com'],
             [
                 'name' => 'Super Admin',
                 'first_name' => 'Super',
@@ -34,7 +34,7 @@ class DemoUsersSeeder extends Seeder
                 'role_id' => $adminRole->id,
                 'city_id' => $casablancaId,
                 'phone_number' => '0600000001',
-                'pickup_address_1' => 'SpeedZone HQ, Casablanca',
+                'pickup_address_1' => 'OWL Delivery HQ, Casablanca',
             ]
         );
         $superAdmin->roles()->sync([$adminRole->id]);
@@ -48,7 +48,7 @@ class DemoUsersSeeder extends Seeder
         $adminRole->permissions()->sync($allPermissionIds);
 
         $driver = User::updateOrCreate(
-            ['email' => 'driver@speedzone.ma'],
+            ['email' => 'driver@oowlmedia.com'],
             [
                 'name' => 'Ahmed Driver',
                 'first_name' => 'Ahmed',
@@ -63,11 +63,11 @@ class DemoUsersSeeder extends Seeder
         $driver->roles()->sync([$driverRole->id]);
 
         $sellerNames = [
-            ['Sara', 'Alami', 'seller1@speedzone.ma', '0600000101'],
-            ['Omar', 'Benjelloun', 'seller2@speedzone.ma', '0600000102'],
-            ['Laila', 'Fassi', 'seller3@speedzone.ma', '0600000103'],
-            ['Mehdi', 'Tazi', 'seller4@speedzone.ma', '0600000104'],
-            ['Nour', 'Chakir', 'seller5@speedzone.ma', '0600000105'],
+            ['Sara', 'Alami', 'seller1@oowlmedia.com', '0600000101'],
+            ['Omar', 'Benjelloun', 'seller2@oowlmedia.com', '0600000102'],
+            ['Laila', 'Fassi', 'seller3@oowlmedia.com', '0600000103'],
+            ['Mehdi', 'Tazi', 'seller4@oowlmedia.com', '0600000104'],
+            ['Nour', 'Chakir', 'seller5@oowlmedia.com', '0600000105'],
         ];
 
         foreach ($sellerNames as [$first, $last, $email, $phone]) {
@@ -90,8 +90,8 @@ class DemoUsersSeeder extends Seeder
         }
 
         $this->command?->info('Demo users seeded (password: '.self::DEMO_PASSWORD.')');
-        $this->command?->info('  Super Admin: superadmin@speedzone.ma');
-        $this->command?->info('  Driver:      driver@speedzone.ma');
-        $this->command?->info('  Sellers:     seller1@speedzone.ma … seller5@speedzone.ma');
+        $this->command?->info('  Super Admin: superadmin@oowlmedia.com');
+        $this->command?->info('  Driver:      driver@oowlmedia.com');
+        $this->command?->info('  Sellers:     seller1@oowlmedia.com … seller5@oowlmedia.com');
     }
 }

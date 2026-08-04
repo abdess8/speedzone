@@ -35,17 +35,17 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <section ref="root" class="sz-stats">
-        <div class="sz-stats__bg" aria-hidden="true"></div>
-        <div class="sz-container sz-stats__grid">
+    <section ref="root" class="owl-stats">
+        <div class="owl-stats__bg" aria-hidden="true"></div>
+        <div class="owl-container owl-stats__grid">
             <div
                 v-for="(stat, index) in stats"
                 :key="stat.label"
-                class="sz-stat"
+                class="owl-stat"
                 data-aos="fade-up"
                 :data-aos-delay="index * 90"
             >
-                <div class="sz-stat__value">
+                <div class="owl-stat__value">
                     <template v-if="stat.text">{{ stat.text }}</template>
                     <CountTo
                         v-else-if="visible"
@@ -58,41 +58,41 @@ onBeforeUnmount(() => {
                     />
                     <span v-else>0{{ stat.suffix }}</span>
                 </div>
-                <p class="sz-stat__label">{{ stat.label }}</p>
+                <p class="owl-stat__label">{{ stat.label }}</p>
             </div>
         </div>
     </section>
 </template>
 
 <style scoped>
-.sz-stats {
+.owl-stats {
     position: relative;
     padding: 4rem 1.5rem;
-    background: var(--sz-dark);
+    background: var(--owl-dark);
     overflow: hidden;
 }
-.sz-stats__bg {
+.owl-stats__bg {
     position: absolute;
     inset: 0;
     background: radial-gradient(circle at 15% 20%, rgba(37, 99, 235, 0.4), transparent 45%),
-        radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.28), transparent 45%);
+        radial-gradient(circle at 85% 80%, rgba(241, 90, 36, 0.28), transparent 45%);
 }
-.sz-container {
+.owl-container {
     position: relative;
     max-width: 1200px;
     margin: 0 auto;
 }
-.sz-stats__grid {
+.owl-stats__grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 1.5rem;
 }
-.sz-stat {
+.owl-stat {
     text-align: center;
     padding: 1rem 0.5rem;
     position: relative;
 }
-.sz-stat:not(:last-child)::after {
+.owl-stat:not(:last-child)::after {
     content: '';
     position: absolute;
     right: 0;
@@ -101,7 +101,7 @@ onBeforeUnmount(() => {
     width: 1px;
     background: rgba(255, 255, 255, 0.12);
 }
-.sz-stat__value {
+.owl-stat__value {
     font-size: clamp(1.9rem, 3.5vw, 2.9rem);
     font-weight: 800;
     letter-spacing: -0.02em;
@@ -111,7 +111,7 @@ onBeforeUnmount(() => {
     color: transparent;
     line-height: 1;
 }
-.sz-stat__label {
+.owl-stat__label {
     margin: 0.7rem 0 0;
     font-size: 0.92rem;
     color: rgba(255, 255, 255, 0.7);
@@ -119,14 +119,14 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 860px) {
-    .sz-stats__grid {
+    .owl-stats__grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 2rem 1rem;
     }
-    .sz-stat:not(:last-child)::after {
+    .owl-stat:not(:last-child)::after {
         display: none;
     }
-    .sz-stat:nth-child(5) {
+    .owl-stat:nth-child(5) {
         grid-column: 1 / -1;
     }
 }

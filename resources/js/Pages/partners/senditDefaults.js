@@ -1,5 +1,5 @@
 /**
- * Default Sendit partner configuration and status mapping (Sendit → speedZone).
+ * Default Sendit partner configuration and status mapping (Sendit → OWL Delivery).
  */
 export const SENDIT_STATUS_MAPPINGS = [
   { speedzone_status: "IN_TRANSIT", partner_status: "En transit" },

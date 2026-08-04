@@ -14,7 +14,7 @@ import { reactive, readonly } from 'vue';
  * its own payload on every visit.
  */
 
-const STORAGE_KEY = 'speedzone.guides.v1';
+const STORAGE_KEY = 'owl.guides.v1';
 
 /** guide key → { completed, completed_count, last_step_index } */
 const progress = reactive({});

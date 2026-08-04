@@ -270,7 +270,7 @@ export default {
                         <ul class="to-do-menu list-unstyled" id="projectlist-data">
                             <li>
                                 <BLink v-b-toggle.velzonAdmin class="nav-link fs-13 active">
-                                    SpeedZone Express
+                                    OWL Delivery
                                     Admin & Dashboard</BLink>
                                 <BCollapse id="velzonAdmin" visible>
                                     <ul class="mb-0 sub-menu list-unstyled ps-3 vstack gap-2 mb-2">
@@ -389,7 +389,7 @@ export default {
                         </BButton>
                     </div>
                     <BCol order="3" order-sm="2" class="mt-3 mt-sm-0" sm>
-                        <h5 class="fw-semibold mb-0">SpeedZone Express Admin & Dashboard <span
+                        <h5 class="fw-semibold mb-0">OWL Delivery Admin & Dashboard <span
                                 class="badge bg-primary align-bottom ms-2">v2.0.0</span></h5>
                     </BCol>
 

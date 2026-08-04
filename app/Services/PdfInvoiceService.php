@@ -33,7 +33,7 @@ class PdfInvoiceService
             'seller' => $invoice->seller,
             'lines' => $invoice->invoiceOrders,
             'logo' => $this->logoDataUri(),
-            'companyName' => config('orders.label.company_name', 'SpeedZone Express'),
+            'companyName' => config('orders.label.company_name', 'OWL Delivery'),
         ])->setPaper('a4');
 
         return PdfPageNumbering::stamp($pdf, 'invoices.pdf.page_of');

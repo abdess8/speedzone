@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Strict vocabulary of speedZone statuses allowed on B2B partner deliveries.
+ * Strict vocabulary of OWL Delivery statuses allowed on B2B partner deliveries.
  *
  * These map to partner-facing labels (e.g. Sendit) through status_mappings.
  */

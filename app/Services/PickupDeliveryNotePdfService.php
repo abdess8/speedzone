@@ -19,7 +19,7 @@ class PickupDeliveryNotePdfService
             'pickup' => $pickup,
             'orders' => $pickup->orders,
             'logo' => $this->logoDataUri(),
-            'companyName' => config('pickup.delivery_note.company_name', 'SpeedZone Express'),
+            'companyName' => config('pickup.delivery_note.company_name', 'OWL Delivery'),
         ])->setPaper(config('pickup.delivery_note.paper', 'a4'), 'portrait');
     }
 

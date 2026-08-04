@@ -2,7 +2,7 @@
 
 return [
     'title' => 'API documentation',
-    'subtitle' => 'Connect your shop, your ERP or your e-commerce platform to SpeedZone and manage your shipments programmatically.',
+    'subtitle' => 'Connect your shop, your ERP or your e-commerce platform to OWL Delivery and manage your shipments programmatically.',
     'page_title' => 'API Integrations',
 
     'search' => [
@@ -23,10 +23,10 @@ return [
     // Variable names are written without their braces on purpose: the Vue i18n
     // message compiler reads `{…}` as a placeholder.
     'postman' => [
-        'collection_name' => 'SpeedZone API',
+        'collection_name' => 'OWL Delivery API',
         'hint' => 'Import it into Postman to exercise every endpoint against your own account. The requests are chained, so one run of the collection creates an order, reads it back, edits it and books its pickup.',
         'token_embedded' => 'The token you pasted above will be written into the downloaded file. Treat that file like a password.',
-        'description' => "Ready-to-run requests for the SpeedZone delivery API.\n\n### Before you start\n\n1. Open the collection variables and paste your personal token into `token`. You create one from your SpeedZone account, under API tokens.\n2. Check that `baseUrl` points at the environment you mean to hit.\n3. Multi-store account? Set `storeId` to the shop you want to act on. Leave it empty to use your default shop.\n\n### Running the whole collection\n\nThe folders are ordered so that a full run works end to end. The reference requests fill in `cityId` and `sectorId`, creating an order stores its `orderId` and `trackingNumber`, and every request after that reuses them.\n\nDelete an order is wired to its own `deletableOrderId` variable, left empty on purpose, so running the collection can never destroy the order the other requests are still using. Set it by hand when you want to test the deletion.\n\n### Limits\n\nCalls are capped at :limit requests per minute, counted per token. Every response carries the remaining quota in `X-RateLimit-Remaining`.",
+        'description' => "Ready-to-run requests for the OWL Delivery delivery API.\n\n### Before you start\n\n1. Open the collection variables and paste your personal token into `token`. You create one from your OWL Delivery account, under API tokens.\n2. Check that `baseUrl` points at the environment you mean to hit.\n3. Multi-store account? Set `storeId` to the shop you want to act on. Leave it empty to use your default shop.\n\n### Running the whole collection\n\nThe folders are ordered so that a full run works end to end. The reference requests fill in `cityId` and `sectorId`, creating an order stores its `orderId` and `trackingNumber`, and every request after that reuses them.\n\nDelete an order is wired to its own `deletableOrderId` variable, left empty on purpose, so running the collection can never destroy the order the other requests are still using. Set it by hand when you want to test the deletion.\n\n### Limits\n\nCalls are capped at :limit requests per minute, counted per token. Every response carries the remaining quota in `X-RateLimit-Remaining`.",
     ],
 
     'console' => [
@@ -76,7 +76,7 @@ return [
     'sections' => [
         'introduction' => [
             'title' => 'Introduction',
-            'lead' => 'The SpeedZone API is a REST API over HTTPS. It accepts and returns JSON, and lets you create shipments, follow them through the delivery workflow and pull back their status without ever opening the dashboard.',
+            'lead' => 'The OWL Delivery API is a REST API over HTTPS. It accepts and returns JSON, and lets you create shipments, follow them through the delivery workflow and pull back their status without ever opening the dashboard.',
             'conventions_title' => 'Conventions',
             'conventions' => [
                 'json' => 'Every request body is JSON, and every response is JSON.',

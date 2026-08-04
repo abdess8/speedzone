@@ -315,7 +315,7 @@ export function buildPostmanCollection({ baseUrl, token, storeId, examples, rate
 }
 
 /** Hands the collection to the browser as a file. */
-export function downloadPostmanCollection(collection, filename = 'speedzone-api.postman_collection.json') {
+export function downloadPostmanCollection(collection, filename = 'owl-delivery-api.postman_collection.json') {
   const blob = new Blob([JSON.stringify(collection, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement('a');

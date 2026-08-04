@@ -185,7 +185,7 @@ return [
     'driver' => [
         'call' => 'Call',
         'whatsapp' => 'WhatsApp',
-        'whatsapp_message' => 'Hello :name, this is your SpeedZone driver. '
+        'whatsapp_message' => 'Hello :name, this is your OWL Delivery driver. '
             .'I am on my way with your parcel :tracking. Are you available?',
         'already_paid' => 'Already paid',
         'navigate' => 'Directions',

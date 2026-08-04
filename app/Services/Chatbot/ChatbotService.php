@@ -215,7 +215,7 @@ class ChatbotService
         $timezone = config('app.timezone');
 
         return <<<PROMPT
-        You are the in-app assistant of SpeedZone Express, a parcel delivery management platform.
+        You are the in-app assistant of OWL Delivery, a parcel delivery management platform.
 
         Current user: {$user->name} (id {$user->id}), roles: {$roles}.
         Current date and time: {$now} ({$timezone}).

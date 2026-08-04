@@ -712,7 +712,7 @@ export default {
                                         </b-link>
                                         <ul class="list-inline text-muted mb-3">
                                             <li class="list-inline-item">
-                                                <i class="ri-building-line align-bottom me-1"></i> SpeedZone Express
+                                                <i class="ri-building-line align-bottom me-1"></i> OWL Delivery
                                             </li>
                                             <li class="list-inline-item">
                                                 <i class="ri-map-pin-2-line align-bottom me-1"></i> USA
@@ -960,7 +960,7 @@ export default {
                                     <BLink href="#!">
                                         <h5>New Web designer</h5>
                                     </BLink>
-                                    <p class="text-muted">SpeedZone Express</p>
+                                    <p class="text-muted">OWL Delivery</p>
 
                                     <div class="d-flex gap-4 mb-3">
                                         <div>
@@ -1282,7 +1282,7 @@ export default {
                             <div class="mt-4 fs-13">
                                 <p>Premium Multipurpose Admin & Dashboard Template</p>
                                 <p>You can build any type of web application like eCommerce, CRM, CMS, Project
-                                    management apps, Admin Panels, etc using SpeedZone Express.</p>
+                                    management apps, Admin Panels, etc using OWL Delivery.</p>
                                 <ul class="list-inline mb-0 footer-social-link">
                                     <li class="list-inline-item">
                                         <BLink href="#" class="avatar-xs d-block">
@@ -1389,7 +1389,7 @@ export default {
                     <BCol sm="6">
                         <div>
                             <p class="copy-rights mb-0">
-                                {{ new Date().getFullYear() }} © SpeedZone Express - SpeedZone Express
+                                {{ new Date().getFullYear() }} © OWL Delivery - OWL Delivery
                             </p>
                         </div>
                     </BCol>

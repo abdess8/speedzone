@@ -341,7 +341,7 @@ class DatasetExportCommand extends Command
         $handle = fopen($path, 'w');
         $pdo = DB::getPdo();
 
-        fwrite($handle, "-- SpeedZone — jeu de données logistique Maroc\n");
+        fwrite($handle, "-- OWL Delivery — jeu de données logistique Maroc\n");
         fwrite($handle, '-- Base source : '.DB::getDatabaseName()."\n");
         fwrite($handle, '-- Généré le : '.now()->toDateTimeString()."\n\n");
         fwrite($handle, "SET NAMES utf8mb4;\nSET FOREIGN_KEY_CHECKS=0;\nSET AUTOCOMMIT=0;\nSTART TRANSACTION;\n\n");

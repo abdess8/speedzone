@@ -56,10 +56,10 @@ export default {
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
                                 <Link to="/" class="d-inline-block auth-logo">
-                                <img src="@assets/images/logo-light.png" alt="" height="20">
+                                <img src="@assets/images/logo-light.png" alt="OWL Delivery" height="58">
                                 </Link>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p>
+                            <p class="mt-3 fs-15 fw-medium">Logistics &amp; Delivery Management Platform</p>
                         </div>
                     </BCol>
                 </BRow>
@@ -127,7 +127,7 @@ export default {
                 <BRow>
                     <BCol lg="12">
                         <div class="text-center">
-                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} SpeedZone Express. Crafted with <i class="mdi mdi-heart text-danger"></i> by SpeedZone Express</p>
+                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} OWL Delivery &mdash; une société OWL Media.</p>
                         </div>
                     </BCol>
                 </BRow>

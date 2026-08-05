@@ -70,6 +70,7 @@ return [
     'delivery_zones' => 'Delivery Zones',
     'sectors' => 'Sectors',
     'driver_zones' => 'Driver Assignment',
+    'user_admin' => 'Users',
     'settings' => [
         'title' => 'Settings',
         'profile' => 'Profile',

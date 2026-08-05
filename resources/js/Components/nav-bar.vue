@@ -1,6 +1,8 @@
 <script setup>
+import GlobalSearch from '@/Components/GlobalSearch.vue';
 import NavModeSwitcher from '@/Components/NavModeSwitcher.vue';
 import NotificationBell from '@/Components/Notifications/NotificationBell.vue';
+import SettingsMenu from '@/Components/SettingsMenu.vue';
 import StoreSwitcher from '@/Components/StoreSwitcher.vue';
 import { layoutMethods } from '@/state/helpers';
 import { Link, router, usePage } from '@inertiajs/vue3';
@@ -130,6 +132,8 @@ export default {
 
         </div>
 
+        <GlobalSearch />
+
         <div class="d-flex align-items-center">
           <StoreSwitcher />
 
@@ -191,6 +195,8 @@ export default {
           <Link href="/chat" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle ms-1 header-item d-none d-sm-flex">
             <i class="bx bx-message-rounded-dots fs-22"></i>
           </Link>
+
+          <SettingsMenu />
 
           <NotificationBell />
 

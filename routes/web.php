@@ -10,6 +10,7 @@ use App\Http\Controllers\DriverFinanceController;
 use App\Http\Controllers\DriverInvoiceController;
 use App\Http\Controllers\DriverTransactionController;
 use App\Http\Controllers\DriverZoneController;
+use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\GuideAccessController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\HelpCenterController;
@@ -92,6 +93,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::redirect('/admin/users/pending', '/admin/pending-users');
 
     Route::post('locale', [LocaleController::class, 'update'])->name('locale.update');
+
+    // Global search bar. Deliberately behind no `permission:` middleware: each
+    // searchable object gates itself, so the endpoint answers with whatever
+    // slice of the platform the caller may already read.
+    Route::get('search', GlobalSearchController::class)->name('search.global');
 
     // Notifications
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');

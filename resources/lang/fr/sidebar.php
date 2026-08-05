@@ -70,6 +70,7 @@ return [
     'delivery_zones' => 'Zones de livraison',
     'sectors' => 'Secteurs',
     'driver_zones' => 'Affectation des livreurs',
+    'user_admin' => 'Utilisateurs',
     'settings' => [
         'title' => 'Paramètres',
         'profile' => 'Profil',

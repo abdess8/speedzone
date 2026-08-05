@@ -24,6 +24,7 @@ final class TranslationBundle
     public const GROUPS = [
         'sidebar',
         'navbar',
+        'search',
         'roles',
         'common',
         'orders',

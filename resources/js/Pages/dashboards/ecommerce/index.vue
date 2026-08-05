@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { computed, ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Layout from '@/Layouts/main.vue';
 import DesktopDashboard from '@/Components/Dashboard/desktop/DesktopDashboard.vue';
@@ -24,6 +24,16 @@ const isMobile = useIsMobile();
 const loading = ref(true);
 const error = ref(null);
 const dashboard = ref(null);
+
+/**
+ * Which families of panels this role may read.
+ *
+ * Decided on the server, which also leaves the corresponding figures out of the
+ * payload — so a panel hidden here has no data behind it to leak either way.
+ * Empty while loading, which keeps the guarded panels out of the first paint
+ * instead of flashing them and taking them back.
+ */
+const widgets = computed(() => dashboard.value?.widgets ?? {});
 
 const period = ref('last_30_days');
 const customRange = ref('');
@@ -109,6 +119,7 @@ onMounted(loadDashboard);
       v-if="isMobile"
       v-model:period="period"
       :dashboard="dashboard"
+      :widgets="widgets"
       :loading="loading"
       :error="error ?? ''"
       @refresh="loadDashboard"
@@ -119,6 +130,7 @@ onMounted(loadDashboard);
       v-model:period="period"
       v-model:custom-range="customRange"
       :dashboard="dashboard"
+      :widgets="widgets"
       :loading="loading"
       :error="error ?? ''"
       @refresh="loadDashboard"

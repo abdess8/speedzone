@@ -198,6 +198,9 @@ return [
         'title' => 'My activity',
         'subtitle' => 'SpeedZone Express',
         'cash_headline' => 'Cash to collect',
+        // Headline for a role that may not read the money figures: the hero panel
+        // still has to say something true, so it counts parcels instead.
+        'orders_headline' => 'Orders over the period',
         'refresh' => 'Refresh',
         'previous_period' => 'Previous period',
         'next_period' => 'Next period',

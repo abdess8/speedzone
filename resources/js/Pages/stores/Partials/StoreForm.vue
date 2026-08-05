@@ -5,6 +5,8 @@ import InputError from '@/Components/InputError.vue';
 const props = defineProps({
   form: { type: Object, required: true },
   cities: { type: Array, default: () => [] },
+  /** Cities flagged as holding a stock depot; empty hides the fulfilment card. */
+  hubCities: { type: Array, default: () => [] },
   currentLogoUrl: { type: String, default: null },
 });
 
@@ -196,6 +198,30 @@ const onLogoSelected = (event) => {
                 :class="{ 'is-invalid': form.errors.pickup_address_2 }"
               />
               <InputError :message="form.errors.pickup_address_2" />
+            </BCol>
+          </BRow>
+        </BCardBody>
+      </BCard>
+
+      <BCard v-if="hubCities.length > 0" data-guide="store-fulfilment" no-body>
+        <BCardHeader>
+          <h5 class="card-title mb-0">{{ $t('stores.form.fulfilment') }}</h5>
+          <p class="text-muted mb-0 fs-13 mt-1">{{ $t('stores.form.fulfilment_hint') }}</p>
+        </BCardHeader>
+        <BCardBody>
+          <BRow class="g-3">
+            <BCol md="6">
+              <label class="form-label" for="storeStockHub">{{ $t('stores.fields.stock_hub_city') }}</label>
+              <select
+                id="storeStockHub"
+                class="form-select"
+                v-model="form.stock_hub_city_id"
+                :class="{ 'is-invalid': form.errors.stock_hub_city_id }"
+              >
+                <option :value="null">{{ $t('stores.form.no_stock_hub') }}</option>
+                <option v-for="city in hubCities" :key="city.id" :value="city.id">{{ city.name }}</option>
+              </select>
+              <InputError :message="form.errors.stock_hub_city_id" />
             </BCol>
           </BRow>
         </BCardBody>

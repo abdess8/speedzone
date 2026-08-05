@@ -1,0 +1,61 @@
+{
+  "key": "stock-catalog",
+  "route": "products.index",
+  "steps": [
+    { "id": "welcome", "kind": "welcome" },
+    {
+      "id": "summary",
+      "target": "[data-guide=\"stock-summary\"]",
+      "placement": "bottom",
+      "padding": 10
+    },
+    {
+      "id": "list",
+      "target": "[data-guide=\"stock-list\"]",
+      "placement": "bottom"
+    },
+    {
+      "id": "create",
+      "target": "[data-guide=\"stock-create\"]",
+      "placement": "bottom",
+      "padding": 10,
+      "require": { "signal": "app.route", "equals": "products.create" },
+      "autoAdvance": true
+    },
+    {
+      "id": "identity",
+      "target": "[data-guide=\"product-identity\"]",
+      "placement": "right"
+    },
+    {
+      "id": "pricing",
+      "target": "[data-guide=\"product-pricing\"]",
+      "placement": "left"
+    },
+    {
+      "id": "logistics",
+      "target": "[data-guide=\"product-logistics\"]",
+      "placement": "right"
+    },
+    {
+      "id": "media",
+      "target": "[data-guide=\"product-media\"]",
+      "placement": "left"
+    },
+    {
+      "id": "submit",
+      "target": "[data-guide=\"product-submit\"]",
+      "placement": "top",
+      "padding": 10,
+      "require": { "signal": "app.route", "equals": "products.index" },
+      "autoAdvance": true
+    },
+    {
+      "id": "import",
+      "target": "[data-guide=\"stock-import\"]",
+      "placement": "bottom",
+      "padding": 10
+    },
+    { "id": "done", "kind": "finish" }
+  ]
+}

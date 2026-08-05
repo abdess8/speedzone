@@ -19,6 +19,7 @@ const form = reactive({
     ticket_message: true,
     ticket_closed: true,
     return_requested: true,
+    stock_pickup_requested: true,
     system_notifications: true,
 });
 
@@ -28,6 +29,7 @@ const typeKeys = [
     'ticket_message',
     'ticket_closed',
     'return_requested',
+    'stock_pickup_requested',
     'system_notifications',
 ];
 

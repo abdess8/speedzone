@@ -53,6 +53,7 @@ class Order extends Model
         'payment_method',
         'order_value',
         'order_amount',
+        'discount_amount',
         'delivery_price',
         'total_amount',
         'notes',
@@ -73,6 +74,7 @@ class Order extends Model
         'failed_at' => 'datetime',
         'order_value' => 'decimal:2',
         'order_amount' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'delivery_price' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'is_fragile' => 'boolean',
@@ -201,6 +203,18 @@ class Order extends Model
         return $this->belongsTo(Sector::class);
     }
 
+    /**
+     * Depot this order ships out of, for the stock flow only.
+     *
+     * Deliberately absent from $fillable: it is derived from the shop at
+     * creation, never submitted, and rewriting it would move a parcel to a
+     * warehouse that has never held it.
+     */
+    public function stockHubCity(): BelongsTo
+    {
+        return $this->belongsTo(City::class, 'stock_hub_city_id');
+    }
+
     public function statusHistories(): HasMany
     {
         return $this->hasMany(OrderStatusHistory::class)->orderBy('created_at')->orderBy('id');
@@ -214,6 +228,27 @@ class Order extends Model
     public function changeHistories(): HasMany
     {
         return $this->hasMany(OrderChangeHistory::class)->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    /**
+     * Catalog lines picked from the vendor's stock.
+     *
+     * Empty for the parcel-only flow, where the seller declares an amount
+     * without telling us what is inside the box.
+     */
+    public function items(): HasMany
+    {
+        return $this->hasMany(OrderItem::class)->orderBy('id');
+    }
+
+    /**
+     * Whether this order was built from the vendor's stock.
+     */
+    public function isStockOrder(): bool
+    {
+        return $this->relationLoaded('items')
+            ? $this->items->isNotEmpty()
+            : $this->items()->exists();
     }
 
     /*
@@ -355,21 +390,74 @@ class Order extends Model
     }
 
     /**
+     * City the parcel starts its journey from.
+     *
+     * The depot it was picked in for the stock flow, the vendor's own city for
+     * the parcel-only flow where the goods begin at his door. Mirrored in SQL by
+     * {@see self::scopeFromOriginCity()}.
+     */
+    public function originCityId(): ?int
+    {
+        if ($this->stock_hub_city_id) {
+            return (int) $this->stock_hub_city_id;
+        }
+
+        $sellerCityId = $this->seller?->city_id;
+
+        return $sellerCityId ? (int) $sellerCityId : null;
+    }
+
+    /**
+     * The city behind {@see self::originCityId()}, for display.
+     *
+     * Reads whichever relation the caller loaded rather than querying, so a list
+     * of a hundred parcels does not turn into a hundred round trips.
+     */
+    public function originCity(): ?City
+    {
+        return $this->stock_hub_city_id ? $this->stockHubCity : $this->seller?->city;
+    }
+
+    /**
+     * Restrict to parcels whose journey starts in the given city.
+     */
+    public function scopeFromOriginCity(Builder $query, int $cityId): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->where('stock_hub_city_id', $cityId)
+            ->orWhere(fn (Builder $parcelOnly) => $parcelOnly
+                ->whereNull('stock_hub_city_id')
+                ->whereHas('seller', fn (Builder $s) => $s->where('city_id', $cityId))));
+    }
+
+    /**
      * Orders ready to be grouped into an inter-city transfer.
-     * Pickup city = seller's city (from_city). Delivery city = order.city_id (to_city).
+     *
+     * Two kinds of parcel wait at the same shelf. One was collected from the
+     * vendor and signed into the depot of his city (IN_DEPOT); the other was
+     * picked from his stock and packed there (PREPARED). Both are physically
+     * sitting in a hub with nothing left to do but travel, so both belong here —
+     * which is exactly what lets a prepared order ride along with the regular
+     * ones, as the fulfilment flow requires.
+     *
+     * A prepared order bound for the city it is already in never reaches this
+     * list: it left PREPARED for IN_DELIVERY_CITY the moment it was packed.
      */
     public function scopeEligibleForTransfer(Builder $query, ?int $fromCityId = null, ?int $toCityId = null): Builder
     {
-        $query->where('status', OrderStatus::IN_DEPOT)
+        $query->whereIn('status', [OrderStatus::IN_DEPOT->value, OrderStatus::PREPARED->value])
             ->whereDoesntHave('transfers', fn (Builder $q) => $q->where(
                 'transfers.status',
                 '!=',
                 TransferStatus::CANCELLED->value
             ))
-            ->whereHas('seller', fn (Builder $q) => $q->whereNotNull('city_id'));
+            // A parcel with no known origin cannot be routed at all.
+            ->where(fn (Builder $q) => $q
+                ->whereNotNull('stock_hub_city_id')
+                ->orWhereHas('seller', fn (Builder $s) => $s->whereNotNull('city_id')));
 
         if ($fromCityId) {
-            $query->whereHas('seller', fn (Builder $q) => $q->where('city_id', $fromCityId));
+            $query->fromOriginCity($fromCityId);
         }
 
         if ($toCityId) {

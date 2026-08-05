@@ -5,9 +5,13 @@
     <meta charset="utf-8">
     <title>{{ $invoice->invoice_number }}</title>
     <style>
+        /* The page margins, not a padding on the content, are what reserve room
+           on *every* sheet: a padded wrapper only indents the first and last
+           page, so a long invoice used to run its rows straight over the fixed
+           footer. The bottom margin is the footer's height plus air. */
+        @page { margin: 18mm 11mm 20mm 11mm; }
         * { font-family: DejaVu Sans, sans-serif; }
         body { margin: 0; color: #1c2333; font-size: 11px; }
-        .wrap { padding: 28px 32px; }
         .row { width: 100%; }
         .clearfix::after { content: ""; display: table; clear: both; }
         .col-left { float: left; width: 55%; }
@@ -27,18 +31,31 @@
         .badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 9px; font-weight: bold; }
         .badge-delivered { background: #d1f5e0; color: #0a7d3f; }
         .badge-returned { background: #e2e5ec; color: #3a4256; }
-        .totals { width: 46%; float: right; margin-top: 12px; }
+        /* Pushed right with a margin rather than a float: dompdf sends a
+           floated table to the next page whenever the float lands below the
+           line it was opened on, which parked the totals of a ten line invoice
+           alone on a second sheet. */
+        .totals { width: 46%; margin: 12px 0 0 54%; }
         .totals td { padding: 5px 8px; }
         .totals .label { color: #56607a; }
         .totals .value { text-align: right; font-weight: bold; }
         .totals .net td { border-top: 2px solid #0d6efd; font-size: 14px; color: #0d6efd; padding-top: 8px; }
         .status-chip { display:inline-block; padding: 3px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; background:#e7f1ff; color:#0d6efd; }
-        .footer { position: fixed; bottom: 18px; left: 32px; right: 32px; color: #98a2b3; font-size: 9px; border-top: 1px solid #e5e8ef; padding-top: 6px; }
+        /* Negative offsets park these two inside the page margins reserved
+           above, which is how dompdf produces a running header and footer:
+           fixed blocks are repeated on every sheet. */
+        .running-head { position: fixed; top: -12mm; left: 0; right: 0; height: 9mm; color: #98a2b3; font-size: 9px; border-bottom: 1px solid #eef1f6; padding-bottom: 4px; }
+        .footer { position: fixed; bottom: -14mm; left: 0; right: 0; height: 12mm; color: #98a2b3; font-size: 9px; border-top: 1px solid #e5e8ef; padding-top: 6px; }
         /* Arabic values are emitted in visual order, so they only need to hang
            right. Table cells additionally refuse to wrap: a break decided by the
            engine would put the end of the value on the first line. */
         .rtl { text-align: right; }
         table.items td.rtl, table.items td.date { white-space: nowrap; }
+        /* A line cut in half across two sheets is unreadable, and a net payable
+           separated from the subtotals it comes from is worse. `thead` is
+           repeated by dompdf on its own, so page two still names its columns. */
+        table.items tr { page-break-inside: avoid; }
+        table.totals { page-break-inside: avoid; }
     </style>
 </head>
 <body>
@@ -46,7 +63,15 @@
     $money = fn ($v) => number_format((float) $v, 2, '.', ' ');
     $status = $invoice->status instanceof \App\Enums\InvoiceStatus ? $invoice->status : \App\Enums\InvoiceStatus::from($invoice->status);
 @endphp
-<div class="wrap">
+
+{{-- Repeated on every sheet: from page two on, the header below is gone and
+     these are the only marks that say which invoice the rows belong to. --}}
+<div class="running-head clearfix">
+    <span style="float:left;">{{ $invoice->invoice_number }}</span>
+    <span style="float:right;" class="@bidiclass($seller->full_name)">@bidi($seller->full_name)</span>
+</div>
+
+<div>
     <div class="row clearfix">
         <div class="col-left">
             @if($logo)
@@ -161,6 +186,8 @@
     </div>
 </div>
 
+{{-- The "page x of y" that belongs on this line is stamped by
+     PdfInvoiceService: only the renderer knows how many sheets there are. --}}
 <div class="footer clearfix">
     <span style="float:left;">{{ $invoice->invoice_number }}</span>
     <span style="float:right;">{{ __('invoices.pdf.generated_on') }}: {{ optional($invoice->generated_at)->format('Y-m-d H:i') }}</span>

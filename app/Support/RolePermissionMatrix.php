@@ -74,6 +74,7 @@ class RolePermissionMatrix
             'pickup_requests.read.all',
             'pickup_requests.assign',
             'pickup_requests.change_status',
+            'orders.transition.to_prepared',
             'orders.transition.to_pickup_requested',
             'orders.transition.to_waiting_pickup',
             'orders.transition.to_picked_up',
@@ -109,7 +110,9 @@ class RolePermissionMatrix
             'driver_invoices.read.all',
             'driver_invoices.print',
             'driver_invoices.assign_driver',
+            ...DashboardPermissions::staffDefaults(),
             ...SupportPermissions::staffDefaults(),
+            ...StockPermissions::staffDefaults(),
         ];
     }
 
@@ -129,6 +132,10 @@ class RolePermissionMatrix
             'orders.print',
             'pickup_requests.read.assigned',
             'pickup_requests.pickup',
+            // Collecting a vendor's stock is the same round as collecting his
+            // parcels. It carries no depot rights: he counts what he loads, and
+            // the hub counts it again on arrival.
+            StockPermissions::COLLECT_INBOUND,
             'transfers.read.assigned',
             'transfers.receive',
             'orders.transition.to_out_for_delivery',
@@ -141,6 +148,9 @@ class RolePermissionMatrix
             'returns.transition.to_delivered_to_vendor',
             'driver_invoices.read.own',
             'driver_invoices.print',
+            // His round and his own numbers. A driver has no reason to read the
+            // turnover of the shops he collects from.
+            ...DashboardPermissions::driverDefaults(),
         ];
     }
 
@@ -175,7 +185,9 @@ class RolePermissionMatrix
             'team.update',
             'team.suspend',
             'team_roles.manage',
+            ...DashboardPermissions::sellerDefaults(),
             ...SupportPermissions::sellerDefaults(),
+            ...StockPermissions::sellerDefaults(),
         ];
     }
 
@@ -224,6 +236,12 @@ class RolePermissionMatrix
         'tickets' => [
             'resource' => 'support',
             'note' => 'Support tickets (SupportTicket) live under the "support" resource.',
+        ],
+        'depots' => [
+            'resource' => 'stock',
+            'note' => 'Stock is held per vendor shop (Store), not per warehouse: a vendor\'s '
+                .'inventory is a single figure across our depots. Inbound shipments (StockReception) '
+                .'are the document trail of goods physically arriving at one.',
         ],
         'cashboxes' => [
             'resource' => 'driver_invoices',

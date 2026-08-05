@@ -43,6 +43,9 @@ const cardRows = (city) => [
     label: t("cities.table.sectors"),
     value: `${city.active_sectors_count ?? 0} / ${city.sectors_count ?? 0}`,
   },
+  // Only surfaced for the handful of cities that warehouse stock, so the rest
+  // of the list stays free of a row reading "no".
+  ...(city.is_stock_hub ? [{ label: t("cities.table.stock_hub"), value: t("common.yes") }] : []),
 ];
 
 const sheetRows = (city) => [
@@ -183,6 +186,13 @@ watch(() => usePage().props?.flash, flashToast, { deep: true });
               <tr v-for="city in rows" :key="city.id">
                 <td>
                   <Link :href="route('cities.show', city.id)" class="fw-semibold">{{ city.name }}</Link>
+                  <span
+                    v-if="city.is_stock_hub"
+                    class="badge bg-info-subtle text-info ms-1"
+                    :title="$t('cities.form.stock_hub_hint')"
+                  >
+                    <i class="ri-archive-line align-bottom"></i> {{ $t('cities.table.stock_hub') }}
+                  </span>
                 </td>
                 <td>
                   <span v-if="city.code" class="badge bg-light text-body border">{{ city.code }}</span>

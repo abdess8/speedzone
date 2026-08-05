@@ -69,7 +69,7 @@ const formattedAmount = computed(() => formatMoneyRounded(props.amount));
     <div class="mdash-hero-figure">
       <div v-if="loading" class="mdash-hero-skeleton" aria-hidden="true"></div>
       <p v-else class="mdash-hero-amount">
-        {{ formattedAmount }}<span class="mdash-hero-currency">{{ currency }}</span>
+        {{ formattedAmount }}<span v-if="currency" class="mdash-hero-currency">{{ currency }}</span>
       </p>
       <p class="mdash-hero-label">{{ label }}</p>
     </div>

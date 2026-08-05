@@ -15,6 +15,7 @@ return [
         'code' => 'Code',
         'region' => 'Region',
         'sectors' => 'Sectors',
+        'stock_hub' => 'Stock hub',
     ],
     'show' => [
         'info' => 'City Information',
@@ -38,6 +39,10 @@ return [
         'name_placeholder' => 'e.g. Casablanca',
         'code_placeholder' => 'e.g. CASA',
         'region_placeholder' => 'e.g. Casablanca-Settat',
+        'stock_hub' => 'Stock hub',
+        'stock_hub_on' => 'This city hosts a stock hub',
+        'stock_hub_off' => 'No stock hub in this city',
+        'stock_hub_hint' => 'Vendors may only ship their stock to the cities ticked here.',
     ],
     'delete_confirm_title' => 'Delete this city?',
     'delete_confirm_text' => ':name will be removed. Cities with active sectors cannot be deleted.',

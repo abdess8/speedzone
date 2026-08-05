@@ -26,8 +26,11 @@ class BillingService
     /**
      * Build the query of orders that can be settled for a seller.
      *
-     * When a period is provided, only orders whose DELIVERED/RETURNED status was
-     * recorded inside the window are included (based on the status history). The
+     * When a period is provided, the window is read on the order's own delivery
+     * or return date — the day the parcel actually reached its last stop — and
+     * not on the day a status line happened to be written. The two used to drift
+     * apart whenever a status was corrected after the fact or replayed from a
+     * partner, which put an order on the invoice of the wrong month. The
      * automatic flow passes no period and bills everything still outstanding.
      *
      * `$storeId` narrows the run to one shop. Billing is store by store so an
@@ -49,15 +52,44 @@ class BillingService
         }
 
         if ($start || $end) {
-            $query->whereHas('statusHistories', function (Builder $sub) use ($start, $end) {
-                $sub->whereIn('status', [OrderStatus::DELIVERED->value, OrderStatus::RETURNED->value]);
-                if ($start) {
-                    $sub->whereDate('created_at', '>=', $start->toDateString());
-                }
-                if ($end) {
-                    $sub->whereDate('created_at', '<=', $end->toDateString());
-                }
+            $query->where(function (Builder $sub) use ($start, $end) {
+                $sub
+                    ->where(fn (Builder $delivered) => $this->completedWithin(
+                        $delivered, OrderStatus::DELIVERED, 'delivered_at', $start, $end
+                    ))
+                    ->orWhere(fn (Builder $returned) => $this->completedWithin(
+                        $returned, OrderStatus::RETURNED, 'returned_at', $start, $end
+                    ));
             });
+        }
+
+        return $query;
+    }
+
+    /**
+     * One branch of the period filter: orders in `$status` whose completion
+     * stamp falls inside the window.
+     *
+     * An order missing its stamp is left out of a dated run rather than swept
+     * into it: a settlement that cannot name the day it settles is a dispute
+     * waiting to happen. It stays billable, and the undated run still catches
+     * it.
+     */
+    private function completedWithin(
+        Builder $query,
+        OrderStatus $status,
+        string $column,
+        ?CarbonInterface $start,
+        ?CarbonInterface $end,
+    ): Builder {
+        $query->where('status', $status->value)->whereNotNull($column);
+
+        if ($start) {
+            $query->whereDate($column, '>=', $start->toDateString());
+        }
+
+        if ($end) {
+            $query->whereDate($column, '<=', $end->toDateString());
         }
 
         return $query;

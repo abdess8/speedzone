@@ -16,6 +16,7 @@ class NotificationPreference extends Model
         'ticket_message',
         'ticket_closed',
         'return_requested',
+        'stock_pickup_requested',
         'system_notifications',
     ];
 
@@ -26,6 +27,7 @@ class NotificationPreference extends Model
         'ticket_message' => 'boolean',
         'ticket_closed' => 'boolean',
         'return_requested' => 'boolean',
+        'stock_pickup_requested' => 'boolean',
         'system_notifications' => 'boolean',
     ];
 

@@ -18,10 +18,12 @@ class ReturnReferenceGenerator
         $min = (int) str_pad('1', $digits, '0');
         $max = (int) str_repeat('9', $digits);
 
+        // Across every shop: the unique index is global, so a reference held by
+        // another vendor's return is taken here too and the retry has to see it.
         do {
             $random = random_int($min, $max);
             $candidate = sprintf('%s-%d-%d', $prefix, $year, $random);
-        } while (OrderReturn::query()->where('reference', $candidate)->exists());
+        } while (OrderReturn::acrossStores()->where('reference', $candidate)->exists());
 
         return $candidate;
     }

@@ -17,6 +17,7 @@ use App\Http\Resources\OrderResource;
 use App\Models\City;
 use App\Models\Order;
 use App\Models\Partner;
+use App\Models\Product;
 use App\Models\Role;
 use App\Models\Sector;
 use App\Models\User;
@@ -25,10 +26,12 @@ use App\Services\OrderDriverAssignmentService;
 use App\Services\OrderLabelPdfService;
 use App\Services\OrderQueryService;
 use App\Services\OrderService;
+use App\Services\OrderStockService;
 use App\Services\OrderTransitionService;
 use App\Services\Partners\PartnerApiException;
 use App\Services\Partners\PartnerDeliveryIngestionService;
 use App\Services\ReturnService;
+use App\Support\StockPermissions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -48,6 +51,7 @@ class OrderController extends Controller
         private readonly OrderTransitionService $transitionService,
         private readonly OrderDriverAssignmentService $driverAssignment,
         private readonly PartnerDeliveryIngestionService $partnerIngestion,
+        private readonly OrderStockService $orderStock,
     ) {}
 
     public function index(Request $request): Response
@@ -143,12 +147,43 @@ class OrderController extends Controller
             }
         }
 
+        $canUseStock = $request->user()->hasPermission(StockPermissions::ORDERS_CREATE_WITH_STOCK);
+
         return Inertia::render('orders/create', [
             'cities' => $this->cityOptions(),
             'sectors' => $sectors,
             'paymentMethods' => PaymentMethod::options(),
             'cloneData' => $cloneData,
+            'canUseStock' => $canUseStock,
+            // The catalog travels with the page rather than behind a search
+            // endpoint: the pick-list has to answer a keystroke instantly, and a
+            // vendor's catalog is orders of magnitude smaller than the sector
+            // table this screen already ships.
+            'products' => $canUseStock ? $this->pickableProducts() : [],
         ]);
+    }
+
+    /**
+     * Catalog options for the order pick-list.
+     *
+     * Out-of-stock references are included on purpose: hiding them makes the
+     * seller wonder whether he mistyped the name, while showing them disabled
+     * answers the question he actually has.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function pickableProducts(): array
+    {
+        return Product::query()
+            ->active()
+            ->orderBy('name')
+            ->limit((int) config('stock.picklist_limit', 2000))
+            ->get([
+                'id', 'store_id', 'name', 'sku', 'barcode', 'category',
+                'unit_price', 'stock_quantity', 'is_fragile', 'photo_path', 'blocked_at',
+            ])
+            ->map(fn (Product $product) => $product->toPickOption())
+            ->all();
     }
 
     public function store(StoreOrderRequest $request): RedirectResponse
@@ -195,6 +230,7 @@ class OrderController extends Controller
             'driverTransactions.driverInvoice',
             'seller.roles',
             'seller.city',
+            'stockHubCity',
             'pickupRequest.createdBy.roles',
             'pickupRequest.assignedDriver.roles',
             'transfers' => fn ($q) => $q->where('transfers.status', '!=', TransferStatus::CANCELLED->value),
@@ -204,6 +240,7 @@ class OrderController extends Controller
             'statusHistories.orderReturn',
             'orderReturn.statusHistories',
             'changeHistories.changedByUser.roles',
+            'items.product',
         ]);
 
         return Inertia::render('orders/show', [
@@ -268,7 +305,7 @@ class OrderController extends Controller
     {
         $this->authorize('update', $order);
 
-        $order->load(['city', 'sector', 'seller', 'seller.city']);
+        $order->load(['city', 'sector', 'seller', 'seller.city', 'stockHubCity']);
 
         return Inertia::render('orders/edit', [
             'order' => OrderResource::make($order)->resolve($request),
@@ -292,6 +329,11 @@ class OrderController extends Controller
     public function destroy(Request $request, Order $order): RedirectResponse
     {
         $this->authorize('delete', $order);
+
+        // An order picked from the catalog took units off the shelf. Deleting it
+        // has to put them back, otherwise the vendor's next inventory count is
+        // short for a reason nobody can explain.
+        $this->orderStock->detach($order, $request->user());
 
         $order->delete();
 

@@ -19,16 +19,23 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\NotificationPreferenceController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderImportController;
+use App\Http\Controllers\OrderPreparationController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerDeliveryController;
 use App\Http\Controllers\PartnerOrderController;
 use App\Http\Controllers\PartnerUserAssignmentController;
 use App\Http\Controllers\PendingApprovalController;
 use App\Http\Controllers\PickupRequestController;
+use App\Http\Controllers\ProductBlockController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImportController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\SellerDashboardController;
+use App\Http\Controllers\StockInventoryController;
+use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\StockReceptionController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\TeamMemberController;
@@ -70,7 +77,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'account.active'])->group(function () {
 
-    Route::get('/dashboard/seller', [SellerDashboardController::class, 'index'])->name('dashboard.seller');
+    Route::get('/dashboard/seller', [SellerDashboardController::class, 'index'])
+        ->middleware('permission:dashboard.view')
+        ->name('dashboard.seller');
 
     Route::prefix('admin')->name('admin.')->middleware('permission:users.read')->group(function () {
         Route::get('pending-users', [PendingUserController::class, 'index'])->name('pending-users.index');
@@ -240,6 +249,19 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('orders/import', [OrderImportController::class, 'store'])
         ->middleware('permission:orders.create')
         ->name('orders.import.store');
+    // Picking bench for stock orders. Grouped rather than annotated one by one:
+    // the four routes are a single workstation and must never drift apart.
+    Route::middleware('permission:orders.transition.to_prepared')->group(function () {
+        Route::get('orders/preparation', [OrderPreparationController::class, 'index'])
+            ->name('orders.preparation.index');
+        Route::post('orders/preparation', [OrderPreparationController::class, 'prepare'])
+            ->name('orders.preparation.prepare');
+        Route::post('orders/preparation/scan', [OrderPreparationController::class, 'scan'])
+            ->name('orders.preparation.scan');
+        Route::post('orders/preparation/bulk-scan', [OrderPreparationController::class, 'bulkScan'])
+            ->name('orders.preparation.bulk-scan');
+    });
+
     Route::get('orders/{order}/pdf', [OrderController::class, 'pdf'])
         ->whereNumber('order')
         ->middleware('permission:orders.print')
@@ -257,6 +279,67 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('orders/{trackingNumber}', [OrderController::class, 'track'])
         ->where('trackingNumber', '[A-Za-z0-9]+-[0-9]{4}-[0-9]+')
         ->name('orders.track');
+
+    // Vendor fulfilment: catalog, inventory, inbound shipments.
+    //
+    // Like the order routes above, the permission middleware duplicates the
+    // controller's authorize() calls so that "hidden in the sidebar" and "403 on
+    // direct URL" stay two views of the same rule. Custom paths are registered
+    // before the resources so `products/import` is not swallowed by
+    // `products/{product}`.
+    Route::get('products/import', [ProductImportController::class, 'create'])
+        ->middleware('permission:stock.create_product')
+        ->name('products.import');
+    Route::post('products/import', [ProductImportController::class, 'store'])
+        ->middleware('permission:stock.create_product')
+        ->name('products.import.store');
+    Route::put('products/{product}/block', ProductBlockController::class)
+        ->whereNumber('product')
+        ->middleware('permission:stock.admin_override')
+        ->name('products.block');
+    Route::resource('products', ProductController::class)
+        ->whereNumber('product')
+        ->middleware('permission:stock.view|stock.receive_inbound|stock.admin_override');
+
+    // Mass inventory. Reading the sheet only needs stock.view; writing a
+    // correction is guarded per product by ProductPolicy::adjust().
+    Route::get('stock/inventory', [StockInventoryController::class, 'index'])
+        ->middleware('permission:stock.view|stock.admin_override')
+        ->name('stock.inventory');
+    Route::post('stock/inventory', [StockInventoryController::class, 'store'])
+        ->middleware('permission:stock.adjust|stock.admin_override')
+        ->name('stock.inventory.store');
+
+    // Cross-vendor movement audit.
+    Route::get('stock/movements', [StockMovementController::class, 'index'])
+        ->middleware('permission:stock.admin_override')
+        ->name('stock.movements');
+
+    Route::put('stock-receptions/{reception}/send', [StockReceptionController::class, 'send'])
+        ->whereNumber('reception')
+        ->middleware('permission:stock.create_inbound')
+        ->name('stock-receptions.send');
+    Route::put('stock-receptions/{reception}/collect', [StockReceptionController::class, 'collect'])
+        ->whereNumber('reception')
+        ->middleware('permission:stock.collect_inbound|stock.admin_override')
+        ->name('stock-receptions.collect');
+    Route::put('stock-receptions/{reception}/dispatch', [StockReceptionController::class, 'dispatchToDepot'])
+        ->whereNumber('reception')
+        ->middleware('permission:stock.collect_inbound|stock.receive_inbound|stock.admin_override')
+        ->name('stock-receptions.dispatch');
+    Route::put('stock-receptions/{reception}/validate', [StockReceptionController::class, 'validateReception'])
+        ->whereNumber('reception')
+        ->middleware('permission:stock.receive_inbound')
+        ->name('stock-receptions.validate');
+    Route::put('stock-receptions/{reception}/cancel', [StockReceptionController::class, 'cancel'])
+        ->whereNumber('reception')
+        ->middleware('permission:stock.create_inbound|stock.collect_inbound|stock.receive_inbound')
+        ->name('stock-receptions.cancel');
+    Route::resource('stock-receptions', StockReceptionController::class)
+        ->except(['destroy'])
+        ->whereNumber('reception')
+        ->parameters(['stock-receptions' => 'reception'])
+        ->middleware('permission:stock.view|stock.create_inbound|stock.collect_inbound|stock.receive_inbound|stock.admin_override');
 
     // Pickup requests (Ramassages)
     Route::post('pickup/scan', [PickupRequestController::class, 'scan'])
@@ -421,7 +504,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         // dashboards
         // NOTE: "/" is intentionally handled by the public LandingController
         // (registered at the top of this file). The dashboard lives at "/dashboard".
-        Route::get('/dashboard', 'dashboard');
+        Route::get('/dashboard', 'dashboard')->middleware('permission:dashboard.view');
 
         // Route::get('/dashboard/analytics', 'dashboard_analytics');
         // Route::get('/dashboard/crm', 'dashboard_crm');

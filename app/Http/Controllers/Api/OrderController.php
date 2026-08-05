@@ -55,6 +55,7 @@ class OrderController extends Controller
             'sector',
             'seller.roles',
             'seller.city',
+            'stockHubCity',
             'pickupRequest.createdBy.roles',
             'pickupRequest.assignedDriver.roles',
             'transfers' => fn ($q) => $q->where('transfers.status', '!=', TransferStatus::CANCELLED->value),

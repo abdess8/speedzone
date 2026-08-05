@@ -20,12 +20,54 @@
             "resource": "support",
             "note": "Support tickets (SupportTicket) live under the \"support\" resource."
         },
+        "depots": {
+            "resource": "stock",
+            "note": "Stock is held per vendor shop (Store), not per warehouse: a vendor's inventory is a single figure across our depots. Inbound shipments (StockReception) are the document trail of goods physically arriving at one."
+        },
         "cashboxes": {
             "resource": "driver_invoices",
             "note": "A driver's caisse is his wallet: DriverInvoice + DriverTransaction, read with driver_invoices.read.own and surfaced by /driver-finance."
         }
     },
     "resources": {
+        "alerts": {
+            "create": {
+                "any": {
+                    "permission": "alerts.create",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "read": {
+                "any": {
+                    "permission": "alerts.read",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "update": {
+                "any": {
+                    "permission": "alerts.update",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            },
+            "delete": {
+                "any": {
+                    "permission": "alerts.delete",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            }
+        },
         "cities": {
             "create": {
                 "any": {
@@ -469,6 +511,16 @@
                         "Admin"
                     ]
                 }
+            },
+            "create_with_stock": {
+                "any": {
+                    "permission": "orders.create_with_stock",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
             }
         },
         "partners": {
@@ -690,8 +742,7 @@
                     "type": "resource",
                     "roles": [
                         "Admin",
-                        "Dispatcher",
-                        "Driver"
+                        "Dispatcher"
                     ]
                 }
             },
@@ -702,6 +753,50 @@
                     "roles": [
                         "Admin",
                         "Dispatcher"
+                    ]
+                }
+            },
+            "transition": {
+                "to_received_at_hub": {
+                    "permission": "returns.transition.to_received_at_hub",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "to_in_transit_to_depot": {
+                    "permission": "returns.transition.to_in_transit_to_depot",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "to_arrived_vendor_hub": {
+                    "permission": "returns.transition.to_arrived_vendor_hub",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
+                "to_in_delivery_to_vendor": {
+                    "permission": "returns.transition.to_in_delivery_to_vendor",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver"
+                    ]
+                },
+                "to_delivered_to_vendor": {
+                    "permission": "returns.transition.to_delivered_to_vendor",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver"
                     ]
                 }
             }
@@ -784,6 +879,110 @@
                 }
             }
         },
+        "stock": {
+            "view": {
+                "any": {
+                    "permission": "stock.view",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Seller"
+                    ]
+                }
+            },
+            "create_product": {
+                "any": {
+                    "permission": "stock.create_product",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
+            "create_inbound": {
+                "any": {
+                    "permission": "stock.create_inbound",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
+            "adjust": {
+                "any": {
+                    "permission": "stock.adjust",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
+            "receive_inbound": {
+                "any": {
+                    "permission": "stock.receive_inbound",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                }
+            },
+            "admin_override": {
+                "any": {
+                    "permission": "stock.admin_override",
+                    "type": "admin",
+                    "roles": [
+                        "Admin"
+                    ]
+                }
+            }
+        },
+        "stores": {
+            "read": {
+                "any": {
+                    "permission": "stores.read",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
+            "create": {
+                "any": {
+                    "permission": "stores.create",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
+            "update": {
+                "any": {
+                    "permission": "stores.update",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
+            "delete": {
+                "any": {
+                    "permission": "stores.delete",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            }
+        },
         "support": {
             "create": {
                 "any": {
@@ -862,6 +1061,60 @@
                     "roles": [
                         "Admin",
                         "Dispatcher"
+                    ]
+                }
+            }
+        },
+        "team": {
+            "read": {
+                "any": {
+                    "permission": "team.read",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
+            "create": {
+                "any": {
+                    "permission": "team.create",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
+            "update": {
+                "any": {
+                    "permission": "team.update",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
+            "suspend": {
+                "any": {
+                    "permission": "team.suspend",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            }
+        },
+        "team_roles": {
+            "manage": {
+                "any": {
+                    "permission": "team_roles.manage",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
                     ]
                 }
             }

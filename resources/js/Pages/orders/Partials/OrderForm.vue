@@ -13,6 +13,12 @@ const props = defineProps({
   cities: { type: Array, default: () => [] },
   sectors: { type: Array, default: () => [] },
   paymentMethods: { type: Array, default: () => [] },
+  /**
+   * True when the order is composed from stock, so the collected amount is the
+   * sum of the picked lines. The field becomes read-only rather than hidden:
+   * the seller still needs to see the figure he is about to send out.
+   */
+  stockDriven: { type: Boolean, default: false },
 });
 
 import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
@@ -27,6 +33,12 @@ const totalAmount = computed(() => {
 watch(
   () => props.form.payment_method,
   (method) => {
+    // The pick-list re-derives both fields from the basket, so clearing them
+    // here would only race it.
+    if (props.stockDriven) {
+      return;
+    }
+
     if (method === "CASH") {
       props.form.order_value = "";
     } else {
@@ -229,9 +241,10 @@ watch(
           <div v-if="isCashPayment" class="mb-3">
             <label class="form-label">{{ $t('orders.form.order_amount') }} <span class="text-danger">*</span></label>
             <div class="input-group">
-              <input type="number" step="0.01" min="0" class="form-control" v-model="form.order_amount" :class="{ 'is-invalid': form.errors.order_amount }" />
+              <input type="number" step="0.01" min="0" class="form-control" v-model="form.order_amount" :class="{ 'is-invalid': form.errors.order_amount }" :readonly="stockDriven" />
               <span class="input-group-text">{{ $t('common.currency_mad') }}</span>
             </div>
+            <div v-if="stockDriven" class="form-text">{{ $t('stock.picklist.amount_from_stock') }}</div>
             <InputError :message="form.errors.order_amount" />
           </div>
 
@@ -241,9 +254,10 @@ watch(
               <small class="text-muted">{{ $t('orders.form.order_value_optional') }}</small>
             </label>
             <div class="input-group">
-              <input type="number" step="0.01" min="0" class="form-control" v-model="form.order_value" :class="{ 'is-invalid': form.errors.order_value }" :placeholder="$t('orders.form.order_value_placeholder')" />
+              <input type="number" step="0.01" min="0" class="form-control" v-model="form.order_value" :class="{ 'is-invalid': form.errors.order_value }" :placeholder="$t('orders.form.order_value_placeholder')" :readonly="stockDriven" />
               <span class="input-group-text">{{ $t('common.currency_mad') }}</span>
             </div>
+            <div v-if="stockDriven" class="form-text">{{ $t('stock.picklist.amount_from_stock') }}</div>
             <InputError :message="form.errors.order_value" />
           </div>
 

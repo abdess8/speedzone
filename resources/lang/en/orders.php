@@ -206,6 +206,7 @@ return [
         'pickup_request' => 'Pickup Request',
         'customer' => 'Customer Information',
         'package' => 'Package Information',
+        'units' => '{count} item | {count} items',
         'financial' => 'Financial Information',
         'modification_history' => 'Modification History',
         'tracking_timeline' => 'Tracking Timeline',

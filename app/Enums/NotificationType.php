@@ -9,6 +9,7 @@ enum NotificationType: string
     case TicketMessage = 'ticket_message';
     case TicketClosed = 'ticket_closed';
     case ReturnRequested = 'return_requested';
+    case StockPickupRequested = 'stock_pickup_requested';
     case System = 'system_notifications';
 
     /**

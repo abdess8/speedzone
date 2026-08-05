@@ -22,6 +22,7 @@ class CityResource extends JsonResource
             'code' => $this->code,
             'region' => $this->region,
             'is_active' => (bool) $this->is_active,
+            'is_stock_hub' => (bool) $this->is_stock_hub,
             'sectors_count' => $this->whenCounted('sectors'),
             'active_sectors_count' => $this->whenCounted('activeSectors'),
             'sectors' => $this->whenLoaded(

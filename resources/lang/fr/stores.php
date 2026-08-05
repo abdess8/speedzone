@@ -36,6 +36,7 @@ return [
         'contact_phone' => 'Téléphone',
         'contact_email' => 'E-mail',
         'city' => 'Ville',
+        'stock_hub_city' => 'Ville du dépôt de stock',
         'address' => 'Adresse',
         'pickup_address_1' => 'Adresse de ramassage 1',
         'pickup_address_2' => 'Adresse de ramassage 2',
@@ -51,6 +52,9 @@ return [
         'category_placeholder' => 'Ex. : Cosmétique',
         'logo_hint' => 'PNG, JPG ou WEBP — 2 Mo maximum. Un format carré rend le mieux sur les étiquettes thermiques.',
         'default_hint' => 'La boutique par défaut est celle proposée en premier à la connexion.',
+        'fulfilment' => 'Stock et préparation',
+        'fulfilment_hint' => 'Le dépôt qui garde le stock de cette boutique. C\'est aussi la ville d\'où partent les commandes préparées avec vos produits.',
+        'no_stock_hub' => 'Aucun dépôt — je n\'entrepose pas chez vous',
     ],
 
     'delete_confirm_title' => 'Supprimer cette boutique ?',
@@ -65,5 +69,6 @@ return [
 
     'errors' => [
         'not_accessible' => 'Vous n\'avez pas accès à cette boutique.',
+        'depot_not_empty' => 'Impossible de changer de dépôt : :units unité(s) sont encore en stock dans le dépôt actuel. Écoulez ou corrigez ce stock avant de déménager.',
     ],
 ];

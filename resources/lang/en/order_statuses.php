@@ -2,6 +2,8 @@
 
 return [
     'CREATED' => 'Created',
+    'AWAITING_PREPARATION' => 'Awaiting Preparation',
+    'PREPARED' => 'Prepared',
     'PICKUP_REQUESTED' => 'Pickup Requested',
     'WAITING_PICKUP' => 'Waiting for Pickup',
     'PICKED_UP' => 'Picked Up',
@@ -21,6 +23,8 @@ return [
 
     'descriptions' => [
         'CREATED' => 'The seller has registered the order. Nothing has been picked up yet.',
+        'AWAITING_PREPARATION' => 'The order is built on stock already sitting in our depot. It is waiting to be picked and packed: no pickup is needed.',
+        'PREPARED' => 'The parcel is picked, packed and ready to leave the depot. It rejoins the normal flow: straight to delivery when the depot is in the customer\'s city, on an inter-city transfer otherwise.',
         'PICKUP_REQUESTED' => 'The seller asked for a driver to come and collect the parcel.',
         'WAITING_PICKUP' => 'The pickup request is scheduled and waiting for the driver to arrive.',
         'PICKED_UP' => 'The driver has collected the parcel from the seller.',
@@ -41,6 +45,8 @@ return [
 
     'actors' => [
         'CREATED' => 'Seller (or import / API)',
+        'AWAITING_PREPARATION' => 'Automatic: order created from stock',
+        'PREPARED' => 'Depot picker',
         'PICKUP_REQUESTED' => 'Seller',
         'WAITING_PICKUP' => 'Operations',
         'PICKED_UP' => 'Pickup driver',

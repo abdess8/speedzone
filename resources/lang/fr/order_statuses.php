@@ -2,6 +2,8 @@
 
 return [
     'CREATED' => 'Créé',
+    'AWAITING_PREPARATION' => 'En attente de préparation',
+    'PREPARED' => 'Préparée',
     'PICKUP_REQUESTED' => 'Ramassage demandé',
     'WAITING_PICKUP' => 'En attente de ramassage',
     'PICKED_UP' => 'Ramassé',
@@ -21,6 +23,8 @@ return [
 
     'descriptions' => [
         'CREATED' => 'La commande est enregistrée par le vendeur. Rien n\'a encore été ramassé.',
+        'AWAITING_PREPARATION' => 'La commande est bâtie sur du stock déjà présent dans notre dépôt. Elle attend d\'être prélevée et emballée : aucun ramassage n\'est nécessaire.',
+        'PREPARED' => 'Le colis est prélevé, emballé et prêt à partir du dépôt. Il rejoint le circuit normal : livraison directe si le dépôt est dans la ville du client, transfert inter-villes sinon.',
         'PICKUP_REQUESTED' => 'Le vendeur a demandé le passage d\'un livreur pour récupérer le colis.',
         'WAITING_PICKUP' => 'La demande de ramassage est planifiée et attend le passage du livreur.',
         'PICKED_UP' => 'Le livreur a récupéré le colis chez le vendeur.',
@@ -41,6 +45,8 @@ return [
 
     'actors' => [
         'CREATED' => 'Vendeur (ou import / API)',
+        'AWAITING_PREPARATION' => 'Automatique : commande créée avec des produits en stock',
+        'PREPARED' => 'Préparateur du dépôt',
         'PICKUP_REQUESTED' => 'Vendeur',
         'WAITING_PICKUP' => 'Exploitation',
         'PICKED_UP' => 'Livreur de ramassage',

@@ -93,6 +93,7 @@ class TransferController extends Controller
             'orders.sector',
             'orders.seller.roles',
             'orders.seller.city',
+            'orders.stockHubCity',
             'statusHistories.changedBy.roles',
         ]);
 

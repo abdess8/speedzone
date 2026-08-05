@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Invoice;
+use App\Support\PdfPageNumbering;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as PdfInstance;
 use Illuminate\Support\Facades\Storage;
@@ -27,13 +28,15 @@ class PdfInvoiceService
             'invoiceOrders.order.sector',
         ]);
 
-        return Pdf::loadView('invoices.pdf', [
+        $pdf = Pdf::loadView('invoices.pdf', [
             'invoice' => $invoice,
             'seller' => $invoice->seller,
             'lines' => $invoice->invoiceOrders,
             'logo' => $this->logoDataUri(),
             'companyName' => config('orders.label.company_name', 'SpeedZone Express'),
         ])->setPaper('a4');
+
+        return PdfPageNumbering::stamp($pdf, 'invoices.pdf.page_of');
     }
 
     /**

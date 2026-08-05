@@ -13,6 +13,10 @@ return [
         'users' => 'Utilisateurs',
         'roles' => 'Rôles',
         'permissions' => 'Permissions',
+        'stock' => 'Stock & catalogue',
+        'stores' => 'Boutiques',
+        'team' => 'Équipe vendeur',
+        'dashboard' => 'Tableau de bord',
     ],
 
     'names' => [
@@ -25,6 +29,7 @@ return [
 
         'orders.read.assigned' => 'Voir les commandes qui lui sont affectées',
         'orders.update.assigned' => 'Modifier le statut des commandes affectées',
+        'orders.transition.to_prepared' => 'Préparer la commande',
 
         'users.read' => 'Voir les utilisateurs',
         'users.create' => 'Créer des utilisateurs',
@@ -40,6 +45,22 @@ return [
         'support.update_status' => 'Modifier le statut',
         'support.close' => 'Clôturer des tickets',
         'support.manage' => 'Gérer le support (accès complet)',
+
+        'stock.view' => 'Consulter le catalogue et les stocks',
+        'stock.create_product' => 'Ajouter / importer des produits',
+        'stock.create_inbound' => 'Créer des envois de stock',
+        'stock.adjust' => 'Réaliser des inventaires et corriger les stocks',
+        'orders.create_with_stock' => 'Créer des commandes depuis le stock',
+        'stock.collect_inbound' => 'Ramasser le stock chez le vendeur',
+        'stock.receive_inbound' => 'Réceptionner le stock au dépôt',
+        'stock.admin_override' => 'Auditer et bloquer les stocks (tous vendeurs)',
+
+        'dashboard.view' => 'Accéder au tableau de bord',
+        'dashboard.view_financials' => 'Voir les montants et le chiffre d\'affaires',
+        'dashboard.view_operations' => 'Voir l\'état des commandes et les tâches',
+        'dashboard.view_performance' => 'Voir les taux de réussite et les délais',
+        'dashboard.view_customers' => 'Voir les meilleurs clients',
+        'dashboard.view_network' => 'Voir les vendeurs et livreurs actifs',
     ],
 
     'scopes' => [
@@ -57,6 +78,7 @@ return [
         'partners.deliveries.manage' => 'Mettre à jour et scanner en masse les livraisons des partenaires assignés.',
         'orders.read.assigned' => 'Consulter uniquement les commandes assignées à l\'utilisateur connecté (livreur).',
         'orders.update.assigned' => 'Faire avancer le statut des commandes assignées au livreur. Ne permet pas de modifier le contenu de la commande.',
+        'orders.transition.to_prepared' => 'Déclarer une commande de stock prélevée et emballée, à l\'unité ou en masse au scanner QR. La commande rejoint alors le circuit normal : livraison directe si le dépôt est dans la ville du client, transfert inter-villes sinon.',
         'users.read' => 'Accéder à la liste et aux fiches des utilisateurs.',
         'users.create' => 'Créer des comptes utilisateurs (vendeurs, livreurs, staff).',
         'users.update' => 'Modifier les informations d\'un compte utilisateur.',
@@ -70,5 +92,21 @@ return [
         'support.update_status' => 'Changer le statut (Ouvert, En cours, En attente vendeur, Résolu, Clôturé).',
         'support.close' => 'Clôturer un ticket. Les vendeurs peuvent clôturer leurs tickets ; le staff peut clôturer n\'importe quel ticket.',
         'support.manage' => 'Accès complet au support : voir tous les tickets, assigner, changer le statut, répondre et clôturer. Destiné aux agents support.',
+
+        'stock.view' => 'Consulter le catalogue produits, les niveaux de stock et les bordereaux de réception de sa boutique.',
+        'stock.create_product' => 'Créer, modifier et archiver des fiches produits, y compris par import Excel/CSV.',
+        'stock.create_inbound' => 'Préparer un bordereau et déclarer un envoi de stock vers notre dépôt.',
+        'stock.adjust' => 'Corriger les quantités en stock lors d\'un inventaire. Chaque écart exige un motif et reste tracé dans un audit non modifiable.',
+        'orders.create_with_stock' => 'Composer une commande à partir des produits du catalogue : le stock est décrémenté et le montant calculé automatiquement.',
+        'stock.collect_inbound' => 'Se déplacer chez les vendeurs de ses villes, compter devant eux le stock chargé et l\'expédier vers le dépôt. Ce comptage devient la référence pour la suite du trajet, mais ne crédite aucun stock. Permission côté hub : elle n\'est pas délégable à une équipe vendeur, car l\'intérêt du comptage est qu\'il soit fait par quelqu\'un d\'autre que le vendeur.',
+        'stock.receive_inbound' => 'Compter physiquement le stock arrivant au dépôt et créditer les quantités réellement reçues. Limitée aux envois adressés au dépôt de ses villes. Permission côté hub : elle n\'est pas délégable à une équipe vendeur.',
+        'stock.admin_override' => 'Auditer tous les mouvements de stock, toutes boutiques confondues, et bloquer un produit défectueux. Permission sensible réservée à l\'administration.',
+
+        'dashboard.view' => 'Ouvrir le tableau de bord. Les chiffres restent limités à la boutique active et aux commandes que l\'utilisateur a le droit de lire.',
+        'dashboard.view_financials' => 'Voir les espèces à encaisser, les encaissements, le chiffre d\'affaires et le panier moyen. À retirer d\'un rôle qui prépare les colis sans avoir à connaître les montants de la boutique.',
+        'dashboard.view_operations' => 'Voir la répartition des commandes par statut et par ville, les transferts en attente et les tâches à traiter.',
+        'dashboard.view_performance' => 'Voir le taux de livraison réussie, les délais moyens et le classement des livreurs.',
+        'dashboard.view_customers' => 'Voir les meilleurs clients et le nombre de nouveaux clients de la période.',
+        'dashboard.view_network' => 'Voir le volume par vendeur ainsi que le nombre de vendeurs et de livreurs actifs.',
     ],
 ];

@@ -10,6 +10,7 @@ return [
         'ticket_closed' => 'Ticket fermé',
         'ticket_assigned' => 'Ticket assigné',
         'return_requested' => 'Demande de retour',
+        'stock_pickup_requested' => 'Stock à ramasser',
         'new_seller_registration' => 'Nouvelle inscription vendeur',
     ],
 
@@ -21,6 +22,7 @@ return [
         'ticket_closed' => 'Votre ticket support :reference a été fermé.',
         'ticket_assigned' => 'Le ticket :reference vous a été assigné.',
         'return_requested' => 'Une nouvelle demande de retour a été créée.',
+        'stock_pickup_requested' => ':shop a du stock prêt à être ramassé à :city.',
         'new_seller_registration' => 'Une nouvelle inscription vendeur nécessite une approbation.',
     ],
 
@@ -30,6 +32,7 @@ return [
         'ticket_message' => 'Messages de tickets',
         'ticket_closed' => 'Tickets fermés',
         'return_requested' => 'Demandes de retour',
+        'stock_pickup_requested' => 'Stock à ramasser chez un vendeur',
         'system_notifications' => 'Notifications système',
     ],
 
@@ -53,6 +56,7 @@ return [
         'ticket_message' => 'bx-message-dots',
         'ticket_closed' => 'bx-check-circle',
         'return_requested' => 'bx-undo',
+        'stock_pickup_requested' => 'bx-package',
         'system_notifications' => 'bx-cog',
     ],
 ];

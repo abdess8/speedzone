@@ -28,6 +28,7 @@ import 'aos/dist/aos.css';
 import store from "./state/store";
 import i18n, { syncLocaleFromPage } from './i18n'
 import { router } from '@inertiajs/vue3';
+import { initBackNavigation } from './composables/useBackNavigation';
 
 AOS.init({
     easing: 'ease-out-back',
@@ -39,6 +40,7 @@ createInertiaApp({
     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
     setup({ el, App, props, plugin }) {
         syncLocaleFromPage(props.initialPage?.props);
+        initBackNavigation();
 
         router.on('success', (event) => {
             syncLocaleFromPage(event.detail.page.props);

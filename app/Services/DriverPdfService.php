@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\DriverInvoice;
+use App\Support\PdfPageNumbering;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as PdfInstance;
 use Illuminate\Support\Facades\Storage;
@@ -36,13 +37,15 @@ class DriverPdfService
             ];
         });
 
-        return Pdf::loadView('driver-invoices.pdf', [
+        $pdf = Pdf::loadView('driver-invoices.pdf', [
             'invoice' => $invoice,
             'driver' => $invoice->driver,
             'lines' => $lines,
             'logo' => $this->logoDataUri(),
             'companyName' => config('orders.label.company_name', 'SpeedZone Express'),
         ])->setPaper('a4');
+
+        return PdfPageNumbering::stamp($pdf, 'driver_invoices.pdf.page_of');
     }
 
     /**

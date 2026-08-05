@@ -10,6 +10,7 @@ use App\Notifications\VerifySpeedZoneAccountEmail;
 use App\Support\StoreContext;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -515,6 +516,23 @@ class User extends Authenticatable implements MustVerifyEmail
             ->unique()
             ->values()
             ->all();
+    }
+
+    /**
+     * Users who can be considered part of a city.
+     *
+     * The query-side counterpart of cityIds(), narrowed to the two paths that
+     * matter when looking for somebody to send into the field: the sectors he
+     * drives and, failing that, the city on his profile. Shop cities are left out
+     * on purpose — owning a shop in Tangier does not make a vendor available to
+     * work there.
+     */
+    public function scopeCoveringCity(Builder $query, int $cityId): Builder
+    {
+        return $query->where(function (Builder $scoped) use ($cityId): void {
+            $scoped->whereHas('sectors', fn (Builder $sectors) => $sectors->where('sectors.city_id', $cityId))
+                ->orWhere('users.city_id', $cityId);
+        });
     }
 
     /**

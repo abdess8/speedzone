@@ -10,6 +10,7 @@ use App\Enums\PickupRequestStatus;
 use App\Enums\ReturnStatus;
 use App\Enums\TransferStatus;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -53,11 +54,16 @@ class OrderResource extends JsonResource
             ] : null),
             'city_id' => $this->city_id,
 
+            // Where the parcel starts: the depot it was packed in for a stock
+            // order, the vendor's own city for one we collect from him. Naming it
+            // after the seller would put a transfer's origin in the wrong city
+            // whenever the vendor warehouses away from home.
             'pickup_city' => $this->when(
-                $this->relationLoaded('seller') && $this->seller?->relationLoaded('city'),
-                fn () => $this->seller?->city ? [
-                    'id' => $this->seller->city->id,
-                    'name' => $this->seller->city->name,
+                $this->relationLoaded('stockHubCity')
+                    || ($this->relationLoaded('seller') && $this->seller?->relationLoaded('city')),
+                fn () => $this->originCity() ? [
+                    'id' => $this->originCity()->id,
+                    'name' => $this->originCity()->name,
                 ] : null
             ),
 
@@ -249,7 +255,26 @@ class OrderResource extends JsonResource
                 $this->order_amount !== null ? (float) $this->order_amount : null
             ),
             'delivery_price' => (float) $this->delivery_price,
+            'discount_amount' => (float) ($this->discount_amount ?? 0),
             'total_amount' => (float) $this->total_amount,
+
+            // What is inside the box, when the box was filled from the vendor's
+            // own catalog. Name, reference and unit price are read off the line
+            // rather than off the product: they are the snapshot taken the day
+            // the order was placed, and a price revised since must not rewrite
+            // history on a parcel already delivered. The photo is the exception
+            // — it is only decoration, so the current one will do.
+            'items' => $this->whenLoaded('items', fn () => $this->items->map(fn (OrderItem $item) => [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'name' => $item->product_name,
+                'sku' => $item->sku,
+                'unit_price' => (float) $item->unit_price,
+                'quantity' => (int) $item->quantity,
+                'line_total' => (float) $item->line_total,
+                'photo_url' => $item->product?->photo_url,
+                'initials' => $item->product?->initials,
+            ])->all()),
 
             'notes' => $this->notes,
             'is_fragile' => (bool) $this->is_fragile,

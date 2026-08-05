@@ -1,0 +1,603 @@
+<?php
+
+return [
+
+    'page_title' => 'Stock',
+    'module_title' => 'Gestion des stocks',
+
+    'errors' => [
+        'insufficient' => 'Stock insuffisant pour « :product » : :available disponible(s), :requested demandé(s).',
+        'unknown_product' => 'Produit introuvable dans votre catalogue.',
+        'inactive_product' => 'Le produit « :product » est archivé et ne peut plus être commandé.',
+        'blocked_product' => 'Le produit « :product » est bloqué par nos équipes et ne peut pas être expédié.',
+        'not_allowed' => 'Vous n\'avez pas la permission de créer une commande à partir du stock.',
+        'no_depot' => 'Aucun dépôt n\'est défini pour cette boutique. Renseignez la ville du dépôt dans les paramètres de la boutique, ou envoyez d\'abord un bordereau de stock.',
+    ],
+
+    'history' => [
+        'title' => 'Historique des modifications',
+        'empty' => 'Aucune modification enregistrée pour ce produit.',
+        'created' => 'Fiche produit créée',
+        'blocked' => 'Produit bloqué',
+        'released' => 'Produit débloqué',
+        'photo_updated' => 'Photo mise à jour',
+        'by' => 'par :author',
+        'system' => 'Système',
+        'columns' => [
+            'field' => 'Champ',
+            'old_value' => 'Ancienne valeur',
+            'new_value' => 'Nouvelle valeur',
+            'author' => 'Modifié par',
+            'date' => 'Date et heure',
+        ],
+        'fields' => [
+            'created' => 'Création',
+            'blocked' => 'Blocage',
+            'name' => 'Nom du produit',
+            'sku' => 'Référence (SKU)',
+            'barcode' => 'Code-barres',
+            'category' => 'Catégorie',
+            'description' => 'Description',
+            'unit_price' => 'Prix de vente',
+            'cost_price' => 'Coût d\'achat',
+            'is_fragile' => 'Fragile',
+            'weight_grams' => 'Poids',
+            'length_cm' => 'Longueur',
+            'width_cm' => 'Largeur',
+            'height_cm' => 'Hauteur',
+            'photo_path' => 'Photo',
+            'is_active' => 'Actif',
+        ],
+    ],
+
+    'products' => [
+        'title' => 'Catalogue produits',
+        'list_title' => 'Mes produits',
+        'create_title' => 'Nouveau produit',
+        'edit_title' => 'Modifier le produit',
+        'create_button' => 'Ajouter un produit',
+        'import_button' => 'Importer un fichier',
+        'empty' => 'Aucun produit dans votre catalogue pour le moment.',
+        'empty_hint' => 'Ajoutez vos produits un par un, ou importez votre catalogue depuis Excel.',
+        'no_results' => 'Aucun produit ne correspond à votre recherche.',
+        'no_category' => 'Sans catégorie',
+
+        'summary' => [
+            'products' => 'Références',
+            'units' => 'Unités en stock',
+            'out_of_stock' => 'En rupture',
+            'low_stock' => 'Stock faible',
+            'stock_value' => 'Valeur du stock',
+        ],
+
+        'columns' => [
+            'product' => 'Produit',
+            'sku' => 'Référence',
+            'barcode' => 'Code-barres',
+            'category' => 'Catégorie',
+            'unit_price' => 'Prix de vente',
+            'cost_price' => 'Coût d\'achat',
+            'margin' => 'Marge',
+            'stock' => 'Stock',
+            'status' => 'Statut',
+            'actions' => 'Actions',
+        ],
+
+        'form' => [
+            'identity' => 'Identification',
+            'pricing' => 'Prix & marge',
+            'logistics' => 'Logistique',
+            'media' => 'Visuel',
+            'name' => 'Nom du produit',
+            'name_placeholder' => 'Ex. T-shirt coton bio — Taille M',
+            'sku' => 'Référence / SKU',
+            'sku_hint' => 'Laissez vide pour générer automatiquement.',
+            'barcode' => 'Code-barres (EAN / UPC)',
+            'barcode_hint' => 'Scannez ou saisissez le code imprimé sur le produit.',
+            'category' => 'Catégorie',
+            'category_placeholder' => 'Ex. Vêtements',
+            'description' => 'Description',
+            'unit_price' => 'Prix de vente unitaire',
+            'cost_price' => 'Coût d\'achat',
+            'cost_price_hint' => 'Optionnel — sert au calcul de la marge.',
+            'margin_preview' => 'Marge unitaire',
+            'margin_rate' => 'Taux de marge',
+            'fragility' => 'Fragilité',
+            'fragile' => 'Fragile',
+            'fragile_hint' => 'Manipulation avec précaution au dépôt.',
+            'unbreakable' => 'Incassable',
+            'unbreakable_hint' => 'Aucune précaution particulière.',
+            'weight' => 'Poids (g)',
+            'length' => 'Longueur (cm)',
+            'width' => 'Largeur (cm)',
+            'height' => 'Hauteur (cm)',
+            'dimensions_hint' => 'Optionnel — utile pour le calcul du volume au dépôt.',
+            'photo' => 'Photo du produit',
+            'photo_hint' => 'JPG, PNG ou WebP — 4 Mo maximum. Sans photo, une vignette est générée automatiquement.',
+            'photo_replace' => 'Remplacer la photo',
+            'is_active' => 'Produit actif',
+            'is_active_hint' => 'Un produit inactif reste dans l\'historique mais disparaît des commandes.',
+            'stock_readonly' => 'Le stock ne se modifie pas ici : passez par l\'inventaire ou une réception.',
+        ],
+
+        'detail' => [
+            'sheet' => 'Fiche produit',
+            'movements' => 'Mouvements de stock',
+            'movements_empty' => 'Aucun mouvement enregistré.',
+            'counts_empty' => 'Ce produit n\'a encore jamais été inventorié.',
+            'receptions_empty' => 'Ce produit n\'apparaît dans aucun bordereau de réception.',
+            'receptions_incoming' => ':count bordereau(x) en cours, soit :units unité(s) en route vers le dépôt.',
+            'dimensions' => 'Dimensions',
+            'weight' => 'Poids',
+            'blocked_banner' => 'Produit bloqué par nos équipes : :reason',
+            'blocked_by' => 'Bloqué par :author le :date',
+        ],
+
+        'actions' => [
+            'adjust_stock' => 'Corriger le stock',
+            'block' => 'Bloquer le produit',
+            'release' => 'Débloquer',
+            'archive' => 'Archiver',
+            'view_history' => 'Historique',
+        ],
+
+        'block' => [
+            'title' => 'Bloquer ce produit',
+            'text' => 'Le produit restera visible et comptabilisé, mais ne pourra plus être ajouté à une commande.',
+            'reason' => 'Motif du blocage',
+            'reason_placeholder' => 'Ex. Lot défectueux — retour fournisseur en cours',
+            'confirm' => 'Bloquer',
+            'release_title' => 'Débloquer ce produit ?',
+            'release_text' => 'Il redeviendra disponible à la vente immédiatement.',
+        ],
+
+        'archive' => [
+            'title' => 'Archiver ce produit ?',
+            'text' => 'Il disparaîtra du catalogue et des commandes, mais son historique et ses mouvements sont conservés.',
+            'confirm' => 'Archiver',
+        ],
+
+        'filters' => [
+            'search' => 'Nom, référence ou code-barres',
+            'category' => 'Toutes les catégories',
+            'stock_status' => 'Tous les niveaux',
+            'in_stock' => 'En stock',
+            'low_stock' => 'Stock faible',
+            'out_of_stock' => 'En rupture',
+            'blocked' => 'Bloqués',
+            'status' => 'Actifs et archivés',
+            'active' => 'Actifs',
+            'archived' => 'Archivés',
+        ],
+
+        'badges' => [
+            'out_of_stock' => 'Rupture',
+            'low_stock' => 'Stock faible',
+            'blocked' => 'Bloqué',
+            'archived' => 'Archivé',
+            'fragile' => 'Fragile',
+        ],
+
+        'flash' => [
+            'created' => 'Produit créé avec la référence :sku.',
+            'updated' => 'Fiche produit mise à jour.',
+            'archived' => 'Produit archivé.',
+            'blocked' => 'Produit bloqué : il ne peut plus être commandé.',
+            'released' => 'Produit débloqué.',
+        ],
+
+        'validation' => [
+            'sku_format' => 'La référence ne peut contenir que des lettres, chiffres, points, tirets et barres obliques.',
+            'sku_taken' => 'Cette référence est déjà utilisée dans votre catalogue.',
+            'sku_duplicated_in_file' => 'Cette référence apparaît plusieurs fois dans le fichier.',
+            'barcode_taken' => 'Ce code-barres est déjà utilisé dans votre catalogue.',
+            'barcode_duplicated_in_file' => 'Ce code-barres apparaît plusieurs fois dans le fichier.',
+            'too_many_rows' => 'Le fichier contient trop de lignes (maximum :max).',
+        ],
+
+        'import' => [
+            'title' => 'Importer un catalogue produits',
+            'opening_stock_note' => 'Stock initial déclaré lors de l\'import du catalogue.',
+
+            'steps' => [
+                'upload' => 'Fichier',
+                'mapping' => 'Colonnes',
+                'review' => 'Vérification',
+            ],
+
+            'fields' => [
+                'name' => 'Nom du produit',
+                'sku' => 'Référence / SKU',
+                'barcode' => 'Code-barres',
+                'category' => 'Catégorie',
+                'description' => 'Description',
+                'unit_price' => 'Prix de vente',
+                'cost_price' => 'Coût d\'achat',
+                'is_fragile' => 'Fragile',
+                'weight_grams' => 'Poids (g)',
+                'stock_quantity' => 'Stock initial',
+            ],
+
+            'upload' => [
+                'drop_title' => 'Déposez votre fichier ici',
+                'drop_hint' => 'ou cliquez pour parcourir vos fichiers',
+                'parsing' => 'Lecture du fichier…',
+                'rows_detected' => '{count} ligne détectée|{count} lignes détectées',
+                'remove_file' => 'Retirer le fichier',
+                'unsupported' => 'Format non pris en charge. Utilisez un fichier CSV, XLS ou XLSX.',
+                'too_large' => 'Fichier trop volumineux (5 Mo maximum).',
+                'empty_file' => 'Le fichier ne contient aucune ligne exploitable.',
+                'too_many_rows' => 'Le fichier contient trop de lignes (maximum :max).',
+                'parse_failed' => 'Lecture impossible : :message',
+                'template_title' => 'Gabarit Excel',
+                'template_hint' => 'Partez du modèle pour être sûr que vos colonnes soient reconnues automatiquement.',
+                'download_template' => 'Télécharger le gabarit',
+                'rules_title' => 'Règles du fichier',
+                'rule_header' => 'La première ligne contient les en-têtes de colonnes.',
+                'rule_max_rows' => ':max lignes maximum par import.',
+                'rule_required' => 'Seuls le nom et le prix de vente sont obligatoires.',
+                'rule_sku' => 'Référence vide = générée automatiquement.',
+                'rule_booleans' => 'Fragile : Oui / Non, 1 / 0, Vrai / Faux.',
+            ],
+
+            'mapping' => [
+                'title' => 'Associez vos colonnes',
+                'hint' => 'Nous avons deviné les correspondances. Corrigez celles qui ne conviennent pas.',
+                'column' => 'Colonne du fichier',
+                'field' => 'Champ produit',
+                'sample' => 'Exemple (1re ligne)',
+                'ignore' => '— Ignorer —',
+                'auto_matched' => 'Détecté automatiquement',
+                'required' => 'Obligatoire',
+                'reset' => 'Relancer la détection',
+                'missing_required' => 'Champs obligatoires non associés : :fields',
+                'rows_ready' => '{count} ligne prête à être vérifiée|{count} lignes prêtes à être vérifiées',
+            ],
+
+            'review' => [
+                'title' => 'Vérifiez vos produits',
+                'hint' => 'Corrigez directement dans le tableau. Les cellules en rouge bloquent l\'enregistrement.',
+                'valid' => '{count} ligne valide|{count} lignes valides',
+                'errors' => '{count} erreur|{count} erreurs',
+                'duplicate_sku' => 'Référence en doublon dans le fichier',
+                'remove_row' => 'Supprimer la ligne',
+                'remove_invalid' => 'Supprimer les lignes en erreur',
+                'verify_success' => '{count} ligne vérifiée, aucune erreur.|{count} lignes vérifiées, aucune erreur.',
+                'verify_failed' => '{count} ligne à corriger.|{count} lignes à corriger.',
+                'total_value' => 'Valeur du catalogue importé',
+                'total_units' => 'Unités de stock initial',
+            ],
+
+            'errors' => [
+                'required' => 'Champ obligatoire',
+                'too_long' => 'Trop long (:max caractères maximum)',
+                'price' => 'Prix illisible',
+                'price_negative' => 'Le prix ne peut pas être négatif',
+                'price_too_large' => 'Prix trop élevé',
+                'integer' => 'Nombre entier attendu',
+                'sku_format' => 'Caractères non autorisés dans la référence',
+                'sku_duplicate' => 'Référence déjà utilisée dans le fichier',
+                'barcode_duplicate' => 'Code-barres déjà utilisé dans le fichier',
+                'boolean' => 'Valeur non reconnue (« :value ») — attendu Oui ou Non',
+            ],
+
+            'next' => 'Continuer',
+            'back' => 'Retour',
+            'validate_mapping' => 'Valider les colonnes',
+            'verify' => 'Vérifier',
+            'save' => 'Importer {count} produit|Importer {count} produits',
+            'save_blocked_errors' => 'Corrigez les erreurs du tableau avant d\'importer.',
+            'save_blocked_dirty' => 'Relancez la vérification après vos corrections.',
+            'save_failed' => 'Import impossible',
+            'save_failed_rows' => ':count ligne(s) refusée(s) par le serveur. Les erreurs sont affichées dans le tableau.',
+
+            'confirm' => [
+                'title' => 'Confirmer l\'import ?',
+                'text' => '{count} produit sera ajouté à votre catalogue.|{count} produits seront ajoutés à votre catalogue.',
+                'confirm' => 'Importer',
+            ],
+
+            'flash' => [
+                'created' => '{count} produit importé avec succès.|{count} produits importés avec succès.',
+            ],
+        ],
+    ],
+
+    /*
+     * Journal des inventaires, distinct du journal des mouvements.
+     *
+     * Le second n'enregistre que les comptages qui ont changé quelque chose ;
+     * celui-ci enregistre l'acte de compter, y compris quand il confirme l'écran.
+     */
+    'counts' => [
+        'title' => 'Inventaires',
+        'last_counted' => 'Dernier comptage',
+        'confirmed' => 'Confirmé',
+        'no_location' => 'Position non communiquée',
+        'accuracy' => 'Précision ±:meters m',
+
+        'columns' => [
+            'date' => 'Date et heure',
+            'author' => 'Compté par',
+            'recorded' => 'Stock système',
+            'counted' => 'Compté',
+            'result' => 'Résultat',
+            'device' => 'Machine',
+            'location' => 'Localisation',
+        ],
+    ],
+
+    'inventory' => [
+        'title' => 'Inventaire',
+        'subtitle' => 'Comptez vos produits et corrigez les écarts.',
+        'table_title' => 'Feuille de comptage',
+        'hint_desktop' => 'Saisissez la quantité comptée dans la colonne « Compté ». L\'écart se calcule automatiquement.',
+        'hint_mobile' => 'Tapez sur un produit pour saisir la quantité comptée.',
+        'empty' => 'Aucun produit à inventorier.',
+
+        'columns' => [
+            'product' => 'Produit',
+            'recorded' => 'Stock système',
+            'counted' => 'Compté',
+            'delta' => 'Écart',
+            'reason' => 'Motif',
+        ],
+
+        'counted_placeholder' => '—',
+        'set_reason' => 'Choisir un motif',
+        'change_reason' => 'Modifier le motif',
+        'reason_missing' => 'Motif requis',
+        'no_change' => 'Aucun écart',
+        'pending_lines' => '{count} ligne modifiée|{count} lignes modifiées',
+        'reset_line' => 'Annuler cette saisie',
+        'reset_all' => 'Tout réinitialiser',
+        'apply' => 'Enregistrer l\'inventaire',
+        'apply_short' => 'Enregistrer',
+        'match_all' => 'Tout conforme',
+        'match_all_hint' => 'Recopie le stock système comme quantité comptée sur les lignes vides.',
+
+        'reason_modal' => [
+            'title' => 'Motif de l\'écart',
+            'subtitle' => ':product — écart de :delta unité(s)',
+            'reason' => 'Motif de l\'écart',
+            'note' => 'Note d\'explication',
+            'note_placeholder' => 'Précisez ce qui s\'est passé…',
+            'note_required' => 'Une note est obligatoire pour ce motif.',
+            'confirm' => 'Valider le motif',
+        ],
+
+        'confirm' => [
+            'title' => 'Enregistrer l\'inventaire ?',
+            'text' => '{count} ligne sera corrigée. Chaque correction est enregistrée dans un audit non modifiable.|{count} lignes seront corrigées. Chaque correction est enregistrée dans un audit non modifiable.',
+            'traced' => 'Chaque ligne comptée est tracée sur la fiche produit avec votre nom, l\'heure, la machine utilisée et, si votre navigateur l\'autorise, votre position.',
+            'confirm' => 'Enregistrer',
+        ],
+
+        'errors' => [
+            'reason_required' => 'Un motif est obligatoire dès qu\'il y a un écart de stock.',
+            'note_required' => 'Une note d\'explication est obligatoire pour ce motif.',
+            'duplicate_product' => 'Ce produit apparaît plusieurs fois dans la feuille de comptage.',
+        ],
+
+        'flash' => [
+            'applied' => '{count} correction de stock enregistrée.|{count} corrections de stock enregistrées.',
+            'nothing' => 'Aucun écart à enregistrer : le stock était déjà conforme.',
+            // Message serveur, sans pluriel : il est rendu par PHP et non par
+            // vue-i18n, et doit rester juste que l'inventaire ait corrigé une
+            // ligne, plusieurs, ou aucune.
+            'saved' => 'Inventaire enregistré : :counted ligne(s) comptée(s), :corrections correction(s) de stock. Chaque comptage est tracé sur la fiche produit.',
+        ],
+    ],
+
+    'movements' => [
+        'title' => 'Audit des mouvements de stock',
+        'subtitle' => 'Tous les mouvements, tous vendeurs confondus.',
+        'empty' => 'Aucun mouvement ne correspond à ces filtres.',
+
+        'columns' => [
+            'date' => 'Date',
+            'product' => 'Produit',
+            'store' => 'Boutique',
+            'source' => 'Origine',
+            'reason' => 'Motif',
+            'before' => 'Avant',
+            'after' => 'Après',
+            'delta' => 'Écart',
+            'author' => 'Auteur',
+            'document' => 'Document',
+        ],
+
+        'filters' => [
+            'product' => 'Nom, référence ou code-barres',
+            'source' => 'Toutes les origines',
+            'reason' => 'Tous les motifs',
+            'from' => 'Du',
+            'to' => 'Au',
+            'clear' => 'Réinitialiser',
+        ],
+    ],
+
+    'receptions' => [
+        'title' => 'Réceptions de stock',
+        'list_title' => 'Bordereaux d\'expédition',
+        'create_title' => 'Nouvelle réception de stock',
+        'edit_title' => 'Modifier le bordereau',
+        'detail_title' => 'Bordereau :reference',
+        'create_button' => 'Envoyer du stock',
+        'empty' => 'Aucun bordereau de réception pour le moment.',
+        'empty_hint' => 'Créez un bordereau pour annoncer le stock que vous envoyez à notre dépôt.',
+        'empty_collector' => 'Aucun stock à ramasser dans vos villes.',
+        'empty_collector_hint' => 'Vous serez notifié dès qu\'un vendeur déclare un envoi prêt.',
+
+        'sections' => [
+            'shipping' => 'Informations d\'envoi',
+            'items' => 'Produits envoyés',
+            'collection' => 'Ramassage chez le vendeur',
+            'reception' => 'Réception au dépôt',
+            'summary' => 'Récapitulatif',
+            'history' => 'Suivi du bordereau',
+        ],
+
+        'columns' => [
+            'reference' => 'Référence',
+            'status' => 'Statut',
+            'seller' => 'Vendeur',
+            'shop' => 'Boutique',
+            'items' => 'Références',
+            'sent' => 'Déclaré',
+            'collected' => 'Ramassé',
+            'received' => 'Réceptionné',
+            'rejected' => 'Rejeté',
+            'sent_at' => 'Date d\'envoi',
+            'collected_at' => 'Ramassé le',
+            'dispatched_at' => 'Expédié le',
+            'received_at' => 'Date de réception',
+            'pickup_city' => 'Ville de ramassage',
+            'destination' => 'Dépôt de destination',
+            'product' => 'Produit',
+            'collection_gap' => 'Écart au ramassage',
+            'discrepancy' => 'Écart',
+            'note' => 'Note',
+        ],
+
+        'form' => [
+            'sent_at' => 'Date d\'envoi',
+            'destination_city' => 'Ville de destination',
+            'destination_city_placeholder' => 'Choisissez le dépôt…',
+            'destination_hint' => 'Seules les villes où nous avons un dépôt sont proposées. Ce choix fixe le dépôt de votre boutique.',
+            'destination_locked' => 'Le stock de cette boutique est entreposé à :city. Toutes vos expéditions partent vers ce dépôt.',
+            'no_hub_cities' => 'Aucun dépôt n\'est ouvert pour le moment. Contactez-nous avant d\'expédier votre stock.',
+            'sending_notes' => 'Notes d\'envoi',
+            'sending_notes_placeholder' => 'Ex. 2 cartons scellés, palette n°4',
+            'quantity_sent' => 'Quantité envoyée',
+            'item_note' => 'Note de ligne',
+            'add_product' => 'Ajouter un produit',
+            'no_items' => 'Ajoutez au moins un produit à ce bordereau.',
+            'save_draft' => 'Enregistrer en brouillon',
+            'save_and_send' => 'Enregistrer et demander le ramassage',
+            'total_units' => 'Total unités envoyées',
+        ],
+
+        'collection_form' => [
+            'title' => 'Vérifier et prendre le stock',
+            'hint' => 'Comptez devant le vendeur ce que vous chargez réellement. Votre comptage remplace sa déclaration pour la suite du trajet.',
+            'quantity_collected' => 'Quantité prise',
+            'collection_notes' => 'Notes de ramassage',
+            'collection_notes_placeholder' => 'Ex. le vendeur n\'avait que 8 unités sur les 10 annoncées',
+            'match_all' => 'Tout conforme',
+            'match_all_hint' => 'Recopie les quantités déclarées comme quantités prises.',
+            'confirm_title' => 'Confirmer ce ramassage ?',
+            'confirm_text' => 'Vous signez pour :units unité(s). Le dépôt comptera votre chargement, pas la déclaration du vendeur.',
+            'confirm' => 'Confirmer le ramassage',
+        ],
+
+        'reception_form' => [
+            'title' => 'Réceptionner et valider',
+            'hint' => 'Saisissez ce que vous avez réellement compté. Seules ces quantités seront créditées au stock du vendeur.',
+            'received_at' => 'Date de réception effective',
+            'quantity_received' => 'Quantité réceptionnée',
+            'quantity_rejected' => 'Quantité rejetée',
+            'reception_notes' => 'Notes post-réception',
+            'reception_notes_placeholder' => 'Ex. 3 articles endommagés lors du transport',
+            'match_all' => 'Tout conforme',
+            'match_all_hint' => 'Recopie les quantités chargées par le ramasseur comme quantités reçues.',
+            'confirm_title' => 'Valider cette réception ?',
+            'confirm_text' => ':units unité(s) seront créditées au stock du vendeur. Cette action est définitive.',
+            'confirm' => 'Valider et créditer le stock',
+        ],
+
+        'people' => [
+            'sent_by' => 'Envoyé par',
+            'collected_by' => 'Ramassé par',
+            'received_by' => 'Réceptionné et scanné par',
+            'pending' => 'En attente',
+        ],
+
+        'actions' => [
+            'send' => 'Demander le ramassage',
+            'collect' => 'Vérifier et prendre le stock',
+            'dispatch' => 'Expédier vers le dépôt',
+            'receive' => 'Réceptionner',
+            'cancel' => 'Annuler le bordereau',
+            'edit' => 'Modifier',
+        ],
+
+        'send_confirm' => [
+            'title' => 'Demander le ramassage de ce stock ?',
+            'text' => 'Les livreurs de votre ville seront prévenus. Vous ne pourrez plus modifier les quantités déclarées : c\'est le document qui sera compté chez vous.',
+            'confirm' => 'Demander le ramassage',
+        ],
+
+        'dispatch_confirm' => [
+            'title' => 'Expédier ce stock vers le dépôt ?',
+            'text' => 'Le dépôt de :city sera prévenu qu\'un colis arrive et pourra le réceptionner.',
+            'confirm' => 'Expédier vers le dépôt',
+        ],
+
+        'cancel_confirm' => [
+            'title' => 'Annuler ce bordereau ?',
+            'text' => 'Aucun stock ne sera crédité. Le document reste consultable.',
+            'reason' => 'Motif de l\'annulation',
+            'confirm' => 'Annuler le bordereau',
+        ],
+
+        'filters' => [
+            'reference' => 'Référence du bordereau',
+            'status' => 'Tous les statuts',
+            'destination' => 'Tous les dépôts',
+        ],
+
+        'history' => [
+            'empty' => 'Aucun mouvement enregistré sur ce bordereau.',
+            'collection_gap' => 'Ramassé :collected unité(s) sur les :declared déclarées.',
+        ],
+
+        'flash' => [
+            'created' => 'Bordereau :reference créé.',
+            'updated' => 'Bordereau mis à jour.',
+            'sent' => 'Ramassage demandé. Les livreurs de votre ville viennent chercher le stock.',
+            'collected' => 'Ramassage du bordereau :reference confirmé.',
+            'dispatched' => 'Stock expédié vers le dépôt de destination.',
+            'validated' => 'Réception :reference validée : le stock a été crédité.',
+            'cancelled' => 'Bordereau annulé.',
+        ],
+
+        'errors' => [
+            'no_items' => 'Un bordereau doit contenir au moins un produit.',
+            'not_editable' => 'Ce bordereau n\'est plus modifiable : le ramassage a déjà été demandé.',
+            'invalid_transition' => 'Transition impossible de « :from » vers « :to ».',
+            'duplicate_product' => 'Ce produit apparaît plusieurs fois dans le bordereau.',
+            'over_declared' => 'Quantité supérieure à ce qui nous a été remis (:sent unités). Vérifiez votre comptage.',
+            'no_destination' => 'Choisissez le dépôt vers lequel vous expédiez ce stock.',
+            'not_a_hub' => 'Cette ville n\'accueille pas de dépôt de stock.',
+            'wrong_destination' => 'Le stock de cette boutique est entreposé à :city. Toutes vos expéditions doivent partir vers ce dépôt.',
+        ],
+    ],
+
+    'picklist' => [
+        'title' => 'Produits de la commande',
+        'hint' => 'Recherchez par nom, référence ou code-barres.',
+        'search_placeholder' => 'Rechercher un produit…',
+        'no_results' => 'Aucun produit ne correspond à « :term ».',
+        'empty_catalog' => 'Votre catalogue est vide. Ajoutez des produits pour les vendre depuis votre stock.',
+        'out_of_stock' => 'Rupture de stock (0 dispo)',
+        'blocked' => 'Produit bloqué',
+        'available' => ':count dispo',
+        'add' => 'Ajouter',
+        'quantity' => 'Qté',
+        'unit_price' => 'Prix unitaire',
+        'line_total' => 'Total ligne',
+        'remove' => 'Retirer',
+        'empty_selection' => 'Aucun produit sélectionné.',
+        'empty_selection_hint' => 'Utilisez la recherche ci-dessus pour composer la commande.',
+        'max_quantity' => 'Stock maximum atteint pour ce produit (:count dispo).',
+        'already_added' => 'Ce produit est déjà dans la commande.',
+        'items_total' => 'Sous-total produits',
+        'discount' => 'Remise globale',
+        'stock_after' => 'Stock restant après commande : :count',
+        'toggle_hint' => 'Composer la commande depuis mon stock',
+        'toggle_off_hint' => 'Décochez pour saisir un montant libre sans lier de produit.',
+        'amount_from_stock' => 'Calculé automatiquement à partir des produits sélectionnés.',
+    ],
+
+];

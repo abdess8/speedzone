@@ -34,6 +34,10 @@ const RETURN_READ = [
   'returns.manage',
 ];
 const SUPPORT_READ = ['support.read.all', 'support.read.own', 'support.manage'];
+const STOCK_READ = ['stock.view', 'stock.receive_inbound', 'stock.admin_override'];
+// A collector holds nothing else in this module, so the shipment list is the only
+// entry he needs — and the only one the parent menu should appear for on his account.
+const INBOUND_READ = [...STOCK_READ, 'stock.create_inbound', 'stock.collect_inbound'];
 
 /**
  * Reverse logistics pipeline, in the order the parcel travels it. Mirrors
@@ -78,7 +82,7 @@ export const menuItems = [
     // Not "/": that path serves the public marketing site, for guests and signed-in
     // users alike. The application dashboard lives at /dashboard.
     href: '/dashboard',
-    permissions: [],
+    permissions: ['dashboard.view'],
   },
   {
     key: 'orders',
@@ -139,6 +143,13 @@ export const menuItems = [
       isDriver || canAny(['partners.read', 'partners.deliveries.manage']),
   },
   {
+    key: 'preparation',
+    labelKey: 'sidebar.preparation',
+    icon: 'ri-inbox-unarchive-line',
+    href: '/orders/preparation',
+    permissions: ['orders.transition.to_prepared'],
+  },
+  {
     key: 'pickups',
     labelKey: 'sidebar.pickups',
     icon: 'ri-truck-line',
@@ -159,6 +170,44 @@ export const menuItems = [
     permissions: RETURN_READ,
     visible: canSeeReturns,
     children: returnStatusChildren(),
+  },
+  {
+    key: 'stock',
+    labelKey: 'sidebar.stock',
+    icon: 'ri-archive-2-line',
+    permissions: INBOUND_READ,
+    children: [
+      {
+        key: 'stock-products',
+        labelKey: 'sidebar.stock_views.products',
+        href: '/products',
+        permissions: STOCK_READ,
+      },
+      {
+        key: 'stock-import',
+        labelKey: 'sidebar.stock_views.import',
+        href: '/products/import',
+        permissions: ['stock.create_product'],
+      },
+      {
+        key: 'stock-inventory',
+        labelKey: 'sidebar.stock_views.inventory',
+        href: '/stock/inventory',
+        permissions: ['stock.view', 'stock.admin_override'],
+      },
+      {
+        key: 'stock-receptions',
+        labelKey: 'sidebar.stock_views.receptions',
+        href: '/stock-receptions',
+        permissions: INBOUND_READ,
+      },
+      {
+        key: 'stock-movements',
+        labelKey: 'sidebar.stock_views.movements',
+        href: '/stock/movements',
+        permissions: ['stock.admin_override'],
+      },
+    ],
   },
   {
     key: 'invoices',
@@ -377,7 +426,7 @@ export const menuSections = [
   {
     key: 'operations',
     labelKey: 'sidebar.sections.operations',
-    keys: ['partner-orders', 'pickups', 'transfers', 'returns'],
+    keys: ['partner-orders', 'preparation', 'pickups', 'transfers', 'returns', 'stock'],
   },
   {
     key: 'finance',
@@ -402,7 +451,7 @@ export const mobileTabs = [
     icon: 'ri-home-5-line',
     activeIcon: 'ri-home-5-fill',
     href: '/dashboard',
-    permissions: [],
+    permissions: ['dashboard.view'],
   },
   {
     key: 'orders',
@@ -417,8 +466,22 @@ export const mobileTabs = [
     labelKey: 'sidebar.bottom_nav.operations',
     icon: 'ri-truck-line',
     activeIcon: 'ri-truck-fill',
-    permissions: [...PICKUP_READ, ...TRANSFER_READ, ...RETURN_READ],
+    permissions: [
+      ...PICKUP_READ,
+      ...TRANSFER_READ,
+      ...RETURN_READ,
+      ...INBOUND_READ,
+      'orders.transition.to_prepared',
+    ],
     children: [
+      {
+        // On the bench itself, phone in hand: this is where the QR scanner lives.
+        key: 'preparation',
+        labelKey: 'sidebar.preparation',
+        icon: 'ri-inbox-unarchive-line',
+        href: '/orders/preparation',
+        permissions: ['orders.transition.to_prepared'],
+      },
       {
         key: 'pickups',
         labelKey: 'sidebar.pickups',
@@ -440,6 +503,32 @@ export const mobileTabs = [
         permissions: RETURN_READ,
         visible: canSeeReturns,
         children: returnStatusChildren(),
+      },
+      {
+        key: 'stock',
+        labelKey: 'sidebar.stock',
+        icon: 'ri-archive-2-line',
+        permissions: INBOUND_READ,
+        children: [
+          {
+            key: 'stock-products',
+            labelKey: 'sidebar.stock_views.products',
+            href: '/products',
+            permissions: STOCK_READ,
+          },
+          {
+            key: 'stock-inventory',
+            labelKey: 'sidebar.stock_views.inventory',
+            href: '/stock/inventory',
+            permissions: ['stock.view', 'stock.admin_override'],
+          },
+          {
+            key: 'stock-receptions',
+            labelKey: 'sidebar.stock_views.receptions',
+            href: '/stock-receptions',
+            permissions: INBOUND_READ,
+          },
+        ],
       },
     ],
   },

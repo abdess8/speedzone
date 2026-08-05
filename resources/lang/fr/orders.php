@@ -42,6 +42,7 @@ return [
             'is_fragile' => 'Colis fragile',
             'can_be_opened' => 'Ouverture autorisée',
             'option_exchange' => 'Option d\'échange',
+            'delivery_included' => 'Livraison incluse',
         ],
         'upload' => [
             'drop_title' => 'Glissez votre fichier ici',
@@ -230,6 +231,7 @@ return [
         'cash_collection' => 'Encaissement espèces',
         'amount_to_collect' => 'Montant à encaisser',
         'delivery_price' => 'Prix de livraison',
+        'delivery_included_note' => 'Livraison incluse : les frais de :amount MAD ne sont pas encaissés chez le client, ils sont déduits sur la facture du vendeur.',
         'total_amount' => 'Montant total',
         'partner' => 'Partenaire',
         'partner_reference' => 'Réf. partenaire',
@@ -274,6 +276,9 @@ return [
         'order_value_placeholder' => 'Valeur du colis si nécessaire',
         'delivery_price' => 'Prix de livraison',
         'delivery_price_hint' => '(auto depuis le secteur)',
+        'delivery_included' => 'Livraison incluse',
+        'delivery_included_hint' => 'Le prix annoncé au client comprend déjà la livraison.',
+        'delivery_included_note' => 'Le client ne paie que le montant de la commande. Les frais de livraison de :amount MAD restent à votre charge et seront déduits sur votre facture.',
         'total_amount' => 'Montant total',
     ],
     'timeline' => [

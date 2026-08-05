@@ -42,6 +42,7 @@ return [
             'is_fragile' => 'Fragile parcel',
             'can_be_opened' => 'Opening allowed',
             'option_exchange' => 'Exchange option',
+            'delivery_included' => 'Delivery included',
         ],
         'upload' => [
             'drop_title' => 'Drop your file here',
@@ -230,6 +231,7 @@ return [
         'cash_collection' => 'Cash Collection',
         'amount_to_collect' => 'Amount to Collect',
         'delivery_price' => 'Delivery Price',
+        'delivery_included_note' => 'Delivery included: the :amount MAD fee is not collected from the customer, it is deducted on the seller invoice.',
         'total_amount' => 'Total Amount',
         'partner' => 'Partner',
         'partner_reference' => 'Partner ref.',
@@ -274,6 +276,9 @@ return [
         'order_value_placeholder' => 'Package value if needed',
         'delivery_price' => 'Delivery Price',
         'delivery_price_hint' => '(auto-filled from sector)',
+        'delivery_included' => 'Delivery included',
+        'delivery_included_hint' => 'The price quoted to the customer already covers the delivery.',
+        'delivery_included_note' => 'The customer only pays the order amount. The :amount MAD delivery fee stays on you and will be deducted on your invoice.',
         'total_amount' => 'Total Amount',
     ],
     'timeline' => [

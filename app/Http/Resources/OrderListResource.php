@@ -39,6 +39,7 @@ class OrderListResource extends JsonResource
         'order_value',
         'order_amount',
         'delivery_price',
+        'delivery_included',
         'total_amount',
         'status',
         'is_fragile',
@@ -99,6 +100,7 @@ class OrderListResource extends JsonResource
             'is_already_paid' => ! $payment->requiresCashCollection(),
             'order_value' => $this->order_value !== null ? (float) $this->order_value : null,
             'delivery_price' => (float) $this->delivery_price,
+            'delivery_included' => (bool) $this->delivery_included,
             'total_amount' => (float) $this->total_amount,
 
             'is_fragile' => (bool) $this->is_fragile,

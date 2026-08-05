@@ -255,6 +255,9 @@ class OrderResource extends JsonResource
                 $this->order_amount !== null ? (float) $this->order_amount : null
             ),
             'delivery_price' => (float) $this->delivery_price,
+            // The fee is still owed to us either way; this only says whether the
+            // customer was already charged for it inside the order amount.
+            'delivery_included' => (bool) $this->delivery_included,
             'discount_amount' => (float) ($this->discount_amount ?? 0),
             'total_amount' => (float) $this->total_amount,
 

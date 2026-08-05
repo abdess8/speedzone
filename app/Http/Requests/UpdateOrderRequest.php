@@ -32,6 +32,10 @@ class UpdateOrderRequest extends FormRequest
             $merge['option_exchange'] = $this->boolean('option_exchange');
         }
 
+        if ($this->has('delivery_included')) {
+            $merge['delivery_included'] = $this->boolean('delivery_included');
+        }
+
         if ($merge !== []) {
             $this->merge($merge);
         }
@@ -83,6 +87,7 @@ class UpdateOrderRequest extends FormRequest
             'payment_method' => ['sometimes', 'required', Rule::in(PaymentMethod::values())],
             ...$paymentRules,
             'delivery_price' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'delivery_included' => ['sometimes', 'boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_fragile' => ['sometimes', 'boolean'],
             'can_be_opened' => ['sometimes', 'boolean'],

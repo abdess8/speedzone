@@ -119,6 +119,29 @@ test('a card payment row stores a value and collects nothing', function () {
         ->and((float) $order->order_value)->toBe(450.0);
 });
 
+test('a row can declare that its price already covers the delivery', function () {
+    $city = importCity();
+    $sector = importSector($city);
+
+    $this->actingAs(importUser(Role::SELLER))->post(route('orders.import.store'), [
+        'orders' => [
+            // "Oui" in the file is resolved to a boolean by the wizard, so what
+            // reaches the endpoint is what is asserted here.
+            importRow($city, $sector, ['delivery_included' => true]),
+            importRow($city, $sector, ['customer_phone' => '0623456789']),
+        ],
+    ]);
+
+    $orders = Order::query()->orderBy('id')->get();
+
+    expect($orders[0]->delivery_included)->toBeTrue()
+        ->and((float) $orders[0]->total_amount)->toBe(450.0)
+        // The fee is still snapshotted on the order and billed to the seller.
+        ->and((float) $orders[0]->delivery_price)->toBe(30.0)
+        ->and($orders[1]->delivery_included)->toBeFalse()
+        ->and((float) $orders[1]->total_amount)->toBe(480.0);
+});
+
 test('a sector belonging to another city is rejected on its own row', function () {
     $city = importCity();
     $sector = importSector($city);

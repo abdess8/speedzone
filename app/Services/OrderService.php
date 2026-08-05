@@ -145,6 +145,7 @@ class OrderService
             'notes' => $order->notes,
             'payment_method' => $payment->value,
             'delivery_price' => (float) $order->delivery_price,
+            'delivery_included' => (bool) $order->delivery_included,
             'order_value' => $order->order_value !== null ? (float) $order->order_value : null,
             'order_amount' => null,
         ];

@@ -111,6 +111,22 @@ export const IMPORT_FIELDS = [
     required: false,
     aliases: ['echange', 'option echange', 'option d echange', 'exchange', 'exchange option'],
   },
+  {
+    // Appended rather than filed next to the amount so the column order of
+    // templates already in circulation does not shift under their users.
+    key: 'delivery_included',
+    type: 'boolean',
+    required: false,
+    aliases: [
+      'livraison incluse',
+      'livraison inclus',
+      'frais inclus',
+      'frais de livraison inclus',
+      'port inclus',
+      'delivery included',
+      'shipping included',
+    ],
+  },
 ];
 
 const BOOLEAN_FIELDS = IMPORT_FIELDS.filter((field) => field.type === 'boolean').map((f) => f.key);
@@ -129,6 +145,7 @@ export const TEMPLATE_EXAMPLES = {
   is_fragile: 'Oui',
   can_be_opened: 'Non',
   option_exchange: 'Non',
+  delivery_included: 'Non',
 };
 
 const CASH_TOKENS = ['cash', 'espece', 'especes', 'comptant', 'liquide', 'cod', 'crbt', 'contre remboursement', 'a la livraison'];
@@ -698,6 +715,7 @@ export function useOrderImport(props) {
         is_fragile: row.is_fragile === true,
         can_be_opened: row.can_be_opened === true,
         option_exchange: row.option_exchange === true,
+        delivery_included: row.delivery_included === true,
       };
     });
   }

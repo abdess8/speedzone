@@ -55,6 +55,7 @@ class Order extends Model
         'order_amount',
         'discount_amount',
         'delivery_price',
+        'delivery_included',
         'total_amount',
         'notes',
         'is_fragile',
@@ -77,6 +78,7 @@ class Order extends Model
         'discount_amount' => 'decimal:2',
         'delivery_price' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'delivery_included' => 'boolean',
         'is_fragile' => 'boolean',
         'can_be_opened' => 'boolean',
         'option_exchange' => 'boolean',
@@ -106,7 +108,7 @@ class Order extends Model
             }
 
             $orderAmount = (float) ($order->order_amount ?? 0);
-            $order->total_amount = round($orderAmount + (float) $order->delivery_price, 2);
+            $order->total_amount = round($orderAmount + $order->customerDeliveryShare(), 2);
         });
     }
 
@@ -256,6 +258,21 @@ class Order extends Model
     | Helpers
     |--------------------------------------------------------------------------
     */
+
+    /**
+     * The part of the shipping cost the customer is asked for on top of the
+     * goods, which is what separates `total_amount` from `order_amount`.
+     *
+     * When the seller advertises a delivered price, the customer pays the goods
+     * and nothing more: the shipping is already baked into the figure he quoted.
+     * The fee itself does not disappear — the seller still owes it to SpeedZone,
+     * and BillingService keeps deducting it from what he is paid at invoicing.
+     * This only decides who hands the money to the driver.
+     */
+    public function customerDeliveryShare(): float
+    {
+        return $this->delivery_included ? 0.0 : (float) $this->delivery_price;
+    }
 
     /**
      * Whether this order was ingested from a B2B partner.

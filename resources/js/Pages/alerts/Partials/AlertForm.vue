@@ -130,6 +130,15 @@ const toggleValue = (field, value) => {
 
 const isSelected = (field, value) => props.form[field].includes(value);
 
+/**
+ * A rejected audience reports itself on the indexed key ("target_cities.0")
+ * when one entry is at fault, and on the bare key for the "reaches nobody"
+ * rule. Reading only the bare key left a refused save with no visible reason.
+ */
+const audienceError = (field) =>
+  props.form.errors[field] ??
+  Object.entries(props.form.errors).find(([key]) => key.startsWith(`${field}.`))?.[1];
+
 /** Options already known to the picker, so saved recipients render by name. */
 const userOptions = ref([...props.selectedUsers]);
 
@@ -297,7 +306,7 @@ const audienceSummary = computed(() => {
                 />
                 <label class="form-check-label" :for="`role-${role.value}`">{{ role.label }}</label>
               </div>
-              <InputError :message="form.errors.target_roles" />
+              <InputError class="d-block" :message="audienceError('target_roles')" />
             </BCol>
 
             <BCol md="6">
@@ -324,7 +333,7 @@ const audienceSummary = computed(() => {
                 :placeholder="$t('alerts.form.cities')"
               />
               <div class="form-text">{{ $t('alerts.form.cities_hint') }}</div>
-              <InputError :message="form.errors.target_cities" />
+              <InputError class="d-block" :message="audienceError('target_cities')" />
             </BCol>
 
             <BCol md="12">
@@ -342,7 +351,7 @@ const audienceSummary = computed(() => {
                 :placeholder="$t('alerts.form.users_placeholder')"
               />
               <div class="form-text">{{ $t('alerts.form.users_hint') }}</div>
-              <InputError :message="form.errors.target_user_ids" />
+              <InputError class="d-block" :message="audienceError('target_user_ids')" />
             </BCol>
 
             <BCol md="12">

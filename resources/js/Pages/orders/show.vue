@@ -634,6 +634,10 @@ onMounted(() => {
               <span class="fw-semibold">{{ $t('orders.show.total_amount') }}</span>
               <span class="fw-bold fs-16 text-primary">{{ money(order.total_amount) }} MAD</span>
             </div>
+            <div v-if="order.delivery_included" class="text-muted fs-13 mt-2">
+              <i class="ri-information-line align-bottom me-1"></i>
+              {{ $t('orders.show.delivery_included_note', { amount: money(order.delivery_price) }) }}
+            </div>
           </BCardBody>
         </BCard>
 

@@ -32,6 +32,7 @@ class ReturnService
             ReturnInitiatedByRole::DRIVER => [
                 OrderStatus::OUT_FOR_DELIVERY->value,
                 OrderStatus::FAILED->value,
+                OrderStatus::READY_TO_RETURN->value,
             ],
             ReturnInitiatedByRole::SELLER => [
                 OrderStatus::IN_TRANSIT->value,
@@ -43,6 +44,7 @@ class ReturnService
             ReturnInitiatedByRole::ADMIN, ReturnInitiatedByRole::SYSTEM => [
                 OrderStatus::OUT_FOR_DELIVERY->value,
                 OrderStatus::FAILED->value,
+                OrderStatus::READY_TO_RETURN->value,
                 OrderStatus::DELIVERED->value,
                 OrderStatus::IN_TRANSIT->value,
                 OrderStatus::RECEIVED_IN_DESTINATION->value,
@@ -345,7 +347,7 @@ class ReturnService
             return OrderStatus::from($previous);
         }
 
-        return OrderStatus::FAILED;
+        return OrderStatus::READY_TO_RETURN;
     }
 
     private function assertCanCreate(User $actor, ReturnInitiatedByRole $role, Order $order): void

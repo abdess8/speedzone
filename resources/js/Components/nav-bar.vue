@@ -1,4 +1,5 @@
 <script setup>
+import NavModeSwitcher from '@/Components/NavModeSwitcher.vue';
 import NotificationBell from '@/Components/Notifications/NotificationBell.vue';
 import StoreSwitcher from '@/Components/StoreSwitcher.vue';
 import { layoutMethods } from '@/state/helpers';
@@ -56,42 +57,6 @@ export default {
   },
   methods: {
     ...layoutMethods,
-    toggleHamburgerMenu() {
-      const windowSize = document.documentElement.clientWidth;
-      const layoutType = document.documentElement.getAttribute('data-layout');
-      const visibilityType = document.documentElement.getAttribute('data-sidebar-visibility');
-
-      document.documentElement.setAttribute('data-sidebar-visibility', 'show');
-
-      if (windowSize > 767) {
-        document.querySelector('.hamburger-icon')?.classList.toggle('open');
-      }
-
-      if (layoutType === 'horizontal') {
-        document.body.classList.toggle('menu');
-      }
-
-      if (visibilityType === 'show' && (layoutType === 'vertical' || layoutType === 'semibox')) {
-        if (windowSize < 1025 && windowSize > 767) {
-          document.body.classList.remove('vertical-sidebar-enable');
-          document.documentElement.getAttribute('data-sidebar-size') === 'sm'
-            ? document.documentElement.setAttribute('data-sidebar-size', '')
-            : document.documentElement.setAttribute('data-sidebar-size', 'sm');
-        } else if (windowSize > 1025) {
-          document.body.classList.remove('vertical-sidebar-enable');
-          document.documentElement.getAttribute('data-sidebar-size') === 'lg'
-            ? document.documentElement.setAttribute('data-sidebar-size', 'sm')
-            : document.documentElement.setAttribute('data-sidebar-size', 'lg');
-        } else if (windowSize <= 767) {
-          document.body.classList.add('vertical-sidebar-enable');
-          document.documentElement.setAttribute('data-sidebar-size', 'lg');
-        }
-      }
-
-      if (layoutType === 'twocolumn') {
-        document.body.classList.toggle('twocolumn-panel');
-      }
-    },
     initFullScreen() {
       document.body.classList.toggle('fullscreen-enable');
       if (
@@ -135,8 +100,6 @@ export default {
         pageTopbar.classList.remove('topbar-shadow');
       }
     });
-
-    document.getElementById('topnav-hamburger-icon')?.addEventListener('click', this.toggleHamburgerMenu);
   },
 };
 </script>
@@ -165,21 +128,12 @@ export default {
             </Link>
           </div>
 
-          <button
-            type="button"
-            class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger"
-            id="topnav-hamburger-icon"
-          >
-            <span class="hamburger-icon">
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-          </button>
         </div>
 
         <div class="d-flex align-items-center">
           <StoreSwitcher />
+
+          <NavModeSwitcher />
 
           <BDropdown
             class="dropdown"

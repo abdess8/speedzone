@@ -270,6 +270,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('orders/{order}/assign-driver', [OrderController::class, 'assignDriver'])
         ->whereNumber('order')
         ->name('orders.assign-driver');
+    // Closing a delivery attempt. Same guard as a bulk status change: the
+    // ownership half is re-checked per order by OrderPolicy::updateStatus().
+    Route::post('orders/{order}/delivery-outcome', [OrderController::class, 'deliveryOutcome'])
+        ->whereNumber('order')
+        ->middleware('permission:orders.update.all|orders.update.own|orders.update.assigned')
+        ->name('orders.delivery-outcome');
     Route::post('orders/{order}/sync-partner', [OrderController::class, 'syncPartner'])
         ->whereNumber('order')
         ->name('orders.sync-partner');

@@ -65,6 +65,7 @@ class Order extends Model
         'failure_reason',
         'failure_note',
         'failed_at',
+        'failed_attempts_count',
         'is_returned',
     ];
 
@@ -73,6 +74,7 @@ class Order extends Model
         'status' => OrderStatus::class,
         'failure_reason' => OrderFailureReason::class,
         'failed_at' => 'datetime',
+        'failed_attempts_count' => 'integer',
         'order_value' => 'decimal:2',
         'order_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
@@ -306,6 +308,8 @@ class Order extends Model
         ?int $pickupRequestId = null,
         ?int $transferId = null,
         ?int $returnId = null,
+        ?string $attachmentPath = null,
+        ?string $attachmentName = null,
     ): OrderStatusHistory {
         return $this->statusHistories()->create([
             'status' => $status instanceof OrderStatus ? $status->value : $status,
@@ -315,6 +319,8 @@ class Order extends Model
             'pickup_request_id' => $pickupRequestId,
             'transfer_id' => $transferId,
             'return_id' => $returnId,
+            'attachment_path' => $attachmentPath,
+            'attachment_name' => $attachmentName,
         ]);
     }
 

@@ -39,6 +39,14 @@ class OrderResource extends JsonResource
             'status_label' => $status->label(),
             'status_color' => $status->color(),
 
+            // How many times a driver has come back empty-handed. Shown next to
+            // the status so an operator can spot a parcel going nowhere.
+            'failed_attempts_count' => (int) $this->failed_attempts_count,
+            'failure_reason' => $this->failure_reason?->value,
+            'failure_reason_label' => $this->failure_reason?->label(),
+            'failure_note' => $this->failure_note,
+            'failed_at' => $this->failed_at?->toIso8601String(),
+
             'customer' => [
                 'first_name' => $this->customer_first_name,
                 'last_name' => $this->customer_last_name,

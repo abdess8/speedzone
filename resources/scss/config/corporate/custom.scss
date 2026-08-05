@@ -6,6 +6,28 @@ Contact: support@themesbrand.com
 File: Custom Css File
 */
 
+// Global UI density.
+//
+// One `zoom` on the root scales everything the browser lays out — type,
+// spacing, images, cards, modals, tables and the px-based sidebar width alike —
+// without touching a single component, which is why it is preferred here over
+// shrinking the root font size (that would leave every px-defined dimension,
+// including the sidebar and inline image sizes, at full scale).
+//
+// Media queries are deliberately unaffected: they still evaluate against the
+// real viewport, so the breakpoints stay exactly where they are and the extra
+// room simply fits more content per screen.
+:root {
+  zoom: $ui-scale;
+}
+
+// Print output was laid out against an unscaled page and must stay that way.
+@media print {
+  :root {
+    zoom: 1;
+  }
+}
+
 .flatpickr-calendar {
   background-color: var(--#{$prefix}secondary-bg) !important;
   box-shadow: 1px 0 0 var(--#{$prefix}border-color), -1px 0 0 var(--#{$prefix}border-color),
@@ -926,6 +948,206 @@ h5.text-primary {
   flex-shrink: 0;
 }
 
+// Top navigation mode — a row of tabs under the topbar, as in Salesforce.
+//
+// Rendered by `TopNav.vue`, which owns its own markup instead of borrowing the
+// sidebar's: the theme's horizontal rules expect the stock Velzon menu and have
+// nothing to say about this one.
+$topnav-height: 45px;
+
+[data-layout='horizontal'] {
+  // The theme centres the horizontal layout in 90% of the viewport. The vertical
+  // one runs edge to edge, and switching navigation mode should not reflow every
+  // table on the screen.
+  .layout-width,
+  .container-fluid {
+    max-width: 100%;
+  }
+
+  // Above 1024 the theme already clears the topbar; between `md` and there it
+  // assumed the bar was hidden behind a hamburger, which no longer exists.
+  @include media-breakpoint-up(md) {
+    .page-content {
+      margin-top: $header-height;
+    }
+  }
+}
+
+.app-topnav {
+  position: fixed;
+  // Just under the topbar, which the bar sits below and never overlaps; above
+  // the page, which its dropdowns do.
+  z-index: 1001;
+  top: $header-height;
+  right: 0;
+  left: 0;
+  height: $topnav-height;
+  border-bottom: 1px solid var(--#{$prefix}border-color);
+  background-color: var(--#{$prefix}topnav-bg);
+  box-shadow: $horizontal-menu-box-shadow;
+}
+
+.app-topnav-inner {
+  display: flex;
+  height: 100%;
+  align-items: stretch;
+  padding: 0 calc(#{$grid-gutter-width} * 0.5);
+  gap: 0.5rem;
+}
+
+.app-topnav-app {
+  display: flex;
+  align-items: center;
+  padding-right: 0.75rem;
+  color: var(--#{$prefix}heading-color);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+// The tab strip never wraps: a second row would push the page content down and
+// leave the layout jumping around as the window resizes. Anything that does not
+// fit is moved into "More" by the component, which measures the real widths.
+.app-topnav-tabs {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: stretch;
+  padding: 0;
+  margin: 0;
+  flex-wrap: nowrap;
+  list-style: none;
+}
+
+// Every tab is on screen for the frame it takes to read its width, and that
+// frame is the only one in which the strip is too wide for the bar. Clipping is
+// confined to it because a dropdown opening out of a clipped box gets cut off.
+.app-topnav-tabs-measuring {
+  overflow: hidden;
+}
+
+.app-topnav-item {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+}
+
+.app-topnav-item-hidden {
+  display: none;
+}
+
+.app-topnav-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.875rem;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--#{$prefix}topnav-item-color);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover,
+  &:focus-visible {
+    background-color: var(--#{$prefix}light);
+    color: var(--#{$prefix}topnav-item-active-color);
+  }
+
+  &.active {
+    border-bottom-color: var(--#{$prefix}primary);
+    color: var(--#{$prefix}topnav-item-active-color);
+    font-weight: 600;
+  }
+}
+
+.app-topnav-caret {
+  margin-left: 0.125rem;
+  font-size: 0.875rem;
+}
+
+.app-topnav-dropdown {
+  display: flex;
+  align-items: stretch;
+}
+
+.app-topnav-launcher {
+  display: flex;
+  align-items: stretch;
+}
+
+.app-topnav-launcher-btn {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  padding: 0 0.5rem;
+  color: var(--#{$prefix}topnav-item-color);
+  font-size: 1.25rem;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--#{$prefix}topnav-item-active-color);
+  }
+}
+
+// Salesforce's app launcher: everything the role can reach, grouped as in the
+// sidebar, so nothing is only findable by overflowing the bar.
+.app-launcher-menu {
+  width: min(44rem, 92vw);
+  max-height: 70vh;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.app-launcher-grid {
+  display: grid;
+  gap: 0 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+}
+
+.app-launcher-caption {
+  padding: 0.5rem 0 0.25rem;
+  margin: 0;
+  color: var(--#{$prefix}vertical-menu-title-color);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.app-launcher-link {
+  display: flex;
+  align-items: center;
+  padding: 0.3125rem 0.5rem;
+  border-radius: var(--#{$prefix}border-radius);
+  color: var(--#{$prefix}body-color);
+  font-size: 0.8125rem;
+  gap: 0.5rem;
+  text-decoration: none;
+
+  &:hover {
+    background-color: var(--#{$prefix}light);
+    color: var(--#{$prefix}primary);
+  }
+
+  &.active {
+    color: var(--#{$prefix}primary);
+    font-weight: 600;
+  }
+}
+
+.app-launcher-parent {
+  color: var(--#{$prefix}body-color);
+  cursor: default;
+  font-weight: 600;
+}
+
+.app-launcher-child {
+  padding-left: 1.75rem;
+  color: rgb(28 28 28 / 72%);
+}
+
 // Sidebar section captions in the navigation panel.
 .menu-section-title {
   padding: 0.75rem 1.5rem 0.25rem;
@@ -938,17 +1160,13 @@ h5.text-primary {
 
 // Bottom navigation takes over below `md`, which is exactly where Velzon slides
 // the sidebar off screen — so the two never appear at once and the sidebar needs
-// no extra hiding. The trigger that would slide it back in is dropped: every
-// destination it held is either a tab or inside the "More" sheet.
+// no extra hiding. Every destination the sidebar held is either a tab or inside
+// the "More" sheet.
 @include media-breakpoint-down(md) {
   body.has-bottom-nav {
     // Keeps the last row of a list clear of the floating bar.
     .page-content {
       padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
-    }
-
-    #topnav-hamburger-icon {
-      display: none !important;
     }
   }
 }

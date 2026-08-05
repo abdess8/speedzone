@@ -21,9 +21,16 @@ enum OrderStatus: string
     case IN_DELIVERY_CITY = 'IN_DELIVERY_CITY';
     case OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY';
     case DELIVERED = 'DELIVERED';
+    // Legacy terminal failure. Nothing enters it any more: a delivery that ends
+    // for good now lands on READY_TO_RETURN, and a delivery that may still be
+    // retried stays on OUT_FOR_DELIVERY with an incremented attempt counter.
     case FAILED = 'FAILED';
     case REJECTED = 'REJECTED';
     case CANCELED = 'CANCELED';
+    // The parcel is off the round and waiting for the reverse leg to be opened.
+    // It is the hand-off point between delivery and the returns module, which
+    // stamps RETURN_REQUESTED once an actual return record exists.
+    case READY_TO_RETURN = 'READY_TO_RETURN';
     case RETURN_REQUESTED = 'RETURN_REQUESTED';
     case RETURN_IN_PROGRESS = 'RETURN_IN_PROGRESS';
     case RETURNED = 'RETURNED';
@@ -57,7 +64,7 @@ enum OrderStatus: string
             self::DELIVERED => 'success',
             self::FAILED, self::REJECTED => 'danger',
             self::CANCELED => 'secondary',
-            self::RETURN_REQUESTED => 'warning',
+            self::READY_TO_RETURN, self::RETURN_REQUESTED => 'warning',
             self::RETURN_IN_PROGRESS => 'info',
             self::RETURNED => 'dark',
         };
@@ -85,6 +92,7 @@ enum OrderStatus: string
             self::FAILED => 'ri-close-circle-line',
             self::REJECTED => 'ri-forbid-line',
             self::CANCELED => 'ri-stop-circle-line',
+            self::READY_TO_RETURN => 'ri-inbox-unarchive-line',
             self::RETURN_REQUESTED => 'ri-arrow-go-back-line',
             self::RETURN_IN_PROGRESS => 'ri-truck-line',
             self::RETURNED => 'ri-arrow-go-back-line',
@@ -114,14 +122,26 @@ enum OrderStatus: string
      * catalog and the runtime check can never disagree.
      *
      * Null means the status is never *chosen*: the return statuses are set by
-     * the returns module as a side effect, and awaiting-preparation is stamped
-     * at creation on any order picked from stock.
+     * the returns module as a side effect, awaiting-preparation is stamped at
+     * creation on any order picked from stock, and FAILED is retired — the
+     * delivery outcome flow routes a dead delivery to READY_TO_RETURN instead.
      */
     public function transitionPermission(): ?string
     {
         return match ($this) {
-            self::RETURN_REQUESTED, self::RETURN_IN_PROGRESS, self::AWAITING_PREPARATION => null,
+            self::RETURN_REQUESTED, self::RETURN_IN_PROGRESS, self::AWAITING_PREPARATION, self::FAILED => null,
             default => 'orders.transition.to_'.strtolower($this->value),
+        };
+    }
+
+    /**
+     * Whether landing on this status must be justified by an OrderFailureReason.
+     */
+    public function carriesFailureReason(): bool
+    {
+        return match ($this) {
+            self::FAILED, self::READY_TO_RETURN => true,
+            default => false,
         };
     }
 
@@ -154,7 +174,7 @@ enum OrderStatus: string
             self::PICKED_UP,
             self::IN_TRANSIT,
             self::OUT_FOR_DELIVERY,
-            self::FAILED,
+            self::READY_TO_RETURN,
         ];
     }
 

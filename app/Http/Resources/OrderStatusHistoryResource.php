@@ -30,6 +30,14 @@ class OrderStatusHistoryResource extends JsonResource
             'status_icon' => $status->icon(),
             'comment' => $this->comment,
             'is_system' => (bool) $this->is_system,
+            'attachment' => $this->attachment_path ? [
+                'name' => $this->attachment_name,
+                'url' => $this->attachmentUrl(),
+                'is_image' => (bool) preg_match(
+                    '/\.(jpe?g|png|gif|webp|heic)$/i',
+                    (string) $this->attachment_path
+                ),
+            ] : null,
             'created_at' => $this->created_at?->toIso8601String(),
             'user' => $this->when(
                 ! $this->is_system && $this->relationLoaded('user') && $this->user,

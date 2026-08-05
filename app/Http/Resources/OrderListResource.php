@@ -42,6 +42,7 @@ class OrderListResource extends JsonResource
         'delivery_included',
         'total_amount',
         'status',
+        'failed_attempts_count',
         'is_fragile',
         'can_be_opened',
         'return_id',
@@ -70,6 +71,8 @@ class OrderListResource extends JsonResource
             'status' => $status->value,
             'status_label' => $status->label(),
             'status_color' => $status->color(),
+            // Warns the driver that the address has already turned him away.
+            'failed_attempts_count' => (int) $this->failed_attempts_count,
 
             'customer' => [
                 'full_name' => $this->customer_full_name,

@@ -198,9 +198,31 @@ return [
         'note_label' => 'Commentaire (optionnel)',
         'note_placeholder' => 'Précisez si nécessaire…',
         'confirm' => 'Confirmer',
+        'outcome_title' => 'Résultat de la livraison',
     ],
     'failure' => [
         'reason_required' => 'Veuillez sélectionner un motif de non-livraison.',
+    ],
+    'delivery_outcome' => [
+        'DELIVERED' => 'Livré',
+        'FAILED' => 'Échec',
+        'title' => 'Résultat de la livraison',
+        'question' => 'Le colis a-t-il été remis au client ?',
+        'not_out_for_delivery' => 'Cette commande n\'est pas en cours de livraison.',
+        'attempt_label' => 'Tentative n° :count',
+        // Formulé pour rester correct à tout nombre : vue-i18n tourne ici en
+        // mode legacy, où `$t` ne choisit pas de forme plurielle.
+        'attempts_badge' => 'Tentatives échouées : :count',
+        'ends_delivery_hint' => 'Ce motif retire le colis de la tournée : la commande passera en « Prête à retourner ».',
+        'retry_hint' => 'La commande reste en cours de livraison ; vous pourrez retenter plus tard.',
+        'attachment_label' => 'Pièce jointe (optionnelle)',
+        'attachment_hint' => 'Photo ou PDF, 5 Mo maximum.',
+        'attachment_remove' => 'Retirer la pièce jointe',
+        'flash' => [
+            'delivered' => 'Commande :tracking livrée.',
+            'ready_to_return' => 'Commande :tracking retirée de la tournée : prête à retourner.',
+            'attempt_recorded' => 'Tentative de livraison enregistrée (:count au total). La commande reste en cours de livraison.',
+        ],
     ],
     'show' => [
         'general' => 'Informations générales',
@@ -285,6 +307,8 @@ return [
         'empty' => 'Aucun historique de suivi.',
         'by' => 'par :name',
         'system' => 'SYSTÈME (Mise à jour automatique)',
+        'attachment' => 'Pièce jointe',
+        'open_attachment' => 'Ouvrir la pièce jointe',
     ],
     'lookups' => [
         'pickup' => 'Ramassage',

@@ -49,9 +49,9 @@ function syncPath() {
 }
 
 /**
- * The stylesheet keys the page bottom padding and the hidden hamburger off this
- * class. It is only set once a usable bar exists: a user whose permissions
- * collapse the bar to a single tab keeps the drawer trigger instead.
+ * The stylesheet keys the page bottom padding off this class. It is only set
+ * once a usable bar exists: a user whose permissions collapse the bar to a
+ * single tab keeps the drawer trigger instead.
  */
 watch(
   () => tabs.value.length > 1,

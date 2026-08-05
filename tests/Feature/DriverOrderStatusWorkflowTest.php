@@ -73,7 +73,7 @@ it('lets an assigned driver move an order out for delivery', function () {
     expect($order->fresh()->status)->toBe(OrderStatus::OUT_FOR_DELIVERY);
 });
 
-it('records the failure reason when an assigned driver marks a delivery as failed', function () {
+it('records the failure reason when an order is taken off the round', function () {
     $seller = workflowUser(Role::SELLER);
     $driver = workflowUser(Role::DRIVER);
     $city = workflowCity();
@@ -83,25 +83,25 @@ it('records the failure reason when an assigned driver marks a delivery as faile
     $this->actingAs($driver)
         ->post(route('orders.bulk-status'), [
             'ids' => [$order->id],
-            'to_status' => OrderStatus::FAILED->value,
-            'failure_reason' => OrderFailureReason::CUSTOMER_UNREACHABLE->value,
-            'failure_note' => 'Phone off after three attempts.',
+            'to_status' => OrderStatus::READY_TO_RETURN->value,
+            'failure_reason' => OrderFailureReason::CUSTOMER_REFUSED->value,
+            'failure_note' => 'Refused at the door.',
         ])
         ->assertRedirect();
 
     $order->refresh();
 
-    expect($order->status)->toBe(OrderStatus::FAILED)
-        ->and($order->failure_reason)->toBe(OrderFailureReason::CUSTOMER_UNREACHABLE)
-        ->and($order->failure_note)->toBe('Phone off after three attempts.')
+    expect($order->status)->toBe(OrderStatus::READY_TO_RETURN)
+        ->and($order->failure_reason)->toBe(OrderFailureReason::CUSTOMER_REFUSED)
+        ->and($order->failure_note)->toBe('Refused at the door.')
         ->and($order->failed_at)->not->toBeNull();
 
     // The reason must reach the tracking timeline, which only renders comments.
     expect($order->statusHistories()->latest('id')->first()->comment)
-        ->toContain(OrderFailureReason::CUSTOMER_UNREACHABLE->label());
+        ->toContain(OrderFailureReason::CUSTOMER_REFUSED->label());
 });
 
-it('rejects a failed delivery submitted without a reason', function () {
+it('rejects a return-ready transition submitted without a reason', function () {
     $seller = workflowUser(Role::SELLER);
     $driver = workflowUser(Role::DRIVER);
     $city = workflowCity();
@@ -111,9 +111,26 @@ it('rejects a failed delivery submitted without a reason', function () {
     $this->actingAs($driver)
         ->post(route('orders.bulk-status'), [
             'ids' => [$order->id],
-            'to_status' => OrderStatus::FAILED->value,
+            'to_status' => OrderStatus::READY_TO_RETURN->value,
         ])
         ->assertSessionHasErrors('failure_reason');
+
+    expect($order->fresh()->status)->toBe(OrderStatus::OUT_FOR_DELIVERY);
+});
+
+it('refuses to move an order into the retired failed status', function () {
+    $seller = workflowUser(Role::SELLER);
+    $driver = workflowUser(Role::DRIVER);
+    $city = workflowCity();
+
+    $order = workflowOrder($seller, $city, OrderStatus::OUT_FOR_DELIVERY, $driver);
+
+    $this->actingAs($driver)
+        ->postJson(route('api.orders.transition', $order), [
+            'to_status' => OrderStatus::FAILED->value,
+            'failure_reason' => OrderFailureReason::CUSTOMER_ABSENT->value,
+        ])
+        ->assertStatus(422);
 
     expect($order->fresh()->status)->toBe(OrderStatus::OUT_FOR_DELIVERY);
 });

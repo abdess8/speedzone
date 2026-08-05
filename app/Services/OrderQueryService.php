@@ -46,6 +46,7 @@ class OrderQueryService
         'failed' => [
             OrderStatus::FAILED,
             OrderStatus::REJECTED,
+            OrderStatus::READY_TO_RETURN,
         ],
         'delivered' => [
             OrderStatus::DELIVERED,

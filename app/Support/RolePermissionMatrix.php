@@ -86,6 +86,7 @@ class RolePermissionMatrix
             'orders.transition.to_out_for_delivery',
             'orders.transition.to_delivered',
             'orders.transition.to_failed',
+            'orders.transition.to_ready_to_return',
             'orders.transition.to_rejected',
             'orders.transition.to_canceled',
             'partners.read',
@@ -141,6 +142,10 @@ class RolePermissionMatrix
             'orders.transition.to_out_for_delivery',
             'orders.transition.to_delivered',
             'orders.transition.to_failed',
+            // Taking a refused or cancelled parcel off the round. Every other
+            // non-delivery leaves the order out for delivery and needs no grant
+            // beyond `orders.update.assigned`.
+            'orders.transition.to_ready_to_return',
             'returns.create',
             // The hand-back leg only: signing a parcel into a hub belongs to
             // the hub manager, not to the driver who dropped it there.

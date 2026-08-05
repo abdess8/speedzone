@@ -19,6 +19,11 @@ const props = defineProps({
   canUpdateStatus: { type: Boolean, default: false },
   /** Transitions available from this order's current status. */
   transitions: { type: Array, default: () => [] },
+  /**
+   * Whether the parcel is on the round, in which case the button opens the
+   * delivery outcome sheet instead of the status picker.
+   */
+  reportsOutcome: { type: Boolean, default: false },
   /** Whether a return may be initiated from this order's current status. */
   canCreateReturn: { type: Boolean, default: false },
 });
@@ -29,7 +34,12 @@ const { t } = useI18n();
 
 const customer = computed(() => props.order.customer ?? {});
 
-const hasStatusActions = computed(() => props.canUpdateStatus && props.transitions.length > 0);
+const hasStatusActions = computed(
+  () => props.canUpdateStatus && (props.reportsOutcome || props.transitions.length > 0)
+);
+
+/** Previous rounds that came back empty-handed, so the driver knows to expect trouble. */
+const attempts = computed(() => props.order.failed_attempts_count ?? 0);
 
 /**
  * Cash the driver has to bring back.
@@ -85,12 +95,15 @@ const whatsAppLink = computed(() =>
             <template v-if="order.sector"> · {{ order.sector.name }}</template>
           </div>
         </div>
-        <span
-          class="badge flex-shrink-0"
-          :class="`bg-${order.status_color}-subtle text-${order.status_color}`"
-        >
-          {{ order.status_label }}
-        </span>
+        <div class="text-end flex-shrink-0">
+          <span class="badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
+            {{ order.status_label }}
+          </span>
+          <div v-if="attempts > 0" class="badge bg-warning-subtle text-warning mt-1">
+            <i class="ri-history-line align-bottom me-1"></i>
+            {{ $t('orders.delivery_outcome.attempts_badge', { count: attempts }) }}
+          </div>
+        </div>
       </div>
 
       <hr class="my-3" />
@@ -168,7 +181,8 @@ const whatsAppLink = computed(() =>
         class="btn btn-primary w-100 mt-2 driver-card-action"
         @click="emit('change-status', order)"
       >
-        <i class="ri-refresh-line align-bottom me-1"></i>{{ $t('orders.driver.update_status') }}
+        <i class="ri-refresh-line align-bottom me-1"></i>
+        {{ reportsOutcome ? $t('orders.driver.outcome_title') : $t('orders.driver.update_status') }}
       </button>
 
       <button

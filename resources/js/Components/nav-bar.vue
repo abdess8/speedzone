@@ -28,6 +28,7 @@ const setLanguage = (locale) => {
 
 const user = computed(() => page.props.auth?.user ?? null);
 const roleLabel = computed(() => user.value?.role_label ?? '');
+const completion = computed(() => user.value?.profile_completion ?? null);
 </script>
 
 <script>
@@ -223,6 +224,27 @@ export default {
             </template>
 
             <h6 class="dropdown-header">{{ $t('navbar.welcome', { name: user?.name ?? '' }) }}</h6>
+
+            <!-- Not a dropdown-item: the gauge is a read-out, and making it look
+                 clickable would promise a destination it does not have. -->
+            <div v-if="completion" class="px-3 py-2">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="fs-12 text-muted">{{ $t('profile.completion.title') }}</span>
+                <span class="fs-12 fw-semibold" :class="`text-${completion.level}`">{{ completion.score }}%</span>
+              </div>
+              <BProgress :max="100" style="height: 6px">
+                <BProgressBar :value="completion.score" :variant="completion.level" />
+              </BProgress>
+              <Link
+                v-if="!completion.is_complete"
+                :href="route('profile.show')"
+                class="d-inline-block mt-2 fs-12 text-primary text-decoration-underline"
+              >
+                {{ $t('profile.completion.improve') }}
+              </Link>
+            </div>
+
+            <div v-if="completion" class="dropdown-divider"></div>
 
             <Link class="dropdown-item" :href="route('profile.show')">
               <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>

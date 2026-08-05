@@ -12,6 +12,7 @@ use App\Support\StoreContext;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -52,6 +53,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+
+        // One policy for every password the platform accepts, whether it is
+        // typed on the seller registration form or by an admin creating a
+        // staff account.
+        Password::defaults(fn () => Password::min(8)->mixedCase()->numbers());
 
         Order::observe(OrderObserver::class);
 

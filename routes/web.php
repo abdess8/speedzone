@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\AccountEmailController;
 use App\Http\Controllers\ActiveStoreController;
 use App\Http\Controllers\Admin\PendingUserController;
 use App\Http\Controllers\AlertController;
 use App\Http\Controllers\AlertDismissalController;
 use App\Http\Controllers\ApiIntegrationController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\DriverFinanceController;
 use App\Http\Controllers\DriverInvoiceController;
@@ -35,6 +37,7 @@ use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\SellerDashboardController;
+use App\Http\Controllers\SellerProfileController;
 use App\Http\Controllers\StockInventoryController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\StockReceptionController;
@@ -72,9 +75,26 @@ Route::get('/tracking/{trackingNumber}', [LandingController::class, 'track'])
 
 Route::get('/verify-email', fn () => redirect()->route('verification.notice'))->name('verify-email');
 
+// Social sign-in. Guest-only: an authenticated visitor has nothing to gain from
+// walking through Google's consent screen again.
+Route::middleware('guest')->group(function () {
+    Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])
+        ->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])
+        ->name('auth.google.callback');
+});
+
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
     Route::get('/account/pending-approval', [PendingApprovalController::class, 'show'])
         ->name('account.pending-approval');
+});
+
+// The single thing an account still waiting on the platform may change about
+// itself. Deliberately outside the `verified` and `account.active` guards: a
+// typo in the address is exactly what locks these users out.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session')])->group(function () {
+    Route::put('/account/email', [AccountEmailController::class, 'update'])
+        ->name('account.email.update');
 });
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'account.active'])->group(function () {
@@ -82,6 +102,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('/dashboard/seller', [SellerDashboardController::class, 'index'])
         ->middleware('permission:dashboard.view')
         ->name('dashboard.seller');
+
+    // Identity, pickup and banking details a vendor maintains himself; they
+    // feed the profile completion score.
+    Route::put('user/seller-profile', [SellerProfileController::class, 'update'])
+        ->name('user-seller-profile.update');
+    Route::delete('user/seller-profile/documents/{document}', [SellerProfileController::class, 'destroyDocument'])
+        ->name('user-seller-profile.documents.destroy');
 
     Route::prefix('admin')->name('admin.')->middleware('permission:users.read')->group(function () {
         Route::get('pending-users', [PendingUserController::class, 'index'])->name('pending-users.index');

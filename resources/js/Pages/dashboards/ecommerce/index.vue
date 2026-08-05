@@ -2,6 +2,7 @@
 import { computed, ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Layout from '@/Layouts/main.vue';
+import ProfileScoreCard from '@/Components/ProfileScoreCard.vue';
 import DesktopDashboard from '@/Components/Dashboard/desktop/DesktopDashboard.vue';
 import MobileDashboard from '@/Components/Dashboard/mobile/MobileDashboard.vue';
 import { useIsMobile } from '@/composables/useMediaQuery';
@@ -115,6 +116,8 @@ onMounted(loadDashboard);
 
 <template>
   <Layout>
+    <ProfileScoreCard />
+
     <MobileDashboard
       v-if="isMobile"
       v-model:period="period"

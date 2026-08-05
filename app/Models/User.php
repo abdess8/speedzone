@@ -7,6 +7,7 @@ use App\Enums\ReturnStatus;
 use App\Enums\SellerPaymentMethod;
 use App\Enums\UserStatus;
 use App\Notifications\VerifySpeedZoneAccountEmail;
+use App\Support\ProfileCompletion;
 use App\Support\StoreContext;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -44,6 +45,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'first_name',
         'last_name',
         'email',
+        'google_id',
         'locale',
         'password',
         'city_id',
@@ -553,6 +555,17 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isSeller(): bool
     {
         return isset($this->roleNameMap()[Role::SELLER]) || $this->isTeamMember();
+    }
+
+    /**
+     * How complete the seller profile is, as a score out of 100 plus the list
+     * of what is still missing.
+     *
+     * @return array<string, mixed>
+     */
+    public function profileCompletion(): array
+    {
+        return ProfileCompletion::forUser($this);
     }
 
     /**

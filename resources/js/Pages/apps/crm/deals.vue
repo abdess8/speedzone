@@ -844,7 +844,7 @@ export default {
                         </BCardBody>
                         <BCollapse class="border-top border-top-dashed" id="needsIdentified4">
                             <BCardBody>
-                                <h6 class="fs-14 mb-1">Themesbrand <BBadge tag="small" variant="danger-subtle"
+                                <h6 class="fs-14 mb-1">SpeedZone Express <BBadge tag="small" variant="danger-subtle"
                                         class="bg-danger-subtle text-danger">3
                                         Month</BBadge></h6>
                                 <p class="text-muted">As a company grows however, you find it's not as easy to shout
@@ -901,14 +901,14 @@ export default {
                                     <img src="@assets/images/users/avatar-2.jpg" alt="" class="avatar-xs rounded-circle" />
                                 </div>
                                 <div class="flex-grow-1 ms-3">
-                                    <h6 class="fs-14 mb-1">Velzon - Admin Dashboard</h6>
+                                    <h6 class="fs-14 mb-1">SpeedZone Express - Admin Dashboard</h6>
                                     <p class="text-muted mb-0">$126.7k - 30 Dec, 2021</p>
                                 </div>
                             </BLink>
                         </BCardBody>
                         <BCollapse class="border-top border-top-dashed" id="needsIdentified5">
                             <BCardBody>
-                                <h6 class="fs-14 mb-1">Themesbrand <BBadge tag="small" variant="danger-subtle"
+                                <h6 class="fs-14 mb-1">SpeedZone Express <BBadge tag="small" variant="danger-subtle"
                                         class="bg-danger-subtle text-danger">3 Days</BBadge>
                                 </h6>
                                 <p class="text-muted">As a company grows however, you find it's not as easy to shout

@@ -26,7 +26,7 @@ export default {
                                     <li>
                                         <ul class="director">
                                             <li>
-                                                <BLink href="javascript:void(0);" class="fw-semibold"><span>Velzon
+                                                <BLink href="javascript:void(0);" class="fw-semibold"><span>SpeedZone Express
                                                         Admin</span></BLink>
                                                 <ul class="subdirector">
                                                     <li>
@@ -372,7 +372,7 @@ export default {
                                 <div class="verti-sitemap">
                                     <ul class="list-unstyled mb-0">
                                         <li class="p-0 parent-title">
-                                            <BLink href="javascript: void(0);" class="fw-medium fs-14">Velzon</BLink>
+                                            <BLink href="javascript: void(0);" class="fw-medium fs-14">SpeedZone Express</BLink>
                                         </li>
                                         <li>
                                             <div class="first-list">

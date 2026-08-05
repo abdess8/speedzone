@@ -1,0 +1,274 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\ReturnInitiatedByRole;
+use App\Enums\ReturnStatus;
+use App\Enums\TransferStatus;
+use App\Models\Concerns\BelongsToStore;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class OrderReturn extends Model
+{
+    use BelongsToStore;
+    use HasFactory;
+
+    protected $table = 'returns';
+
+    protected $fillable = [
+        'reference',
+        'order_id',
+        'store_id',
+        'created_by',
+        'assigned_to',
+        'assigned_at',
+        'initiated_by_role',
+        'reason',
+        'status',
+        'current_location_city_id',
+        'return_address',
+        'return_notes',
+        'updated_customer_name',
+        'updated_customer_phone',
+        'updated_address',
+        'updated_city_id',
+    ];
+
+    protected $casts = [
+        'status' => ReturnStatus::class,
+        'initiated_by_role' => ReturnInitiatedByRole::class,
+        'assigned_at' => 'datetime',
+    ];
+
+    protected static function booted(): void
+    {
+        // A return is almost always opened by a driver or by back-office staff,
+        // neither of whom stands on a store, so BelongsToStore has nothing to
+        // copy. The store is inherited from the order being reversed instead.
+        static::creating(function (self $return): void {
+            if ($return->store_id === null && $return->order_id !== null) {
+                $return->store_id = Order::acrossStores()
+                    ->whereKey($return->order_id)
+                    ->value('store_id');
+            }
+        });
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->createdBy();
+    }
+
+    /**
+     * The driver carrying the parcel on the last leg, back to the seller.
+     */
+    public function assignedDriver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function currentLocationCity(): BelongsTo
+    {
+        return $this->belongsTo(City::class, 'current_location_city_id');
+    }
+
+    public function updatedCity(): BelongsTo
+    {
+        return $this->belongsTo(City::class, 'updated_city_id');
+    }
+
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(ReturnStatusHistory::class, 'return_id')->orderBy('created_at')->orderBy('id');
+    }
+
+    public function recordStatus(
+        ReturnStatus|string $newStatus,
+        ?User $actor = null,
+        ?string $oldStatus = null,
+        ?string $comment = null
+    ): ReturnStatusHistory {
+        $new = $newStatus instanceof ReturnStatus ? $newStatus->value : $newStatus;
+
+        return $this->statusHistories()->create([
+            'old_status' => $oldStatus,
+            'new_status' => $new,
+            'changed_by' => $actor?->id,
+            'comment' => $comment,
+        ]);
+    }
+
+    public function scanUrl(): string
+    {
+        $base = rtrim((string) config('returns.tracking_base_url', config('app.url')), '/');
+
+        return $base.'/returns/'.$this->reference;
+    }
+
+    public function canEditCustomerData(): bool
+    {
+        $status = $this->status instanceof ReturnStatus ? $this->status : ReturnStatus::from($this->status);
+
+        return $status->allowsCustomerDataEdit();
+    }
+
+    public function isTerminal(): bool
+    {
+        $status = $this->status instanceof ReturnStatus ? $this->status : ReturnStatus::from($this->status);
+
+        return $status->isTerminal();
+    }
+
+    /**
+     * The city the parcel has to end up in: the seller's own.
+     */
+    public function vendorCityId(): ?int
+    {
+        $cityId = $this->order?->seller?->city_id;
+
+        return $cityId === null ? null : (int) $cityId;
+    }
+
+    /**
+     * City the hand-back happens in: where the parcel physically sits, falling
+     * back to the seller's own city while no leg has stamped a location yet.
+     */
+    public function handBackCityId(): ?int
+    {
+        $cityId = $this->current_location_city_id ?? $this->vendorCityId() ?? $this->order?->city_id;
+
+        return $cityId === null ? null : (int) $cityId;
+    }
+
+    /**
+     * Whether the parcel already sits in the seller's city, which is what makes
+     * the inter-city leg pointless: a return refused three streets away from the
+     * shop it came from has nothing to transfer.
+     */
+    public function isAtVendorCity(): bool
+    {
+        $vendorCityId = $this->vendorCityId();
+
+        return $vendorCityId !== null
+            && $this->current_location_city_id !== null
+            && (int) $this->current_location_city_id === $vendorCityId;
+    }
+
+    /**
+     * Effective customer name for return processing (override or original order).
+     */
+    public function effectiveCustomerName(): string
+    {
+        if ($this->updated_customer_name) {
+            return $this->updated_customer_name;
+        }
+
+        return $this->order?->customer_full_name ?? '';
+    }
+
+    /**
+     * Effective customer phone for return processing.
+     */
+    public function effectiveCustomerPhone(): ?string
+    {
+        return $this->updated_customer_phone ?? $this->order?->customer_phone;
+    }
+
+    /**
+     * Effective return address for processing.
+     */
+    public function effectiveAddress(): ?string
+    {
+        return $this->updated_address ?? $this->return_address ?? $this->order?->customer_address;
+    }
+
+    /**
+     * Effective city for return processing.
+     */
+    public function effectiveCityId(): ?int
+    {
+        return $this->updated_city_id ?? $this->current_location_city_id ?? $this->order?->city_id;
+    }
+
+    public function scopeOwnedBySeller(Builder $query, int $sellerId): Builder
+    {
+        return $query->whereHas('order', fn (Builder $q) => $q->where('seller_id', $sellerId));
+    }
+
+    public function transfers(): BelongsToMany
+    {
+        return $this->belongsToMany(Transfer::class, 'transfer_returns', 'return_id', 'transfer_id')
+            ->withPivot('created_at');
+    }
+
+    /**
+     * Returns ready to ride an inter-city transfer back to their seller.
+     *
+     * The parcel travels the delivery leg in reverse, so the manifest's origin
+     * is the hub currently holding it and its destination is the seller's own
+     * city — the mirror image of {@see Order::scopeEligibleForTransfer()}.
+     */
+    public function scopeEligibleForTransfer(Builder $query, ?int $fromCityId = null, ?int $toCityId = null): Builder
+    {
+        $query->where('status', ReturnStatus::RECEIVED_AT_HUB->value)
+            ->whereDoesntHave('transfers', fn (Builder $q) => $q->where(
+                'transfers.status',
+                '!=',
+                TransferStatus::CANCELLED->value
+            ))
+            ->whereHas('order.seller', fn (Builder $q) => $q->whereNotNull('city_id'));
+
+        if ($fromCityId) {
+            $query->where('current_location_city_id', $fromCityId);
+        }
+
+        if ($toCityId) {
+            $query->whereHas('order.seller', fn (Builder $q) => $q->where('city_id', $toCityId));
+        }
+
+        return $query;
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->whereNotIn('status', [
+            ReturnStatus::DELIVERED_TO_VENDOR->value,
+            ReturnStatus::CANCELLED->value,
+        ]);
+    }
+
+    /**
+     * Parcels parked at the seller's hub, waiting for a driver to take them the
+     * last mile. This is what the bulk hand-back screen scans against.
+     */
+    public function scopeAwaitingHandBack(Builder $query, ?int $cityId = null): Builder
+    {
+        $query->where('status', ReturnStatus::ARRIVED_VENDOR_HUB->value);
+
+        if ($cityId) {
+            $query->where('current_location_city_id', $cityId);
+        }
+
+        return $query;
+    }
+
+    public function scopeAssignedTo(Builder $query, int $driverId): Builder
+    {
+        return $query->where('assigned_to', $driverId);
+    }
+}

@@ -17,6 +17,11 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
      */
     public function update(User $user, array $input): void
     {
+        // Fortify's own routes carry no account-status guard, so the rule that
+        // an unapproved account may only change its email address (through
+        // AccountEmailController) is enforced here rather than on the route.
+        abort_unless($user->isAccountActive(), 403);
+
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],

@@ -162,7 +162,7 @@ export default {
                                     <div class="p-lg-5 p-4">
                                         <div>
                                             <h5 class="text-primary">Register Account</h5>
-                                            <p class="text-muted">Get your Free Velzon account now.</p>
+                                            <p class="text-muted">Get your Free SpeedZone Express account now.</p>
                                         </div>
 
                                         <div class="mt-4">
@@ -196,7 +196,7 @@ export default {
 
                                                 <div class="mb-4">
                                                     <p class="mb-0 fs-12 text-muted fst-italic">By registering you agree
-                                                        to the Velzon <BLink href="#" class="text-primary text-decoration-underline fst-normal fw-medium">
+                                                        to the SpeedZone Express <BLink href="#" class="text-primary text-decoration-underline fst-normal fw-medium">
                                                             Terms
                                                             of Use</BLink>
                                                     </p>
@@ -259,7 +259,7 @@ export default {
                 <BRow>
                     <BCol lg="12">
                         <div class="text-center">
-                            <p class="mb-0">&copy; {{ new Date().getFullYear() }} Velzon. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand</p>
+                            <p class="mb-0">&copy; {{ new Date().getFullYear() }} SpeedZone Express. Crafted with <i class="mdi mdi-heart text-danger"></i> by SpeedZone Express</p>
                         </div>
                     </BCol>
                 </BRow>

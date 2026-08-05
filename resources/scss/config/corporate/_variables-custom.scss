@@ -2,6 +2,10 @@
 // custom-variables
 //
 
+// Global UI scale, applied once as a root `zoom` in custom.scss. Below 1 the
+// whole interface gets denser without any component knowing about it.
+$ui-scale:                                        0.9;
+
 // Vertical menu
 $vertical-menu-width:                             250px;
 $vertical-menu-width-md:                          180px;
@@ -19,32 +23,32 @@ $vertical-menu-sub-item-padding-x:                1.5rem;
 $vertical-menu-sub-item-padding-y:                0.55rem;
 
 // Light Menu
-$vertical-menu-bg:                                $white;
-$vertical-menu-border:                            $white;
-$vertical-menu-item-color:                        darken($gray-600, 10%);
-$vertical-menu-item-bg:                           rgba($primary, .15);
-$vertical-menu-item-hover-color:                  $primary;
-$vertical-menu-item-active-color:                 $primary;
-$vertical-menu-item-active-bg:                    rgba($primary, .15);
-$vertical-menu-sub-item-color:                    darken($gray-600, 4%);
-$vertical-menu-sub-item-hover-color:              $primary;
-$vertical-menu-sub-item-active-color:             $primary;
-$vertical-menu-title-color:                       #919da9;
-$vertical-menu-box-shadow:                        0 2px 4px rgba(15,34,58,0.12);
-$vertical-menu-dropdown-box-shadow:               0 2px 4px rgba(15, 34, 58, 0.12);
+$vertical-menu-bg:                                $primary;
+$vertical-menu-border:                            $primary;
+$vertical-menu-item-color:                        rgba($white, 0.9);
+$vertical-menu-item-bg:                           rgba($secondary, 0.15);
+$vertical-menu-item-hover-color:                  $white;
+$vertical-menu-item-active-color:                 $white;
+$vertical-menu-item-active-bg:                    $secondary;
+$vertical-menu-sub-item-color:                    rgba($white, 0.85);
+$vertical-menu-sub-item-hover-color:              $white;
+$vertical-menu-sub-item-active-color:             $secondary;
+$vertical-menu-title-color:                       rgba($white, 0.72);
+$vertical-menu-box-shadow:                        0 10px 30px rgba(13, 74, 157, 0.25);
+$vertical-menu-dropdown-box-shadow:               0 12px 30px rgba(13, 74, 157, 0.2);
 
 //sidebar dark 
-$dark-vertical-menu-bg:                           shade-color($primary, 60%);
-$dark-vertical-menu-border:                       shade-color($primary, 60%);
-$dark-vertical-menu-item-color:                   #abb9e8;
-$dark-vertical-menu-item-bg:                      rgba($white, .15);
+$dark-vertical-menu-bg:                           $primary;
+$dark-vertical-menu-border:                       $primary;
+$dark-vertical-menu-item-color:                   rgba($white, 0.9);
+$dark-vertical-menu-item-bg:                      rgba($secondary, 0.2);
 $dark-vertical-menu-item-hover-color:             $white;
 $dark-vertical-menu-item-active-color:            $white;
-$dark-vertical-menu-item-active-bg:               rgba($white, .15);
-$dark-vertical-menu-sub-item-color:               #abb9e8;
+$dark-vertical-menu-item-active-bg:               $secondary;
+$dark-vertical-menu-sub-item-color:               rgba($white, 0.85);
 $dark-vertical-menu-sub-item-hover-color:         $white;
-$dark-vertical-menu-sub-item-active-color:        $white;
-$dark-vertical-menu-title-color:                  #838fb9;
+$dark-vertical-menu-sub-item-active-color:        $secondary;
+$dark-vertical-menu-title-color:                  rgba($white, 0.72);
 $dark-vertical-menu-box-shadow:                   0 2px 4px rgba(15,34,58,0.12);
 $dark-vertical-menu-dropdown-box-shadow:          0 2px 4px rgba(15,34,58,0.12);
 $dark-twocolumn-menu-iconview-bg:                 darken($dark-vertical-menu-bg, 2%);
@@ -63,31 +67,31 @@ $vertical-menu-box-shadow-gradient:               0 2px 4px rgba(15,34,58,0.12);
 $vertical-menu-dropdown-box-shadow-gradient:      0 2px 4px rgba(15,34,58,0.12);
 
 //gradient one
-$vertical-menu-bg-gradient:                       linear-gradient(to right, $purple-900, $purple-800);
-$vertical-menu-border-gradient:                   $purple-800;
-$twocolumn-menu-iconview-bg-gradient:             $purple-900;
+$vertical-menu-bg-gradient:                       linear-gradient(180deg, shade-color($primary, 4%), $primary);
+$vertical-menu-border-gradient:                   $primary;
+$twocolumn-menu-iconview-bg-gradient:             $primary;
 
 //gradient-2
-$vertical-menu-bg-gradient-2:                     linear-gradient(to right, $cyan-900, $cyan-800);
-$vertical-menu-border-gradient-2:                 $cyan-800;
-$twocolumn-menu-iconview-bg-gradient-2:           $cyan-900;
+$vertical-menu-bg-gradient-2:                     linear-gradient(180deg, shade-color($primary, 10%), shade-color($primary, 4%));
+$vertical-menu-border-gradient-2:                 shade-color($primary, 4%);
+$twocolumn-menu-iconview-bg-gradient-2:           shade-color($primary, 10%);
 
 //gradient-3
-$vertical-menu-bg-gradient-3:                     linear-gradient(to right, $green-900, $green-800);
-$vertical-menu-border-gradient-3:                 $green-800;
-$twocolumn-menu-iconview-bg-gradient-3:           $green-900;
+$vertical-menu-bg-gradient-3:                     linear-gradient(180deg, shade-color($primary, 5%), shade-color($primary, 14%));
+$vertical-menu-border-gradient-3:                 shade-color($primary, 14%);
+$twocolumn-menu-iconview-bg-gradient-3:           shade-color($primary, 14%);
 
 //gradient-4
-$vertical-menu-bg-gradient-4:                     linear-gradient(to right, $orange-900, $orange-800);
-$vertical-menu-border-gradient-4:                 $orange-800;
-$twocolumn-menu-iconview-bg-gradient-4:           $orange-900;
+$vertical-menu-bg-gradient-4:                     linear-gradient(180deg, $primary, shade-color($primary, 8%));
+$vertical-menu-border-gradient-4:                 shade-color($primary, 8%);
+$twocolumn-menu-iconview-bg-gradient-4:           shade-color($primary, 8%);
 
 // Topbar - (Default Light)
 $header-height:                                   70px;
 $header-bg:                                       $white;
 $header-border:                                   $border-color;
 $header-item-color:                               $gray-700;
-$header-item-bg:                                  rgba($secondary, .12);
+$header-item-bg:                                  rgba($primary, .1);
 $header-item-sub-color:                           #878a99;  
 $topbar-user-bg:                                  #f3f3f9;
 $topbar-search-bg:                                #f3f3f9;
@@ -101,9 +105,9 @@ $page-title-border:                               none;
 $dark-header-bg:                                  $primary;
 $dark-header-border:                              $primary;
 $dark-header-item-color:                          rgba($white, .85);
-$dark-header-item-bg:                             #6275f5;
-$dark-header-item-sub-color:                      #c2d3e5; 
-$dark-topbar-user-bg:                             #5e72f1;
+$dark-header-item-bg:                             rgba($secondary, 0.35);
+$dark-header-item-sub-color:                      rgba($white, 0.72);
+$dark-topbar-user-bg:                             rgba($secondary, 0.2);
 $dark-topbar-search-bg:                           rgba($white, .05);
 $dark-topbar-search-color:                        $white;
 
@@ -148,7 +152,7 @@ $chat-secondary-color:                            var(--#{$prefix}success);
 $timeline-color:                                  var(--#{$prefix}secondary-bg);     
 
 //auth pages
-$auth-bg-cover:                                   linear-gradient(-45deg, $primary 50%, $success);
+$auth-bg-cover:                                   linear-gradient(135deg, $primary 0%, shade-color($primary, 14%) 60%, $secondary 100%);
 
 $input-bg-custom:                                 $body-secondary-bg;
 $input-border-custom:                             $border-color-translucent;

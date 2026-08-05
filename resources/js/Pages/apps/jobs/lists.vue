@@ -313,7 +313,7 @@ export default {
               <h5 class="view-title">Product Designer</h5>
               <div class="hstack gap-3 mb-3">
                 <span class="text-muted"><i class="ri-building-line me-1 align-bottom"></i> <span
-                    class="view-companyname">Themesbrand</span></span>
+                    class="view-companyname">SpeedZone Express</span></span>
                 <span class="text-muted"><i class="ri-map-pin-2-line me-1 align-bottom"></i> <span
                     class="view-location">United Kingdom</span></span>
               </div>

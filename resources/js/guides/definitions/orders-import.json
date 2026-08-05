@@ -1,0 +1,53 @@
+{
+  "key": "orders-import",
+  "route": "orders.import",
+  "steps": [
+    {
+      "id": "welcome",
+      "kind": "welcome"
+    },
+    {
+      "id": "template",
+      "target": "[data-guide=\"import-template\"]",
+      "placement": "left",
+      "padding": 10
+    },
+    {
+      "id": "dropzone",
+      "target": "[data-guide=\"import-dropzone\"]",
+      "placement": "right",
+      "padding": 6,
+      "require": { "signal": "orders.import.file_ready" },
+      "autoAdvance": true
+    },
+    {
+      "id": "mapping",
+      "target": "[data-guide=\"import-mapping\"]",
+      "pendingTarget": "[data-guide=\"wizard-next\"]",
+      "placement": "top",
+      "require": { "signal": "orders.import.step", "equals": 2 },
+      "autoAdvance": true
+    },
+    {
+      "id": "review",
+      "target": "[data-guide=\"import-review\"]",
+      "pendingTarget": "[data-guide=\"wizard-next\"]",
+      "placement": "top",
+      "require": { "signal": "orders.import.step", "equals": 3 },
+      "autoAdvance": true
+    },
+    {
+      "id": "save",
+      "target": "[data-guide=\"import-save\"]",
+      "placement": "top",
+      "padding": 10,
+      "require": { "signal": "orders.import.saved" },
+      "autoAdvance": true
+    },
+    {
+      "id": "done",
+      "kind": "finish",
+      "cta": { "route": "orders.index" }
+    }
+  ]
+}

@@ -103,25 +103,25 @@ const disableTwoFactorAuthentication = () => {
 <template>
     <BCard no-body>
         <BCardHeader>
-            <BCardTitle>Two Factor Authentication</BCardTitle>
-            <p class="text-muted mb-0">Add additional security to your account using two factor authentication.</p>
+            <BCardTitle>{{ $t('profile.two_factor.title') }}</BCardTitle>
+            <p class="text-muted mb-0">{{ $t('profile.two_factor.description') }}</p>
         </BCardHeader>
         <BCardBody class="p-4">
             <h5 v-if="twoFactorEnabled && !confirming">
-                You have enabled two factor authentication.
+                {{ $t('profile.two_factor.enabled') }}
             </h5>
 
             <h5 v-else-if="twoFactorEnabled && confirming">
-                Finish enabling two factor authentication.
+                {{ $t('profile.two_factor.finish_enabling') }}
             </h5>
 
             <h5 v-else>
-                You have not enabled two factor authentication.
+                {{ $t('profile.two_factor.not_enabled') }}
             </h5>
 
             <div class="mt-3 text-muted text-sm">
                 <p>
-                    When two factor authentication is enabled, you will be prompted for a secure, random token during authentication. You may retrieve this token from your phone's Google Authenticator application.
+                    {{ $t('profile.two_factor.not_enabled_hint') }}
                 </p>
             </div>
 
@@ -129,11 +129,11 @@ const disableTwoFactorAuthentication = () => {
                 <div v-if="qrCode">
                     <div class="mt-3 max-w-xl text-sm text-gray-600">
                         <p v-if="confirming" class="text-muted">
-                            To finish enabling two factor authentication, scan the following QR code using your phone's authenticator application or enter the setup key and provide the generated OTP code.
+                            {{ $t('profile.two_factor.qr_instructions_confirm') }}
                         </p>
 
                         <p v-else>
-                            Two factor authentication is now enabled. Scan the following QR code using your phone's authenticator application or enter the setup key.
+                            {{ $t('profile.two_factor.qr_instructions') }}
                         </p>
                     </div>
 
@@ -141,12 +141,12 @@ const disableTwoFactorAuthentication = () => {
 
                     <div v-if="setupKey" class="mt-3 text-muted">
                         <p class="fw-semibold">
-                            Setup Key: <span v-html="setupKey"></span>
+                            {{ $t('profile.two_factor.setup_key') }}: <span v-html="setupKey"></span>
                         </p>
                     </div>
 
                     <div v-if="confirming" class="mt-3">
-                        <InputLabel for="code" value="Code" />
+                        <InputLabel for="code" :value="$t('profile.two_factor.code')" />
 
                         <TextInput id="code" v-model="confirmationForm.code" type="text" name="code" inputmode="numeric" autofocus autocomplete="one-time-code" @keyup.enter="confirmTwoFactorAuthentication" :class="{ 'is-invalid': confirmationForm.errors.code }" />
 
@@ -157,7 +157,7 @@ const disableTwoFactorAuthentication = () => {
                 <div v-if="recoveryCodes.length > 0 && !confirming">
                     <div class="mt-3 text-sm text-muted">
                         <p class="fw-semibold">
-                            Store these recovery codes in a secure password manager. They can be used to recover access to your account if your two factor authentication device is lost.
+                            {{ $t('profile.two_factor.recovery_codes_hint') }}
                         </p>
                     </div>
 
@@ -170,29 +170,29 @@ const disableTwoFactorAuthentication = () => {
             <div class="mt-3">
                 <div v-if="!twoFactorEnabled">
                     <ConfirmsPassword @confirmed="enableTwoFactorAuthentication">
-                        <BButton variant="danger w-100" type="button" :class="{ 'opacity-25': enabling }" :disabled="enabling">Enable</BButton>
+                        <BButton variant="danger w-100" type="button" :class="{ 'opacity-25': enabling }" :disabled="enabling">{{ $t('profile.two_factor.enable') }}</BButton>
                     </ConfirmsPassword>
                 </div>
 
                 <div v-else>
                     <ConfirmsPassword @confirmed="confirmTwoFactorAuthentication">
-                        <BButton v-if="confirming" variant="primary" type="button" class="me-1" :class="{ 'opacity-25': enabling }" :disabled="enabling">Confirm</BButton>
+                        <BButton v-if="confirming" variant="primary" type="button" class="me-1" :class="{ 'opacity-25': enabling }" :disabled="enabling">{{ $t('profile.two_factor.confirm') }}</BButton>
                     </ConfirmsPassword>
 
                     <ConfirmsPassword @confirmed="regenerateRecoveryCodes">
-                        <BButton v-if="recoveryCodes.length > 0 && !confirming" variant="primary" type="button" class="me-1">Regenerate Recovery Codes</BButton>
+                        <BButton v-if="recoveryCodes.length > 0 && !confirming" variant="primary" type="button" class="me-1">{{ $t('profile.two_factor.regenerate_recovery_codes') }}</BButton>
                     </ConfirmsPassword>
 
                     <ConfirmsPassword @confirmed="showRecoveryCodes">
-                        <BButton v-if="recoveryCodes.length === 0 && !confirming" variant="primary" class="me-1" type="button">Show Recovery Codes</BButton>
+                        <BButton v-if="recoveryCodes.length === 0 && !confirming" variant="primary" class="me-1" type="button">{{ $t('profile.two_factor.show_recovery_codes') }}</BButton>
                     </ConfirmsPassword>
 
                     <ConfirmsPassword @confirmed="disableTwoFactorAuthentication">
-                        <BButton v-if="confirming" variant="danger" type="button" :class="{ 'opacity-25': disabling }" :disabled="disabling">Cancel</BButton>
+                        <BButton v-if="confirming" variant="danger" type="button" :class="{ 'opacity-25': disabling }" :disabled="disabling">{{ $t('profile.two_factor.cancel') }}</BButton>
                     </ConfirmsPassword>
 
                     <ConfirmsPassword @confirmed="disableTwoFactorAuthentication">
-                        <BButton v-if="!confirming" variant="danger" type="button"  :class="{ 'opacity-25': disabling }" :disabled="disabling">Disable</BButton>
+                        <BButton v-if="!confirming" variant="danger" type="button"  :class="{ 'opacity-25': disabling }" :disabled="disabling">{{ $t('profile.two_factor.disable') }}</BButton>
                     </ConfirmsPassword>
                 </div>
             </div>

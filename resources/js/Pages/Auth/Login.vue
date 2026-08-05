@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import Checkbox from '@/Components/Checkbox.vue';
 import InputError from '@/Components/InputError.vue';
@@ -16,6 +17,8 @@ const form = useForm({
     remember: false,
 });
 
+const togglePassword = ref(false);
+
 const submit = () => {
     form.transform(data => ({
         ...data,
@@ -26,18 +29,8 @@ const submit = () => {
 };
 </script>
 
-<script>
-export default {
-    data() {
-        return {
-            togglePassword: false
-        }
-    }
-}
-</script>
-
 <template>
-    <Head title="Log in" />
+    <Head :title="$t('seller_registration.login.title')" />
 
     <div class="auth-page-wrapper pt-5">
         <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
@@ -57,10 +50,10 @@ export default {
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
                                 <Link href="/" class="d-inline-block auth-logo">
-                                <img src="@assets/images/logo-light.png" alt="" height="20">
+                                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="52">
                                 </Link>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p>
+                            <p class="mt-3 fs-15 fw-medium">{{ $t('seller_registration.login.subtitle') }}</p>
                         </div>
                     </BCol>
                 </BRow>
@@ -71,8 +64,8 @@ export default {
 
                             <BCardBody class="p-4">
                                 <div class="text-center mt-2">
-                                    <h5 class="text-primary">Welcome Back !</h5>
-                                    <p class="text-muted">Sign in to continue to Velzon.</p>
+                                    <h5 class="text-primary">{{ $t('seller_registration.login.heading') }}</h5>
+                                    <p class="text-muted">{{ $t('seller_registration.login.description') }}</p>
                                 </div>
                                 <div v-if="status" class="alert alert-success text-success">
                                     {{ status }}
@@ -81,19 +74,19 @@ export default {
                                     <form @submit.prevent="submit">
 
                                         <div class="mb-3">
-                                            <InputLabel for="email" value="Email" />
-                                            <TextInput id="email" v-model="form.email" type="email" class="form-control" autofocus placeholder="Please enter email" autocomplete="email" required :class="{ 'is-invalid': form.errors.email }" />
+                                            <InputLabel for="email" :value="$t('seller_registration.login.email')" />
+                                            <TextInput id="email" v-model="form.email" type="email" class="form-control" autofocus :placeholder="$t('seller_registration.login.email_placeholder')" autocomplete="email" required :class="{ 'is-invalid': form.errors.email }" />
                                             <InputError :message="form.errors.email" />
                                         </div>
 
                                         <div class="mb-3">
                                             <div class="float-end">
-                                                <Link v-if="canResetPassword" :href="route('password.request')" class="text-muted">Forgot
-                                                password?</Link>
+                                                <Link v-if="canResetPassword" :href="route('password.request')" class="text-muted">
+                                                {{ $t('seller_registration.login.forgot_password') }}</Link>
                                             </div>
-                                            <InputLabel for="password" value="Password" />
+                                            <InputLabel for="password" :value="$t('seller_registration.login.password')" />
                                             <div class="position-relative auth-pass-inputgroup mb-3">
-                                                <input :type="togglePassword ? 'text' : 'password'" class="form-control pe-5" placeholder="Enter password" id="password-input" v-model="form.password" autocomplete="password" required :class="{ 'is-invalid': form.errors.password }">
+                                                <input :type="togglePassword ? 'text' : 'password'" class="form-control pe-5" :placeholder="$t('seller_registration.login.password_placeholder')" id="password-input" v-model="form.password" autocomplete="current-password" required :class="{ 'is-invalid': form.errors.password }">
                                                 <BButton variant="link" class="position-absolute end-0 top-0 text-decoration-none text-muted" type="button" id="password-addon" @click="togglePassword = !togglePassword">
                                                     <i class="ri-eye-fill align-middle"></i>
                                                 </BButton>
@@ -103,24 +96,29 @@ export default {
 
                                         <div class="form-check">
                                             <Checkbox v-model:checked="form.remember" name="remember" class="form-check-input" id="auth-remember-check" />
-                                            <label class="form-check-label" for="auth-remember-check">Remember
-                                                me</label>
+                                            <label class="form-check-label" for="auth-remember-check">{{ $t('seller_registration.login.remember_me') }}</label>
                                         </div>
 
                                         <div class="mt-4">
-                                            <BButton variant="secondary" class="w-100" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Sign In</BButton>
+                                            <BButton variant="primary" class="w-100" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">{{ $t('seller_registration.login.submit') }}</BButton>
                                         </div>
 
                                         <div class="mt-4 text-center">
                                             <div class="signin-other-title">
-                                                <h5 class="fs-13 mb-4 title">Sign In with</h5>
+                                                <h5 class="fs-13 mb-4 title">{{ $t('seller_registration.login.or') }}</h5>
                                             </div>
-                                            <div>
-                                                <BButton type="button" variant="primary" class="btn-icon"><i class="ri-facebook-fill fs-16"></i></BButton>
-                                                <BButton type="button" variant="danger" class="btn-icon ms-1"><i class="ri-google-fill fs-16"></i></BButton>
-                                                <BButton type="button" variant="dark" class="btn-icon ms-1"><i class="ri-github-fill fs-16"></i></BButton>
-                                                <BButton type="button" variant="info" class="btn-icon ms-1"><i class="ri-twitter-fill fs-16"></i></BButton>
-                                            </div>
+
+                                            <!-- Full page load, not an Inertia visit: the OAuth handshake
+                                                 leaves the SPA for Google's consent screen. -->
+                                            <a :href="route('auth.google.redirect')" class="btn btn-light border w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                                                <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+                                                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                                                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                                                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                                                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                                                </svg>
+                                                <span class="fw-medium">{{ $t('seller_registration.login.google') }}</span>
+                                            </a>
                                         </div>
                                     </form>
                                 </div>
@@ -128,8 +126,8 @@ export default {
                         </BCard>
 
                         <div class="mt-4 text-center">
-                            <p class="mb-0">Don't have an account ?
-                                <Link :href="route('register')" class="fw-semibold text-primary text-decoration-underline"> Signup </Link>
+                            <p class="mb-0">{{ $t('seller_registration.login.no_account') }}
+                                <Link :href="route('register')" class="fw-semibold text-primary text-decoration-underline"> {{ $t('seller_registration.login.sign_up') }} </Link>
                             </p>
                         </div>
 
@@ -143,7 +141,7 @@ export default {
                 <BRow>
                     <BCol lg="12">
                         <div class="text-center">
-                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} Velzon. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand</p>
+                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} SpeedZone Express. Built for reliable logistics operations.</p>
                         </div>
                     </BCol>
                 </BRow>

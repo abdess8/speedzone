@@ -23,7 +23,7 @@ const folderList = [{
 },
 {
     id: 4,
-    name: "Velzon v1.7.0",
+    name: "SpeedZone Express v1.7.0",
     files: "180",
     storage: "478.65MB",
     ischecked: true,
@@ -53,7 +53,7 @@ const fileList = [{
     id: 3,
     icon: "ri-folder-2-fill",
     iconClass: "warning",
-    fileName: "Velzon React",
+    fileName: "SpeedZone Express React",
     fileType: "Media",
     fileItem: "367",
     fileSize: "934 MB",

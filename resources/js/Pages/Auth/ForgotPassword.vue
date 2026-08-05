@@ -58,10 +58,10 @@ export default {
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
                                 <Link href="/" class="d-inline-block auth-logo">
-                                <img src="@assets/images/logo-light.png" alt="" height="20">
+                                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="52">
                                 </Link>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p>
+                            <p class="mt-3 fs-15 fw-medium">Secure account recovery for delivery operations</p>
                         </div>
                     </BCol>
                 </BRow>
@@ -75,7 +75,7 @@ export default {
                                     <h5 class="text-primary">Forgot Password?</h5>
                                     <p class="text-muted">Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.</p>
 
-                                    <lottie class="avatar-xl some-class" colors="primary:#0ab39c" :options="defaultOptions" :height="120" :width="120" />
+                                    <lottie class="avatar-xl some-class" colors="primary:#0D4A9D" :options="defaultOptions" :height="120" :width="120" />
 
                                 </div>
 
@@ -90,7 +90,7 @@ export default {
                                         </div>
 
                                         <div class="text-center mt-4">
-                                            <b-button variant="secondary" class="w-100" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Send Reset Link</b-button>
+                                            <b-button variant="primary" class="w-100" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Send Reset Link</b-button>
                                         </div>
                                     </form>
                                 </div>
@@ -114,7 +114,7 @@ export default {
                 <BRow>
                     <BCol lg="12">
                         <div class="text-center">
-                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} Velzon. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand</p>
+                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} SpeedZone Express. Built for reliable logistics operations.</p>
                         </div>
                     </BCol>
                 </BRow>

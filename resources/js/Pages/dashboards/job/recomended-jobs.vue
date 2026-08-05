@@ -91,7 +91,7 @@ export default {
                 {
                     id: '10',
                     position: 'Project Manager',
-                    c_name: 'Themesbrand',
+                    c_name: 'SpeedZone Express',
                     location: 'California, US',
                     salary: '$400 - $600',
                     experience: '3+ year',

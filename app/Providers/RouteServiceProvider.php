@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\OrderReturn;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
@@ -17,15 +18,29 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @var string
      */
-    public const HOME = '/';
+    public const HOME = '/dashboard';
 
     /**
      * Define your route model bindings, pattern filters, and other route configuration.
      */
     public function boot(): void
     {
+        Route::bind('return', fn (string $value) => OrderReturn::query()->where(
+            is_numeric($value) ? 'id' : 'reference',
+            is_numeric($value) ? (int) $value : strtoupper($value)
+        )->firstOrFail());
+
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Each assistant turn can cost several OpenAI round-trips, so it gets a
+        // tighter budget than the rest of the API — per user, never per IP, so
+        // one office cannot exhaust another's quota.
+        RateLimiter::for('chatbot', function (Request $request) {
+            $perMinute = (int) config('ai.chatbot.rate_limit', 20);
+
+            return Limit::perMinute($perMinute)->by('chatbot:'.($request->user()?->id ?: $request->ip()));
         });
 
         $this->routes(function () {

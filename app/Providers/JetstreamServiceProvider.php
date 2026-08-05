@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Actions\Jetstream\DeleteUser;
+use App\Http\Controllers\Profile\ProfileScreenController;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Jetstream\Http\Controllers\Inertia\UserProfileController;
 use Laravel\Jetstream\Jetstream;
 
 class JetstreamServiceProvider extends ServiceProvider
@@ -13,7 +15,9 @@ class JetstreamServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // The package route resolves its controller through the container, so
+        // the profile screen can be extended without touching its URL or name.
+        $this->app->bind(UserProfileController::class, ProfileScreenController::class);
     }
 
     /**

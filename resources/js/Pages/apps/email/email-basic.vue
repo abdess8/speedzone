@@ -139,7 +139,7 @@ export default {
                                     </ul>
                                     <p
                                         style="font-family: 'Roboto', sans-serif; font-size: 14px;color: #98a6ad; margin: 0px;">
-                                        2022 Velzon. Design & Develop by Themesbrand</p>
+                                        2022 SpeedZone Express. Design & Develop by SpeedZone Express</p>
                                 </div>
                             </div>
                         </td>
@@ -246,7 +246,7 @@ export default {
                                     </ul>
                                     <p
                                         style="font-family: 'Roboto', sans-serif; font-size: 14px;color: #98a6ad; margin: 0px;">
-                                        2022 Velzon. Design & Develop by Themesbrand</p>
+                                        2022 SpeedZone Express. Design & Develop by SpeedZone Express</p>
                                 </div>
                             </div>
                         </td>
@@ -348,7 +348,7 @@ export default {
                                     </p>
                                     <p
                                         style="font-family: 'Roboto', sans-serif; font-size: 14px;color: #98a6ad; margin: 0px;">
-                                        2022 Velzon. Design & Develop by Themesbrand</p>
+                                        2022 SpeedZone Express. Design & Develop by SpeedZone Express</p>
                                 </div>
                             </div>
                         </td>
@@ -465,7 +465,7 @@ export default {
                                     </p>
                                     <p
                                         style="font-family: 'Roboto', sans-serif; font-size: 14px;color: #98a6ad; margin: 0px;">
-                                        2022 Velzon. Design & Develop by Themesbrand</p>
+                                        2022 SpeedZone Express. Design & Develop by SpeedZone Express</p>
                                 </div>
                             </div>
                         </td>

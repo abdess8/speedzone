@@ -8,6 +8,7 @@ use App\Http\Controllers\ApiIntegrationController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\DriverFinanceController;
 use App\Http\Controllers\DriverInvoiceController;
+use App\Http\Controllers\DriverTransactionController;
 use App\Http\Controllers\DriverZoneController;
 use App\Http\Controllers\GuideAccessController;
 use App\Http\Controllers\GuideController;
@@ -443,6 +444,14 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('driver-finance', [DriverFinanceController::class, 'dashboard'])
         ->middleware('permission:driver_invoices.read.own|driver_invoices.read.all')
         ->name('driver-finance.dashboard');
+    // Manual ledger entries (bonus / penalty / adjustment) for a driver
+    Route::post('driver-transactions', [DriverTransactionController::class, 'store'])
+        ->middleware('permission:driver_invoices.adjust')
+        ->name('driver-transactions.store');
+    Route::delete('driver-transactions/{driverTransaction}', [DriverTransactionController::class, 'destroy'])
+        ->whereNumber('driverTransaction')
+        ->middleware('permission:driver_invoices.adjust')
+        ->name('driver-transactions.destroy');
     Route::get('driver-invoices/pending', [DriverInvoiceController::class, 'pending'])->name('driver-invoices.pending');
     Route::get('driver-invoices/payments', [DriverInvoiceController::class, 'payments'])->name('driver-invoices.payments');
     Route::post('driver-invoices/preview', [DriverInvoiceController::class, 'preview'])->name('driver-invoices.preview');

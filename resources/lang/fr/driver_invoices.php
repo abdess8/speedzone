@@ -122,6 +122,17 @@ return [
         'empty' => 'Aucune transaction en attente de facturation.',
     ],
 
+    'transactions' => [
+        'add' => 'Ajouter une transaction',
+        'submit' => 'Enregistrer la transaction',
+        'delete' => 'Supprimer',
+        'amount_hint' => 'Saisir un montant positif : le signe découle du type choisi.',
+        'note_placeholder' => 'Motif visible par le livreur',
+        'created' => ':type ajouté au compte de :driver.',
+        'deleted' => 'Transaction supprimée.',
+        'not_deletable' => 'Cette transaction ne peut pas être supprimée : elle provient d\'une livraison ou est déjà rattachée à une facture.',
+    ],
+
     'assign' => [
         'title' => 'Affecter un livreur',
         'select_driver' => 'Sélectionner un livreur',
@@ -139,6 +150,8 @@ return [
         'cancel_text' => 'Les transactions rattachées seront libérées et pourront être refacturées.',
         'delete_title' => 'Supprimer cette facture ?',
         'delete_text' => 'Cette action est irréversible.',
+        'delete_transaction_title' => 'Supprimer cette transaction ?',
+        'delete_transaction_text' => 'Le montant sera retiré du solde du livreur. Cette action est irréversible.',
         'confirm' => 'Oui, continuer',
     ],
 

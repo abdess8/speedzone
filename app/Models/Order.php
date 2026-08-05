@@ -99,6 +99,11 @@ class Order extends Model
                 $order->status = OrderStatus::CREATED->value;
             }
 
+            // "No discount" is zero, not unknown, and the column says so. An
+            // empty form field reaches the model as null once the framework has
+            // converted it, which the database would reject outright.
+            $order->discount_amount ??= 0;
+
             $payment = $order->payment_method instanceof PaymentMethod
                 ? $order->payment_method
                 : PaymentMethod::resolve((string) $order->payment_method);

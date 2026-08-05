@@ -1,14 +1,17 @@
 <script setup>
-import { ref, computed } from "vue";
-import { router } from "@inertiajs/vue3";
+import { ref, computed, onMounted } from "vue";
+import { router, useForm, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import FilterPanel from "@/Components/FilterPanel.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
+import BottomSheet from "@/Components/BottomSheet.vue";
+import InputError from "@/Components/InputError.vue";
 import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
+import Swal from "sweetalert2";
 
 const { t } = useI18n();
 
@@ -17,6 +20,7 @@ const props = defineProps({
   driverId: { type: Number, default: null },
   drivers: { type: Array, default: () => [] },
   billing: { type: Object, default: () => ({}) },
+  transactionTypes: { type: Array, default: () => [] },
   can: { type: Object, default: () => ({}) },
 });
 
@@ -54,6 +58,11 @@ const resetFilters = () => {
   changeDriver(null);
 };
 
+// A manual entry has no order behind it, so it identifies itself by its type.
+const lineTitle = (line) => line.tracking_number ?? line.transaction_type_label;
+
+const lineSubtitle = (line) => line.customer_full_name ?? line.note ?? "—";
+
 const cardRows = (line) => [
   { label: t("driver_invoices.columns.sector"), value: line.sector },
   { label: t("driver_invoices.columns.amount"), value: money(line.amount), emphasis: true },
@@ -63,6 +72,75 @@ const sheetRows = (line) => [
   ...cardRows(line),
   { label: t("driver_invoices.columns.note"), value: line.note },
 ];
+
+/* --- Manual ledger entries (bonus / penalty / adjustment) --- */
+
+/**
+ * The page falls back to the viewer's own ledger when no driver is filtered, so
+ * only offer the form once a real driver from the list is on screen.
+ */
+const targetDriver = computed(
+  () => (props.drivers ?? []).find((d) => d.id === props.driverId) ?? null
+);
+
+const canAdjust = computed(() => Boolean(props.can?.adjust && targetDriver.value));
+
+const showTransactionSheet = ref(false);
+
+const transactionForm = useForm({
+  driver_id: null,
+  transaction_type: "BONUS",
+  amount: "",
+  note: "",
+});
+
+const openTransactionSheet = () => {
+  transactionForm.reset();
+  transactionForm.clearErrors();
+  transactionForm.driver_id = targetDriver.value?.id ?? null;
+  showTransactionSheet.value = true;
+};
+
+const submitTransaction = () => {
+  transactionForm.post(route("driver-transactions.store"), {
+    preserveScroll: true,
+    onSuccess: () => {
+      showTransactionSheet.value = false;
+      transactionForm.reset();
+    },
+  });
+};
+
+/** A delivery payment mirrors a delivered order and is never removable here. */
+const isManualLine = (line) => line.transaction_type !== "DELIVERY_PAYMENT";
+
+const deleteTransaction = (line) => {
+  selectedLine.value = null;
+
+  Swal.fire({
+    title: t("driver_invoices.confirms.delete_transaction_title"),
+    text: t("driver_invoices.confirms.delete_transaction_text"),
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: t("driver_invoices.confirms.confirm"),
+    cancelButtonText: t("common.cancel"),
+    confirmButtonColor: "#f06548",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      router.delete(route("driver-transactions.destroy", line.id), { preserveScroll: true });
+    }
+  });
+};
+
+onMounted(() => {
+  const flash = usePage().props?.flash ?? {};
+  if (flash.success) {
+    Swal.fire({ toast: true, position: "top-end", icon: "success", title: flash.success, showConfirmButton: false, timer: 3000, timerProgressBar: true });
+  }
+  if (flash.error) {
+    Swal.fire({ toast: true, position: "top-end", icon: "error", title: flash.error, showConfirmButton: false, timer: 4000, timerProgressBar: true });
+  }
+});
 </script>
 
 <template>
@@ -83,6 +161,13 @@ const sheetRows = (line) => [
                 <h5 class="card-title mb-0">{{ $t('driver_invoices.pending.orders_title') }}</h5>
                 <span class="badge bg-primary-subtle text-primary">{{ summary.transactions_count ?? 0 }}</span>
               </div>
+            </template>
+
+            <template v-if="canAdjust" #actions>
+              <button type="button" class="btn btn-soft-success text-nowrap" @click="openTransactionSheet">
+                <i class="ri-add-line align-bottom me-1"></i>
+                <span class="d-none d-sm-inline">{{ $t('driver_invoices.transactions.add') }}</span>
+              </button>
             </template>
 
             <BCol md="6">
@@ -126,13 +211,19 @@ const sheetRows = (line) => [
               <EntityCard
                 v-for="line in lines"
                 :key="line.id"
-                :title="line.tracking_number ?? '—'"
-                :subtitle="line.customer_full_name ?? '—'"
+                :title="lineTitle(line)"
+                :subtitle="lineSubtitle(line)"
                 :status-label="line.transaction_type_label"
                 status-color="info"
                 :rows="cardRows(line)"
                 @open="selectedLine = line"
-              />
+              >
+                <template v-if="canAdjust && isManualLine(line)" #actions>
+                  <button class="btn btn-sm btn-soft-danger flex-fill" @click="deleteTransaction(line)">
+                    <i class="ri-delete-bin-line align-bottom me-1"></i> {{ $t('driver_invoices.transactions.delete') }}
+                  </button>
+                </template>
+              </EntityCard>
               <p v-if="lines.length === 0" class="text-center text-muted py-4 mb-0">
                 {{ $t('driver_invoices.pending.empty') }}
               </p>
@@ -147,18 +238,33 @@ const sheetRows = (line) => [
                     <th>{{ $t('driver_invoices.columns.sector') }}</th>
                     <th>{{ $t('driver_invoices.columns.type') }}</th>
                     <th class="text-end">{{ $t('driver_invoices.columns.amount') }}</th>
+                    <th v-if="canAdjust" class="text-end">{{ $t('common.actions') }}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="line in lines" :key="line.id">
                     <td class="fw-semibold">{{ line.tracking_number ?? "—" }}</td>
-                    <td>{{ line.customer_full_name ?? "—" }}</td>
+                    <td>
+                      <div>{{ line.customer_full_name ?? "—" }}</div>
+                      <div v-if="line.note" class="text-muted fs-12">{{ line.note }}</div>
+                    </td>
                     <td>{{ line.sector ?? "—" }}</td>
                     <td><span class="badge bg-info-subtle text-info">{{ line.transaction_type_label }}</span></td>
                     <td class="text-end fw-semibold" :class="line.amount < 0 ? 'text-danger' : ''">{{ money(line.amount) }}</td>
+                    <td v-if="canAdjust" class="text-end">
+                      <BButton
+                        v-if="isManualLine(line)"
+                        variant="ghost-danger"
+                        size="sm"
+                        :title="$t('driver_invoices.transactions.delete')"
+                        @click="deleteTransaction(line)"
+                      >
+                        <i class="ri-delete-bin-line align-bottom"></i>
+                      </BButton>
+                    </td>
                   </tr>
                   <tr v-if="lines.length === 0">
-                    <td colspan="5" class="text-center text-muted py-4">{{ $t('driver_invoices.pending.empty') }}</td>
+                    <td :colspan="canAdjust ? 6 : 5" class="text-center text-muted py-4">{{ $t('driver_invoices.pending.empty') }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -203,12 +309,77 @@ const sheetRows = (line) => [
 
     <EntityDetailSheet
       :show="selectedLine !== null"
-      :title="selectedLine?.tracking_number ?? ''"
-      :subtitle="selectedLine?.customer_full_name ?? ''"
+      :title="selectedLine ? lineTitle(selectedLine) : ''"
+      :subtitle="selectedLine ? lineSubtitle(selectedLine) : ''"
       :status-label="selectedLine?.transaction_type_label ?? ''"
       status-color="info"
       :rows="selectedLine ? sheetRows(selectedLine) : []"
       @close="selectedLine = null"
-    />
+    >
+      <template v-if="canAdjust && selectedLine && isManualLine(selectedLine)" #actions>
+        <button class="btn btn-danger flex-fill sheet-action" @click="deleteTransaction(selectedLine)">
+          <i class="ri-delete-bin-line align-bottom me-1"></i> {{ $t('driver_invoices.transactions.delete') }}
+        </button>
+      </template>
+    </EntityDetailSheet>
+
+    <BottomSheet
+      :show="showTransactionSheet"
+      :title="$t('driver_invoices.transactions.add')"
+      :subtitle="targetDriver?.name ?? ''"
+      @close="showTransactionSheet = false"
+    >
+      <form @submit.prevent="submitTransaction">
+        <div class="mb-3">
+          <label class="form-label">{{ $t('driver_invoices.columns.type') }} <span class="text-danger">*</span></label>
+          <select
+            v-model="transactionForm.transaction_type"
+            class="form-select"
+            :class="{ 'is-invalid': transactionForm.errors.transaction_type }"
+          >
+            <option v-for="type in transactionTypes" :key="type.value" :value="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+          <InputError :message="transactionForm.errors.transaction_type" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">{{ $t('driver_invoices.columns.amount') }} <span class="text-danger">*</span></label>
+          <input
+            v-model="transactionForm.amount"
+            type="number"
+            step="0.01"
+            min="0.01"
+            class="form-control"
+            :class="{ 'is-invalid': transactionForm.errors.amount }"
+          />
+          <div class="form-text">{{ $t('driver_invoices.transactions.amount_hint') }}</div>
+          <InputError :message="transactionForm.errors.amount" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">{{ $t('driver_invoices.columns.note') }}</label>
+          <input
+            v-model="transactionForm.note"
+            type="text"
+            maxlength="255"
+            class="form-control"
+            :placeholder="$t('driver_invoices.transactions.note_placeholder')"
+            :class="{ 'is-invalid': transactionForm.errors.note }"
+          />
+          <InputError :message="transactionForm.errors.note" />
+        </div>
+
+        <InputError :message="transactionForm.errors.driver_id" />
+
+        <div class="hstack gap-2 justify-content-end">
+          <BButton variant="light" type="button" @click="showTransactionSheet = false">{{ $t('common.cancel') }}</BButton>
+          <BButton variant="success" type="submit" :disabled="transactionForm.processing">
+            <i class="ri-check-line align-bottom me-1"></i> {{ $t('driver_invoices.transactions.submit') }}
+          </BButton>
+        </div>
+      </form>
+    </BottomSheet>
   </Layout>
 </template>

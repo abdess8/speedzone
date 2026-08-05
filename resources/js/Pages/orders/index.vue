@@ -7,8 +7,10 @@ import PageHeader from "@/Components/page-header.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
 import FilterPanel from "@/Components/FilterPanel.vue";
 import StatusPills from "@/Components/StatusPills.vue";
+import StatusKpiCards from "@/Components/StatusKpiCards.vue";
 import DriverOrderCard from "./Partials/DriverOrderCard.vue";
 import DriverStatusSheet from "./Partials/DriverStatusSheet.vue";
+import DeliveryOutcomeSheet from "./Partials/DeliveryOutcomeSheet.vue";
 import DriverReturnSheet from "./Partials/DriverReturnSheet.vue";
 import OrderCard from "./Partials/OrderCard.vue";
 import OrderDetailSheet from "./Partials/OrderDetailSheet.vue";
@@ -19,6 +21,7 @@ const { t } = useI18n();
 
 const props = defineProps({
   orders: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
+  stats: { type: Array, default: () => [] },
   filters: { type: Object, default: () => ({}) },
   filterOptions: { type: Object, default: () => ({}) },
   can: { type: Object, default: () => ({}) },
@@ -93,8 +96,9 @@ const query = () => {
 };
 
 // Filter options and abilities never change between two visits to this page,
-// so every table interaction asks the server for the table only.
-const TABLE_PROPS = ["orders", "filters"];
+// so every table interaction asks the server for the table only. The status
+// counts do move with the filters, hence their place in the list.
+const TABLE_PROPS = ["orders", "filters", "stats"];
 
 const reload = () => {
   router.get(route("orders.index"), query(), {
@@ -194,8 +198,20 @@ const canUpdateStatus = computed(() => props.workflow.can_update_status === true
 const isDriver = computed(() => props.workflow.is_driver === true);
 const failureReasons = computed(() => props.workflow.failure_reasons ?? []);
 const returnReasons = computed(() => props.workflow.return_reasons ?? []);
+const deliveryOutcomes = computed(() => props.workflow.delivery_outcomes ?? []);
 
 const transitionsFor = (order) => props.workflow.transitions?.[order.status] ?? [];
+
+/*
+ * A parcel on the round is not moved by picking a status: the driver reports
+ * whether he handed it over, and the failure reason decides where it goes. Both
+ * flows hang off the same button, so the row only has to know that *something*
+ * can be done.
+ */
+const reportsOutcome = (order) =>
+  (props.workflow.delivery_outcome_statuses ?? []).includes(order.status);
+
+const canAct = (order) => reportsOutcome(order) || transitionsFor(order).length > 0;
 
 /** A parcel already tied to a return must not spawn a second one. */
 const canReturn = (order) =>
@@ -210,6 +226,12 @@ const sheetTransitions = computed(() =>
 );
 
 const openStatusSheet = (order) => {
+  if (reportsOutcome(order)) {
+    outcomeOrder.value = order;
+
+    return;
+  }
+
   sheetOrder.value = order;
 };
 
@@ -229,6 +251,33 @@ const submitStatusChange = ({ order, to_status, failure_reason, failure_note }) 
       onFinish: () => {
         sheetProcessing.value = false;
         sheetOrder.value = null;
+      },
+    }
+  );
+};
+
+const outcomeOrder = ref(null);
+const outcomeProcessing = ref(false);
+
+const closeOutcomeSheet = () => {
+  if (outcomeProcessing.value) return;
+  outcomeOrder.value = null;
+};
+
+const submitDeliveryOutcome = ({ order, outcome, failure_reason, note, attachment }) => {
+  outcomeProcessing.value = true;
+
+  // Multipart even without a file: Inertia cannot mix a File into a JSON body,
+  // and branching on its presence would give the two paths different encodings.
+  router.post(
+    route("orders.delivery-outcome", order.id),
+    { outcome, failure_reason, note, attachment },
+    {
+      forceFormData: true,
+      preserveScroll: true,
+      onFinish: () => {
+        outcomeProcessing.value = false;
+        outcomeOrder.value = null;
       },
     }
   );
@@ -280,6 +329,13 @@ onMounted(() => {
 <template>
   <Layout>
     <PageHeader :title="$t('orders.title')" :pageTitle="$t('orders.page_title')" />
+
+    <StatusKpiCards
+      :stats="stats"
+      :model-value="filters.status"
+      :all-label="$t('common.all_statuses')"
+      @select="selectStatus"
+    />
 
     <BCard no-body>
       <FilterPanel
@@ -436,6 +492,7 @@ onMounted(() => {
               :order="order"
               :can-update-status="canUpdateStatus"
               :transitions="transitionsFor(order)"
+              :reports-outcome="reportsOutcome(order)"
               :can-create-return="canReturn(order)"
               @change-status="openStatusSheet"
               @create-return="returnOrder = $event"
@@ -542,7 +599,7 @@ onMounted(() => {
                     <li v-if="can.view_details" class="list-inline-item" :title="$t('common.edit')">
                       <Link :href="route('orders.edit', order.id)" class="text-warning"><i class="ri-pencil-fill fs-14"></i></Link>
                     </li>
-                    <li v-if="isDriver && canUpdateStatus && transitionsFor(order).length" class="list-inline-item" :title="$t('orders.driver.update_status')">
+                    <li v-if="isDriver && canUpdateStatus && canAct(order)" class="list-inline-item" :title="$t('orders.driver.update_status')">
                       <BLink class="text-primary" @click="openStatusSheet(order)"><i class="ri-refresh-line fs-14"></i></BLink>
                     </li>
                   </ul>
@@ -592,6 +649,16 @@ onMounted(() => {
       :processing="sheetProcessing"
       @close="closeStatusSheet"
       @submit="submitStatusChange"
+    />
+
+    <DeliveryOutcomeSheet
+      :show="outcomeOrder !== null"
+      :order="outcomeOrder"
+      :outcomes="deliveryOutcomes"
+      :failure-reasons="failureReasons"
+      :processing="outcomeProcessing"
+      @close="closeOutcomeSheet"
+      @submit="submitDeliveryOutcome"
     />
 
     <DriverReturnSheet

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
+use App\Support\StatusCounts;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -38,9 +39,48 @@ class OrderPreparationService
      */
     public function queue(array $filters = [])
     {
-        return Order::acrossStores()
+        return $this->scoped($filters)
             ->where('status', OrderStatus::AWAITING_PREPARATION->value)
             ->with(['items', 'city', 'sector', 'seller', 'store', 'stockHubCity'])
+            // Oldest first: a preparation queue is a queue.
+            ->orderBy('created_at')
+            ->orderBy('id');
+    }
+
+    /**
+     * What the desk has in front of it, either side of the queue.
+     *
+     * The queue itself only ever holds one status, so counting it alone would
+     * just restate the pagination total. The cards widen to the two statuses
+     * that bracket the work: what is still to pack, and what has been packed
+     * and is waiting to leave.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<int, array<string, mixed>>
+     */
+    public function statusCounts(array $filters = []): array
+    {
+        return StatusCounts::build(
+            $this->scoped($filters),
+            OrderStatus::options(),
+            'orders.status',
+            [
+                OrderStatus::AWAITING_PREPARATION->value,
+                OrderStatus::PREPARED->value,
+                OrderStatus::IN_DEPOT->value,
+            ],
+        );
+    }
+
+    /**
+     * The hub and search narrowing shared by the queue and its counters.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return Builder<Order>
+     */
+    private function scoped(array $filters)
+    {
+        return Order::acrossStores()
             ->when(
                 ! empty($filters['hub_city_id']),
                 fn ($query) => $query->where('stock_hub_city_id', (int) $filters['hub_city_id'])
@@ -48,10 +88,7 @@ class OrderPreparationService
             ->when(
                 ! empty($filters['search']),
                 fn ($query) => $query->where('tracking_number', 'like', '%'.$filters['search'].'%')
-            )
-            // Oldest first: a preparation queue is a queue.
-            ->orderBy('created_at')
-            ->orderBy('id');
+            );
     }
 
     /**

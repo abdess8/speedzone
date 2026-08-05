@@ -43,6 +43,13 @@ class OrderReturnResource extends JsonResource
             'updated_customer_phone' => $this->updated_customer_phone,
             'updated_address' => $this->updated_address,
             'updated_city_id' => $this->updated_city_id,
+            'assigned_to' => $this->assigned_to,
+            'assigned_at' => $this->assigned_at?->toIso8601String(),
+            'assigned_driver' => $this->whenLoaded('assignedDriver', fn () => $this->assignedDriver
+                ? UserSummaryResource::make($this->assignedDriver)->resolve($request)
+                : null),
+            'hand_back_city_id' => $this->handBackCityId(),
+            'is_at_vendor_city' => $this->isAtVendorCity(),
             'can_edit_customer_data' => $this->canEditCustomerData(),
             'effective_customer_name' => $this->effectiveCustomerName(),
             'effective_customer_phone' => $this->effectiveCustomerPhone(),

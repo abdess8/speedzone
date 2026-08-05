@@ -39,8 +39,10 @@ class OrderListResource extends JsonResource
         'order_value',
         'order_amount',
         'delivery_price',
+        'delivery_included',
         'total_amount',
         'status',
+        'failed_attempts_count',
         'is_fragile',
         'can_be_opened',
         'return_id',
@@ -69,6 +71,8 @@ class OrderListResource extends JsonResource
             'status' => $status->value,
             'status_label' => $status->label(),
             'status_color' => $status->color(),
+            // Warns the driver that the address has already turned him away.
+            'failed_attempts_count' => (int) $this->failed_attempts_count,
 
             'customer' => [
                 'full_name' => $this->customer_full_name,
@@ -99,6 +103,7 @@ class OrderListResource extends JsonResource
             'is_already_paid' => ! $payment->requiresCashCollection(),
             'order_value' => $this->order_value !== null ? (float) $this->order_value : null,
             'delivery_price' => (float) $this->delivery_price,
+            'delivery_included' => (bool) $this->delivery_included,
             'total_amount' => (float) $this->total_amount,
 
             'is_fragile' => (bool) $this->is_fragile,

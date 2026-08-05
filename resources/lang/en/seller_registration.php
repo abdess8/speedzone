@@ -5,7 +5,7 @@ return [
         'title' => 'Seller registration',
         'subtitle' => 'Join OWL Delivery as a delivery seller',
         'heading' => 'Create your seller account',
-        'description' => 'Register to start shipping with OWL Delivery Express.',
+        'description' => 'Register to start shipping with OWL Delivery.',
         'first_name' => 'First name',
         'last_name' => 'Last name',
         'email' => 'Email',
@@ -17,13 +17,50 @@ return [
         'submit' => 'Create account',
         'already_have_account' => 'Already have an account?',
         'sign_in' => 'Sign in',
+        'password_rules' => [
+            'length' => 'At least 8 characters',
+            'uppercase' => 'At least one uppercase letter',
+            'lowercase' => 'At least one lowercase letter',
+            'number' => 'At least one number',
+            'mismatch' => 'The two passwords do not match.',
+        ],
     ],
 
     'registered' => 'Registration successful. Please verify your email address to continue.',
 
     'login' => [
+        'title' => 'Log in',
+        'subtitle' => 'Logistics & Delivery Management Platform',
+        'heading' => 'Welcome back',
+        'description' => 'Sign in to continue to OWL Delivery.',
+        'email' => 'Email',
+        'email_placeholder' => 'Please enter your email',
+        'password' => 'Password',
+        'password_placeholder' => 'Enter your password',
+        'forgot_password' => 'Forgot password?',
+        'remember_me' => 'Remember me',
+        'submit' => 'Sign In',
+        'no_account' => "Don't have an account?",
+        'sign_up' => 'Sign up',
+        'or' => 'Sign In with',
+        'google' => 'Continue with Google',
         'unverified' => 'Please verify your email address before accessing your account.',
         'rejected' => 'Your registration request has been rejected.',
+    ],
+
+    'verify' => [
+        'title' => 'Email verification',
+        'heading' => 'Verify your email address',
+        'message' => 'We sent a verification link to :email. Click it to activate your account. Nothing in your inbox? We will gladly send another one.',
+        'link_sent' => 'A new verification link has been sent to your email address.',
+        'resend' => 'Resend verification email',
+    ],
+
+    'google' => [
+        'failed' => 'Google sign-in failed. Please try again or use your email and password.',
+        'no_email' => 'Your Google account did not share an email address, so we cannot sign you in.',
+        'email_taken' => 'An account already exists with this email address. Sign in with your password, then link Google from your profile.',
+        'disabled' => 'Google sign-in is not configured yet. Please use your email and password.',
     ],
 
     'pending' => [
@@ -33,6 +70,13 @@ return [
         'review_note' => 'You will receive an email once your account has been approved.',
         'contact_support' => 'Contact support',
         'sign_out' => 'Sign out',
+        'change_email' => [
+            'title' => 'Wrong email address?',
+            'description' => 'While your account is under review, the email address is the only detail you can change. A new verification link will be sent to the new address.',
+            'label' => 'Email address',
+            'submit' => 'Update email address',
+            'updated' => 'Email address updated. Please check your inbox to verify the new address.',
+        ],
     ],
 
     'admin' => [

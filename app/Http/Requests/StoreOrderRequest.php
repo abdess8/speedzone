@@ -29,6 +29,7 @@ class StoreOrderRequest extends FormRequest
             'is_fragile' => $this->boolean('is_fragile'),
             'can_be_opened' => $this->boolean('can_be_opened'),
             'option_exchange' => $this->boolean('option_exchange'),
+            'delivery_included' => $this->boolean('delivery_included'),
         ]);
 
         // Catalog lines decide the amount, so they are folded in first and the
@@ -71,6 +72,7 @@ class StoreOrderRequest extends FormRequest
             ...$this->paymentAmountRules(),
             ...$this->stockLineRules(),
             'delivery_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'delivery_included' => ['boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_fragile' => ['boolean'],
             'can_be_opened' => ['boolean'],

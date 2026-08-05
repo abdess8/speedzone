@@ -25,6 +25,7 @@ const form = useForm({
   order_amount: props.order.order_amount ?? "",
   order_value: props.order.order_value ?? "",
   delivery_price: props.order.delivery_price,
+  delivery_included: props.order.delivery_included,
   notes: props.order.notes,
   is_fragile: props.order.is_fragile,
   can_be_opened: props.order.can_be_opened,

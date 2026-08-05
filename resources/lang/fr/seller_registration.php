@@ -5,7 +5,7 @@ return [
         'title' => 'Inscription vendeur',
         'subtitle' => 'Rejoignez OWL Delivery en tant que vendeur',
         'heading' => 'Créez votre compte vendeur',
-        'description' => 'Inscrivez-vous pour expédier avec OWL Delivery Express.',
+        'description' => 'Inscrivez-vous pour expédier avec OWL Delivery.',
         'first_name' => 'Prénom',
         'last_name' => 'Nom',
         'email' => 'E-mail',
@@ -17,13 +17,50 @@ return [
         'submit' => 'Créer le compte',
         'already_have_account' => 'Vous avez déjà un compte ?',
         'sign_in' => 'Se connecter',
+        'password_rules' => [
+            'length' => 'Au moins 8 caractères',
+            'uppercase' => 'Au moins une lettre majuscule',
+            'lowercase' => 'Au moins une lettre minuscule',
+            'number' => 'Au moins un chiffre',
+            'mismatch' => 'Les deux mots de passe ne correspondent pas.',
+        ],
     ],
 
     'registered' => 'Inscription réussie. Veuillez vérifier votre adresse e-mail pour continuer.',
 
     'login' => [
+        'title' => 'Connexion',
+        'subtitle' => 'Plateforme de gestion logistique et de livraison',
+        'heading' => 'Bon retour',
+        'description' => 'Connectez-vous pour accéder à OWL Delivery.',
+        'email' => 'E-mail',
+        'email_placeholder' => 'Veuillez saisir votre e-mail',
+        'password' => 'Mot de passe',
+        'password_placeholder' => 'Saisissez votre mot de passe',
+        'forgot_password' => 'Mot de passe oublié ?',
+        'remember_me' => 'Se souvenir de moi',
+        'submit' => 'Se connecter',
+        'no_account' => 'Vous n\'avez pas de compte ?',
+        'sign_up' => 'S\'inscrire',
+        'or' => 'Se connecter avec',
+        'google' => 'Continuer avec Google',
         'unverified' => 'Veuillez vérifier votre adresse e-mail avant d\'accéder à votre compte.',
         'rejected' => 'Votre demande d\'inscription a été rejetée.',
+    ],
+
+    'verify' => [
+        'title' => 'Vérification de l\'e-mail',
+        'heading' => 'Vérifiez votre adresse e-mail',
+        'message' => 'Nous avons envoyé un lien de vérification à :email. Cliquez dessus pour activer votre compte. Rien reçu ? Nous pouvons vous en renvoyer un.',
+        'link_sent' => 'Un nouveau lien de vérification a été envoyé à votre adresse e-mail.',
+        'resend' => 'Renvoyer l\'e-mail de vérification',
+    ],
+
+    'google' => [
+        'failed' => 'La connexion avec Google a échoué. Réessayez ou utilisez votre e-mail et mot de passe.',
+        'no_email' => 'Votre compte Google n\'a pas partagé d\'adresse e-mail, la connexion est impossible.',
+        'email_taken' => 'Un compte existe déjà avec cette adresse e-mail. Connectez-vous avec votre mot de passe, puis liez Google depuis votre profil.',
+        'disabled' => 'La connexion Google n\'est pas encore configurée. Utilisez votre e-mail et mot de passe.',
     ],
 
     'pending' => [
@@ -33,6 +70,13 @@ return [
         'review_note' => 'Vous recevrez un e-mail une fois votre compte approuvé.',
         'contact_support' => 'Contacter le support',
         'sign_out' => 'Se déconnecter',
+        'change_email' => [
+            'title' => 'Mauvaise adresse e-mail ?',
+            'description' => 'Tant que votre compte est en cours de validation, l\'adresse e-mail est la seule information modifiable. Un nouveau lien de vérification sera envoyé à la nouvelle adresse.',
+            'label' => 'Adresse e-mail',
+            'submit' => 'Modifier l\'adresse e-mail',
+            'updated' => 'Adresse e-mail modifiée. Consultez votre boîte de réception pour vérifier la nouvelle adresse.',
+        ],
     ],
 
     'admin' => [

@@ -53,6 +53,9 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+                // A batch action that partly succeeded is neither, and saying
+                // "success" over three failed parcels would be a lie.
+                'warning' => fn () => $request->session()->get('warning'),
             ],
             'locale' => $locale,
             'permissions' => fn () => $request->user()?->permissionNames() ?? [],
@@ -119,6 +122,9 @@ class HandleInertiaRequests extends Middleware
             'is_pending_approval' => $user->isPendingApproval(),
             'can_view_returns' => $user->canAccessReturnsModule(),
             'can_create_return_request' => $user->canCreateReturnRequest(),
+            // Only vendors are scored: the missing fields are all seller
+            // paperwork, so the gauge would be meaningless for staff accounts.
+            'profile_completion' => $user->isSeller() ? $user->profileCompletion() : null,
             'two_factor_enabled' => Features::enabled(Features::twoFactorAuthentication())
                 && ! is_null($user->two_factor_secret),
         ]);

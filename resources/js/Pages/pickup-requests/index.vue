@@ -10,6 +10,7 @@ import EntityLink from "@/Components/EntityLink.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import FilterPanel from "@/Components/FilterPanel.vue";
 import StatusPills from "@/Components/StatusPills.vue";
+import StatusKpiCards from "@/Components/StatusKpiCards.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import { useGuideSignals } from "@/composables/useGuideSignals";
@@ -19,6 +20,7 @@ const { t } = useI18n();
 
 const props = defineProps({
   pickups: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
+  stats: { type: Array, default: () => [] },
   filters: { type: Object, default: () => ({}) },
   filterOptions: { type: Object, default: () => ({}) },
   eligibleOrders: { type: Array, default: () => [] },
@@ -124,6 +126,13 @@ onMounted(() => {
 <template>
   <Layout>
     <PageHeader :title="$t('pickups.title')" :pageTitle="$t('pickups.page_title')" />
+
+    <StatusKpiCards
+      :stats="stats"
+      :model-value="filters.status"
+      :all-label="$t('common.all_statuses')"
+      @select="selectStatus"
+    />
 
     <BCard no-body>
       <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">

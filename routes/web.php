@@ -1,14 +1,18 @@
 <?php
 
+use App\Http\Controllers\AccountEmailController;
 use App\Http\Controllers\ActiveStoreController;
 use App\Http\Controllers\Admin\PendingUserController;
 use App\Http\Controllers\AlertController;
 use App\Http\Controllers\AlertDismissalController;
 use App\Http\Controllers\ApiIntegrationController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\DriverFinanceController;
 use App\Http\Controllers\DriverInvoiceController;
+use App\Http\Controllers\DriverTransactionController;
 use App\Http\Controllers\DriverZoneController;
+use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\GuideAccessController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\HelpCenterController;
@@ -33,6 +37,7 @@ use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\SellerDashboardController;
+use App\Http\Controllers\SellerProfileController;
 use App\Http\Controllers\StockInventoryController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\StockReceptionController;
@@ -70,9 +75,26 @@ Route::get('/tracking/{trackingNumber}', [LandingController::class, 'track'])
 
 Route::get('/verify-email', fn () => redirect()->route('verification.notice'))->name('verify-email');
 
+// Social sign-in. Guest-only: an authenticated visitor has nothing to gain from
+// walking through Google's consent screen again.
+Route::middleware('guest')->group(function () {
+    Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])
+        ->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])
+        ->name('auth.google.callback');
+});
+
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
     Route::get('/account/pending-approval', [PendingApprovalController::class, 'show'])
         ->name('account.pending-approval');
+});
+
+// The single thing an account still waiting on the platform may change about
+// itself. Deliberately outside the `verified` and `account.active` guards: a
+// typo in the address is exactly what locks these users out.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session')])->group(function () {
+    Route::put('/account/email', [AccountEmailController::class, 'update'])
+        ->name('account.email.update');
 });
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'account.active'])->group(function () {
@@ -80,6 +102,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('/dashboard/seller', [SellerDashboardController::class, 'index'])
         ->middleware('permission:dashboard.view')
         ->name('dashboard.seller');
+
+    // Identity, pickup and banking details a vendor maintains himself; they
+    // feed the profile completion score.
+    Route::put('user/seller-profile', [SellerProfileController::class, 'update'])
+        ->name('user-seller-profile.update');
+    Route::delete('user/seller-profile/documents/{document}', [SellerProfileController::class, 'destroyDocument'])
+        ->name('user-seller-profile.documents.destroy');
 
     Route::prefix('admin')->name('admin.')->middleware('permission:users.read')->group(function () {
         Route::get('pending-users', [PendingUserController::class, 'index'])->name('pending-users.index');
@@ -91,6 +120,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::redirect('/admin/users/pending', '/admin/pending-users');
 
     Route::post('locale', [LocaleController::class, 'update'])->name('locale.update');
+
+    // Global search bar. Deliberately behind no `permission:` middleware: each
+    // searchable object gates itself, so the endpoint answers with whatever
+    // slice of the platform the caller may already read.
+    Route::get('search', GlobalSearchController::class)->name('search.global');
 
     // Notifications
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -269,6 +303,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('orders/{order}/assign-driver', [OrderController::class, 'assignDriver'])
         ->whereNumber('order')
         ->name('orders.assign-driver');
+    // Closing a delivery attempt. Same guard as a bulk status change: the
+    // ownership half is re-checked per order by OrderPolicy::updateStatus().
+    Route::post('orders/{order}/delivery-outcome', [OrderController::class, 'deliveryOutcome'])
+        ->whereNumber('order')
+        ->middleware('permission:orders.update.all|orders.update.own|orders.update.assigned')
+        ->name('orders.delivery-outcome');
     Route::post('orders/{order}/sync-partner', [OrderController::class, 'syncPartner'])
         ->whereNumber('order')
         ->name('orders.sync-partner');
@@ -399,6 +439,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     // Returns (reverse logistics)
     Route::get('returns/eligible-orders', [ReturnController::class, 'eligibleOrders'])
         ->name('returns.eligible-orders');
+    Route::get('returns/hand-back', [ReturnController::class, 'handBack'])
+        ->name('returns.hand-back');
+    Route::post('returns/hand-back/scan', [ReturnController::class, 'handBackScan'])
+        ->name('returns.hand-back.scan');
+    Route::post('returns/hand-back/dispatch', [ReturnController::class, 'handBackDispatch'])
+        ->name('returns.hand-back.dispatch');
     Route::get('returns/{reference}', [ReturnController::class, 'track'])
         ->where('reference', 'RTN-[0-9]{4}-[0-9]+')
         ->name('returns.track');
@@ -406,6 +452,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->name('returns.scan');
     Route::post('returns/process-scan', [ReturnController::class, 'processScan'])
         ->name('returns.process-scan');
+    Route::post('returns/{return}/assign-driver', [ReturnController::class, 'assignDriver'])
+        ->whereNumber('return')
+        ->name('returns.assign-driver');
     Route::post('returns/{return}/change-status', [ReturnController::class, 'changeStatus'])
         ->whereNumber('return')
         ->name('returns.change-status');
@@ -443,6 +492,14 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('driver-finance', [DriverFinanceController::class, 'dashboard'])
         ->middleware('permission:driver_invoices.read.own|driver_invoices.read.all')
         ->name('driver-finance.dashboard');
+    // Manual ledger entries (bonus / penalty / adjustment) for a driver
+    Route::post('driver-transactions', [DriverTransactionController::class, 'store'])
+        ->middleware('permission:driver_invoices.adjust')
+        ->name('driver-transactions.store');
+    Route::delete('driver-transactions/{driverTransaction}', [DriverTransactionController::class, 'destroy'])
+        ->whereNumber('driverTransaction')
+        ->middleware('permission:driver_invoices.adjust')
+        ->name('driver-transactions.destroy');
     Route::get('driver-invoices/pending', [DriverInvoiceController::class, 'pending'])->name('driver-invoices.pending');
     Route::get('driver-invoices/payments', [DriverInvoiceController::class, 'payments'])->name('driver-invoices.payments');
     Route::post('driver-invoices/preview', [DriverInvoiceController::class, 'preview'])->name('driver-invoices.preview');

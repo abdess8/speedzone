@@ -45,6 +45,7 @@ class SupportTicketController extends Controller
 
         return Inertia::render('support-tickets/index', [
             'tickets' => SupportTicketResource::collection($tickets)->response()->getData(true),
+            'stats' => $this->ticketQuery->statusCounts($request, $request->user()),
             'filters' => $request->only([
                 'reference', 'subject', 'seller', 'assigned_to', 'status', 'category',
                 'created_from', 'created_to', 'sort', 'direction', 'per_page',

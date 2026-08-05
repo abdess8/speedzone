@@ -54,7 +54,7 @@ class ImportOrdersRequest extends FormRequest
 
         $row['payment_method'] = $method?->value ?? $declared;
 
-        foreach (['is_fragile', 'can_be_opened', 'option_exchange'] as $flag) {
+        foreach (['is_fragile', 'can_be_opened', 'option_exchange', 'delivery_included'] as $flag) {
             $row[$flag] = filter_var($row[$flag] ?? false, FILTER_VALIDATE_BOOL);
         }
 
@@ -119,6 +119,7 @@ class ImportOrdersRequest extends FormRequest
                 "orders.{$index}.is_fragile" => ['boolean'],
                 "orders.{$index}.can_be_opened" => ['boolean'],
                 "orders.{$index}.option_exchange" => ['boolean'],
+                "orders.{$index}.delivery_included" => ['boolean'],
             ];
         }
 

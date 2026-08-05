@@ -25,9 +25,12 @@ import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common
 
 const isCashPayment = computed(() => props.form.payment_method === "CASH");
 
+// Mirrors Order::customerDeliveryShare(): a delivered price already covers the
+// shipping, so the customer is not asked for it a second time at the door.
 const totalAmount = computed(() => {
   const collectible = isCashPayment.value ? Number(props.form.order_amount || 0) : 0;
-  return collectible + Number(props.form.delivery_price || 0);
+  const shipping = props.form.delivery_included ? 0 : Number(props.form.delivery_price || 0);
+  return collectible + shipping;
 });
 
 watch(
@@ -273,9 +276,29 @@ watch(
             <InputError :message="form.errors.delivery_price" />
           </div>
 
-          <div class="d-flex justify-content-between align-items-center border-top pt-3">
-            <span class="fs-15 fw-medium">{{ $t('orders.form.total_amount') }}</span>
-            <span class="fs-18 fw-bold text-primary">{{ money(totalAmount) }}</span>
+          <div class="form-check form-switch mb-3">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="deliveryIncluded"
+              v-model="form.delivery_included"
+            />
+            <label class="form-check-label fw-medium" for="deliveryIncluded">
+              {{ $t('orders.form.delivery_included') }}
+            </label>
+            <div class="form-text">{{ $t('orders.form.delivery_included_hint') }}</div>
+          </div>
+
+          <div class="border-top pt-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fs-15 fw-medium">{{ $t('orders.form.total_amount') }}</span>
+              <span class="fs-18 fw-bold text-primary">{{ money(totalAmount) }}</span>
+            </div>
+            <div v-if="form.delivery_included" class="form-text mt-2 mb-0">
+              <i class="ri-information-line align-bottom me-1"></i>
+              {{ $t('orders.form.delivery_included_note', { amount: money(form.delivery_price || 0) }) }}
+            </div>
           </div>
         </BCardBody>
       </BCard>

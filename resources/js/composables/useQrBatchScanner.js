@@ -20,10 +20,11 @@ const REPEAT_GUARD_MS = 3000;
 const DETECT_INTERVAL_MS = 500;
 
 /**
- * Pull a tracking number out of a scanned string.
+ * Pull a reference out of a scanned string.
  *
  * Shipping labels encode the public tracking URL, while a hand-held wedge
- * scanner types the bare reference, so both shapes are accepted.
+ * scanner types the bare reference, so both shapes are accepted. Return labels
+ * carry the same shape under `/returns/`, which is why both paths are read.
  *
  * @param {string} raw
  * @returns {string|null}
@@ -35,7 +36,7 @@ export function parseTrackingNumber(raw) {
     return null;
   }
 
-  const fromUrl = value.match(/\/orders\/([A-Za-z0-9]+-[0-9]{4}-[0-9]+)/i);
+  const fromUrl = value.match(/\/(?:orders|returns)\/([A-Za-z0-9]+-[0-9]{4}-[0-9]+)/i);
 
   if (fromUrl) {
     return fromUrl[1];

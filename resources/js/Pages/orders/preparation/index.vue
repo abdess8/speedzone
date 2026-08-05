@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import Layout from '@/Layouts/main.vue';
 import PageHeader from '@/Components/page-header.vue';
 import FilterPanel from '@/Components/FilterPanel.vue';
+import StatusKpiCards from '@/Components/StatusKpiCards.vue';
 import PreparationScanner from './Partials/PreparationScanner.vue';
 
 /**
@@ -23,6 +24,7 @@ const { t } = useI18n();
 
 const props = defineProps({
   orders: { type: Object, default: () => ({ data: [], meta: {} }) },
+  stats: { type: Array, default: () => [] },
   filters: { type: Object, default: () => ({}) },
   hubCities: { type: Array, default: () => [] },
 });
@@ -148,6 +150,10 @@ onMounted(() => {
 <template>
   <Layout>
     <PageHeader :title="$t('preparation.title')" :pageTitle="$t('orders.page_title')" />
+
+    <!-- The queue is pinned to one status, so these report on the bench rather
+         than filtering it. -->
+    <StatusKpiCards :stats="stats" show-empty :clickable="false" />
 
     <BCard no-body>
       <FilterPanel :active-count="activeFilterCount" @apply="reload" @reset="resetFilters">

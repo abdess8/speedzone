@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Support\StatusCounts;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -28,7 +29,7 @@ class InvoiceQueryService
     /**
      * Build the filtered, scoped and sorted invoice query.
      */
-    public function build(Request $request, User $user): Builder
+    public function build(Request $request, User $user, bool $withStatusFilter = true): Builder
     {
         $query = Invoice::query()->with(['seller']);
 
@@ -37,10 +38,22 @@ class InvoiceQueryService
             $query->forSeller($user->accountOwnerId());
         }
 
-        $this->applyFilters($query, $request);
+        $this->applyFilters($query, $request, $withStatusFilter);
         $this->applySorting($query, $request);
 
         return $query;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function statusCounts(Request $request, User $user): array
+    {
+        return StatusCounts::build(
+            $this->build($request, $user, withStatusFilter: false),
+            InvoiceStatus::options(),
+            'invoices.status',
+        );
     }
 
     public function perPage(Request $request): int
@@ -54,7 +67,7 @@ class InvoiceQueryService
         return min($perPage, self::MAX_PAGE_SIZE);
     }
 
-    private function applyFilters(Builder $query, Request $request): void
+    private function applyFilters(Builder $query, Request $request, bool $withStatusFilter = true): void
     {
         $query->when($request->input('invoice_number'), fn (Builder $q, $value) => $q->where('invoice_number', 'like', "%{$value}%"));
 
@@ -75,7 +88,7 @@ class InvoiceQueryService
 
         $query->when($request->filled('seller_id'), fn (Builder $q) => $q->where('seller_id', $request->integer('seller_id')));
 
-        $query->when($request->input('status'), function (Builder $q, $value) {
+        $query->when($withStatusFilter ? $request->input('status') : null, function (Builder $q, $value) {
             $values = array_values(array_intersect((array) $value, InvoiceStatus::values()));
             if ($values !== []) {
                 $q->whereIn('status', $values);

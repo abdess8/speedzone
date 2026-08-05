@@ -122,6 +122,17 @@ return [
         'empty' => 'No transactions awaiting billing.',
     ],
 
+    'transactions' => [
+        'add' => 'Add a transaction',
+        'submit' => 'Save transaction',
+        'delete' => 'Delete',
+        'amount_hint' => 'Enter a positive amount: the sign follows from the selected type.',
+        'note_placeholder' => 'Reason shown to the driver',
+        'created' => ':type added to :driver\'s ledger.',
+        'deleted' => 'Transaction deleted.',
+        'not_deletable' => 'This transaction cannot be deleted: it comes from a delivery or is already attached to an invoice.',
+    ],
+
     'assign' => [
         'title' => 'Assign Driver',
         'select_driver' => 'Select a driver',
@@ -139,6 +150,8 @@ return [
         'cancel_text' => 'The attached transactions will be released and can be billed again.',
         'delete_title' => 'Delete this invoice?',
         'delete_text' => 'This action cannot be undone.',
+        'delete_transaction_title' => 'Delete this transaction?',
+        'delete_transaction_text' => 'The amount will be removed from the driver\'s balance. This action cannot be undone.',
         'confirm' => 'Yes, proceed',
     ],
 

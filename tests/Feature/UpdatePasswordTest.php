@@ -6,13 +6,27 @@ use Illuminate\Support\Facades\Hash;
 test('password can be updated', function () {
     $this->actingAs($user = User::factory()->create());
 
-    $response = $this->put('/user/password', [
+    $this->put('/user/password', [
         'current_password' => 'password',
-        'password' => 'new-password',
-        'password_confirmation' => 'new-password',
+        'password' => 'NewPassword123',
+        'password_confirmation' => 'NewPassword123',
     ]);
 
-    expect(Hash::check('new-password', $user->fresh()->password))->toBeTrue();
+    expect(Hash::check('NewPassword123', $user->fresh()->password))->toBeTrue();
+});
+
+test('a password that does not meet the policy is rejected', function () {
+    $this->actingAs($user = User::factory()->create());
+
+    $response = $this->put('/user/password', [
+        'current_password' => 'password',
+        'password' => 'newpassword',
+        'password_confirmation' => 'newpassword',
+    ]);
+
+    $response->assertSessionHasErrors('password', errorBag: 'updatePassword');
+
+    expect(Hash::check('password', $user->fresh()->password))->toBeTrue();
 });
 
 test('current password must be correct', function () {
@@ -20,8 +34,8 @@ test('current password must be correct', function () {
 
     $response = $this->put('/user/password', [
         'current_password' => 'wrong-password',
-        'password' => 'new-password',
-        'password_confirmation' => 'new-password',
+        'password' => 'NewPassword123',
+        'password_confirmation' => 'NewPassword123',
     ]);
 
     $response->assertSessionHasErrors();
@@ -34,8 +48,8 @@ test('new passwords must match', function () {
 
     $response = $this->put('/user/password', [
         'current_password' => 'password',
-        'password' => 'new-password',
-        'password_confirmation' => 'wrong-password',
+        'password' => 'NewPassword123',
+        'password_confirmation' => 'OtherPassword123',
     ]);
 
     $response->assertSessionHasErrors();

@@ -38,6 +38,7 @@ class OrderPreparationController extends Controller
 
         return Inertia::render('orders/preparation/index', [
             'orders' => PreparationOrderResource::collection($orders)->response()->getData(true),
+            'stats' => $this->preparation->statusCounts($filters),
             'filters' => $filters,
             'hubCities' => City::hubOptions(),
         ]);

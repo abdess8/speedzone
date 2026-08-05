@@ -33,6 +33,7 @@ return [
     'returns' => 'Returns',
     'returns_views' => [
         'all' => 'All returns',
+        'hand_back' => 'Restitution round',
         'created' => 'Created',
         'received_at_hub' => 'Received at hub',
         'in_transit_to_depot' => 'In transit to hub',
@@ -70,6 +71,7 @@ return [
     'delivery_zones' => 'Delivery Zones',
     'sectors' => 'Sectors',
     'driver_zones' => 'Driver Assignment',
+    'user_admin' => 'Users',
     'settings' => [
         'title' => 'Settings',
         'profile' => 'Profile',

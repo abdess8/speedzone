@@ -1,7 +1,11 @@
 <script setup>
+import GlobalSearch from '@/Components/GlobalSearch.vue';
+import NavModeSwitcher from '@/Components/NavModeSwitcher.vue';
 import NotificationBell from '@/Components/Notifications/NotificationBell.vue';
+import SettingsMenu from '@/Components/SettingsMenu.vue';
 import StoreSwitcher from '@/Components/StoreSwitcher.vue';
 import { layoutMethods } from '@/state/helpers';
+import { usePermissions } from '@/composables/usePermissions';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import french from '@assets/images/flags/fr.svg';
@@ -25,6 +29,14 @@ const setLanguage = (locale) => {
 
 const user = computed(() => page.props.auth?.user ?? null);
 const roleLabel = computed(() => user.value?.role_label ?? '');
+const completion = computed(() => user.value?.profile_completion ?? null);
+
+const { canAny } = usePermissions();
+
+/** The route is permission-gated, so the shortcut hides rather than 403s. */
+const canReachSupport = computed(() =>
+  canAny(['support.read.all', 'support.read.own', 'support.manage'])
+);
 </script>
 
 <script>
@@ -56,42 +68,6 @@ export default {
   },
   methods: {
     ...layoutMethods,
-    toggleHamburgerMenu() {
-      const windowSize = document.documentElement.clientWidth;
-      const layoutType = document.documentElement.getAttribute('data-layout');
-      const visibilityType = document.documentElement.getAttribute('data-sidebar-visibility');
-
-      document.documentElement.setAttribute('data-sidebar-visibility', 'show');
-
-      if (windowSize > 767) {
-        document.querySelector('.hamburger-icon')?.classList.toggle('open');
-      }
-
-      if (layoutType === 'horizontal') {
-        document.body.classList.toggle('menu');
-      }
-
-      if (visibilityType === 'show' && (layoutType === 'vertical' || layoutType === 'semibox')) {
-        if (windowSize < 1025 && windowSize > 767) {
-          document.body.classList.remove('vertical-sidebar-enable');
-          document.documentElement.getAttribute('data-sidebar-size') === 'sm'
-            ? document.documentElement.setAttribute('data-sidebar-size', '')
-            : document.documentElement.setAttribute('data-sidebar-size', 'sm');
-        } else if (windowSize > 1025) {
-          document.body.classList.remove('vertical-sidebar-enable');
-          document.documentElement.getAttribute('data-sidebar-size') === 'lg'
-            ? document.documentElement.setAttribute('data-sidebar-size', 'sm')
-            : document.documentElement.setAttribute('data-sidebar-size', 'lg');
-        } else if (windowSize <= 767) {
-          document.body.classList.add('vertical-sidebar-enable');
-          document.documentElement.setAttribute('data-sidebar-size', 'lg');
-        }
-      }
-
-      if (layoutType === 'twocolumn') {
-        document.body.classList.toggle('twocolumn-panel');
-      }
-    },
     initFullScreen() {
       document.body.classList.toggle('fullscreen-enable');
       if (
@@ -135,8 +111,6 @@ export default {
         pageTopbar.classList.remove('topbar-shadow');
       }
     });
-
-    document.getElementById('topnav-hamburger-icon')?.addEventListener('click', this.toggleHamburgerMenu);
   },
 };
 </script>
@@ -165,21 +139,14 @@ export default {
             </Link>
           </div>
 
-          <button
-            type="button"
-            class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger"
-            id="topnav-hamburger-icon"
-          >
-            <span class="hamburger-icon">
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-          </button>
         </div>
+
+        <GlobalSearch />
 
         <div class="d-flex align-items-center">
           <StoreSwitcher />
+
+          <NavModeSwitcher />
 
           <BDropdown
             class="dropdown"
@@ -234,9 +201,16 @@ export default {
             </BButton>
           </div>
 
-          <Link href="/chat" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle ms-1 header-item d-none d-sm-flex">
+          <Link
+            v-if="canReachSupport"
+            :href="route('support-tickets.index')"
+            class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle ms-1 header-item d-none d-sm-flex"
+            :title="$t('support_tickets.title')"
+          >
             <i class="bx bx-message-rounded-dots fs-22"></i>
           </Link>
+
+          <SettingsMenu />
 
           <NotificationBell />
 
@@ -263,6 +237,27 @@ export default {
             </template>
 
             <h6 class="dropdown-header">{{ $t('navbar.welcome', { name: user?.name ?? '' }) }}</h6>
+
+            <!-- Not a dropdown-item: the gauge is a read-out, and making it look
+                 clickable would promise a destination it does not have. -->
+            <div v-if="completion" class="px-3 py-2">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="fs-12 text-muted">{{ $t('profile.completion.title') }}</span>
+                <span class="fs-12 fw-semibold" :class="`text-${completion.level}`">{{ completion.score }}%</span>
+              </div>
+              <BProgress :max="100" style="height: 6px">
+                <BProgressBar :value="completion.score" :variant="completion.level" />
+              </BProgress>
+              <Link
+                v-if="!completion.is_complete"
+                :href="route('profile.show')"
+                class="d-inline-block mt-2 fs-12 text-primary text-decoration-underline"
+              >
+                {{ $t('profile.completion.improve') }}
+              </Link>
+            </div>
+
+            <div v-if="completion" class="dropdown-divider"></div>
 
             <Link class="dropdown-item" :href="route('profile.show')">
               <i class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i>

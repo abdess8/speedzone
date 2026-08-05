@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\DeliveryOutcome;
 use App\Enums\OrderFailureReason;
 use App\Enums\OrderStatus;
 use App\Enums\PartnerOrderStatus;
@@ -10,6 +11,7 @@ use App\Enums\ReturnInitiatedByRole;
 use App\Enums\ReturnReason;
 use App\Enums\TransferStatus;
 use App\Http\Requests\AssignOrderDriverRequest;
+use App\Http\Requests\StoreDeliveryOutcomeRequest;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Resources\OrderListResource;
@@ -22,6 +24,7 @@ use App\Models\Role;
 use App\Models\Sector;
 use App\Models\User;
 use App\Policies\OrderPolicy;
+use App\Services\DeliveryOutcomeService;
 use App\Services\OrderDriverAssignmentService;
 use App\Services\OrderLabelPdfService;
 use App\Services\OrderQueryService;
@@ -52,6 +55,7 @@ class OrderController extends Controller
         private readonly OrderDriverAssignmentService $driverAssignment,
         private readonly PartnerDeliveryIngestionService $partnerIngestion,
         private readonly OrderStockService $orderStock,
+        private readonly DeliveryOutcomeService $deliveryOutcome,
     ) {}
 
     public function index(Request $request): Response
@@ -69,6 +73,7 @@ class OrderController extends Controller
 
         return Inertia::render('orders/index', [
             'orders' => OrderListResource::collection($orders)->response()->getData(true),
+            'stats' => fn () => $this->orderQuery->statusCounts($request, $request->user()),
             'filters' => $request->only([
                 'tracking_number', 'order_number', 'customer_name', 'customer_phone',
                 'seller', 'city_id', 'sector_id', 'status', 'status_group', 'payment_method',
@@ -104,7 +109,7 @@ class OrderController extends Controller
                     'label' => OrderStatus::from($status)->label(),
                     'color' => OrderStatus::from($status)->color(),
                     'icon' => OrderStatus::from($status)->icon(),
-                    'requires_reason' => $status === OrderStatus::FAILED->value,
+                    'requires_reason' => OrderStatus::from($status)->carriesFailureReason(),
                 ])
                 ->values()
                 ->all())
@@ -114,6 +119,10 @@ class OrderController extends Controller
         return [
             'transitions' => $transitions,
             'failure_reasons' => OrderFailureReason::options(),
+            // The delivery leg is reported as an outcome rather than picked
+            // from the transition list: see OrderController::deliveryOutcome().
+            'delivery_outcomes' => DeliveryOutcome::options(),
+            'delivery_outcome_statuses' => DeliveryOutcomeService::reportableStatuses(),
             // Drivers only ever see orders assigned to them, so holding the
             // scoped permission is enough to enable the quick actions.
             'can_update_status' => $user->hasPermission('orders.update.all')
@@ -246,6 +255,15 @@ class OrderController extends Controller
         return Inertia::render('orders/show', [
             'order' => OrderResource::make($order)->resolve($request),
             'allowedTransitions' => $this->transitionOptions($order),
+            // A parcel on the round is closed through the outcome flow instead
+            // of the transition dropdown, so the page gets what that sheet needs.
+            'deliveryOutcome' => [
+                'reportable' => ! $order->isPartnerDelivery()
+                    && DeliveryOutcomeService::isReportable($order)
+                    && $request->user()->can('updateStatus', $order),
+                'outcomes' => DeliveryOutcome::options(),
+                'failure_reasons' => OrderFailureReason::options(),
+            ],
             'returnFilterOptions' => ['reasons' => ReturnReason::options()],
             'can' => array_merge($this->abilities($request), [
                 'update' => $request->user()->can('update', $order),
@@ -469,6 +487,44 @@ class OrderController extends Controller
     }
 
     /**
+     * Close a delivery attempt: delivered, or not delivered and why.
+     *
+     * Kept apart from `bulkStatus` because the driver does not pick a status
+     * here — he reports what happened, and the failure reason decides whether
+     * the parcel leaves the round or stays on it for another try.
+     */
+    public function deliveryOutcome(StoreDeliveryOutcomeRequest $request, Order $order): RedirectResponse
+    {
+        $this->authorize('updateStatus', $order);
+
+        if ($order->isPartnerDelivery()) {
+            return back()->with('error', __('partners.orders.sync.use_partner_endpoint'));
+        }
+
+        $order = $this->deliveryOutcome->record(
+            $order,
+            $request->user(),
+            $request->outcome(),
+            $request->failureReason(),
+            $request->input('note'),
+            $request->file('attachment'),
+        );
+
+        return back()->with('success', $this->deliveryOutcomeMessage($order, $request->outcome()));
+    }
+
+    private function deliveryOutcomeMessage(Order $order, DeliveryOutcome $outcome): string
+    {
+        if ($outcome === DeliveryOutcome::DELIVERED) {
+            return __('orders.delivery_outcome.flash.delivered', ['tracking' => $order->tracking_number]);
+        }
+
+        return $order->status === OrderStatus::READY_TO_RETURN
+            ? __('orders.delivery_outcome.flash.ready_to_return', ['tracking' => $order->tracking_number])
+            : __('orders.delivery_outcome.flash.attempt_recorded', ['count' => $order->failed_attempts_count]);
+    }
+
+    /**
      * Apply a status transition to several orders at once.
      */
     public function bulkStatus(Request $request): RedirectResponse
@@ -479,7 +535,9 @@ class OrderController extends Controller
             'to_status' => ['required', 'string', Rule::in(OrderStatus::values())],
             'comment' => ['nullable', 'string', 'max:1000'],
             'failure_reason' => [
-                Rule::requiredIf(fn () => $request->input('to_status') === OrderStatus::FAILED->value),
+                Rule::requiredIf(fn () => OrderStatus::tryFrom(
+                    (string) $request->input('to_status')
+                )?->carriesFailureReason() === true),
                 'nullable',
                 'string',
                 Rule::in(OrderFailureReason::values()),
@@ -635,8 +693,16 @@ class OrderController extends Controller
                 return [];
             }
 
-            return collect($this->transitionService->allowedNextStatuses($order))
-                ->filter(fn (string $status) => PartnerOrderStatus::isAllowed($status))
+            // A partner delivery is not governed by our transition graph: the
+            // partner's own vocabulary is authoritative and PartnerDeliveryService
+            // lets an operator jump freely inside it to mirror whatever the
+            // partner reports. Deriving the list from the native graph would
+            // hide states the partner still uses — "en attente de retour" chief
+            // among them, since FAILED left the graph with the outcome flow.
+            $current = $order->status instanceof OrderStatus ? $order->status->value : $order->status;
+
+            return collect(PartnerOrderStatus::values())
+                ->reject(fn (string $status) => $status === $current)
                 ->map(fn (string $status) => [
                     'value' => $status,
                     'label' => OrderStatus::from($status)->label(),
@@ -652,13 +718,21 @@ class OrderController extends Controller
             return [];
         }
 
+        // The two ways a delivery can end belong to the outcome flow, which
+        // asks for the reason that decides between them. Leaving them in the
+        // dropdown would offer a second, reason-less route to the same states.
+        $ownedByOutcomeFlow = DeliveryOutcomeService::isReportable($order)
+            ? [OrderStatus::DELIVERED->value, OrderStatus::READY_TO_RETURN->value]
+            : [];
+
         return collect($this->transitionService->allowedNextStatuses($order))
+            ->reject(fn (string $status) => in_array($status, $ownedByOutcomeFlow, true))
             ->filter(fn (string $status) => $user->hasPermission('orders.transition.to_'.strtolower($status)))
             ->map(fn (string $status) => [
                 'value' => $status,
                 'label' => OrderStatus::from($status)->label(),
                 'color' => OrderStatus::from($status)->color(),
-                'requires_reason' => $status === OrderStatus::FAILED->value,
+                'requires_reason' => OrderStatus::from($status)->carriesFailureReason(),
             ])
             ->values()
             ->all();

@@ -54,6 +54,13 @@ const RETURN_STATUS_VIEWS = [
   { key: 'delivered_to_vendor', status: 'DELIVERED_TO_VENDOR' },
 ];
 
+/** Naming a driver for the last mile, in bulk. */
+const RETURN_DISPATCH = [
+  'returns.manage',
+  'returns.update_status',
+  'returns.transition.to_in_delivery_to_vendor',
+];
+
 /** Sidebar children filtering the returns list down to one workflow step. */
 const returnStatusChildren = () => [
   {
@@ -61,6 +68,12 @@ const returnStatusChildren = () => [
     labelKey: 'sidebar.returns_views.all',
     href: '/returns',
     permissions: RETURN_READ,
+  },
+  {
+    key: 'returns-hand-back',
+    labelKey: 'sidebar.returns_views.hand_back',
+    href: '/returns/hand-back',
+    permissions: RETURN_DISPATCH,
   },
   ...RETURN_STATUS_VIEWS.map(({ key, status }) => ({
     key: `returns-${key}`,
@@ -325,20 +338,49 @@ export const menuItems = [
     ],
   },
   {
-    key: 'guides',
-    labelKey: 'sidebar.guides',
-    icon: 'ri-graduation-cap-line',
-    href: '/guides',
+    // Everything that administers *people*: the accounts themselves, the ones
+    // still waiting to be let in, and the B2B partners with their assignments.
+    // Configuration knobs live in the topbar gear instead, which is why this
+    // group replaced the old Settings menu rather than sitting next to it.
+    key: 'user-admin',
+    labelKey: 'sidebar.user_admin',
+    icon: 'ri-team-line',
     footer: true,
-    // The catalog filters itself per role, so the entry is offered to everyone.
     permissions: [],
+    children: [
+      {
+        key: 'users',
+        labelKey: 'sidebar.settings.users',
+        href: '/users',
+        permissions: ['users.read'],
+      },
+      {
+        key: 'pending-sellers',
+        labelKey: 'sidebar.settings.pending_sellers',
+        route: 'admin.pending-users.index',
+        permissions: ['users.read'],
+      },
+      {
+        key: 'partners',
+        labelKey: 'sidebar.settings.partners',
+        href: '/partners',
+        permissions: ['partners.read'],
+      },
+      {
+        key: 'partner-assignments',
+        labelKey: 'sidebar.settings.partner_assignments',
+        route: 'partner-assignments.index',
+        permissions: ['partners.update'],
+      },
+    ],
   },
   {
     key: 'help-center',
     labelKey: 'sidebar.help_center',
     icon: 'ri-book-open-line',
     footer: true,
-    // Both pages document rules the reader already lives under.
+    // All three document rules the reader already lives under, and the guide
+    // catalogue filters itself per role.
     permissions: [],
     children: [
       {
@@ -353,62 +395,11 @@ export const menuItems = [
         route: 'help.processes',
         permissions: [],
       },
-    ],
-  },
-  {
-    key: 'settings',
-    labelKey: 'sidebar.settings.title',
-    icon: 'ri-settings-3-line',
-    footer: true,
-    permissions: [],
-    children: [
       {
-        key: 'profile',
-        labelKey: 'sidebar.settings.profile',
-        route: 'profile.show',
+        key: 'guides',
+        labelKey: 'sidebar.guides',
+        href: '/guides',
         permissions: [],
-      },
-      {
-        key: 'users',
-        labelKey: 'sidebar.settings.users',
-        href: '/users',
-        permissions: ['users.read'],
-      },
-      {
-        key: 'pending-sellers',
-        labelKey: 'sidebar.settings.pending_sellers',
-        route: 'admin.pending-users.index',
-        permissions: ['users.read'],
-      },
-      {
-        key: 'roles',
-        labelKey: 'sidebar.settings.roles_permissions',
-        href: '/roles',
-        permissions: ['roles.read'],
-      },
-      {
-        key: 'alerts',
-        labelKey: 'sidebar.settings.alerts',
-        href: '/alerts',
-        permissions: ['alerts.read'],
-      },
-      {
-        key: 'partners',
-        labelKey: 'sidebar.settings.partners',
-        href: '/partners',
-        permissions: ['partners.read'],
-      },
-      {
-        key: 'partner-assignments',
-        labelKey: 'sidebar.settings.partner_assignments',
-        route: 'partner-assignments.index',
-        permissions: ['partners.update'],
-      },
-      {
-        key: 'api-integrations',
-        labelKey: 'sidebar.settings.api_integrations',
-        route: 'api-integrations.index',
-        permissions: ['orders.create'],
       },
     ],
   },

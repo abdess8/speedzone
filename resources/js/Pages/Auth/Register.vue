@@ -25,6 +25,21 @@ const cityOptions = computed(() =>
     (props.cities ?? []).map((city) => ({ value: city.id, label: city.name }))
 );
 
+// Mirrors Password::min(8)->mixedCase()->numbers() enforced server side, so the
+// rules are visible while typing instead of only after a failed submit.
+const passwordChecks = computed(() => [
+    { key: 'length', met: form.password.length >= 8 },
+    { key: 'uppercase', met: /\p{Lu}/u.test(form.password) },
+    { key: 'lowercase', met: /\p{Ll}/u.test(form.password) },
+    { key: 'number', met: /\d/.test(form.password) },
+]);
+
+const passwordIsStrong = computed(() => passwordChecks.value.every((check) => check.met));
+
+const passwordsMatch = computed(
+    () => form.password.length > 0 && form.password === form.password_confirmation
+);
+
 const submit = () => {
     form.post(route('register'), {
         onFinish: () => form.reset('password', 'password_confirmation'),
@@ -174,6 +189,20 @@ export default {
                                                 </BButton>
                                                 <InputError :message="form.errors.password" />
                                             </div>
+
+                                            <ul class="list-unstyled mb-0 mt-2 fs-12">
+                                                <li
+                                                    v-for="check in passwordChecks"
+                                                    :key="check.key"
+                                                    :class="check.met ? 'text-success' : 'text-muted'"
+                                                >
+                                                    <i
+                                                        class="align-middle me-1"
+                                                        :class="check.met ? 'ri-checkbox-circle-fill' : 'ri-checkbox-blank-circle-line'"
+                                                    ></i>
+                                                    {{ $t(`seller_registration.register.password_rules.${check.key}`) }}
+                                                </li>
+                                            </ul>
                                         </BCol>
 
                                         <BCol md="6">
@@ -198,6 +227,13 @@ export default {
                                                 </BButton>
                                                 <InputError :message="form.errors.password_confirmation" />
                                             </div>
+
+                                            <p
+                                                v-if="form.password_confirmation && !passwordsMatch"
+                                                class="fs-12 text-danger mb-0 mt-2"
+                                            >
+                                                {{ $t('seller_registration.register.password_rules.mismatch') }}
+                                            </p>
                                         </BCol>
                                     </BRow>
 
@@ -207,11 +243,30 @@ export default {
                                             class="w-100"
                                             type="submit"
                                             :class="{ 'opacity-25': form.processing }"
-                                            :disabled="form.processing"
+                                            :disabled="form.processing || !passwordIsStrong || !passwordsMatch"
                                         >
                                             {{ $t('seller_registration.register.submit') }}
                                         </BButton>
                                     </div>
+
+                                    <div class="mt-4 text-center">
+                                        <div class="signin-other-title">
+                                            <h5 class="fs-13 mb-4 title">{{ $t('seller_registration.login.or') }}</h5>
+                                        </div>
+
+                                        <!-- Full page load, not an Inertia visit: the OAuth handshake
+                                             leaves the SPA for Google's consent screen. -->
+                                        <a :href="route('auth.google.redirect')" class="btn btn-light border w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                                            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+                                                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                                                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                                                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                                                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                                            </svg>
+                                            <span class="fw-medium">{{ $t('seller_registration.login.google') }}</span>
+                                        </a>
+                                    </div>
+
                                 </form>
                             </BCardBody>
                         </BCard>

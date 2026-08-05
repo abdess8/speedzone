@@ -10,6 +10,7 @@ import EntityLink from "@/Components/EntityLink.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import FilterPanel from "@/Components/FilterPanel.vue";
 import StatusPills from "@/Components/StatusPills.vue";
+import StatusKpiCards from "@/Components/StatusKpiCards.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import { useGuideSignals } from "@/composables/useGuideSignals";
@@ -19,6 +20,7 @@ const { t } = useI18n();
 
 const props = defineProps({
   returns: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
+  stats: { type: Array, default: () => [] },
   filters: { type: Object, default: () => ({}) },
   filterOptions: { type: Object, default: () => ({}) },
   can: { type: Object, default: () => ({}) },
@@ -117,6 +119,13 @@ onMounted(() => {
   <Layout>
     <PageHeader :title="$t('returns.title')" :pageTitle="$t('returns.page_title')" />
 
+    <StatusKpiCards
+      :stats="stats"
+      :model-value="filters.status"
+      :all-label="$t('common.all_statuses')"
+      @select="selectStatus"
+    />
+
     <BCard no-body>
       <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
         <template #title>
@@ -124,6 +133,10 @@ onMounted(() => {
         </template>
 
         <template #actions>
+          <Link v-if="can.hand_back" :href="route('returns.hand-back')" class="btn btn-soft-success">
+            <i class="ri-e-bike-2-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('returns.hand_back.open') }}</span>
+          </Link>
           <button v-if="can.scan" type="button" class="btn btn-soft-primary" @click="showQrScanner = true">
             <i class="ri-qr-scan-2-line align-bottom"></i>
             <span class="d-none d-sm-inline ms-1">{{ $t('returns.qr_scan') }}</span>
@@ -217,6 +230,7 @@ onMounted(() => {
                 <th>{{ $t('returns.table.seller') }}</th>
                 <th>{{ $t('returns.table.reason') }}</th>
                 <th>{{ $t('returns.table.status') }}</th>
+                <th>{{ $t('returns.hand_back.driver') }}</th>
                 <th>{{ $t('returns.table.current_city') }}</th>
                 <th>{{ $t('returns.table.created') }}</th>
                 <th></th>
@@ -224,7 +238,7 @@ onMounted(() => {
             </thead>
             <tbody>
               <tr v-if="rows.length === 0">
-                <td colspan="9" class="text-center text-muted py-4">{{ $t('returns.empty') }}</td>
+                <td colspan="10" class="text-center text-muted py-4">{{ $t('returns.empty') }}</td>
               </tr>
               <tr v-for="row in rows" :key="row.id">
                 <td><span class="fw-medium">{{ row.reference }}</span></td>
@@ -240,6 +254,10 @@ onMounted(() => {
                 <td>{{ row.reason_label }}</td>
                 <td>
                   <span class="badge" :class="`bg-${row.status_color}-subtle text-${row.status_color}`">{{ row.status_label }}</span>
+                </td>
+                <td>
+                  <UserAvatar v-if="row.assigned_driver" :user="row.assigned_driver" :size="24" clickable show-name />
+                  <span v-else class="text-muted">{{ $t('returns.hand_back.unassigned') }}</span>
                 </td>
                 <td>{{ row.current_location_city?.name || '—' }}</td>
                 <td>{{ formatDate(row.created_at) }}</td>

@@ -46,10 +46,10 @@ beforeEach(function () {
     $this->admin = invoiceDatesUser(Role::ADMIN);
 });
 
-function invoiceDatesUser(string $roleName): User
+function invoiceDatesUser(string $roleName, ?City $city = null): User
 {
     $role = Role::query()->where('name', $roleName)->firstOrFail();
-    $user = User::factory()->create(['role_id' => $role->id, 'city_id' => null]);
+    $user = User::factory()->create(['role_id' => $role->id, 'city_id' => $city?->id]);
     $user->roles()->sync([$role->id]);
 
     return $user->fresh(['roles.permissions']);
@@ -85,12 +85,15 @@ test('an order stamps the day it comes back to the seller', function () {
 
     expect($order->fresh()->returned_at)->toBeNull();
 
+    // The last leg is carried by a named driver, who is the one to close it.
+    $driver = invoiceDatesUser(Role::DRIVER, $this->city);
+
     $transitions = app(ReturnTransitionService::class);
     $transitions->receiveAtHub($return->fresh(), $this->admin);
     $transitions->transition($return->fresh(), ReturnStatus::IN_TRANSIT_TO_DEPOT, $this->admin);
     $transitions->transition($return->fresh(), ReturnStatus::ARRIVED_VENDOR_HUB, $this->admin);
-    $transitions->transition($return->fresh(), ReturnStatus::IN_DELIVERY_TO_VENDOR, $this->admin);
-    $transitions->transition($return->fresh(), ReturnStatus::DELIVERED_TO_VENDOR, $this->admin);
+    $transitions->handBack($return->fresh(), $this->admin, $driver);
+    $transitions->transition($return->fresh(), ReturnStatus::DELIVERED_TO_VENDOR, $driver);
 
     $order->refresh();
 

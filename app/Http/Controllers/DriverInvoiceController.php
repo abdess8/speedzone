@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\BillingFrequency;
 use App\Enums\DriverInvoiceStatus;
+use App\Enums\DriverTransactionType;
 use App\Http\Requests\GenerateDriverInvoiceRequest;
 use App\Http\Requests\MarkDriverInvoicePaidRequest;
 use App\Http\Resources\DriverInvoiceResource;
@@ -162,6 +163,7 @@ class DriverInvoiceController extends Controller
             'preview' => $preview,
             'driverId' => $driver->id,
             'drivers' => $user->hasPermission('driver_invoices.read.all') ? $this->driverOptions() : [],
+            'transactionTypes' => DriverTransactionType::manualOptions(),
             'billing' => [
                 'billing_enabled' => (bool) $driver->billing_enabled,
                 'billing_frequency' => $frequency,
@@ -312,6 +314,7 @@ class DriverInvoiceController extends Controller
 
         return [
             'generate' => $user->hasPermission('driver_invoices.generate'),
+            'adjust' => $user->hasPermission('driver_invoices.adjust'),
             'read_all' => $user->hasPermission('driver_invoices.read.all'),
             'pay' => $user->hasPermission('driver_invoices.pay'),
             'cancel' => $user->hasPermission('driver_invoices.cancel'),

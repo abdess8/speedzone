@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Enums\PickupRequestStatus;
 use App\Models\PickupRequest;
 use App\Models\User;
+use App\Support\StatusCounts;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -13,7 +15,7 @@ class PickupRequestQueryService
 
     private const MAX_PAGE_SIZE = 100;
 
-    public function build(Request $request, User $user): Builder
+    public function build(Request $request, User $user, bool $withStatusFilter = true): Builder
     {
         $query = PickupRequest::query()
             ->with(['creator.roles', 'assignee.roles'])
@@ -29,9 +31,21 @@ class PickupRequestQueryService
             $query->whereRaw('1 = 0');
         }
 
-        $this->applyFilters($query, $request);
+        $this->applyFilters($query, $request, $withStatusFilter);
 
         return $query->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function statusCounts(Request $request, User $user): array
+    {
+        return StatusCounts::build(
+            $this->build($request, $user, withStatusFilter: false),
+            PickupRequestStatus::options(),
+            'pickup_requests.status',
+        );
     }
 
     public function perPage(Request $request): int
@@ -45,7 +59,7 @@ class PickupRequestQueryService
         return min($perPage, self::MAX_PAGE_SIZE);
     }
 
-    private function applyFilters(Builder $query, Request $request): void
+    private function applyFilters(Builder $query, Request $request, bool $withStatusFilter = true): void
     {
         $query->when($request->filled('search'), fn (Builder $q) => $q->where(
             'reference',
@@ -53,7 +67,10 @@ class PickupRequestQueryService
             '%'.$request->string('search').'%'
         ));
 
-        $query->when($request->filled('status'), fn (Builder $q) => $q->where('status', $request->string('status')));
+        $query->when(
+            $withStatusFilter && $request->filled('status'),
+            fn (Builder $q) => $q->where('status', $request->string('status'))
+        );
 
         $query->when($request->filled('seller_id'), fn (Builder $q) => $q->where('created_by', $request->integer('seller_id')));
 

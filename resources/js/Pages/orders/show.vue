@@ -14,6 +14,7 @@ import SupportTicketsPanel from "@/Components/SupportTicketsPanel.vue";
 import EntityLink from "@/Components/EntityLink.vue";
 import ProductThumb from "../stock/Partials/ProductThumb.vue";
 import CreateReturnModal from "../returns/Partials/CreateReturnModal.vue";
+import DeliveryOutcomeSheet from "./Partials/DeliveryOutcomeSheet.vue";
 import Swal from "sweetalert2";
 import { usePermissions } from "@/composables/usePermissions";
 
@@ -23,6 +24,10 @@ const { canAny } = usePermissions();
 const props = defineProps({
   order: { type: Object, required: true },
   allowedTransitions: { type: Array, default: () => [] },
+  deliveryOutcome: {
+    type: Object,
+    default: () => ({ reportable: false, outcomes: [], failure_reasons: [] }),
+  },
   can: { type: Object, default: () => ({}) },
   returnFilterOptions: { type: Object, default: () => ({ reasons: [] }) },
   driverOptions: { type: Array, default: () => [] },
@@ -167,6 +172,32 @@ const changeStatus = (status) => {
   });
 };
 
+/*
+ * Closing the delivery leg. The same sheet the driver sees on his phone, which
+ * BottomSheet renders as a centered dialog from tablets up — one flow, so the
+ * failure reason can never be skipped just because the operator sits at a desk.
+ */
+const canReportOutcome = computed(() => props.deliveryOutcome.reportable === true);
+const showOutcomeSheet = ref(false);
+const outcomeProcessing = ref(false);
+
+const submitDeliveryOutcome = ({ outcome, failure_reason, note, attachment }) => {
+  outcomeProcessing.value = true;
+
+  router.post(
+    route("orders.delivery-outcome", props.order.id),
+    { outcome, failure_reason, note, attachment },
+    {
+      forceFormData: true,
+      preserveScroll: true,
+      onFinish: () => {
+        outcomeProcessing.value = false;
+        showOutcomeSheet.value = false;
+      },
+    }
+  );
+};
+
 const syncPartner = async () => {
   if (!props.order.partner?.id) return;
 
@@ -244,7 +275,25 @@ onMounted(() => {
         <span class="badge fs-13" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
           {{ order.status_label }}
         </span>
+        <span
+          v-if="order.failed_attempts_count > 0"
+          class="badge fs-13 bg-warning-subtle text-warning"
+          :title="order.failure_reason_label"
+        >
+          <i class="ri-history-line align-bottom me-1"></i>
+          {{ $t('orders.delivery_outcome.attempts_badge', { count: order.failed_attempts_count }) }}
+        </span>
         <div class="vr"></div>
+
+        <button
+          v-if="canReportOutcome"
+          class="btn btn-sm btn-primary"
+          :title="$t('orders.delivery_outcome.title')"
+          @click="showOutcomeSheet = true"
+        >
+          <i class="ri-truck-line align-bottom"></i>
+          <span class="d-none d-sm-inline ms-1">{{ $t('orders.delivery_outcome.title') }}</span>
+        </button>
 
         <!-- Ten actions on one row: labels collapse below `sm` so the row stays
              a single line of icons, and `title` is what still names each one. -->
@@ -634,6 +683,10 @@ onMounted(() => {
               <span class="fw-semibold">{{ $t('orders.show.total_amount') }}</span>
               <span class="fw-bold fs-16 text-primary">{{ money(order.total_amount) }} MAD</span>
             </div>
+            <div v-if="order.delivery_included" class="text-muted fs-13 mt-2">
+              <i class="ri-information-line align-bottom me-1"></i>
+              {{ $t('orders.show.delivery_included_note', { amount: money(order.delivery_price) }) }}
+            </div>
           </BCardBody>
         </BCard>
 
@@ -648,6 +701,16 @@ onMounted(() => {
         </BCard>
       </BCol>
     </BRow>
+
+    <DeliveryOutcomeSheet
+      :show="showOutcomeSheet"
+      :order="order"
+      :outcomes="deliveryOutcome.outcomes"
+      :failure-reasons="deliveryOutcome.failure_reasons"
+      :processing="outcomeProcessing"
+      @close="showOutcomeSheet = false"
+      @submit="submitDeliveryOutcome"
+    />
 
     <CreateReturnModal
       v-if="can.request_return"

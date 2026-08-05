@@ -8,6 +8,7 @@ import CreateTransferModal from "./Partials/CreateTransferModal.vue";
 import EntityLink from "@/Components/EntityLink.vue";
 import FilterPanel from "@/Components/FilterPanel.vue";
 import StatusPills from "@/Components/StatusPills.vue";
+import StatusKpiCards from "@/Components/StatusKpiCards.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
@@ -16,6 +17,7 @@ const { t } = useI18n();
 
 const props = defineProps({
   transfers: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
+  stats: { type: Array, default: () => [] },
   filters: { type: Object, default: () => ({}) },
   filterOptions: { type: Object, default: () => ({}) },
   eligibleOrders: { type: Array, default: () => [] },
@@ -119,6 +121,13 @@ onMounted(() => {
 <template>
   <Layout>
     <PageHeader :title="$t('transfers.title')" :pageTitle="$t('transfers.page_title')" />
+
+    <StatusKpiCards
+      :stats="stats"
+      :model-value="filters.status"
+      :all-label="$t('common.all_statuses')"
+      @select="selectStatus"
+    />
 
     <BCard no-body>
       <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">

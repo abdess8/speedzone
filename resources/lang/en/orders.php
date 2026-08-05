@@ -42,6 +42,7 @@ return [
             'is_fragile' => 'Fragile parcel',
             'can_be_opened' => 'Opening allowed',
             'option_exchange' => 'Exchange option',
+            'delivery_included' => 'Delivery included',
         ],
         'upload' => [
             'drop_title' => 'Drop your file here',
@@ -197,9 +198,31 @@ return [
         'note_label' => 'Comment (optional)',
         'note_placeholder' => 'Add details if needed…',
         'confirm' => 'Confirm',
+        'outcome_title' => 'Delivery outcome',
     ],
     'failure' => [
         'reason_required' => 'Please select a non-delivery reason.',
+    ],
+    'delivery_outcome' => [
+        'DELIVERED' => 'Delivered',
+        'FAILED' => 'Failed',
+        'title' => 'Delivery outcome',
+        'question' => 'Was the parcel handed over to the customer?',
+        'not_out_for_delivery' => 'This order is not out for delivery.',
+        'attempt_label' => 'Attempt #:count',
+        // Phrased so it reads correctly at any count: vue-i18n runs in legacy
+        // mode here, where `$t` does not pick a plural branch.
+        'attempts_badge' => 'Failed attempts: :count',
+        'ends_delivery_hint' => 'This reason takes the parcel off the round: the order moves to "Ready to return".',
+        'retry_hint' => 'The order stays out for delivery, so you can try again later.',
+        'attachment_label' => 'Attachment (optional)',
+        'attachment_hint' => 'Photo or PDF, 5 MB maximum.',
+        'attachment_remove' => 'Remove attachment',
+        'flash' => [
+            'delivered' => 'Order :tracking delivered.',
+            'ready_to_return' => 'Order :tracking taken off the round: ready to return.',
+            'attempt_recorded' => 'Delivery attempt recorded (:count in total). The order stays out for delivery.',
+        ],
     ],
     'show' => [
         'general' => 'General Information',
@@ -230,6 +253,7 @@ return [
         'cash_collection' => 'Cash Collection',
         'amount_to_collect' => 'Amount to Collect',
         'delivery_price' => 'Delivery Price',
+        'delivery_included_note' => 'Delivery included: the :amount MAD fee is not collected from the customer, it is deducted on the seller invoice.',
         'total_amount' => 'Total Amount',
         'partner' => 'Partner',
         'partner_reference' => 'Partner ref.',
@@ -274,12 +298,17 @@ return [
         'order_value_placeholder' => 'Package value if needed',
         'delivery_price' => 'Delivery Price',
         'delivery_price_hint' => '(auto-filled from sector)',
+        'delivery_included' => 'Delivery included',
+        'delivery_included_hint' => 'The price quoted to the customer already covers the delivery.',
+        'delivery_included_note' => 'The customer only pays the order amount. The :amount MAD delivery fee stays on you and will be deducted on your invoice.',
         'total_amount' => 'Total Amount',
     ],
     'timeline' => [
         'empty' => 'No tracking history yet.',
         'by' => 'by :name',
         'system' => 'SYSTEM (Automatic Update)',
+        'attachment' => 'Attachment',
+        'open_attachment' => 'Open attachment',
     ],
     'lookups' => [
         'pickup' => 'Pickup',

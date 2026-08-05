@@ -2,6 +2,10 @@
 // custom-variables
 //
 
+// Global UI scale, applied once as a root `zoom` in custom.scss. Below 1 the
+// whole interface gets denser without any component knowing about it.
+$ui-scale:                                        0.9;
+
 // Vertical menu
 $vertical-menu-width:                             250px;
 $vertical-menu-width-md:                          180px;

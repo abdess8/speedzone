@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Enums\TransferStatus;
 use App\Models\Transfer;
 use App\Models\User;
+use App\Support\StatusCounts;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -13,7 +15,7 @@ class TransferQueryService
 
     private const MAX_PAGE_SIZE = 100;
 
-    public function build(Request $request, User $user): Builder
+    public function build(Request $request, User $user, bool $withStatusFilter = true): Builder
     {
         $query = Transfer::query()
             ->with(['fromCity', 'toCity', 'creator.roles', 'assignee.roles'])
@@ -27,9 +29,21 @@ class TransferQueryService
             $query->whereRaw('1 = 0');
         }
 
-        $this->applyFilters($query, $request);
+        $this->applyFilters($query, $request, $withStatusFilter);
 
         return $query->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function statusCounts(Request $request, User $user): array
+    {
+        return StatusCounts::build(
+            $this->build($request, $user, withStatusFilter: false),
+            TransferStatus::options(),
+            'transfers.status',
+        );
     }
 
     public function perPage(Request $request): int
@@ -43,7 +57,7 @@ class TransferQueryService
         return min($perPage, self::MAX_PAGE_SIZE);
     }
 
-    private function applyFilters(Builder $query, Request $request): void
+    private function applyFilters(Builder $query, Request $request, bool $withStatusFilter = true): void
     {
         $query->when($request->filled('search'), fn (Builder $q) => $q->where(
             'reference',
@@ -51,7 +65,10 @@ class TransferQueryService
             '%'.$request->string('search').'%'
         ));
 
-        $query->when($request->filled('status'), fn (Builder $q) => $q->where('status', $request->string('status')));
+        $query->when(
+            $withStatusFilter && $request->filled('status'),
+            fn (Builder $q) => $q->where('status', $request->string('status'))
+        );
 
         $query->when($request->filled('from_city_id'), fn (Builder $q) => $q->where('from_city_id', $request->integer('from_city_id')));
 

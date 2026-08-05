@@ -33,6 +33,7 @@ return [
     'returns' => 'Returns',
     'returns_views' => [
         'all' => 'All returns',
+        'hand_back' => 'Restitution round',
         'created' => 'Created',
         'received_at_hub' => 'Received at hub',
         'in_transit_to_depot' => 'In transit to hub',

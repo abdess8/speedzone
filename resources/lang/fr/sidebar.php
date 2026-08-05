@@ -33,6 +33,7 @@ return [
     'returns' => 'Retours',
     'returns_views' => [
         'all' => 'Tous les retours',
+        'hand_back' => 'Tournée de restitution',
         'created' => 'Créés',
         'received_at_hub' => 'Reçus au dépôt',
         'in_transit_to_depot' => 'En transit vers hub',

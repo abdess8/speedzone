@@ -25,6 +25,8 @@ class OrderReturn extends Model
         'order_id',
         'store_id',
         'created_by',
+        'assigned_to',
+        'assigned_at',
         'initiated_by_role',
         'reason',
         'status',
@@ -40,6 +42,7 @@ class OrderReturn extends Model
     protected $casts = [
         'status' => ReturnStatus::class,
         'initiated_by_role' => ReturnInitiatedByRole::class,
+        'assigned_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -69,6 +72,14 @@ class OrderReturn extends Model
     public function creator(): BelongsTo
     {
         return $this->createdBy();
+    }
+
+    /**
+     * The driver carrying the parcel on the last leg, back to the seller.
+     */
+    public function assignedDriver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     public function currentLocationCity(): BelongsTo
@@ -121,6 +132,41 @@ class OrderReturn extends Model
         $status = $this->status instanceof ReturnStatus ? $this->status : ReturnStatus::from($this->status);
 
         return $status->isTerminal();
+    }
+
+    /**
+     * The city the parcel has to end up in: the seller's own.
+     */
+    public function vendorCityId(): ?int
+    {
+        $cityId = $this->order?->seller?->city_id;
+
+        return $cityId === null ? null : (int) $cityId;
+    }
+
+    /**
+     * City the hand-back happens in: where the parcel physically sits, falling
+     * back to the seller's own city while no leg has stamped a location yet.
+     */
+    public function handBackCityId(): ?int
+    {
+        $cityId = $this->current_location_city_id ?? $this->vendorCityId() ?? $this->order?->city_id;
+
+        return $cityId === null ? null : (int) $cityId;
+    }
+
+    /**
+     * Whether the parcel already sits in the seller's city, which is what makes
+     * the inter-city leg pointless: a return refused three streets away from the
+     * shop it came from has nothing to transfer.
+     */
+    public function isAtVendorCity(): bool
+    {
+        $vendorCityId = $this->vendorCityId();
+
+        return $vendorCityId !== null
+            && $this->current_location_city_id !== null
+            && (int) $this->current_location_city_id === $vendorCityId;
     }
 
     /**
@@ -204,5 +250,25 @@ class OrderReturn extends Model
             ReturnStatus::DELIVERED_TO_VENDOR->value,
             ReturnStatus::CANCELLED->value,
         ]);
+    }
+
+    /**
+     * Parcels parked at the seller's hub, waiting for a driver to take them the
+     * last mile. This is what the bulk hand-back screen scans against.
+     */
+    public function scopeAwaitingHandBack(Builder $query, ?int $cityId = null): Builder
+    {
+        $query->where('status', ReturnStatus::ARRIVED_VENDOR_HUB->value);
+
+        if ($cityId) {
+            $query->where('current_location_city_id', $cityId);
+        }
+
+        return $query;
+    }
+
+    public function scopeAssignedTo(Builder $query, int $driverId): Builder
+    {
+        return $query->where('assigned_to', $driverId);
     }
 }

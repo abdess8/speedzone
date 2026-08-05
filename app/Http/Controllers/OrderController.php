@@ -73,6 +73,7 @@ class OrderController extends Controller
 
         return Inertia::render('orders/index', [
             'orders' => OrderListResource::collection($orders)->response()->getData(true),
+            'stats' => fn () => $this->orderQuery->statusCounts($request, $request->user()),
             'filters' => $request->only([
                 'tracking_number', 'order_number', 'customer_name', 'customer_phone',
                 'seller', 'city_id', 'sector_id', 'status', 'status_group', 'payment_method',

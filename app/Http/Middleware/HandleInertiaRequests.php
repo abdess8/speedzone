@@ -53,6 +53,9 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+                // A batch action that partly succeeded is neither, and saying
+                // "success" over three failed parcels would be a lie.
+                'warning' => fn () => $request->session()->get('warning'),
             ],
             'locale' => $locale,
             'permissions' => fn () => $request->user()?->permissionNames() ?? [],

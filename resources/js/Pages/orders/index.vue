@@ -7,6 +7,7 @@ import PageHeader from "@/Components/page-header.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
 import FilterPanel from "@/Components/FilterPanel.vue";
 import StatusPills from "@/Components/StatusPills.vue";
+import StatusKpiCards from "@/Components/StatusKpiCards.vue";
 import DriverOrderCard from "./Partials/DriverOrderCard.vue";
 import DriverStatusSheet from "./Partials/DriverStatusSheet.vue";
 import DeliveryOutcomeSheet from "./Partials/DeliveryOutcomeSheet.vue";
@@ -20,6 +21,7 @@ const { t } = useI18n();
 
 const props = defineProps({
   orders: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
+  stats: { type: Array, default: () => [] },
   filters: { type: Object, default: () => ({}) },
   filterOptions: { type: Object, default: () => ({}) },
   can: { type: Object, default: () => ({}) },
@@ -94,8 +96,9 @@ const query = () => {
 };
 
 // Filter options and abilities never change between two visits to this page,
-// so every table interaction asks the server for the table only.
-const TABLE_PROPS = ["orders", "filters"];
+// so every table interaction asks the server for the table only. The status
+// counts do move with the filters, hence their place in the list.
+const TABLE_PROPS = ["orders", "filters", "stats"];
 
 const reload = () => {
   router.get(route("orders.index"), query(), {
@@ -326,6 +329,13 @@ onMounted(() => {
 <template>
   <Layout>
     <PageHeader :title="$t('orders.title')" :pageTitle="$t('orders.page_title')" />
+
+    <StatusKpiCards
+      :stats="stats"
+      :model-value="filters.status"
+      :all-label="$t('common.all_statuses')"
+      @select="selectStatus"
+    />
 
     <BCard no-body>
       <FilterPanel

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\ReturnStatus;
 use App\Models\OrderReturn;
 use App\Models\User;
+use App\Support\StatusCounts;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -14,7 +15,7 @@ class ReturnQueryService
 
     private const MAX_PAGE_SIZE = 100;
 
-    public function build(Request $request, User $user): Builder
+    public function build(Request $request, User $user, bool $withStatusFilter = true): Builder
     {
         $query = OrderReturn::query()
             ->with([
@@ -22,6 +23,7 @@ class ReturnQueryService
                 'order.city',
                 'currentLocationCity',
                 'createdBy.roles',
+                'assignedDriver',
             ]);
 
         if ($user->hasPermission('returns.read.all')) {
@@ -39,9 +41,21 @@ class ReturnQueryService
             $query->whereRaw('1 = 0');
         }
 
-        $this->applyFilters($query, $request);
+        $this->applyFilters($query, $request, $withStatusFilter);
 
         return $query->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function statusCounts(Request $request, User $user): array
+    {
+        return StatusCounts::build(
+            $this->build($request, $user, withStatusFilter: false),
+            ReturnStatus::options(),
+            'returns.status',
+        );
     }
 
     /**
@@ -86,7 +100,7 @@ class ReturnQueryService
         return min($perPage, self::MAX_PAGE_SIZE);
     }
 
-    private function applyFilters(Builder $query, Request $request): void
+    private function applyFilters(Builder $query, Request $request, bool $withStatusFilter = true): void
     {
         $query->when($request->filled('search'), fn (Builder $q) => $q->where(function (Builder $inner) use ($request): void {
             $search = $request->string('search')->toString();
@@ -94,7 +108,10 @@ class ReturnQueryService
                 ->orWhereHas('order', fn (Builder $oq) => $oq->where('tracking_number', 'like', '%'.$search.'%'));
         }));
 
-        $query->when($request->filled('status'), fn (Builder $q) => $q->where('status', $request->string('status')));
+        $query->when(
+            $withStatusFilter && $request->filled('status'),
+            fn (Builder $q) => $q->where('status', $request->string('status'))
+        );
 
         $query->when($request->filled('city_id'), fn (Builder $q) => $q->where(
             'current_location_city_id',

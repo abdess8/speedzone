@@ -54,6 +54,13 @@ const RETURN_STATUS_VIEWS = [
   { key: 'delivered_to_vendor', status: 'DELIVERED_TO_VENDOR' },
 ];
 
+/** Naming a driver for the last mile, in bulk. */
+const RETURN_DISPATCH = [
+  'returns.manage',
+  'returns.update_status',
+  'returns.transition.to_in_delivery_to_vendor',
+];
+
 /** Sidebar children filtering the returns list down to one workflow step. */
 const returnStatusChildren = () => [
   {
@@ -61,6 +68,12 @@ const returnStatusChildren = () => [
     labelKey: 'sidebar.returns_views.all',
     href: '/returns',
     permissions: RETURN_READ,
+  },
+  {
+    key: 'returns-hand-back',
+    labelKey: 'sidebar.returns_views.hand_back',
+    href: '/returns/hand-back',
+    permissions: RETURN_DISPATCH,
   },
   ...RETURN_STATUS_VIEWS.map(({ key, status }) => ({
     key: `returns-${key}`,

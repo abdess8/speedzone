@@ -439,6 +439,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     // Returns (reverse logistics)
     Route::get('returns/eligible-orders', [ReturnController::class, 'eligibleOrders'])
         ->name('returns.eligible-orders');
+    Route::get('returns/hand-back', [ReturnController::class, 'handBack'])
+        ->name('returns.hand-back');
+    Route::post('returns/hand-back/scan', [ReturnController::class, 'handBackScan'])
+        ->name('returns.hand-back.scan');
+    Route::post('returns/hand-back/dispatch', [ReturnController::class, 'handBackDispatch'])
+        ->name('returns.hand-back.dispatch');
     Route::get('returns/{reference}', [ReturnController::class, 'track'])
         ->where('reference', 'RTN-[0-9]{4}-[0-9]+')
         ->name('returns.track');
@@ -446,6 +452,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->name('returns.scan');
     Route::post('returns/process-scan', [ReturnController::class, 'processScan'])
         ->name('returns.process-scan');
+    Route::post('returns/{return}/assign-driver', [ReturnController::class, 'assignDriver'])
+        ->whereNumber('return')
+        ->name('returns.assign-driver');
     Route::post('returns/{return}/change-status', [ReturnController::class, 'changeStatus'])
         ->whereNumber('return')
         ->name('returns.change-status');

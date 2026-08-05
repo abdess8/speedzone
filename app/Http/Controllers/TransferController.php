@@ -49,6 +49,7 @@ class TransferController extends Controller
 
         return Inertia::render('transfers/index', [
             'transfers' => TransferResource::collection($transfers)->response()->getData(true),
+            'stats' => $this->transferQuery->statusCounts($request, $request->user()),
             'filters' => $request->only([
                 'search', 'status', 'from_city_id', 'to_city_id', 'created_from', 'created_to', 'per_page',
             ]),

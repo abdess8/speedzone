@@ -5,6 +5,7 @@ import NotificationBell from '@/Components/Notifications/NotificationBell.vue';
 import SettingsMenu from '@/Components/SettingsMenu.vue';
 import StoreSwitcher from '@/Components/StoreSwitcher.vue';
 import { layoutMethods } from '@/state/helpers';
+import { usePermissions } from '@/composables/usePermissions';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import french from '@assets/images/flags/fr.svg';
@@ -29,6 +30,13 @@ const setLanguage = (locale) => {
 const user = computed(() => page.props.auth?.user ?? null);
 const roleLabel = computed(() => user.value?.role_label ?? '');
 const completion = computed(() => user.value?.profile_completion ?? null);
+
+const { canAny } = usePermissions();
+
+/** The route is permission-gated, so the shortcut hides rather than 403s. */
+const canReachSupport = computed(() =>
+  canAny(['support.read.all', 'support.read.own', 'support.manage'])
+);
 </script>
 
 <script>
@@ -193,7 +201,12 @@ export default {
             </BButton>
           </div>
 
-          <Link href="/chat" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle ms-1 header-item d-none d-sm-flex">
+          <Link
+            v-if="canReachSupport"
+            :href="route('support-tickets.index')"
+            class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle ms-1 header-item d-none d-sm-flex"
+            :title="$t('support_tickets.title')"
+          >
             <i class="bx bx-message-rounded-dots fs-22"></i>
           </Link>
 

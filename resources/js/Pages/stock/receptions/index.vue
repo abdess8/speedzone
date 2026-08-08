@@ -9,6 +9,8 @@ import FilterPanel from '@/Components/FilterPanel.vue';
 import StatusPills from '@/Components/StatusPills.vue';
 import EntityCard from '@/Components/EntityCard.vue';
 import EntityDetailSheet from '@/Components/EntityDetailSheet.vue';
+import SortableTh from '@/Components/SortableTh.vue';
+import { useTableSort } from '@/composables/useTableSort';
 
 /**
  * Inbound shipment slips, from all three sides of the counter.
@@ -48,7 +50,7 @@ const activeFilterCount = computed(
 );
 
 const reload = () => {
-  const params = {};
+  const params = { sort: sort.value, direction: direction.value };
 
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== '' && value !== null) {
@@ -62,6 +64,8 @@ const reload = () => {
     replace: true,
   });
 };
+
+const { sort, direction, sortBy } = useTableSort(props.filters, reload);
 
 const resetFilters = () => {
   Object.keys(filters).forEach((key) => {
@@ -209,17 +213,39 @@ onMounted(() => {
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light">
               <tr>
-                <th>{{ $t('stock.receptions.columns.reference') }}</th>
-                <th>{{ $t('stock.receptions.columns.status') }}</th>
-                <th>{{ $t('stock.receptions.columns.seller') }}</th>
-                <th>{{ $t('stock.receptions.columns.pickup_city') }}</th>
-                <th>{{ $t('stock.receptions.columns.destination') }}</th>
-                <th class="text-center">{{ $t('stock.receptions.columns.items') }}</th>
-                <th class="text-end">{{ $t('stock.receptions.columns.sent') }}</th>
-                <th class="text-end">{{ $t('stock.receptions.columns.collected') }}</th>
-                <th class="text-end">{{ $t('stock.receptions.columns.received') }}</th>
-                <th>{{ $t('stock.receptions.columns.sent_at') }}</th>
-                <th>{{ $t('stock.receptions.columns.received_at') }}</th>
+                <SortableTh field="reference" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.receptions.columns.reference') }}
+                </SortableTh>
+                <SortableTh field="status" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.receptions.columns.status') }}
+                </SortableTh>
+                <SortableTh field="seller" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.receptions.columns.seller') }}
+                </SortableTh>
+                <SortableTh field="pickup_city" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.receptions.columns.pickup_city') }}
+                </SortableTh>
+                <SortableTh field="destination_city" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.receptions.columns.destination') }}
+                </SortableTh>
+                <SortableTh field="items_count" align="center" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.receptions.columns.items') }}
+                </SortableTh>
+                <SortableTh field="quantity_sent" align="end" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.receptions.columns.sent') }}
+                </SortableTh>
+                <SortableTh field="quantity_collected" align="end" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.receptions.columns.collected') }}
+                </SortableTh>
+                <SortableTh field="quantity_received" align="end" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.receptions.columns.received') }}
+                </SortableTh>
+                <SortableTh field="sent_at" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.receptions.columns.sent_at') }}
+                </SortableTh>
+                <SortableTh field="received_at" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.receptions.columns.received_at') }}
+                </SortableTh>
                 <th class="text-end">{{ $t('common.actions') }}</th>
               </tr>
             </thead>

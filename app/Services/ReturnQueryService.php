@@ -5,15 +5,22 @@ namespace App\Services;
 use App\Enums\ReturnStatus;
 use App\Models\OrderReturn;
 use App\Models\User;
+use App\Support\SortableQuery;
 use App\Support\StatusCounts;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ReturnQueryService
 {
     private const DEFAULT_PAGE_SIZE = 15;
 
     private const MAX_PAGE_SIZE = 100;
+
+    private const DEFAULT_SORT = 'created_at';
+
+    /** Mirrors {@see User::getFullNameAttribute()} so the order matches the screen. */
+    private const USER_FULL_NAME = "coalesce(nullif(concat_ws(' ', users.first_name, users.last_name), ''), users.name)";
 
     public function build(Request $request, User $user, bool $withStatusFilter = true): Builder
     {
@@ -43,7 +50,70 @@ class ReturnQueryService
 
         $this->applyFilters($query, $request, $withStatusFilter);
 
-        return $query->orderByDesc('created_at')->orderByDesc('id');
+        SortableQuery::apply($query, $request, self::sortable(), self::DEFAULT_SORT);
+
+        return $query;
+    }
+
+    /**
+     * The order actually applied, echoed back so the header can draw its arrow.
+     *
+     * @return array{sort: string, direction: string}
+     */
+    public function sortState(Request $request): array
+    {
+        return SortableQuery::state($request, self::sortable(), self::DEFAULT_SORT);
+    }
+
+    /**
+     * Columns the return list may be ordered on.
+     *
+     * Everything borrowed from the order or from a user is read through a
+     * correlated subquery rather than a join: the filters above name `status`,
+     * `reason` and `created_at` unqualified, and both `orders` and `users` carry
+     * columns of the same name — in this query and in the head-count that
+     * reuses it.
+     *
+     * @return array<string, string|array<int, mixed>>
+     */
+    private static function sortable(): array
+    {
+        return [
+            'reference' => 'reference',
+            'order_tracking' => [
+                DB::table('orders')
+                    ->select('tracking_number')
+                    ->whereColumn('orders.id', 'returns.order_id'),
+            ],
+            // Same fallback as the resource: the corrected name when the desk
+            // has entered one, the customer on the original order otherwise.
+            'customer' => [
+                DB::raw(
+                    "coalesce(nullif(returns.updated_customer_name, ''), (".
+                    "select concat_ws(' ', orders.customer_first_name, orders.customer_last_name) ".
+                    'from orders where orders.id = returns.order_id))'
+                ),
+            ],
+            'seller' => [
+                DB::table('orders')
+                    ->join('users', 'users.id', '=', 'orders.seller_id')
+                    ->select(DB::raw(self::USER_FULL_NAME))
+                    ->whereColumn('orders.id', 'returns.order_id'),
+            ],
+            'reason' => 'reason',
+            'status' => 'status',
+            'driver' => [
+                DB::table('users')
+                    ->select(DB::raw(self::USER_FULL_NAME))
+                    ->whereColumn('users.id', 'returns.assigned_to'),
+            ],
+            'current_city' => [
+                DB::table('cities')
+                    ->select('name')
+                    ->whereColumn('cities.id', 'returns.current_location_city_id'),
+            ],
+            'created_at' => 'created_at',
+        ];
     }
 
     /**

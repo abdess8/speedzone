@@ -4,6 +4,7 @@ import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
+import { roleLabel } from "@/utils/roleLabel";
 import Swal from "sweetalert2";
 
 export default {
@@ -21,14 +22,12 @@ export default {
     this.flashMessage();
   },
   methods: {
-    roleLabel(name) {
-      const key = `roles.${name}`;
-      const translated = this.$t(key);
-      return translated !== key ? translated : name;
+    roleLabel(role) {
+      return roleLabel(role, this.$t);
     },
     /** Shown as a subtitle only when translated, so it never repeats the title. */
     rawName(role) {
-      return this.roleLabel(role.name) === role.name ? "" : role.name;
+      return this.roleLabel(role) === role.name ? "" : role.name;
     },
     /** Detail lines shared by the mobile card and its sheet. */
     cardRows(role) {
@@ -104,7 +103,7 @@ export default {
               <EntityCard
                 v-for="role in roles"
                 :key="role.id"
-                :title="roleLabel(role.name)"
+                :title="roleLabel(role)"
                 :subtitle="rawName(role)"
                 :rows="cardRows(role)"
                 @open="selectedRole = role"
@@ -127,7 +126,7 @@ export default {
                 <tbody>
                   <tr v-for="role in roles" :key="role.id">
                     <td>
-                      <span class="fw-medium">{{ roleLabel(role.name) }}</span>
+                      <span class="fw-medium">{{ roleLabel(role) }}</span>
                     </td>
                     <td>
                       <span class="badge bg-primary-subtle text-primary">
@@ -167,7 +166,7 @@ export default {
 
     <EntityDetailSheet
       :show="selectedRole !== null"
-      :title="selectedRole ? roleLabel(selectedRole.name) : ''"
+      :title="selectedRole ? roleLabel(selectedRole) : ''"
       :subtitle="selectedRole ? rawName(selectedRole) : ''"
       :rows="selectedRole ? cardRows(selectedRole) : []"
       @close="selectedRole = null"

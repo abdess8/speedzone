@@ -14,11 +14,13 @@ use App\Models\StockReception;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\StockReceptionService;
+use App\Support\SortableQuery;
 use App\Support\StockPermissions;
 use App\Support\StoreContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,6 +34,15 @@ use Inertia\Response;
  */
 class StockReceptionController extends Controller
 {
+    /**
+     * Newest slip first, as before the table became sortable. The key is not one
+     * of the visible columns, so no header claims it.
+     */
+    private const DEFAULT_SORT = 'id';
+
+    /** Mirrors {@see User::getFullNameAttribute()} so the order matches the screen. */
+    private const USER_FULL_NAME = "coalesce(nullif(concat_ws(' ', users.first_name, users.last_name), ''), users.name)";
+
     public function __construct(
         private readonly StockReceptionService $receptionService,
     ) {}
@@ -43,7 +54,16 @@ class StockReceptionController extends Controller
         $user = $request->user();
         $isCollector = $this->isFieldCollector($user);
 
-        $receptions = StockReception::query()
+        $sort = SortableQuery::state($request, self::sortable(), self::DEFAULT_SORT);
+
+        // A reader who has picked a column is no longer reading a worklist, so
+        // the two queue buckets below only float what is waiting on him while he
+        // has not: floating them anyway would sort within the buckets and look
+        // like the click did nothing. The default key is not one of the headers,
+        // so it can only still be in force if nobody clicked one.
+        $isWorklist = $sort['sort'] === self::DEFAULT_SORT;
+
+        $query = StockReception::query()
             ->with([
                 'sender:id,first_name,last_name,name',
                 'collector:id,first_name,last_name,name',
@@ -73,24 +93,25 @@ class StockReceptionController extends Controller
             // Both staff screens open on a queue somebody has to work, so the
             // shipments waiting on the reader come first: parcels to fetch for a
             // collector, parcels to count for the depot.
-            ->when($isCollector, fn (Builder $query) => $query->orderByRaw(
+            ->when($isWorklist && $isCollector, fn (Builder $query) => $query->orderByRaw(
                 'CASE WHEN status = ? THEN 0 ELSE 1 END',
                 [StockReceptionStatus::AWAITING_PICKUP->value]
             ))
             ->when(
-                $user->hasPermission(StockPermissions::RECEIVE_INBOUND),
+                $isWorklist && $user->hasPermission(StockPermissions::RECEIVE_INBOUND),
                 fn (Builder $query) => $query->orderByRaw(
                     'CASE WHEN status = ? THEN 0 ELSE 1 END',
                     [StockReceptionStatus::IN_TRANSIT->value]
                 )
-            )
-            ->orderByDesc('id')
-            ->paginate(25)
-            ->withQueryString();
+            );
+
+        SortableQuery::apply($query, $request, self::sortable(), self::DEFAULT_SORT);
+
+        $receptions = $query->paginate(25)->withQueryString();
 
         return Inertia::render('stock/receptions/index', [
             'receptions' => StockReceptionListResource::collection($receptions)->response()->getData(true),
-            'filters' => $request->only(['status', 'reference', 'destination_city_id']),
+            'filters' => array_merge($request->only(['status', 'reference', 'destination_city_id']), $sort),
             'statuses' => StockReceptionStatus::options(),
             'hubCities' => City::hubOptions(),
             'can' => [
@@ -256,6 +277,48 @@ class StockReceptionController extends Controller
         return redirect()
             ->route('stock-receptions.show', $reception)
             ->with('success', __('stock.receptions.flash.cancelled'));
+    }
+
+    /**
+     * Columns the shipment list may be ordered on.
+     *
+     * The three quantity columns and the line count are the aggregates the query
+     * already selects, so ordering names the alias rather than summing twice.
+     * Everything borrowed from another table is read through a correlated
+     * subquery: the filters above name `status` unqualified, and both `users`
+     * and `stores` carry a column of that name.
+     *
+     * @return array<string, string|array<int, mixed>>
+     */
+    private static function sortable(): array
+    {
+        return [
+            'id' => 'id',
+            'reference' => 'reference',
+            'status' => 'status',
+            'seller' => [
+                DB::table('users')
+                    ->select(DB::raw(self::USER_FULL_NAME))
+                    ->whereColumn('users.id', 'stock_receptions.seller_id'),
+            ],
+            'pickup_city' => [
+                DB::table('stores')
+                    ->join('cities', 'cities.id', '=', 'stores.city_id')
+                    ->select('cities.name')
+                    ->whereColumn('stores.id', 'stock_receptions.store_id'),
+            ],
+            'destination_city' => [
+                DB::table('cities')
+                    ->select('name')
+                    ->whereColumn('cities.id', 'stock_receptions.destination_city_id'),
+            ],
+            'items_count' => 'items_count',
+            'quantity_sent' => 'items_sum_quantity_sent',
+            'quantity_collected' => 'items_sum_quantity_collected',
+            'quantity_received' => 'items_sum_quantity_received',
+            'sent_at' => 'sent_at',
+            'received_at' => 'received_at',
+        ];
     }
 
     /**

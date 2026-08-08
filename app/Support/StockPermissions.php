@@ -19,6 +19,16 @@ final class StockPermissions
 
     public const CREATE_PRODUCT = 'stock.create_product';
 
+    /**
+     * Opening a whole catalog from a spreadsheet.
+     *
+     * Split from CREATE_PRODUCT because the two carry very different blast
+     * radii: a warehouse employee entrusted with adding the odd reference is not
+     * necessarily entrusted with rewriting the price list a thousand rows at a
+     * time.
+     */
+    public const IMPORT_PRODUCTS = 'stock.import_products';
+
     public const CREATE_INBOUND = 'stock.create_inbound';
 
     public const ADJUST = 'stock.adjust';
@@ -51,6 +61,7 @@ final class StockPermissions
         return [
             self::VIEW,
             self::CREATE_PRODUCT,
+            self::IMPORT_PRODUCTS,
             self::CREATE_INBOUND,
             self::ADJUST,
             self::ORDERS_CREATE_WITH_STOCK,

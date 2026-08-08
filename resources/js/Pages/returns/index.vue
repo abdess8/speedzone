@@ -13,7 +13,9 @@ import StatusPills from "@/Components/StatusPills.vue";
 import StatusKpiCards from "@/Components/StatusKpiCards.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
+import SortableTh from "@/Components/SortableTh.vue";
 import { useGuideSignals } from "@/composables/useGuideSignals";
+import { useTableSort } from "@/composables/useTableSort";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -74,7 +76,7 @@ const sheetRows = (row) => [
 ];
 
 const query = () => {
-  const params = { per_page: perPage.value };
+  const params = { per_page: perPage.value, sort: sort.value, direction: direction.value };
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== "" && value !== null) params[key] = value;
   });
@@ -88,6 +90,8 @@ const reload = () => {
     replace: true,
   });
 };
+
+const { sort, direction, sortBy } = useTableSort(props.filters, reload);
 
 const applyFilters = () => reload();
 const resetFilters = () => {
@@ -224,15 +228,33 @@ onMounted(() => {
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light">
               <tr>
-                <th>{{ $t('returns.table.reference') }}</th>
-                <th>{{ $t('returns.table.order_tracking') }}</th>
-                <th>{{ $t('returns.table.customer') }}</th>
-                <th>{{ $t('returns.table.seller') }}</th>
-                <th>{{ $t('returns.table.reason') }}</th>
-                <th>{{ $t('returns.table.status') }}</th>
-                <th>{{ $t('returns.hand_back.driver') }}</th>
-                <th>{{ $t('returns.table.current_city') }}</th>
-                <th>{{ $t('returns.table.created') }}</th>
+                <SortableTh field="reference" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.reference') }}
+                </SortableTh>
+                <SortableTh field="order_tracking" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.order_tracking') }}
+                </SortableTh>
+                <SortableTh field="customer" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.customer') }}
+                </SortableTh>
+                <SortableTh field="seller" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.seller') }}
+                </SortableTh>
+                <SortableTh field="reason" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.reason') }}
+                </SortableTh>
+                <SortableTh field="status" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.status') }}
+                </SortableTh>
+                <SortableTh field="driver" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.hand_back.driver') }}
+                </SortableTh>
+                <SortableTh field="current_city" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.current_city') }}
+                </SortableTh>
+                <SortableTh field="created_at" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.created') }}
+                </SortableTh>
                 <th></th>
               </tr>
             </thead>

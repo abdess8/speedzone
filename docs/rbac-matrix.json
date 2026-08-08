@@ -108,6 +108,77 @@
                 }
             }
         },
+        "dashboard": {
+            "view": {
+                "any": {
+                    "permission": "dashboard.view",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver",
+                        "Seller"
+                    ]
+                }
+            },
+            "view_financials": {
+                "any": {
+                    "permission": "dashboard.view_financials",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Seller"
+                    ]
+                }
+            },
+            "view_operations": {
+                "any": {
+                    "permission": "dashboard.view_operations",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver",
+                        "Seller"
+                    ]
+                }
+            },
+            "view_performance": {
+                "any": {
+                    "permission": "dashboard.view_performance",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver",
+                        "Seller"
+                    ]
+                }
+            },
+            "view_customers": {
+                "any": {
+                    "permission": "dashboard.view_customers",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Seller"
+                    ]
+                }
+            },
+            "view_network": {
+                "any": {
+                    "permission": "dashboard.view_network",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Seller"
+                    ]
+                }
+            }
+        },
         "driver_invoices": {
             "read": {
                 "own": {
@@ -222,6 +293,28 @@
                     "roles": [
                         "Admin",
                         "Dispatcher"
+                    ]
+                }
+            }
+        },
+        "integrations": {
+            "read": {
+                "any": {
+                    "permission": "integrations.read",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
+            "manage": {
+                "any": {
+                    "permission": "integrations.manage",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
                     ]
                 }
             }
@@ -397,6 +490,14 @@
                 }
             },
             "transition": {
+                "to_prepared": {
+                    "permission": "orders.transition.to_prepared",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher"
+                    ]
+                },
                 "to_pickup_requested": {
                     "permission": "orders.transition.to_pickup_requested",
                     "type": "workflow_transition",
@@ -481,6 +582,15 @@
                 },
                 "to_failed": {
                     "permission": "orders.transition.to_failed",
+                    "type": "workflow_transition",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver"
+                    ]
+                },
+                "to_ready_to_return": {
+                    "permission": "orders.transition.to_ready_to_return",
                     "type": "workflow_transition",
                     "roles": [
                         "Admin",
@@ -901,6 +1011,16 @@
                     ]
                 }
             },
+            "import_products": {
+                "any": {
+                    "permission": "stock.import_products",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Seller"
+                    ]
+                }
+            },
             "create_inbound": {
                 "any": {
                     "permission": "stock.create_inbound",
@@ -918,6 +1038,17 @@
                     "roles": [
                         "Admin",
                         "Seller"
+                    ]
+                }
+            },
+            "collect_inbound": {
+                "any": {
+                    "permission": "stock.collect_inbound",
+                    "type": "resource",
+                    "roles": [
+                        "Admin",
+                        "Dispatcher",
+                        "Driver"
                     ]
                 }
             },

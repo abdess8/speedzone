@@ -174,7 +174,7 @@ return [
             'open' => 'Scan QR en masse',
             'title' => 'Scan QR — mise à jour en masse',
             'camera_preview' => 'Aperçu caméra',
-            'camera_unsupported' => 'Le scan QR n\'est pas supporté par ce navigateur.',
+            'camera_unsupported' => 'Ce navigateur ne donne pas accès à la caméra. Saisissez les numéros à la main.',
             'camera_error' => 'Impossible d\'accéder à la caméra.',
             'start_camera' => 'Activer la caméra',
             'scan_manual_label' => 'Scanner ou saisir le numéro de suivi',

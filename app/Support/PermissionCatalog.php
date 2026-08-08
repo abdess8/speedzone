@@ -26,8 +26,28 @@ class PermissionCatalog
             self::partnerPermissions(),
             self::storePermissions(),
             self::teamPermissions(),
-            self::stockPermissions()
+            self::stockPermissions(),
+            self::ecommerceIntegrationPermissions()
         );
+    }
+
+    /**
+     * Plugging a vendor's own shop (Shopify, YouCan, WooCommerce, PrestaShop)
+     * into the platform.
+     *
+     * Inside the seller ceiling: the shop is the vendor's, and whether the
+     * person who runs his back office may connect it is his call. Reading is
+     * split from managing because the credentials are the sensitive half —
+     * seeing that a store is connected is not.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    public static function ecommerceIntegrationPermissions(): array
+    {
+        return [
+            self::make(EcommerceIntegrationPermissions::READ, 'integrations', 'read', null, 'resource'),
+            self::make(EcommerceIntegrationPermissions::MANAGE, 'integrations', 'manage', null, 'resource'),
+        ];
     }
 
     /**
@@ -66,6 +86,7 @@ class PermissionCatalog
         return [
             self::make(StockPermissions::VIEW, 'stock', 'view', null, 'resource'),
             self::make(StockPermissions::CREATE_PRODUCT, 'stock', 'create_product', null, 'resource'),
+            self::make(StockPermissions::IMPORT_PRODUCTS, 'stock', 'import_products', null, 'resource'),
             self::make(StockPermissions::CREATE_INBOUND, 'stock', 'create_inbound', null, 'resource'),
             self::make(StockPermissions::ADJUST, 'stock', 'adjust', null, 'resource'),
             self::make(StockPermissions::ORDERS_CREATE_WITH_STOCK, 'orders', 'create_with_stock', null, 'resource'),

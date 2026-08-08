@@ -4,6 +4,9 @@ import { Link } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
+import DocumentPreview from "@/Components/DocumentPreview.vue";
+import FlipCardPreview from "@/Components/FlipCardPreview.vue";
+import { roleLabel as sharedRoleLabel } from "@/utils/roleLabel";
 
 const { t, locale } = useI18n();
 
@@ -34,12 +37,7 @@ const roleBadge = computed(() => {
   return map[props.user.role?.name] || "bg-secondary-subtle text-secondary";
 });
 
-const roleLabel = (name) => {
-  if (!name) return t("common.empty_value_short");
-  const key = `roles.${name}`;
-  const translated = t(key);
-  return translated !== key ? translated : name;
-};
+const roleLabel = (role) => sharedRoleLabel(role, t) || t("common.empty_value_short");
 
 const isSeller = computed(() =>
   ["Seller", "Vendeur"].includes(props.user.role?.name) ||
@@ -52,6 +50,16 @@ const isDriver = computed(() =>
 );
 
 const showBilling = computed(() => isSeller.value);
+
+const hasIdentityDocuments = computed(() =>
+  Boolean(
+    props.user.rib_attachment_url ||
+      props.user.cin_front_attachment_url ||
+      props.user.cin_back_attachment_url
+  )
+);
+
+const attachedFiles = computed(() => props.user.attached_files_urls ?? []);
 
 const driverCities = computed(() => {
   const sectors = props.user.sectors ?? [];
@@ -121,7 +129,7 @@ const labelFrom = (group, value) => {
             </div>
             <h5 class="mt-3 mb-1">{{ user.full_name }}</h5>
             <p class="text-muted mb-2">{{ user.email }}</p>
-            <span class="badge" :class="roleBadge" v-if="user.role">{{ roleLabel(user.role.name) }}</span>
+            <span class="badge" :class="roleBadge" v-if="user.role">{{ roleLabel(user.role) }}</span>
           </BCardBody>
           <BCardBody class="border-top">
             <div class="d-flex gap-2">
@@ -185,7 +193,7 @@ const labelFrom = (group, value) => {
                   </tr>
                   <tr>
                     <th class="ps-0" scope="row">{{ $t('users.show.role') }}</th>
-                    <td class="text-muted">{{ user.role ? roleLabel(user.role.name) : $t('common.empty_value_short') }}</td>
+                    <td class="text-muted">{{ user.role ? roleLabel(user.role) : $t('common.empty_value_short') }}</td>
                   </tr>
                   <tr>
                     <th class="ps-0" scope="row">{{ $t('users.show.created_at') }}</th>
@@ -352,51 +360,55 @@ const labelFrom = (group, value) => {
                 </tbody>
               </table>
             </div>
-
-            <BRow class="g-3 mt-1">
-              <BCol md="4" v-if="user.rib_attachment_url">
-                <div class="text-muted fs-13 mb-1">{{ $t('users.show.rib_attachment') }}</div>
-                <a :href="user.rib_attachment_url" target="_blank" class="btn btn-sm btn-soft-primary w-100">
-                  <i class="ri-file-text-line align-bottom me-1"></i> {{ $t('users.show.view_document') }}
-                </a>
-              </BCol>
-              <BCol md="4" v-if="user.cin_front_attachment_url">
-                <div class="text-muted fs-13 mb-1">{{ $t('users.show.cin_front_attachment') }}</div>
-                <a :href="user.cin_front_attachment_url" target="_blank" class="btn btn-sm btn-soft-primary w-100">
-                  <i class="ri-id-card-line align-bottom me-1"></i> {{ $t('users.show.view_document') }}
-                </a>
-              </BCol>
-              <BCol md="4" v-if="user.cin_back_attachment_url">
-                <div class="text-muted fs-13 mb-1">{{ $t('users.show.cin_back_attachment') }}</div>
-                <a :href="user.cin_back_attachment_url" target="_blank" class="btn btn-sm btn-soft-primary w-100">
-                  <i class="ri-id-card-line align-bottom me-1"></i> {{ $t('users.show.view_document') }}
-                </a>
-              </BCol>
-            </BRow>
           </BCardBody>
         </BCard>
 
+        <!-- The identity papers sit here rather than under billing: a driver
+             also has a CIN on file, and the billing card is a seller's. -->
         <BCard no-body>
           <BCardHeader>
             <h5 class="card-title mb-0">{{ $t('users.show.attached_documents') }}</h5>
           </BCardHeader>
           <BCardBody>
-            <div v-if="user.attached_files_urls && user.attached_files_urls.length">
-              <BRow class="g-3">
-                <BCol md="6" v-for="(file, i) in user.attached_files_urls" :key="i">
-                  <div class="border rounded p-2 d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center text-truncate">
-                      <i class="ri-file-text-line fs-20 text-primary me-2"></i>
-                      <span class="text-truncate">{{ file.name }}</span>
-                    </div>
-                    <a :href="file.url" target="_blank" download class="btn btn-sm btn-soft-primary ms-2">
-                      <i class="ri-download-2-line"></i>
-                    </a>
-                  </div>
-                </BCol>
-              </BRow>
-            </div>
-            <p class="text-muted mb-0" v-else>{{ $t('users.show.no_documents') }}</p>
+            <BRow v-if="hasIdentityDocuments" class="g-3">
+              <!-- The CIN is a single card with two sides, so it is previewed as
+                   one card that turns. Two thumbnails side by side never made it
+                   clear they were two halves of the same document. -->
+              <BCol sm="6" md="4">
+                <FlipCardPreview
+                  :front-url="user.cin_front_attachment_url"
+                  :back-url="user.cin_back_attachment_url"
+                  :label="$t('users.show.cin')"
+                />
+              </BCol>
+              <BCol sm="6" md="4" v-if="user.rib_attachment_url">
+                <DocumentPreview
+                  :url="user.rib_attachment_url"
+                  :label="$t('users.show.rib_attachment')"
+                />
+              </BCol>
+            </BRow>
+
+            <hr v-if="hasIdentityDocuments && attachedFiles.length" class="my-4" />
+
+            <BRow v-if="attachedFiles.length" class="g-3">
+              <BCol sm="6" md="4" v-for="(file, i) in attachedFiles" :key="i">
+                <DocumentPreview :url="file.url" :label="file.name" />
+                <a
+                  :href="file.url"
+                  target="_blank"
+                  download
+                  class="btn btn-sm btn-soft-primary w-100 mt-2"
+                >
+                  <i class="ri-download-2-line align-bottom me-1"></i>
+                  {{ $t('common.download') }}
+                </a>
+              </BCol>
+            </BRow>
+
+            <p v-if="!hasIdentityDocuments && !attachedFiles.length" class="text-muted mb-0">
+              {{ $t('users.show.no_documents') }}
+            </p>
           </BCardBody>
         </BCard>
       </BCol>

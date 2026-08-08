@@ -42,6 +42,18 @@ class ProductPolicy
     }
 
     /**
+     * Opening the bulk import wizard.
+     *
+     * A separate grant from `create`, and it does not fall back to it: the point
+     * of the split is that an owner can hand out one without the other.
+     */
+    public function import(User $user): bool
+    {
+        return $user->hasPermission(StockPermissions::IMPORT_PRODUCTS)
+            && app(StoreContext::class)->isEnforced();
+    }
+
+    /**
      * Editing the product sheet.
      *
      * Reserved to the vendor side: a hub agent may correct the *quantity* he

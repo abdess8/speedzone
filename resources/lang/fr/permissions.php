@@ -10,6 +10,7 @@ return [
         'returns' => 'Retours',
         'transfers' => 'Transferts',
         'partners' => 'Intégrations partenaires',
+        'integrations' => 'Intégrations e-commerce',
         'users' => 'Utilisateurs',
         'roles' => 'Rôles',
         'permissions' => 'Permissions',
@@ -47,13 +48,17 @@ return [
         'support.manage' => 'Gérer le support (accès complet)',
 
         'stock.view' => 'Consulter le catalogue et les stocks',
-        'stock.create_product' => 'Ajouter / importer des produits',
+        'stock.create_product' => 'Ajouter et modifier des produits',
+        'stock.import_products' => 'Importer des produits en masse (Excel/CSV)',
         'stock.create_inbound' => 'Créer des envois de stock',
         'stock.adjust' => 'Réaliser des inventaires et corriger les stocks',
         'orders.create_with_stock' => 'Créer des commandes depuis le stock',
         'stock.collect_inbound' => 'Ramasser le stock chez le vendeur',
         'stock.receive_inbound' => 'Réceptionner le stock au dépôt',
         'stock.admin_override' => 'Auditer et bloquer les stocks (tous vendeurs)',
+
+        'integrations.read' => 'Voir les intégrations e-commerce',
+        'integrations.manage' => 'Connecter et configurer une boutique e-commerce',
 
         'dashboard.view' => 'Accéder au tableau de bord',
         'dashboard.view_financials' => 'Voir les montants et le chiffre d\'affaires',
@@ -94,13 +99,17 @@ return [
         'support.manage' => 'Accès complet au support : voir tous les tickets, assigner, changer le statut, répondre et clôturer. Destiné aux agents support.',
 
         'stock.view' => 'Consulter le catalogue produits, les niveaux de stock et les bordereaux de réception de sa boutique.',
-        'stock.create_product' => 'Créer, modifier et archiver des fiches produits, y compris par import Excel/CSV.',
+        'stock.create_product' => 'Créer, modifier et archiver des fiches produits une par une.',
+        'stock.import_products' => 'Créer des fiches produits en masse depuis un fichier Excel/CSV. Distincte de la création à l\'unité : un import remplace tout un catalogue en une opération.',
         'stock.create_inbound' => 'Préparer un bordereau et déclarer un envoi de stock vers notre dépôt.',
         'stock.adjust' => 'Corriger les quantités en stock lors d\'un inventaire. Chaque écart exige un motif et reste tracé dans un audit non modifiable.',
         'orders.create_with_stock' => 'Composer une commande à partir des produits du catalogue : le stock est décrémenté et le montant calculé automatiquement.',
         'stock.collect_inbound' => 'Se déplacer chez les vendeurs de ses villes, compter devant eux le stock chargé et l\'expédier vers le dépôt. Ce comptage devient la référence pour la suite du trajet, mais ne crédite aucun stock. Permission côté hub : elle n\'est pas délégable à une équipe vendeur, car l\'intérêt du comptage est qu\'il soit fait par quelqu\'un d\'autre que le vendeur.',
         'stock.receive_inbound' => 'Compter physiquement le stock arrivant au dépôt et créditer les quantités réellement reçues. Limitée aux envois adressés au dépôt de ses villes. Permission côté hub : elle n\'est pas délégable à une équipe vendeur.',
         'stock.admin_override' => 'Auditer tous les mouvements de stock, toutes boutiques confondues, et bloquer un produit défectueux. Permission sensible réservée à l\'administration.',
+
+        'integrations.read' => 'Consulter les boutiques e-commerce reliées au compte et leur état de synchronisation.',
+        'integrations.manage' => 'Relier, reconfigurer ou débrancher une boutique Shopify, YouCan, WooCommerce ou PrestaShop. Donne accès aux clés d\'API de la boutique.',
 
         'dashboard.view' => 'Ouvrir le tableau de bord. Les chiffres restent limités à la boutique active et aux commandes que l\'utilisateur a le droit de lire.',
         'dashboard.view_financials' => 'Voir les espèces à encaisser, les encaissements, le chiffre d\'affaires et le panier moyen. À retirer d\'un rôle qui prépare les colis sans avoir à connaître les montants de la boutique.',

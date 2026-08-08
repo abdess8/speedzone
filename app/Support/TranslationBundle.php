@@ -40,6 +40,7 @@ final class TranslationBundle
         'billing_frequencies',
         'seller_payment_methods',
         'users',
+        'documents',
         'stores',
         'team',
         'cities',
@@ -69,6 +70,7 @@ final class TranslationBundle
         'stock_adjustment_reasons',
         'stock_movement_sources',
         'stock_reception_statuses',
+        'integrations',
     ];
 
     /**

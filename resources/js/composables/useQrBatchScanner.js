@@ -1,14 +1,14 @@
 import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
+import { createQrDetector } from '@/utils/qrDetector';
 
 /**
  * Camera and batch mechanics behind a "scan a pile of parcels, then act on them"
  * screen.
  *
- * Scanning is done with the browser's own BarcodeDetector rather than a bundled
- * library, which is what the pickup and partner scanners already rely on. The
- * detector is not available everywhere, so the caller must surface `cameraError`
- * and keep the manual input reachable — a warehouse with an unsupported browser
- * still has to be able to work.
+ * Decoding goes through {@see createQrDetector}, which uses the browser's native
+ * BarcodeDetector where it exists and falls back to jsQR everywhere else. Only a
+ * device that refuses the camera outright reaches `cameraError`, so the caller
+ * must still surface it and keep the manual input reachable.
  *
  * The caller owns what a code *means*: it passes a `validate` callback that
  * turns a tracking number into a row, and submits `validBatch` itself.
@@ -135,7 +135,9 @@ export function useQrBatchScanner({
     cameraError.value = '';
     stopCamera();
 
-    if (!('BarcodeDetector' in window)) {
+    // Only reached on a device with no camera API at all: a plain HTTP origin,
+    // or a browser too old for getUserMedia.
+    if (!navigator.mediaDevices?.getUserMedia) {
       cameraError.value = unsupportedMessage();
 
       return;
@@ -150,7 +152,7 @@ export function useQrBatchScanner({
         await videoRef.value.play();
       }
 
-      const detector = new BarcodeDetector({ formats: ['qr_code'] });
+      const detector = await createQrDetector();
       scanning.value = true;
       lastValue = '';
       lastAt = 0;

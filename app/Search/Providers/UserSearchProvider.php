@@ -5,6 +5,7 @@ namespace App\Search\Providers;
 use App\Enums\UserStatus;
 use App\Models\User;
 use App\Search\SearchHit;
+use App\Support\RoleLabel;
 use Illuminate\Database\Eloquent\Builder;
 
 class UserSearchProvider extends AbstractSearchProvider
@@ -59,9 +60,7 @@ class UserSearchProvider extends AbstractSearchProvider
                     __('search.fields.email') => $found->email,
                     __('search.fields.phone') => $found->phone_number,
                     __('search.fields.cin') => $found->cin,
-                    __('search.fields.role') => $found->role?->name
-                        ? trans('roles.'.$found->role->name)
-                        : null,
+                    __('search.fields.role') => RoleLabel::of($found->role),
                     __('search.fields.created_at') => $this->date($found->created_at),
                 ],
                 badge: $status ? trans('user_statuses.'.$status->value) : null,

@@ -200,7 +200,7 @@ export const menuItems = [
         key: 'stock-import',
         labelKey: 'sidebar.stock_views.import',
         href: '/products/import',
-        permissions: ['stock.create_product'],
+        permissions: ['stock.import_products'],
       },
       {
         key: 'stock-inventory',

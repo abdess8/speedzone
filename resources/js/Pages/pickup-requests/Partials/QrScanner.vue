@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 import axios from "axios";
 import Swal from "sweetalert2";
 import BottomSheet from "@/Components/BottomSheet.vue";
+import { createQrDetector } from "@/utils/qrDetector";
 
 const { t } = useI18n();
 
@@ -151,7 +152,7 @@ const startCamera = async () => {
   cameraError.value = "";
   stopCamera();
 
-  if (!("BarcodeDetector" in window)) {
+  if (!navigator.mediaDevices?.getUserMedia) {
     cameraError.value = t("pickups.scanner.camera_unsupported");
     return;
   }
@@ -164,7 +165,7 @@ const startCamera = async () => {
       await videoRef.value.play();
     }
 
-    const detector = new BarcodeDetector({ formats: ["qr_code"] });
+    const detector = await createQrDetector();
     scanning.value = true;
     lastScannedValue = "";
     lastScannedAt = 0;

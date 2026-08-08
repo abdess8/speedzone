@@ -6,10 +6,12 @@ import Swal from 'sweetalert2';
 import Layout from '@/Layouts/main.vue';
 import PageHeader from '@/Components/page-header.vue';
 import FilterPanel from '@/Components/FilterPanel.vue';
+import SortableTh from '@/Components/SortableTh.vue';
 import ProductThumb from '../Partials/ProductThumb.vue';
 import ReasonSheet from './Partials/ReasonSheet.vue';
 import { formatMoneyRounded } from '@/common/formatMoney';
 import { useGuideSignals } from '@/composables/useGuideSignals';
+import { useTableSort } from '@/composables/useTableSort';
 
 /**
  * Mass inventory: count a shelf, record what was found.
@@ -238,7 +240,7 @@ function reasonMeta(productId) {
 /* -------------------------------------------------------------- filtering */
 
 const reload = () => {
-  const params = {};
+  const params = { sort: sort.value, direction: direction.value };
 
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== '' && value !== null) {
@@ -252,6 +254,8 @@ const reload = () => {
     replace: true,
   });
 };
+
+const { sort, direction, sortBy } = useTableSort(props.filters, reload);
 
 const resetFilters = () => {
   Object.keys(filters).forEach((key) => {
@@ -591,9 +595,15 @@ onMounted(() => {
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light">
               <tr>
-                <th>{{ $t('stock.inventory.columns.product') }}</th>
-                <th>{{ $t('stock.products.columns.sku') }}</th>
-                <th class="text-end">{{ $t('stock.inventory.columns.recorded') }}</th>
+                <SortableTh field="name" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.inventory.columns.product') }}
+                </SortableTh>
+                <SortableTh field="sku" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.products.columns.sku') }}
+                </SortableTh>
+                <SortableTh field="stock_quantity" align="end" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.inventory.columns.recorded') }}
+                </SortableTh>
                 <th class="text-center" style="width: 130px">{{ $t('stock.inventory.columns.counted') }}</th>
                 <th class="text-end" style="width: 90px">{{ $t('stock.inventory.columns.delta') }}</th>
                 <th style="width: 240px">{{ $t('stock.inventory.columns.reason') }}</th>

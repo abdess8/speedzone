@@ -8,9 +8,11 @@ import PageHeader from '@/Components/page-header.vue';
 import FilterPanel from '@/Components/FilterPanel.vue';
 import EntityCard from '@/Components/EntityCard.vue';
 import EntityDetailSheet from '@/Components/EntityDetailSheet.vue';
+import SortableTh from '@/Components/SortableTh.vue';
 import ProductThumb from '../Partials/ProductThumb.vue';
 import StockLevel from '../Partials/StockLevel.vue';
 import { formatMoney as money, formatMoneyRounded } from '@/common/formatMoney';
+import { useTableSort } from '@/composables/useTableSort';
 
 /**
  * Vendor product catalog.
@@ -86,7 +88,7 @@ const stats = computed(() => [
 ]);
 
 const query = () => {
-  const params = { per_page: perPage.value };
+  const params = { per_page: perPage.value, sort: sort.value, direction: direction.value };
 
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== '' && value !== null) {
@@ -103,6 +105,8 @@ const reload = () =>
     preserveScroll: true,
     replace: true,
   });
+
+const { sort, direction, sortBy } = useTableSort(props.filters, reload);
 
 const applyFilters = () => reload();
 
@@ -320,12 +324,24 @@ onMounted(() => {
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light">
               <tr>
-                <th>{{ $t('stock.products.columns.product') }}</th>
-                <th>{{ $t('stock.products.columns.sku') }}</th>
-                <th>{{ $t('stock.products.columns.category') }}</th>
-                <th class="text-end">{{ $t('stock.products.columns.unit_price') }}</th>
-                <th class="text-end">{{ $t('stock.products.columns.margin') }}</th>
-                <th class="text-center">{{ $t('stock.products.columns.stock') }}</th>
+                <SortableTh field="name" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.products.columns.product') }}
+                </SortableTh>
+                <SortableTh field="sku" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.products.columns.sku') }}
+                </SortableTh>
+                <SortableTh field="category" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.products.columns.category') }}
+                </SortableTh>
+                <SortableTh field="unit_price" align="end" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.products.columns.unit_price') }}
+                </SortableTh>
+                <SortableTh field="margin" align="end" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.products.columns.margin') }}
+                </SortableTh>
+                <SortableTh field="stock_quantity" align="center" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.products.columns.stock') }}
+                </SortableTh>
                 <th>{{ $t('stock.products.columns.status') }}</th>
                 <th class="text-end">{{ $t('common.actions') }}</th>
               </tr>

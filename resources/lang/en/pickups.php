@@ -77,7 +77,7 @@ return [
         'invalid_tracking_text' => 'Enter a tracking number or order URL.',
         'scan_rejected' => 'Scan rejected',
         'unable_validate' => 'Unable to validate this order.',
-        'camera_unsupported' => 'Camera QR scanning is not supported in this browser. Use manual entry below.',
+        'camera_unsupported' => 'This browser gives no access to the camera. Use manual entry below.',
         'camera_error' => 'Unable to access camera. Check permissions or use manual entry.',
         'update_status' => 'Update Status',
         'status_updated' => 'Status updated',

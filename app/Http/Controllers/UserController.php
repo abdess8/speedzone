@@ -13,8 +13,10 @@ use App\Models\Sector;
 use App\Models\User;
 use App\Policies\UserPolicy;
 use App\Services\DriverZoneService;
+use App\Support\SortableQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -22,6 +24,8 @@ use Inertia\Response;
 
 class UserController extends Controller
 {
+    private const DEFAULT_SORT = 'created_at';
+
     public function __construct(private readonly DriverZoneService $driverZones) {}
 
     /**
@@ -31,31 +35,121 @@ class UserController extends Controller
     {
         $this->authorize('viewAny', User::class);
 
-        $users = User::query()
+        $search = (string) $request->string('search');
+
+        $query = User::query()
             ->with(['role', 'city'])
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $search = $request->string('search');
+            // A vendor's team members are shown folded into their owner's row
+            // rather than scattered through the alphabet: side by side, nothing
+            // said which shop a sub-account answered to.
+            ->whereNull('parent_user_id')
+            ->with([
+                'teamMembers' => fn ($q) => $q
+                    ->with(['roles:id,name,label', 'city:id,name'])
+                    ->orderBy('first_name')
+                    ->orderBy('last_name'),
+            ])
+            ->when($request->filled('search'), function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone_number', 'like', "%{$search}%")
-                        ->orWhere('cin', 'like', "%{$search}%");
+                    $q->where(fn ($owner) => self::matchesSearch($owner, $search))
+                        // A team member has no row of its own, so a search that
+                        // names one has to return the account it hangs under.
+                        ->orWhereHas('teamMembers', fn ($member) => self::matchesSearch($member, $search));
                 });
             })
             ->when($request->filled('role'), function ($query) use ($request) {
                 $query->where('role_id', $request->integer('role'));
-            })
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+            });
+
+        SortableQuery::apply($query, $request, self::sortable(), self::DEFAULT_SORT);
+
+        $users = $query->paginate(10)->withQueryString();
+
+        $users->getCollection()->each(function (User $user) {
+            $user->setAttribute('team_members', self::teamMemberRows($user));
+            // The full sub-account models carry billing details the list has no
+            // use for; only the flattened rows above are sent over the wire.
+            $user->unsetRelation('teamMembers');
+        });
 
         return Inertia::render('users/index', [
             'users' => $users,
             'roles' => Role::query()->system()->orderBy('name')->get(['id', 'name']),
-            'filters' => $request->only(['search', 'role']),
+            'filters' => array_merge(
+                $request->only(['search', 'role']),
+                SortableQuery::state($request, self::sortable(), self::DEFAULT_SORT),
+            ),
         ]);
+    }
+
+    /**
+     * The free-text clause, shared by the owner row and its team members.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<User>  $query
+     */
+    private static function matchesSearch($query, string $search): void
+    {
+        $query->where('first_name', 'like', "%{$search}%")
+            ->orWhere('last_name', 'like', "%{$search}%")
+            ->orWhere('name', 'like', "%{$search}%")
+            ->orWhere('email', 'like', "%{$search}%")
+            ->orWhere('phone_number', 'like', "%{$search}%")
+            ->orWhere('cin', 'like', "%{$search}%");
+    }
+
+    /**
+     * Team members of a vendor account, flattened to what the list row draws.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private static function teamMemberRows(User $user): array
+    {
+        return $user->teamMembers
+            ->map(fn (User $member) => [
+                'id' => $member->id,
+                'full_name' => $member->full_name,
+                'email' => $member->email,
+                'phone_number' => $member->phone_number,
+                'photo_url' => $member->photo_url,
+                'city' => $member->city?->name,
+                'cin' => $member->cin,
+                // Team members wear the vendor's own roles, which are named per
+                // account and carry a label the catalogue cannot translate.
+                'role_label' => $member->roles->map->displayName()->implode(', '),
+                'status' => $member->status?->value,
+                'status_class' => $member->status?->badgeClass(),
+                'created_at' => $member->created_at?->toIso8601String(),
+            ])
+            ->all();
+    }
+
+    /**
+     * Columns the user list may be ordered on.
+     *
+     * The name shown is the first and last name joined, so the two are ordered
+     * in that order rather than on the stored `name`, which is only a fallback.
+     * The role sorts on its stored name: the label the reader sees is
+     * translated in the browser, and ordering on it would mean shipping the
+     * whole table to sort ten rows.
+     *
+     * @return array<string, string|array<int, mixed>>
+     */
+    private static function sortable(): array
+    {
+        return [
+            'full_name' => ['first_name', 'last_name'],
+            'email' => 'email',
+            'phone_number' => 'phone_number',
+            'city' => [
+                DB::table('cities')->select('name')->whereColumn('cities.id', 'users.city_id'),
+            ],
+            'cin' => 'cin',
+            'ice_number' => 'ice_number',
+            'role' => [
+                DB::table('roles')->select('name')->whereColumn('roles.id', 'users.role_id'),
+            ],
+            'created_at' => 'created_at',
+        ];
     }
 
     /**

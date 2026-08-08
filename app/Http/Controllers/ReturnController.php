@@ -53,9 +53,12 @@ class ReturnController extends Controller
         return Inertia::render('returns/index', [
             'returns' => OrderReturnResource::collection($returns)->response()->getData(true),
             'stats' => $this->returnQuery->statusCounts($request, $user),
-            'filters' => $request->only([
-                'search', 'status', 'city_id', 'seller_id', 'reason', 'created_from', 'created_to', 'per_page',
-            ]),
+            'filters' => array_merge(
+                $request->only([
+                    'search', 'status', 'city_id', 'seller_id', 'reason', 'created_from', 'created_to', 'per_page',
+                ]),
+                $this->returnQuery->sortState($request),
+            ),
             'filterOptions' => [
                 'statuses' => ReturnStatus::options(),
                 'reasons' => ReturnReason::options(),

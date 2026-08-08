@@ -5,9 +5,12 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
+use App\Support\SortableQuery;
 use App\Support\StatusCounts;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -24,6 +27,11 @@ use Illuminate\Validation\ValidationException;
  */
 class OrderPreparationService
 {
+    private const DEFAULT_SORT = 'created_at';
+
+    /** Oldest first: a preparation queue is a queue. */
+    private const DEFAULT_DIRECTION = 'asc';
+
     public function __construct(
         private readonly OrderTransitionService $transitions,
     ) {}
@@ -37,14 +45,46 @@ class OrderPreparationService
      * @param  array<string, mixed>  $filters
      * @return Builder<Order>
      */
-    public function queue(array $filters = [])
+    public function queue(Request $request, array $filters = [])
     {
-        return $this->scoped($filters)
+        $query = $this->scoped($filters)
             ->where('status', OrderStatus::AWAITING_PREPARATION->value)
-            ->with(['items', 'city', 'sector', 'seller', 'store', 'stockHubCity'])
-            // Oldest first: a preparation queue is a queue.
-            ->orderBy('created_at')
-            ->orderBy('id');
+            ->with(['items', 'city', 'sector', 'seller', 'store', 'stockHubCity']);
+
+        SortableQuery::apply($query, $request, self::sortable(), self::DEFAULT_SORT, self::DEFAULT_DIRECTION);
+
+        return $query;
+    }
+
+    /**
+     * The order actually applied, echoed back so the header can draw its arrow.
+     *
+     * @return array{sort: string, direction: string}
+     */
+    public function sortState(Request $request): array
+    {
+        return SortableQuery::state($request, self::sortable(), self::DEFAULT_SORT, self::DEFAULT_DIRECTION);
+    }
+
+    /**
+     * Columns the picking queue may be ordered on.
+     *
+     * The lines and the routing badge are left out: one is a list, the other a
+     * comparison the resource makes in PHP, and neither is a value a row can be
+     * ranked by.
+     *
+     * @return array<string, string|array<int, mixed>>
+     */
+    private static function sortable(): array
+    {
+        return [
+            'tracking_number' => 'tracking_number',
+            'created_at' => 'created_at',
+            'store' => [
+                DB::table('stores')->select('name')->whereColumn('stores.id', 'orders.store_id'),
+            ],
+            'customer' => ['customer_first_name', 'customer_last_name'],
+        ];
     }
 
     /**

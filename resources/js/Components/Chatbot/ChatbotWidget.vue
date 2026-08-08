@@ -435,7 +435,7 @@ const onKeydown = (event) => {
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--vz-border-color, #e9ebec);
   border-radius: 0.75rem;
-  background-color: var(--vz-input-bg, #fff);
+  background-color: var(--vz-input-bg-custom);
   color: var(--vz-body-color, #212529);
   font-size: 0.8125rem;
   resize: none;

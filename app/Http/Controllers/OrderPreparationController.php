@@ -32,14 +32,14 @@ class OrderPreparationController extends Controller
         $filters = $request->only(['hub_city_id', 'search']);
 
         $orders = $this->preparation
-            ->queue($filters)
+            ->queue($request, $filters)
             ->paginate(30)
             ->withQueryString();
 
         return Inertia::render('orders/preparation/index', [
             'orders' => PreparationOrderResource::collection($orders)->response()->getData(true),
             'stats' => $this->preparation->statusCounts($filters),
-            'filters' => $filters,
+            'filters' => array_merge($filters, $this->preparation->sortState($request)),
             'hubCities' => City::hubOptions(),
         ]);
     }

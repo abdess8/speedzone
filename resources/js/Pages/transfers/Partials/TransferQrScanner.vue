@@ -1,9 +1,10 @@
 <script setup>
-import { ref, watch, onUnmounted } from "vue";
+import { ref, watch, nextTick, onUnmounted } from "vue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Swal from "sweetalert2";
 import BottomSheet from "@/Components/BottomSheet.vue";
+import { createQrDetector } from "@/utils/qrDetector";
 
 const { t } = useI18n();
 
@@ -18,6 +19,16 @@ const manualInput = ref("");
 const scannedOrders = ref([]);
 const scanning = ref(false);
 const stream = ref(null);
+const videoRef = ref(null);
+const cameraError = ref("");
+
+/** Frames are cheap; a code left in front of the lens must not be added twice. */
+const REPEAT_GUARD_MS = 3000;
+const DETECT_INTERVAL_MS = 500;
+
+let detectInterval = null;
+let lastValue = "";
+let lastAt = 0;
 
 const parseTrackingNumber = (input) => {
   const trimmed = input.trim();
@@ -78,6 +89,10 @@ const submitBulk = () => {
 };
 
 const stopCamera = () => {
+  if (detectInterval) {
+    clearInterval(detectInterval);
+    detectInterval = null;
+  }
   if (stream.value) {
     stream.value.getTracks().forEach((track) => track.stop());
     stream.value = null;
@@ -86,13 +101,48 @@ const stopCamera = () => {
 };
 
 const startCamera = async () => {
-  if (!("BarcodeDetector" in window)) return;
+  cameraError.value = "";
+  stopCamera();
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    cameraError.value = t("transfers.scanner.camera_unsupported");
+    return;
+  }
 
   try {
     stream.value = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    await nextTick();
+
+    if (videoRef.value) {
+      videoRef.value.srcObject = stream.value;
+      await videoRef.value.play();
+    }
+
+    const detector = await createQrDetector();
     scanning.value = true;
+    lastValue = "";
+    lastAt = 0;
+
+    detectInterval = setInterval(async () => {
+      if (!videoRef.value) return;
+
+      try {
+        const codes = await detector.detect(videoRef.value);
+        if (codes.length === 0) return;
+
+        const rawValue = codes[0].rawValue;
+        const now = Date.now();
+        if (rawValue === lastValue && now - lastAt < REPEAT_GUARD_MS) return;
+
+        lastValue = rawValue;
+        lastAt = now;
+        await addScan(rawValue);
+      } catch {
+        // A frame the detector cannot read is not an error worth reporting.
+      }
+    }, DETECT_INTERVAL_MS);
   } catch {
-    /* camera unavailable */
+    cameraError.value = t("transfers.scanner.camera_error");
   }
 };
 
@@ -128,6 +178,16 @@ const close = () => emit("close");
       </button>
     </div>
 
+    <div v-if="cameraError" class="alert alert-warning">
+      <i class="ri-camera-off-line align-bottom me-1"></i>
+      {{ cameraError }}
+    </div>
+
+    <div v-show="scanning" class="scanner-viewport mb-3">
+      <video ref="videoRef" class="w-100 rounded" playsinline muted></video>
+      <div class="scanner-frame"></div>
+    </div>
+
     <div v-if="scannedOrders.length" class="mb-3">
       <div class="text-muted mb-2">{{ $t('transfers.scanner.scanned_count', { count: scannedOrders.length }) }}</div>
       <div class="d-flex flex-wrap gap-1">
@@ -143,3 +203,28 @@ const close = () => emit("close");
     </div>
   </BottomSheet>
 </template>
+
+<style scoped>
+.scanner-viewport {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--vz-border-radius, 0.375rem);
+  background-color: #000;
+}
+
+.scanner-viewport video {
+  display: block;
+  max-height: 18rem;
+  object-fit: cover;
+}
+
+/* Tells the operator where to hold the label, which is the difference between
+   a viewfinder and a video of the warehouse floor. */
+.scanner-frame {
+  position: absolute;
+  inset: 15% 25%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 0.5rem;
+  pointer-events: none;
+}
+</style>

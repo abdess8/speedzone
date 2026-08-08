@@ -8,6 +8,7 @@ use App\Enums\SellerPaymentMethod;
 use App\Enums\UserStatus;
 use App\Notifications\VerifySpeedZoneAccountEmail;
 use App\Support\ProfileCompletion;
+use App\Support\RoleLabel;
 use App\Support\StoreContext;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -471,6 +472,17 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Human readable name of the role shown next to the user, whatever its
+     * origin. Vendor roles have no translation entry — see {@see RoleLabel}.
+     */
+    public function primaryRoleLabel(): ?string
+    {
+        $this->loadMissing('roles');
+
+        return RoleLabel::of($this->roles->first());
+    }
+
+    /**
      * Drop the memoized role/permission lookups (call after granting or
      * revoking access on an already-loaded instance).
      */
@@ -617,9 +629,15 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Roles that are granted unrestricted access across the application.
      *
+     * `Admin` is the seeded one; the two spellings after it are the legacy rows
+     * that predate the seeder and are still what live installations carry. They
+     * matter beyond this check: every permission migration grants to this list,
+     * so a name missing here silently skips the platform owner on each new
+     * permission shipped.
+     *
      * @var array<int, string>
      */
-    public const SUPER_ADMIN_ROLES = ['Admin', 'SuperAdmin'];
+    public const SUPER_ADMIN_ROLES = ['Admin', 'SuperAdmin', 'Super Admin'];
 
     /**
      * Whether the user belongs to an all-access (super admin) role.

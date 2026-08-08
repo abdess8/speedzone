@@ -1,5 +1,3 @@
-import jsQR from 'jsqr';
-
 /**
  * A QR reader that works on every phone in the fleet.
  *
@@ -48,6 +46,10 @@ export async function createQrDetector() {
       detect: (video) => detector.detect(video),
     };
   }
+
+  // Loaded only on the browsers that need it: the decoder is ~40 KB, and the
+  // Android handsets the drivers carry all have the native one.
+  const { default: jsQR } = await import('jsqr');
 
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d', { willReadFrequently: true });

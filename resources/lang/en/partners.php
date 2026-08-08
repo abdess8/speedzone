@@ -174,7 +174,7 @@ return [
             'open' => 'QR bulk scan',
             'title' => 'QR Bulk Status Scan',
             'camera_preview' => 'Camera preview',
-            'camera_unsupported' => 'QR scanning is not supported in this browser.',
+            'camera_unsupported' => 'This browser gives no access to the camera. Type the numbers by hand.',
             'camera_error' => 'Unable to access the camera.',
             'start_camera' => 'Start camera',
             'scan_manual_label' => 'Scan or enter tracking number',

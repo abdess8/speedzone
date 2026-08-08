@@ -26,7 +26,7 @@ class ProductImportController extends Controller
 
     public function create(): Response
     {
-        $this->authorize('create', Product::class);
+        $this->authorize('import', Product::class);
 
         return Inertia::render('stock/products/import', [
             // Existing categories drive the suggestions in the review table, so a
@@ -38,7 +38,7 @@ class ProductImportController extends Controller
 
     public function store(ImportProductsRequest $request): RedirectResponse
     {
-        $this->authorize('create', Product::class);
+        $this->authorize('import', Product::class);
 
         $products = $this->importService->import($request->rows(), $request->user());
 

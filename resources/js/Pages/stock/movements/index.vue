@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n';
 import Layout from '@/Layouts/main.vue';
 import PageHeader from '@/Components/page-header.vue';
 import FilterPanel from '@/Components/FilterPanel.vue';
+import SortableTh from '@/Components/SortableTh.vue';
+import { useTableSort } from '@/composables/useTableSort';
 
 /**
  * The stock ledger, read whole.
@@ -41,7 +43,7 @@ const activeFilterCount = computed(
 );
 
 const reload = () => {
-  const params = {};
+  const params = { sort: sort.value, direction: direction.value };
 
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== '' && value !== null) {
@@ -55,6 +57,8 @@ const reload = () => {
     replace: true,
   });
 };
+
+const { sort, direction, sortBy } = useTableSort(props.filters, reload);
 
 const resetFilters = () => {
   Object.keys(filters).forEach((key) => {
@@ -137,15 +141,33 @@ const signed = (delta) => (delta > 0 ? `+${delta}` : String(delta));
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light">
               <tr>
-                <th>{{ $t('stock.movements.columns.date') }}</th>
-                <th>{{ $t('stock.movements.columns.product') }}</th>
-                <th>{{ $t('stock.movements.columns.store') }}</th>
-                <th>{{ $t('stock.movements.columns.source') }}</th>
-                <th>{{ $t('stock.movements.columns.reason') }}</th>
-                <th class="text-end">{{ $t('stock.movements.columns.before') }}</th>
-                <th class="text-center">{{ $t('stock.movements.columns.delta') }}</th>
-                <th class="text-end">{{ $t('stock.movements.columns.after') }}</th>
-                <th>{{ $t('stock.movements.columns.author') }}</th>
+                <SortableTh field="created_at" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.movements.columns.date') }}
+                </SortableTh>
+                <SortableTh field="product" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.movements.columns.product') }}
+                </SortableTh>
+                <SortableTh field="store" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.movements.columns.store') }}
+                </SortableTh>
+                <SortableTh field="source" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.movements.columns.source') }}
+                </SortableTh>
+                <SortableTh field="reason" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.movements.columns.reason') }}
+                </SortableTh>
+                <SortableTh field="stock_before" align="end" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.movements.columns.before') }}
+                </SortableTh>
+                <SortableTh field="delta" align="center" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.movements.columns.delta') }}
+                </SortableTh>
+                <SortableTh field="stock_after" align="end" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.movements.columns.after') }}
+                </SortableTh>
+                <SortableTh field="author" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('stock.movements.columns.author') }}
+                </SortableTh>
                 <th>{{ $t('stock.movements.columns.document') }}</th>
               </tr>
             </thead>

@@ -193,6 +193,7 @@ class RolePermissionMatrix
             ...DashboardPermissions::sellerDefaults(),
             ...SupportPermissions::sellerDefaults(),
             ...StockPermissions::sellerDefaults(),
+            ...EcommerceIntegrationPermissions::sellerDefaults(),
         ];
     }
 

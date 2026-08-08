@@ -9,10 +9,12 @@ use App\Models\Product;
 use App\Services\ProductAuditService;
 use App\Services\ProductService;
 use App\Services\StockInventoryService;
+use App\Support\SortableQuery;
 use App\Support\StockPermissions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,6 +28,8 @@ use Inertia\Response;
  */
 class ProductController extends Controller
 {
+    private const DEFAULT_SORT = 'name';
+
     public function __construct(
         private readonly ProductService $productService,
         private readonly StockInventoryService $inventoryService,
@@ -35,15 +39,20 @@ class ProductController extends Controller
     {
         $this->authorize('viewAny', Product::class);
 
-        $products = $this->filtered($request)
-            ->select(ProductListResource::COLUMNS)
-            ->orderBy('name')
+        $query = $this->filtered($request)->select(ProductListResource::COLUMNS);
+
+        SortableQuery::apply($query, $request, self::sortable(), self::DEFAULT_SORT, 'asc');
+
+        $products = $query
             ->paginate($this->perPage($request))
             ->withQueryString();
 
         return Inertia::render('stock/products/index', [
             'products' => ProductListResource::collection($products)->response()->getData(true),
-            'filters' => $request->only(['search', 'category', 'stock_status', 'status', 'per_page']),
+            'filters' => array_merge(
+                $request->only(['search', 'category', 'stock_status', 'status', 'per_page']),
+                SortableQuery::state($request, self::sortable(), self::DEFAULT_SORT, 'asc'),
+            ),
             'categories' => $this->productService->categories(),
             'summary' => $this->inventoryService->summary(),
             'can' => $this->abilities($request),
@@ -170,6 +179,29 @@ class ProductController extends Controller
         return redirect()
             ->route('products.index')
             ->with('success', __('stock.products.flash.archived'));
+    }
+
+    /**
+     * Columns the catalog may be ordered on.
+     *
+     * The status column is left out: it collapses "blocked", "archived", "out of
+     * stock" and "low" into one badge, and there is no ranking of those four a
+     * reader would agree with in advance.
+     *
+     * @return array<string, string|array<int, mixed>>
+     */
+    private static function sortable(): array
+    {
+        return [
+            'name' => 'name',
+            'sku' => 'sku',
+            'category' => 'category',
+            'unit_price' => 'unit_price',
+            // Same definition as Product::margin(): null — and therefore last
+            // going down — for a vendor who does not track his costs.
+            'margin' => [DB::raw('(unit_price - cost_price)')],
+            'stock_quantity' => 'stock_quantity',
+        ];
     }
 
     /**
@@ -332,7 +364,7 @@ class ProductController extends Controller
 
         return [
             'create' => $user->can('create', Product::class),
-            'import' => $user->can('create', Product::class),
+            'import' => $user->can('import', Product::class),
             'adjust' => $user->hasPermission(StockPermissions::ADJUST)
                 || $user->hasPermission(StockPermissions::ADMIN_OVERRIDE),
             'block' => $user->hasPermission(StockPermissions::ADMIN_OVERRIDE),

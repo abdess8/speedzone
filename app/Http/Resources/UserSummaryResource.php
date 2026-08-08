@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\User;
+use App\Support\RoleLabel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,9 +17,10 @@ class UserSummaryResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $roleName = $this->relationLoaded('roles')
-            ? $this->roles->first()?->name
-            : ($this->relationLoaded('role') ? $this->role?->name : null);
+        $role = $this->relationLoaded('roles')
+            ? $this->roles->first()
+            : ($this->relationLoaded('role') ? $this->role : null);
+        $roleName = $role?->name;
 
         return [
             'id' => $this->id,
@@ -29,7 +31,7 @@ class UserSummaryResource extends JsonResource
             'photo_url' => $this->photo_url,
             'has_profile_photo' => $this->hasProfilePhoto(),
             'role' => $roleName,
-            'role_label' => $roleName ? __('roles.'.$roleName, [], $roleName) : null,
+            'role_label' => RoleLabel::of($role),
             'city_id' => $this->city_id,
             'city' => $this->whenLoaded('city', fn () => $this->city ? [
                 'id' => $this->city->id,

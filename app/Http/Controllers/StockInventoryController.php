@@ -8,6 +8,7 @@ use App\Http\Resources\ProductListResource;
 use App\Models\Product;
 use App\Services\StockInventoryService;
 use App\Support\CountingContext;
+use App\Support\SortableQuery;
 use App\Support\StockPermissions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,21 @@ use Inertia\Response;
  */
 class StockInventoryController extends Controller
 {
+    private const DEFAULT_SORT = 'name';
+
+    /**
+     * Columns the counting sheet may be ordered on.
+     *
+     * The counted quantity, the gap and the motive are only ever held in the
+     * browser until the sheet is submitted, so there is nothing in SQL to rank
+     * them by.
+     */
+    private const SORTABLE = [
+        'name' => 'name',
+        'sku' => 'sku',
+        'stock_quantity' => 'stock_quantity',
+    ];
+
     public function __construct(
         private readonly StockInventoryService $inventoryService,
     ) {}
@@ -31,20 +47,26 @@ class StockInventoryController extends Controller
     {
         $this->authorize('viewAny', Product::class);
 
-        $products = Product::query()
+        $query = Product::query()
             ->active()
             ->search($request->input('search'))
             ->when($request->filled('category'), fn ($query) => $query->where('category', $request->input('category')))
             ->when($request->input('stock_status') === 'out', fn ($query) => $query->outOfStock())
             ->when($request->input('stock_status') === 'in', fn ($query) => $query->inStock())
-            ->select(ProductListResource::COLUMNS)
-            ->orderBy('name')
+            ->select(ProductListResource::COLUMNS);
+
+        SortableQuery::apply($query, $request, self::SORTABLE, self::DEFAULT_SORT, 'asc');
+
+        $products = $query
             ->paginate($this->perPage($request))
             ->withQueryString();
 
         return Inertia::render('stock/inventory/index', [
             'products' => ProductListResource::collection($products)->response()->getData(true),
-            'filters' => $request->only(['search', 'category', 'stock_status', 'per_page']),
+            'filters' => array_merge(
+                $request->only(['search', 'category', 'stock_status', 'per_page']),
+                SortableQuery::state($request, self::SORTABLE, self::DEFAULT_SORT, 'asc'),
+            ),
             'reasons' => StockAdjustmentReason::options(),
             'summary' => $this->inventoryService->summary(),
             'can' => [

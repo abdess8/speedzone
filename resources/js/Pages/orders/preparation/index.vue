@@ -7,6 +7,8 @@ import Layout from '@/Layouts/main.vue';
 import PageHeader from '@/Components/page-header.vue';
 import FilterPanel from '@/Components/FilterPanel.vue';
 import StatusKpiCards from '@/Components/StatusKpiCards.vue';
+import SortableTh from '@/Components/SortableTh.vue';
+import { useTableSort } from '@/composables/useTableSort';
 import PreparationScanner from './Partials/PreparationScanner.vue';
 
 /**
@@ -62,7 +64,7 @@ const toggle = (id) => {
 };
 
 const reload = () => {
-  const params = {};
+  const params = { sort: sort.value, direction: direction.value };
 
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== '' && value !== null) {
@@ -78,6 +80,8 @@ const reload = () => {
     replace: true,
   });
 };
+
+const { sort, direction, sortBy } = useTableSort(props.filters, reload);
 
 const resetFilters = () => {
   Object.keys(filters).forEach((key) => {
@@ -275,10 +279,18 @@ onMounted(() => {
                     @change="toggleAll"
                   />
                 </th>
-                <th>{{ $t('preparation.columns.tracking') }}</th>
-                <th>{{ $t('preparation.columns.created') }}</th>
-                <th>{{ $t('preparation.columns.store') }}</th>
-                <th>{{ $t('preparation.columns.customer') }}</th>
+                <SortableTh field="tracking_number" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('preparation.columns.tracking') }}
+                </SortableTh>
+                <SortableTh field="created_at" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('preparation.columns.created') }}
+                </SortableTh>
+                <SortableTh field="store" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('preparation.columns.store') }}
+                </SortableTh>
+                <SortableTh field="customer" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('preparation.columns.customer') }}
+                </SortableTh>
                 <th>{{ $t('preparation.columns.lines') }}</th>
                 <th>{{ $t('preparation.columns.routing') }}</th>
                 <th class="text-end">{{ $t('common.actions') }}</th>

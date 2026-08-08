@@ -12,6 +12,7 @@ use App\Http\Controllers\DriverFinanceController;
 use App\Http\Controllers\DriverInvoiceController;
 use App\Http\Controllers\DriverTransactionController;
 use App\Http\Controllers\DriverZoneController;
+use App\Http\Controllers\EcommerceIntegrationController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\GuideAccessController;
 use App\Http\Controllers\GuideController;
@@ -113,8 +114,15 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::prefix('admin')->name('admin.')->middleware('permission:users.read')->group(function () {
         Route::get('pending-users', [PendingUserController::class, 'index'])->name('pending-users.index');
         Route::get('pending-users/{user}', [PendingUserController::class, 'show'])->name('pending-users.show');
+        Route::put('pending-users/{user}', [PendingUserController::class, 'update'])->name('pending-users.update');
+        Route::put('pending-users/{user}/password', [PendingUserController::class, 'updatePassword'])
+            ->name('pending-users.password.update');
+        Route::post('pending-users/{user}/resend-verification', [PendingUserController::class, 'resendVerification'])
+            ->middleware('throttle:6,1')
+            ->name('pending-users.resend-verification');
         Route::post('users/{user}/approve', [PendingUserController::class, 'approve'])->name('users.approve');
         Route::post('users/{user}/reject', [PendingUserController::class, 'reject'])->name('users.reject');
+        Route::post('users/{user}/reactivate', [PendingUserController::class, 'reactivate'])->name('users.reactivate');
     });
 
     Route::redirect('/admin/users/pending', '/admin/pending-users');
@@ -328,10 +336,10 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     // before the resources so `products/import` is not swallowed by
     // `products/{product}`.
     Route::get('products/import', [ProductImportController::class, 'create'])
-        ->middleware('permission:stock.create_product')
+        ->middleware('permission:stock.import_products')
         ->name('products.import');
     Route::post('products/import', [ProductImportController::class, 'store'])
-        ->middleware('permission:stock.create_product')
+        ->middleware('permission:stock.import_products')
         ->name('products.import.store');
     Route::put('products/{product}/block', ProductBlockController::class)
         ->whereNumber('product')
@@ -537,6 +545,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('api-integrations', [ApiIntegrationController::class, 'index'])
         ->middleware('permission:orders.create')
         ->name('api-integrations.index');
+
+    // Storefront connectors (Shopify, YouCan, WooCommerce, PrestaShop).
+    Route::get('integrations', [EcommerceIntegrationController::class, 'index'])
+        ->middleware('permission:integrations.read|integrations.manage')
+        ->name('integrations.index');
 
     // Help Center. No permission guard: both pages document rules the reader is
     // already subject to, and hiding the contract from the people it binds

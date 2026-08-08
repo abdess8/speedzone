@@ -11,6 +11,8 @@ import StatusPills from "@/Components/StatusPills.vue";
 import StatusKpiCards from "@/Components/StatusKpiCards.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
+import SortableTh from "@/Components/SortableTh.vue";
+import { useTableSort } from "@/composables/useTableSort";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -69,7 +71,7 @@ const sheetRows = (transfer) => [
 ];
 
 const query = () => {
-  const params = { per_page: perPage.value };
+  const params = { per_page: perPage.value, sort: sort.value, direction: direction.value };
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== "" && value !== null) params[key] = value;
   });
@@ -83,6 +85,8 @@ const reload = () => {
     replace: true,
   });
 };
+
+const { sort, direction, sortBy } = useTableSort(props.filters, reload);
 
 const applyFilters = () => reload();
 const resetFilters = () => {
@@ -206,13 +210,27 @@ onMounted(() => {
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
               <tr>
-                <th>{{ $t('transfers.filters.reference') }}</th>
-                <th>{{ $t('transfers.table.from_city') }}</th>
-                <th>{{ $t('transfers.table.to_city') }}</th>
-                <th class="text-center">{{ $t('transfers.table.packages') }}</th>
-                <th class="text-end">{{ $t('transfers.table.total_amount') }}</th>
-                <th>{{ $t('common.status') }}</th>
-                <th>{{ $t('transfers.table.created') }}</th>
+                <SortableTh field="reference" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('transfers.filters.reference') }}
+                </SortableTh>
+                <SortableTh field="from_city" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('transfers.table.from_city') }}
+                </SortableTh>
+                <SortableTh field="to_city" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('transfers.table.to_city') }}
+                </SortableTh>
+                <SortableTh field="number_of_packages" align="center" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('transfers.table.packages') }}
+                </SortableTh>
+                <SortableTh field="total_amount" align="end" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('transfers.table.total_amount') }}
+                </SortableTh>
+                <SortableTh field="status" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('common.status') }}
+                </SortableTh>
+                <SortableTh field="created_at" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('transfers.table.created') }}
+                </SortableTh>
                 <th class="text-end">{{ $t('common.actions') }}</th>
               </tr>
             </thead>

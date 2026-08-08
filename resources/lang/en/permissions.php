@@ -10,6 +10,7 @@ return [
         'returns' => 'Returns',
         'transfers' => 'Transfers',
         'partners' => 'Partner Integrations',
+        'integrations' => 'E-commerce integrations',
         'users' => 'Users',
         'roles' => 'Roles',
         'permissions' => 'Permissions',
@@ -47,13 +48,17 @@ return [
         'support.manage' => 'Manage support (full access)',
 
         'stock.view' => 'View catalog and stock levels',
-        'stock.create_product' => 'Add / import products',
+        'stock.create_product' => 'Add and edit products',
+        'stock.import_products' => 'Bulk import products (Excel/CSV)',
         'stock.create_inbound' => 'Create inbound shipments',
         'stock.adjust' => 'Run inventories and correct stock',
         'orders.create_with_stock' => 'Create orders from stock',
         'stock.collect_inbound' => 'Collect stock from the vendor',
         'stock.receive_inbound' => 'Receive stock at the depot',
         'stock.admin_override' => 'Audit and block stock (all vendors)',
+
+        'integrations.read' => 'View e-commerce integrations',
+        'integrations.manage' => 'Connect and configure an e-commerce store',
 
         'dashboard.view' => 'Open the dashboard',
         'dashboard.view_financials' => 'See amounts and revenue',
@@ -94,13 +99,17 @@ return [
         'support.manage' => 'Full support operations: view all tickets, assign, change status, reply, and close. Intended for support agents.',
 
         'stock.view' => 'View the product catalog, stock levels and inbound shipment slips of the shop.',
-        'stock.create_product' => 'Create, edit and archive product sheets, including through the Excel/CSV import.',
+        'stock.create_product' => 'Create, edit and archive product sheets one at a time.',
+        'stock.import_products' => 'Create product sheets in bulk from an Excel/CSV file. Kept apart from one-off creation: an import rewrites a whole catalog in a single operation.',
         'stock.create_inbound' => 'Prepare a slip and declare a stock shipment towards our depot.',
         'stock.adjust' => 'Correct stock quantities during an inventory. Every gap requires a reason and is kept in an immutable audit trail.',
         'orders.create_with_stock' => 'Build an order from catalog products: stock is debited and the amount computed automatically.',
         'stock.collect_inbound' => 'Drive to vendors in your cities, count the load in front of them and send it on to the depot. That count becomes the reference for the rest of the journey but credits no stock. Hub-side permission: it cannot be delegated to a vendor team, because the whole point of the count is that somebody other than the vendor makes it.',
         'stock.receive_inbound' => 'Physically count stock arriving at the depot and credit the quantities actually received. Limited to shipments addressed to a depot in your cities. Hub-side permission: it cannot be delegated to a vendor team.',
         'stock.admin_override' => 'Audit every stock movement across all shops and block a defective product. Sensitive permission, reserved for administration.',
+
+        'integrations.read' => 'See which e-commerce stores are linked to the account and how their sync is doing.',
+        'integrations.manage' => 'Link, reconfigure or disconnect a Shopify, YouCan, WooCommerce or PrestaShop store. Grants access to the store API keys.',
 
         'dashboard.view' => 'Open the dashboard. The figures stay limited to the active store and to the orders the user is allowed to read.',
         'dashboard.view_financials' => 'See cash to collect, COD collected, revenue and average order value. Withhold it from a role that packs parcels without needing to know what the shop makes.',

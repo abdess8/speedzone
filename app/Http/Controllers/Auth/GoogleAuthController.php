@@ -31,7 +31,16 @@ class GoogleAuthController extends Controller
             return $this->failure('seller_registration.google.disabled');
         }
 
-        return Socialite::driver('google')->redirect();
+        try {
+            return Socialite::driver('google')->redirect();
+        } catch (Throwable $e) {
+            // A bad redirect URI or an unwritable session would otherwise put a
+            // 500 in front of someone trying to sign in, with the reason
+            // visible to nobody.
+            Log::error('Google sign-in redirect failed.', ['exception' => $e]);
+
+            return $this->failure('seller_registration.google.failed');
+        }
     }
 
     /**
@@ -47,7 +56,7 @@ class GoogleAuthController extends Controller
         try {
             $googleUser = Socialite::driver('google')->user();
         } catch (Throwable $e) {
-            Log::warning('Google sign-in failed.', ['error' => $e->getMessage()]);
+            Log::warning('Google sign-in failed.', ['exception' => $e]);
 
             return $this->failure('seller_registration.google.failed');
         }
@@ -58,13 +67,27 @@ class GoogleAuthController extends Controller
             return $this->failure('seller_registration.google.no_email');
         }
 
-        $user = User::query()->where('google_id', $googleUser->getId())->first()
-            ?? User::query()->where('email', $email)->first();
+        // Everything past this point touches our own database and event
+        // listeners. A pending migration, a missing Seller role or a listener
+        // that cannot reach the mail server must not answer a sign-in attempt
+        // with a blank 500 — the reason belongs in the log, and the visitor
+        // belongs back on the login form.
+        try {
+            $user = User::query()->where('google_id', $googleUser->getId())->first()
+                ?? User::query()->where('email', $email)->first();
 
-        if (! $user) {
-            $user = $this->createSeller($googleUser, $email);
-        } else {
-            $this->linkGoogleAccount($user, $googleUser);
+            if (! $user) {
+                $user = $this->createSeller($googleUser, $email);
+            } else {
+                $this->linkGoogleAccount($user, $googleUser);
+            }
+        } catch (Throwable $e) {
+            Log::error('Google sign-in could not resolve the account.', [
+                'email' => $email,
+                'exception' => $e,
+            ]);
+
+            return $this->failure('seller_registration.google.failed');
         }
 
         if ($user->isRegistrationRejected()) {
@@ -114,7 +137,17 @@ class GoogleAuthController extends Controller
 
         $user->roles()->sync([$sellerRole->id]);
 
-        NewSellerRegistered::dispatch($user->fresh(['city']));
+        // The account exists and is valid at this point. A notification the
+        // admins do not receive is a problem for the admins, not a reason to
+        // refuse the sign-in the visitor just completed.
+        try {
+            NewSellerRegistered::dispatch($user->fresh(['city']));
+        } catch (Throwable $e) {
+            Log::error('New seller notification failed after Google sign-up.', [
+                'user_id' => $user->id,
+                'exception' => $e,
+            ]);
+        }
 
         return $user;
     }

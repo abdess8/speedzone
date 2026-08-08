@@ -77,7 +77,7 @@ return [
         'invalid_tracking_text' => 'Entrez un numéro de suivi ou une URL de commande.',
         'scan_rejected' => 'Scan refusé',
         'unable_validate' => 'Impossible de valider cette commande.',
-        'camera_unsupported' => 'Le scan QR par caméra n\'est pas supporté. Utilisez la saisie manuelle.',
+        'camera_unsupported' => 'Ce navigateur ne donne pas accès à la caméra. Utilisez la saisie manuelle.',
         'camera_error' => 'Impossible d\'accéder à la caméra. Vérifiez les permissions ou utilisez la saisie manuelle.',
         'update_status' => 'Mettre à jour le statut',
         'status_updated' => 'Statut mis à jour',

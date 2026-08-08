@@ -52,7 +52,10 @@ class PickupRequestController extends Controller
         return Inertia::render('pickup-requests/index', [
             'pickups' => PickupRequestResource::collection($pickups)->response()->getData(true),
             'stats' => $this->pickupQuery->statusCounts($request, $request->user()),
-            'filters' => $request->only(['search', 'status', 'seller_id', 'created_from', 'created_to', 'per_page']),
+            'filters' => array_merge(
+                $request->only(['search', 'status', 'seller_id', 'created_from', 'created_to', 'per_page']),
+                $this->pickupQuery->sortState($request),
+            ),
             'filterOptions' => [
                 'statuses' => PickupRequestStatus::options(),
                 'sellers' => $this->sellerOptions($user),

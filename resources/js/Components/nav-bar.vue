@@ -1,4 +1,5 @@
 <script setup>
+import EcommerceIntegrationsMenu from '@/Components/EcommerceIntegrationsMenu.vue';
 import GlobalSearch from '@/Components/GlobalSearch.vue';
 import NavModeSwitcher from '@/Components/NavModeSwitcher.vue';
 import NotificationBell from '@/Components/Notifications/NotificationBell.vue';
@@ -211,6 +212,8 @@ export default {
           </Link>
 
           <SettingsMenu />
+
+          <EcommerceIntegrationsMenu />
 
           <NotificationBell />
 

@@ -1,9 +1,12 @@
 <script setup>
 import LandingButton from '@/Components/Landing/LandingButton.vue';
+import { useLandingLocale } from '@/Components/Landing/i18n';
 
 defineProps({
     authenticated: { type: Boolean, default: false },
 });
+
+const { t } = useLandingLocale();
 </script>
 
 <template>
@@ -16,22 +19,19 @@ defineProps({
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
                         </svg>
-                        Prêt à accélérer ?
+                        {{ t('cta.badge') }}
                     </span>
-                    <h2 class="sz-cta__title">Prêt à améliorer vos livraisons ?</h2>
-                    <p class="sz-cta__text">
-                        Rejoignez les centaines d'entreprises qui font déjà confiance à SpeedZone
-                        pour livrer plus vite et plus sereinement.
-                    </p>
+                    <h2 class="sz-cta__title">{{ t('cta.title') }}</h2>
+                    <p class="sz-cta__text">{{ t('cta.text') }}</p>
                     <div class="sz-cta__actions">
                         <LandingButton v-if="authenticated" href="/dashboard" variant="light" size="lg">
-                            Ouvrir le tableau de bord
+                            {{ t('cta.dashboard') }}
                         </LandingButton>
                         <LandingButton v-else href="/register" variant="light" size="lg">
-                            Créer un compte gratuitement
+                            {{ t('cta.primary') }}
                         </LandingButton>
                         <LandingButton href="#contact" variant="ghost" size="lg">
-                            Planifier un ramassage
+                            {{ t('cta.secondary') }}
                         </LandingButton>
                     </div>
                 </div>

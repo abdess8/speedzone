@@ -4,46 +4,17 @@ import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
+import { useLandingLocale } from '@/Components/Landing/i18n';
+
+const { t } = useLandingLocale();
 
 const modules = [Autoplay, Pagination];
 
 const testimonials = [
-    {
-        name: 'Yassine El Amrani',
-        company: 'Boutique Mode Rabat',
-        initials: 'YA',
-        color: 'blue',
-        rating: 5,
-        comment:
-            "Depuis que nous utilisons SpeedZone, nos livraisons sont plus rapides et nos clients beaucoup plus satisfaits. Le suivi en temps réel change tout.",
-    },
-    {
-        name: 'Salma Bennani',
-        company: 'E-commerce Kénitra',
-        initials: 'SB',
-        color: 'green',
-        rating: 5,
-        comment:
-            "La plateforme est vraiment simple et le service COD est fiable. On gère toutes nos commandes et reversements sans stress au quotidien.",
-    },
-    {
-        name: 'Karim Tazi',
-        company: 'Parapharmacie Gharb',
-        initials: 'KT',
-        color: 'violet',
-        rating: 5,
-        comment:
-            "Les reversements COD sont rapides et transparents. Une équipe réactive et des livreurs toujours professionnels. Je recommande vivement.",
-    },
-    {
-        name: 'Nabila Chraibi',
-        company: 'Cosmétiques Salé',
-        initials: 'NC',
-        color: 'amber',
-        rating: 5,
-        comment:
-            "Enfin un partenaire logistique qui comprend le e-commerce marocain. La gestion des retours nous fait gagner un temps précieux.",
-    },
+    { key: 'first', initials: 'YA', color: 'blue', rating: 5 },
+    { key: 'second', initials: 'SB', color: 'green', rating: 5 },
+    { key: 'third', initials: 'KT', color: 'violet', rating: 5 },
+    { key: 'fourth', initials: 'NC', color: 'amber', rating: 5 },
 ];
 </script>
 
@@ -51,9 +22,9 @@ const testimonials = [
     <section id="apropos" class="sz-section sz-testi">
         <div class="sz-container">
             <SectionHeading
-                eyebrow="Ils nous font confiance"
-                title="Ce que nos clients disent de SpeedZone"
-                subtitle="Des centaines d'entreprises marocaines nous confient leurs livraisons chaque jour."
+                :eyebrow="t('testimonials.eyebrow')"
+                :title="t('testimonials.title')"
+                :subtitle="t('testimonials.subtitle')"
             />
 
             <div data-aos="fade-up">
@@ -67,20 +38,20 @@ const testimonials = [
                     :breakpoints="{ 768: { slidesPerView: 2 }, 1100: { slidesPerView: 3 } }"
                     class="sz-testi__swiper"
                 >
-                    <SwiperSlide v-for="t in testimonials" :key="t.name">
+                    <SwiperSlide v-for="item in testimonials" :key="item.key">
                         <article class="sz-tcard">
                             <div class="sz-tcard__quote">"</div>
                             <div class="sz-tcard__stars">
-                                <svg v-for="n in t.rating" :key="n" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <svg v-for="n in item.rating" :key="n" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M12 2l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17.8 5.9 20.3l1.4-6.7-5-4.6 6.8-.8z" />
                                 </svg>
                             </div>
-                            <p class="sz-tcard__text">{{ t.comment }}</p>
+                            <p class="sz-tcard__text">{{ t(`testimonials.items.${item.key}.comment`) }}</p>
                             <div class="sz-tcard__author">
-                                <span class="sz-tcard__avatar" :class="`sz-tcard__avatar--${t.color}`">{{ t.initials }}</span>
+                                <span class="sz-tcard__avatar" :class="`sz-tcard__avatar--${item.color}`">{{ item.initials }}</span>
                                 <div>
-                                    <p class="sz-tcard__name">{{ t.name }}</p>
-                                    <small class="sz-tcard__company">{{ t.company }}</small>
+                                    <p class="sz-tcard__name">{{ t(`testimonials.items.${item.key}.name`) }}</p>
+                                    <small class="sz-tcard__company">{{ t(`testimonials.items.${item.key}.company`) }}</small>
                                 </div>
                             </div>
                         </article>

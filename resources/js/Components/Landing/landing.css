@@ -1,0 +1,83 @@
+/*
+ * Design tokens for the public marketing site.
+ *
+ * Intentionally global rather than scoped: the variables must cascade into
+ * every child component, while the `.sz-landing` selector keeps them from
+ * leaking into the dashboard. Lives in its own file so both landing pages
+ * (home and public tracking) pull it in — they are code-split, so a <style>
+ * block in one of them would leave the other without tokens.
+ */
+
+.sz-landing {
+    --sz-primary: #1d4ed8;
+    --sz-primary-dark: #1e40af;
+    --sz-secondary: #2563eb;
+    --sz-accent: #10b981;
+    --sz-accent-dark: #059669;
+    --sz-dark: #0f172a;
+    --sz-slate: #475569;
+    --sz-muted: #64748b;
+    --sz-bg: #f8fafc;
+    --sz-bg-soft: #eef2ff;
+    --sz-border: #e2e8f0;
+    --sz-white: #ffffff;
+
+    --sz-radius: 24px;
+    --sz-radius-sm: 14px;
+    --sz-radius-lg: 32px;
+
+    --sz-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.04);
+    --sz-shadow: 0 10px 30px rgba(15, 23, 42, 0.06), 0 2px 8px rgba(15, 23, 42, 0.04);
+    --sz-shadow-lg: 0 30px 60px rgba(29, 78, 216, 0.12), 0 12px 24px rgba(15, 23, 42, 0.06);
+    --sz-shadow-primary: 0 18px 40px rgba(29, 78, 216, 0.28);
+
+    --sz-gradient: linear-gradient(135deg, #1d4ed8 0%, #2563eb 55%, #10b981 160%);
+    --sz-gradient-soft: linear-gradient(160deg, #eef2ff 0%, #f8fafc 100%);
+
+    --sz-font: 'Plus Jakarta Sans', 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    font-family: var(--sz-font);
+    color: var(--sz-dark);
+    background: var(--sz-bg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+.sz-landing *,
+.sz-landing *::before,
+.sz-landing *::after {
+    box-sizing: border-box;
+}
+
+/*
+ * Arabic reading direction. Only what carries meaning is mirrored: the
+ * decorative blobs and the pins on the Morocco map keep their physical
+ * placement, since flipping those would misplace the cities.
+ */
+.sz-landing[dir='rtl'] {
+    --sz-font: 'Cairo', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.sz-landing[dir='rtl'] .sz-scard__link svg,
+.sz-landing[dir='rtl'] .sz-btn__icon--right svg {
+    transform: scaleX(-1);
+}
+
+.sz-landing[dir='rtl'] .sz-heading__title,
+.sz-landing[dir='rtl'] .sz-hero__title,
+.sz-landing[dir='rtl'] .sz-cta__title,
+.sz-landing[dir='rtl'] .sz-app__title {
+    letter-spacing: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}

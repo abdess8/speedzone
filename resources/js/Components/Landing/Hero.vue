@@ -1,6 +1,9 @@
 <script setup>
 import LandingButton from '@/Components/Landing/LandingButton.vue';
 import TrackingSearch from '@/Components/Landing/TrackingSearch.vue';
+import { useLandingLocale } from '@/Components/Landing/i18n';
+
+const { t } = useLandingLocale();
 </script>
 
 <template>
@@ -15,26 +18,23 @@ import TrackingSearch from '@/Components/Landing/TrackingSearch.vue';
             <div class="sz-hero__left" data-aos="fade-up">
                 <span class="sz-hero__badge">
                     <span class="sz-hero__badge-dot"></span>
-                    La livraison nouvelle génération au Maroc
+                    {{ t('hero.badge') }}
                 </span>
 
                 <h1 class="sz-hero__title">
-                    Livrez vos colis
-                    <span class="sz-hero__title-grad">rapidement</span>
-                    avec SpeedZone.
+                    {{ t('hero.titleLead') }}
+                    <span class="sz-hero__title-grad">{{ t('hero.titleHighlight') }}</span>
+                    {{ t('hero.titleTail') }}
                 </h1>
 
-                <p class="sz-hero__subtitle">
-                    La plateforme de livraison la plus fiable au Maroc. Gérez vos expéditions,
-                    vos paiements et vos retours depuis une seule plateforme.
-                </p>
+                <p class="sz-hero__subtitle">{{ t('hero.subtitle') }}</p>
 
                 <div class="sz-hero__actions">
                     <LandingButton href="/register" variant="primary" size="lg">
-                        Créer un compte
+                        {{ t('hero.cta') }}
                     </LandingButton>
-                    <LandingButton href="#contact" variant="light" size="lg">
-                        Demander un ramassage
+                    <LandingButton href="#tarifs" variant="light" size="lg">
+                        {{ t('hero.ctaSecondary') }}
                     </LandingButton>
                 </div>
 
@@ -43,19 +43,19 @@ import TrackingSearch from '@/Components/Landing/TrackingSearch.vue';
                 </div>
 
                 <div class="sz-hero__proof">
-                    <div class="sz-hero__stars" aria-label="Note 4.9 sur 5">
+                    <div class="sz-hero__stars" :aria-label="t('hero.ratingLabel')">
                         <svg v-for="n in 5" :key="n" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 2l2.9 6.2 6.8.8-5 4.6 1.3 6.7L12 17.8 5.9 20.3l1.4-6.7-5-4.6 6.8-.8z" />
                         </svg>
                     </div>
                     <div class="sz-hero__proof-text">
-                        <strong>4.9/5</strong>
-                        <span>+500 entreprises nous font confiance</span>
+                        <strong>{{ t('hero.rating') }}</strong>
+                        <span>{{ t('hero.proof') }}</span>
                     </div>
                 </div>
             </div>
 
-            <div class="sz-hero__right" data-aos="fade-left" data-aos-delay="150">
+            <div class="sz-hero__right" data-aos="fade-left" data-aos-delay="80">
                 <div class="sz-hero__visual">
                     <!-- Dashboard card -->
                     <div class="sz-mock sz-mock--dash">
@@ -66,7 +66,7 @@ import TrackingSearch from '@/Components/Landing/TrackingSearch.vue';
                         <div class="sz-mock__body">
                             <div class="sz-mock__row">
                                 <div>
-                                    <p class="sz-mock__label">Colis livrés aujourd'hui</p>
+                                    <p class="sz-mock__label">{{ t('hero.mock.delivered') }}</p>
                                     <p class="sz-mock__value">1 284</p>
                                 </div>
                                 <span class="sz-mock__trend">+12,4%</span>
@@ -88,15 +88,15 @@ import TrackingSearch from '@/Components/Landing/TrackingSearch.vue';
                                         <p>SPD-2026-583920</p>
                                         <small>Rabat → Kénitra</small>
                                     </div>
-                                    <span class="sz-mock__tag sz-mock__tag--green">Livré</span>
+                                    <span class="sz-mock__tag sz-mock__tag--green">{{ t('hero.mock.statusDelivered') }}</span>
                                 </div>
                                 <div class="sz-mock__item">
                                     <span class="sz-mock__ic sz-mock__ic--amber">SP</span>
                                     <div>
                                         <p>SPD-2026-583921</p>
-                                        <small>Salé → Témara</small>
+                                        <small>Casablanca → Marrakech</small>
                                     </div>
-                                    <span class="sz-mock__tag sz-mock__tag--amber">En route</span>
+                                    <span class="sz-mock__tag sz-mock__tag--amber">{{ t('hero.mock.statusOnTheWay') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -106,7 +106,7 @@ import TrackingSearch from '@/Components/Landing/TrackingSearch.vue';
                     <div class="sz-mock sz-mock--phone">
                         <div class="sz-phone__notch"></div>
                         <div class="sz-phone__screen">
-                            <p class="sz-phone__title">Suivi en direct</p>
+                            <p class="sz-phone__title">{{ t('hero.mock.liveTracking') }}</p>
                             <div class="sz-phone__map">
                                 <svg viewBox="0 0 120 120" width="100%" height="100%">
                                     <path d="M8 30 Q40 10 70 34 T112 40 L108 96 Q70 112 40 92 T10 88 Z" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5" />
@@ -119,29 +119,29 @@ import TrackingSearch from '@/Components/Landing/TrackingSearch.vue';
                             <div class="sz-phone__status">
                                 <span class="sz-phone__bike">🛵</span>
                                 <div>
-                                    <p>Livreur en route</p>
-                                    <small>Arrivée dans 12 min</small>
+                                    <p>{{ t('hero.mock.driverOnTheWay') }}</p>
+                                    <small>{{ t('hero.mock.eta') }}</small>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Floating cards -->
-                    <div class="sz-float sz-float--1" data-aos="zoom-in" data-aos-delay="450">
+                    <div class="sz-float sz-float--1" data-aos="zoom-in" data-aos-delay="220">
                         <span class="sz-float__ic sz-float__ic--green">✓</span>
-                        <div><p>Colis livré</p><small>il y a 2 min</small></div>
+                        <div><p>{{ t('hero.mock.parcelDelivered') }}</p><small>{{ t('hero.mock.minutesAgo') }}</small></div>
                     </div>
-                    <div class="sz-float sz-float--2" data-aos="zoom-in" data-aos-delay="600">
+                    <div class="sz-float sz-float--2" data-aos="zoom-in" data-aos-delay="300">
                         <span class="sz-float__ic sz-float__ic--blue">🚚</span>
-                        <div><p>Livreur en route</p><small>Rabat centre</small></div>
+                        <div><p>{{ t('hero.mock.driverOnTheWay') }}</p><small>{{ t('hero.mock.downtown') }}</small></div>
                     </div>
-                    <div class="sz-float sz-float--3" data-aos="zoom-in" data-aos-delay="750">
+                    <div class="sz-float sz-float--3" data-aos="zoom-in" data-aos-delay="380">
                         <span class="sz-float__ic sz-float__ic--amber">💵</span>
-                        <div><p>Paiement COD</p><small>350,00 DH</small></div>
+                        <div><p>{{ t('hero.mock.codPayment') }}</p><small>350,00 DH</small></div>
                     </div>
-                    <div class="sz-float sz-float--4" data-aos="zoom-in" data-aos-delay="900">
+                    <div class="sz-float sz-float--4" data-aos="zoom-in" data-aos-delay="460">
                         <span class="sz-float__ic sz-float__ic--violet">📦</span>
-                        <div><p>Ramassage confirmé</p><small>Salé</small></div>
+                        <div><p>{{ t('hero.mock.pickupConfirmed') }}</p><small>Salé</small></div>
                     </div>
                 </div>
             </div>
@@ -325,7 +325,7 @@ import TrackingSearch from '@/Components/Landing/TrackingSearch.vue';
 .sz-mock__bar span:nth-child(2) { background: #fcd34d; }
 .sz-mock__bar span:nth-child(3) { background: #86efac; }
 .sz-mock__pill {
-    margin-left: auto;
+    margin-inline-start: auto;
     font-size: 0.7rem;
     color: var(--sz-muted);
     background: #fff;

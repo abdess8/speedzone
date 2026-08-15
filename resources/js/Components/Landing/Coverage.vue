@@ -1,38 +1,54 @@
 <script setup>
+import { computed, ref } from 'vue';
 import SectionHeading from '@/Components/Landing/SectionHeading.vue';
+import { useLandingLocale } from '@/Components/Landing/i18n';
 
-const activeCities = [
-    'Rabat', 'Salé', 'Témara', 'Skhirat', 'Kénitra',
-    'Sidi Yahya', 'Sidi Slimane', 'Souk El Arbaa', 'Sidi Kacem', 'Mehdia', 'Gharb',
-];
+const props = defineProps({
+    cities: { type: Array, default: () => [] },
+    totals: { type: Object, default: () => ({ cities: 0, sectors: 0, regions: 0 }) },
+});
 
-const comingSoon = ['Casablanca', 'Fès', 'Marrakech', 'Tanger'];
+const { t, tName } = useLandingLocale();
 
-// Pins positioned (%) over the Morocco SVG (Mercator, viewBox 0 0 400 340).
-const pins = [
-    { name: 'Tanger', x: 66.6, y: 10.7 },
-    { name: 'Rabat', x: 61.4, y: 20.8 },
-    { name: 'Casablanca', x: 57.6, y: 23.4 },
-    { name: 'Marrakech', x: 55.6, y: 34.5 },
-    { name: 'Agadir', x: 47.3, y: 41.2 },
-    { name: 'Fès', x: 70.8, y: 20.9 },
-    { name: 'Oujda', x: 86.7, y: 17 },
-    { name: 'Laâyoune', x: 29, y: 59.3 },
-    { name: 'Dakhla', x: 14.7, y: 77.6 },
-];
+const active = ref(null);
+
+const cityName = (city) => tName('cities', city.key, city.name);
+
+const priceOf = (city) => `${Math.round(city.price)} ${t('coverage.currency')}`;
+
+/** Only the cities we have coordinates for can be plotted. */
+const pins = computed(() => props.cities.filter((city) => city.x !== null && city.y !== null));
+
+/**
+ * Chip anchors are absolute positions on the map, not offsets, so the
+ * connector has to be drawn from the pin to wherever the chip was placed.
+ */
+const labelled = computed(() => pins.value.filter((city) => city.chip));
+
+const sorted = computed(() =>
+    [...props.cities].sort((a, b) => cityName(a).localeCompare(cityName(b)))
+);
+
+/** Hovering one city clears the map of every other pin, chip and leader. */
+const dimmed = (city) => active.value !== null && active.value !== city.key;
 </script>
 
 <template>
     <section id="zones" class="sz-section sz-coverage">
         <div class="sz-container">
             <SectionHeading
-                eyebrow="Zones couvertes"
-                title="Nous livrons là où vous êtes"
-                subtitle="Une couverture dense sur l'axe Rabat – Kénitra – Gharb, et une expansion continue vers tout le Maroc."
+                :eyebrow="t('coverage.eyebrow')"
+                :title="t('coverage.title')"
+                :subtitle="t('coverage.subtitle')"
             />
 
             <div class="sz-coverage__grid">
                 <div class="sz-coverage__map" data-aos="fade-right">
+                    <span class="sz-coverage__badge">
+                        <span class="sz-coverage__badge-dot"></span>
+                        {{ t('coverage.national') }}
+                    </span>
+
                     <svg viewBox="0 0 400 340" class="sz-coverage__svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
                         <defs>
                             <linearGradient id="szMap" x1="0" y1="0" x2="1" y2="1">
@@ -57,42 +73,91 @@ const pins = [
                         />
                     </svg>
 
+                    <!-- Leader lines tying each price chip back to its city. -->
+                    <svg class="sz-coverage__leaders" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                        <line
+                            v-for="city in labelled"
+                            :key="`leader-${city.key}`"
+                            :class="{ 'is-dimmed': dimmed(city) }"
+                            :x1="city.x"
+                            :y1="city.y"
+                            :x2="city.chip.x"
+                            :y2="city.chip.y"
+                            stroke="#93c5fd"
+                            stroke-width="1"
+                            vector-effect="non-scaling-stroke"
+                        />
+                    </svg>
+
                     <span
-                        v-for="pin in pins"
-                        :key="pin.name"
+                        v-for="city in pins"
+                        :key="city.key"
                         class="sz-pin"
-                        :style="{ left: pin.x + '%', top: pin.y + '%' }"
+                        :class="{ 'is-active': active === city.key, 'is-dimmed': dimmed(city) }"
+                        :style="{ left: `${city.x}%`, top: `${city.y}%` }"
+                        tabindex="0"
+                        @mouseenter="active = city.key"
+                        @mouseleave="active = null"
+                        @focus="active = city.key"
+                        @blur="active = null"
                     >
                         <span class="sz-pin__dot"></span>
                         <span class="sz-pin__ring"></span>
-                        <span class="sz-pin__label">{{ pin.name }}</span>
+                        <span v-if="!city.chip" class="sz-pin__tip">
+                            <strong>{{ cityName(city) }}</strong>
+                            <small>{{ t('coverage.from') }} {{ priceOf(city) }} · {{ city.delay }}</small>
+                        </span>
                     </span>
+
+                    <span
+                        v-for="city in labelled"
+                        :key="`chip-${city.key}`"
+                        class="sz-chip-map"
+                        :class="{ 'is-active': active === city.key, 'is-dimmed': dimmed(city) }"
+                        :style="{ left: `${city.chip.x}%`, top: `${city.chip.y}%` }"
+                        @mouseenter="active = city.key"
+                        @mouseleave="active = null"
+                    >
+                        <span class="sz-chip-map__city">{{ cityName(city) }}</span>
+                        <span class="sz-chip-map__price">{{ priceOf(city) }}</span>
+                        <span class="sz-chip-map__delay">{{ city.delay }}</span>
+                    </span>
+
+                    <p class="sz-coverage__hint">{{ t('coverage.mapHint') }}</p>
                 </div>
 
                 <div class="sz-coverage__panel" data-aos="fade-left">
-                    <div class="sz-coverage__block">
-                        <div class="sz-coverage__block-head">
-                            <span class="sz-legend sz-legend--active"></span>
-                            <h3>Zones actives</h3>
+                    <div class="sz-coverage__stats">
+                        <div class="sz-cstat">
+                            <strong>{{ totals.cities }}</strong>
+                            <span>{{ t('coverage.stats.cities') }}</span>
                         </div>
-                        <div class="sz-chips">
-                            <span v-for="city in activeCities" :key="city" class="sz-chip sz-chip--active">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                {{ city }}
-                            </span>
+                        <div class="sz-cstat">
+                            <strong>{{ totals.sectors }}</strong>
+                            <span>{{ t('coverage.stats.sectors') }}</span>
+                        </div>
+                        <div class="sz-cstat">
+                            <strong>{{ totals.regions }}</strong>
+                            <span>{{ t('coverage.stats.regions') }}</span>
                         </div>
                     </div>
 
                     <div class="sz-coverage__block">
-                        <div class="sz-coverage__block-head">
-                            <span class="sz-legend sz-legend--soon"></span>
-                            <h3>Bientôt disponible</h3>
-                        </div>
+                        <h3>{{ t('coverage.allCities') }}</h3>
                         <div class="sz-chips">
-                            <span v-for="city in comingSoon" :key="city" class="sz-chip sz-chip--soon">
-                                {{ city }}
+                            <span
+                                v-for="city in sorted"
+                                :key="city.key"
+                                class="sz-chip"
+                                :class="{ 'is-active': active === city.key }"
+                                @mouseenter="active = city.key"
+                                @mouseleave="active = null"
+                            >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                {{ cityName(city) }}
+                                <b>{{ priceOf(city) }}</b>
                             </span>
                         </div>
                     </div>
@@ -115,7 +180,7 @@ const pins = [
 }
 .sz-coverage__grid {
     display: grid;
-    grid-template-columns: 1.1fr 1fr;
+    grid-template-columns: 1.15fr 1fr;
     gap: 3rem;
     align-items: center;
 }
@@ -126,59 +191,171 @@ const pins = [
     border-radius: var(--sz-radius);
     padding: 1.5rem;
     box-shadow: var(--sz-shadow);
-    overflow: hidden;
+}
+.sz-coverage__badge {
+    position: absolute;
+    top: 1.1rem;
+    inset-inline-start: 1.1rem;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--sz-primary-dark);
+    background: rgba(29, 78, 216, 0.08);
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+}
+.sz-coverage__badge-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--sz-accent);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 .sz-coverage__svg {
     width: 100%;
     height: auto;
     display: block;
 }
+.sz-coverage__leaders {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.75;
+}
+.sz-coverage__hint {
+    margin: 0.5rem 0 0;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--sz-muted);
+}
+
 .sz-pin {
     position: absolute;
     transform: translate(-50%, -50%);
+    cursor: pointer;
+    outline: none;
 }
 .sz-pin__dot {
     display: block;
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     background: var(--sz-primary);
-    border: 3px solid #fff;
-    box-shadow: 0 4px 10px rgba(29, 78, 216, 0.45);
+    border: 2.5px solid #fff;
+    box-shadow: 0 3px 8px rgba(29, 78, 216, 0.45);
     position: relative;
     z-index: 2;
+    transition: transform 0.2s ease;
+}
+.sz-pin.is-active .sz-pin__dot,
+.sz-pin:focus-visible .sz-pin__dot {
+    transform: scale(1.35);
+    background: var(--sz-accent-dark);
 }
 .sz-pin__ring {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(29, 78, 216, 0.4);
-    animation: sz-ring 2.4s ease-out infinite;
+    background: rgba(29, 78, 216, 0.35);
+    animation: sz-ring 2.8s ease-out infinite;
 }
-.sz-pin__label {
+.sz-pin__tip {
     position: absolute;
     left: 50%;
-    top: -26px;
+    bottom: 18px;
     transform: translateX(-50%);
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
     white-space: nowrap;
-    font-size: 0.7rem;
+    background: var(--sz-dark);
+    color: #fff;
+    border-radius: 10px;
+    padding: 0.4rem 0.65rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.sz-pin__tip strong {
+    font-size: 0.76rem;
     font-weight: 700;
-    color: var(--sz-dark);
+}
+.sz-pin__tip small {
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.75);
+}
+.sz-pin.is-active .sz-pin__tip,
+.sz-pin:focus-visible .sz-pin__tip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-3px);
+}
+
+.sz-chip-map {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.2;
+    white-space: nowrap;
     background: #fff;
     border: 1px solid var(--sz-border);
-    border-radius: 999px;
-    padding: 0.15rem 0.55rem;
+    border-radius: 12px;
+    padding: 0.3rem 0.7rem;
     box-shadow: var(--sz-shadow-sm);
-    opacity: 0;
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.25s ease;
 }
-.sz-pin:hover .sz-pin__label {
-    opacity: 1;
-    transform: translateX(-50%) translateY(-2px);
+.sz-chip-map.is-active {
+    z-index: 6;
+    border-color: var(--sz-primary);
+    box-shadow: var(--sz-shadow);
+    transform: translate(-50%, -50%) scale(1.12);
+}
+.sz-chip-map__city {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--sz-dark);
+}
+.sz-chip-map__price {
+    font-size: 0.86rem;
+    font-weight: 800;
+    color: var(--sz-primary);
+}
+/* The delay is only shown for the city being hovered: at rest the chips have
+   to stay small enough not to collide with each other. */
+.sz-chip-map__delay {
+    display: none;
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--sz-muted);
+}
+.sz-chip-map.is-active .sz-chip-map__delay {
+    display: block;
+}
+
+/* Hovering a city empties the map of everything else. */
+.sz-pin.is-dimmed,
+.sz-chip-map.is-dimmed {
+    opacity: 0;
+    pointer-events: none;
+}
+.sz-pin,
+.sz-coverage__leaders line {
+    transition: opacity 0.25s ease;
+}
+.sz-coverage__leaders line.is-dimmed {
+    opacity: 0;
 }
 
 .sz-coverage__panel {
@@ -186,70 +363,99 @@ const pins = [
     flex-direction: column;
     gap: 2rem;
 }
-.sz-coverage__block-head {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 1rem;
+.sz-coverage__stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.9rem;
 }
-.sz-coverage__block-head h3 {
-    margin: 0;
+.sz-cstat {
+    background: #fff;
+    border: 1px solid var(--sz-border);
+    border-radius: var(--sz-radius-sm);
+    padding: 1rem 0.9rem;
+    text-align: center;
+    box-shadow: var(--sz-shadow-sm);
+}
+.sz-cstat strong {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--sz-primary);
+    line-height: 1.1;
+}
+.sz-cstat span {
+    font-size: 0.78rem;
+    color: var(--sz-muted);
+}
+.sz-coverage__block h3 {
+    margin: 0 0 1rem;
     font-size: 1.05rem;
     font-weight: 700;
     color: var(--sz-dark);
 }
-.sz-legend {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-}
-.sz-legend--active { background: var(--sz-primary); }
-.sz-legend--soon { background: #cbd5e1; }
 .sz-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.6rem;
+    gap: 0.55rem;
 }
 .sz-chip {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
-    padding: 0.5rem 0.9rem;
+    padding: 0.45rem 0.8rem;
     border-radius: 999px;
+    background: #fff;
+    color: var(--sz-slate);
     border: 1px solid var(--sz-border);
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
-.sz-chip:hover {
-    transform: translateY(-2px);
-}
-.sz-chip--active {
-    background: rgba(29, 78, 216, 0.07);
-    color: var(--sz-primary-dark);
-    border-color: rgba(29, 78, 216, 0.2);
-}
-.sz-chip--active svg {
+.sz-chip svg {
     color: var(--sz-accent-dark);
 }
-.sz-chip--soon {
-    background: #fff;
-    color: var(--sz-muted);
-    border-style: dashed;
+.sz-chip b {
+    font-weight: 800;
+    color: var(--sz-primary);
+}
+.sz-chip.is-active {
+    transform: translateY(-2px);
+    border-color: rgba(29, 78, 216, 0.35);
+    color: var(--sz-dark);
 }
 
 @keyframes sz-ring {
-    0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-    100% { transform: translate(-50%, -50%) scale(3.6); opacity: 0; }
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 0.55; }
+    100% { transform: translate(-50%, -50%) scale(3.4); opacity: 0; }
 }
 
+@media (max-width: 1100px) {
+    /* The chips keep their pixel size as the map shrinks, so scale them down. */
+    .sz-chip-map {
+        padding: 0.22rem 0.5rem;
+        border-radius: 10px;
+    }
+    .sz-chip-map__city {
+        font-size: 0.62rem;
+    }
+    .sz-chip-map__price {
+        font-size: 0.74rem;
+    }
+}
+@media (max-width: 640px) {
+    /* Below this the map is too narrow for chips; the list still has prices. */
+    .sz-chip-map,
+    .sz-coverage__leaders {
+        display: none;
+    }
+}
 @media (max-width: 992px) {
     .sz-coverage__grid {
         grid-template-columns: 1fr;
         gap: 2.5rem;
     }
     .sz-coverage__map {
-        max-width: 460px;
+        max-width: 480px;
         margin: 0 auto;
         width: 100%;
     }
@@ -257,6 +463,9 @@ const pins = [
 @media (max-width: 620px) {
     .sz-section {
         padding: 4rem 1.1rem;
+    }
+    .sz-coverage__stats {
+        gap: 0.6rem;
     }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -1,49 +1,46 @@
 <script setup>
 import SectionHeading from '@/Components/Landing/SectionHeading.vue';
+import { useLandingLocale } from '@/Components/Landing/i18n';
 
-const steps = [
-    { title: 'Créer la commande', desc: 'Ajoutez vos colis en quelques secondes.', icon: 'order' },
-    { title: 'Ramassage', desc: 'Un livreur récupère vos colis.', icon: 'pickup' },
-    { title: 'Transit', desc: 'Acheminement entre nos hubs.', icon: 'transit' },
-    { title: 'Livraison', desc: 'Remise au client final.', icon: 'delivery' },
-    { title: 'Paiement', desc: 'Encaissement COD & reversement.', icon: 'payment' },
-];
+const { t } = useLandingLocale();
+
+const steps = ['order', 'pickup', 'transit', 'delivery', 'payment'];
 </script>
 
 <template>
     <section class="sz-section sz-process">
         <div class="sz-container">
             <SectionHeading
-                eyebrow="Comment ça marche"
-                title="De la commande au paiement, en 5 étapes"
-                subtitle="Un processus fluide et entièrement traçable, du premier clic jusqu'au reversement."
+                :eyebrow="t('process.eyebrow')"
+                :title="t('process.title')"
+                :subtitle="t('process.subtitle')"
             />
 
             <div class="sz-process__track">
                 <div class="sz-process__line" aria-hidden="true"></div>
                 <div
                     v-for="(step, index) in steps"
-                    :key="step.title"
+                    :key="step"
                     class="sz-step"
                     data-aos="fade-up"
-                    :data-aos-delay="index * 120"
+                    :data-aos-delay="index * 60"
                 >
                     <div class="sz-step__badge">
                         <span class="sz-step__num">{{ index + 1 }}</span>
                         <span class="sz-step__icon">
-                            <svg v-if="step.icon === 'order'" viewBox="0 0 24 24" fill="none" width="24" height="24">
+                            <svg v-if="step === 'order'" viewBox="0 0 24 24" fill="none" width="24" height="24">
                                 <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.8" />
                                 <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
                             </svg>
-                            <svg v-else-if="step.icon === 'pickup'" viewBox="0 0 24 24" fill="none" width="24" height="24">
+                            <svg v-else-if="step === 'pickup'" viewBox="0 0 24 24" fill="none" width="24" height="24">
                                 <path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7M12 11v10" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
                             </svg>
-                            <svg v-else-if="step.icon === 'transit'" viewBox="0 0 24 24" fill="none" width="24" height="24">
+                            <svg v-else-if="step === 'transit'" viewBox="0 0 24 24" fill="none" width="24" height="24">
                                 <path d="M3 13l2-6h9l4 4h3v5h-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                                 <circle cx="7.5" cy="17.5" r="2" stroke="currentColor" stroke-width="1.8" />
                                 <circle cx="17.5" cy="17.5" r="2" stroke="currentColor" stroke-width="1.8" />
                             </svg>
-                            <svg v-else-if="step.icon === 'delivery'" viewBox="0 0 24 24" fill="none" width="24" height="24">
+                            <svg v-else-if="step === 'delivery'" viewBox="0 0 24 24" fill="none" width="24" height="24">
                                 <path d="M12 21s-7-5.2-7-11a7 7 0 1 1 14 0c0 5.8-7 11-7 11z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
                                 <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.8" />
                             </svg>
@@ -53,8 +50,8 @@ const steps = [
                             </svg>
                         </span>
                     </div>
-                    <h3 class="sz-step__title">{{ step.title }}</h3>
-                    <p class="sz-step__desc">{{ step.desc }}</p>
+                    <h3 class="sz-step__title">{{ t(`process.steps.${step}.title`) }}</h3>
+                    <p class="sz-step__desc">{{ t(`process.steps.${step}.description`) }}</p>
                 </div>
             </div>
         </div>

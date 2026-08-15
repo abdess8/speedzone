@@ -1,44 +1,46 @@
 <script setup>
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
+import { useLandingLocale } from '@/Components/Landing/i18n';
+
+const { t } = useLandingLocale();
+
 const year = new Date().getFullYear();
+
+const company = computed(() => usePage().props.company ?? {});
 
 const columns = [
     {
-        title: 'Navigation',
+        title: 'footer.columns.navigation',
         links: [
-            { label: 'Accueil', href: '#accueil' },
-            { label: 'Services', href: '#services' },
-            { label: 'Plateforme', href: '#plateforme' },
-            { label: 'Zones couvertes', href: '#zones' },
-            { label: 'À propos', href: '#apropos' },
+            { label: 'nav.home', href: '#accueil' },
+            { label: 'nav.services', href: '#services' },
+            { label: 'nav.platform', href: '#plateforme' },
+            { label: 'nav.zones', href: '#zones' },
+            { label: 'nav.pricing', href: '#tarifs' },
+            { label: 'nav.about', href: '#apropos' },
         ],
     },
     {
-        title: 'Services',
+        title: 'footer.columns.services',
         links: [
-            { label: 'Ramassage', href: '#services' },
-            { label: 'Livraison Express', href: '#services' },
-            { label: 'Livraison Nationale', href: '#services' },
-            { label: 'Paiement à la livraison', href: '#services' },
-            { label: 'Gestion des retours', href: '#services' },
+            { label: 'services.items.pickup.title', href: '#services' },
+            { label: 'services.items.express.title', href: '#services' },
+            { label: 'services.items.national.title', href: '#services' },
+            { label: 'services.items.cod.title', href: '#services' },
+            { label: 'services.items.returns.title', href: '#services' },
         ],
     },
     {
-        title: 'Support',
+        title: 'footer.columns.support',
         links: [
-            { label: 'Centre d\'aide', href: '#contact' },
-            { label: 'FAQ', href: '#contact' },
-            { label: 'Conditions générales', href: '#contact' },
-            { label: 'Confidentialité', href: '#contact' },
-            { label: 'Nous contacter', href: '#contact' },
+            { label: 'footer.support.help', href: '#contact' },
+            { label: 'footer.support.faq', href: '#contact' },
+            { label: 'footer.support.terms', href: '#contact' },
+            { label: 'footer.support.privacy', href: '#contact' },
+            { label: 'footer.support.contact', href: '#contact' },
         ],
     },
-];
-
-const socials = [
-    { label: 'Facebook', icon: 'facebook' },
-    { label: 'Instagram', icon: 'instagram' },
-    { label: 'LinkedIn', icon: 'linkedin' },
-    { label: 'X', icon: 'x' },
 ];
 </script>
 
@@ -56,67 +58,65 @@ const socials = [
                             height="54"
                         />
                     </a>
-                    <p class="sz-footer__tagline">Livraison rapide. Confiance assurée.</p>
-                    <p class="sz-footer__desc">
-                        La plateforme de livraison la plus fiable au Maroc, de Rabat au Gharb.
-                    </p>
-                    <div class="sz-footer__socials">
-                        <a v-for="s in socials" :key="s.icon" href="#" :aria-label="s.label" class="sz-social">
-                            <svg v-if="s.icon === 'facebook'" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                                <path d="M14 9h3V6h-3c-2.2 0-4 1.8-4 4v2H7v3h3v6h3v-6h3l1-3h-4v-2c0-.6.4-1 1-1z" />
-                            </svg>
-                            <svg v-else-if="s.icon === 'instagram'" viewBox="0 0 24 24" width="18" height="18" fill="none">
+                    <p class="sz-footer__tagline">{{ t('footer.tagline') }}</p>
+                    <p class="sz-footer__desc">{{ t('footer.description') }}</p>
+                    <div v-if="company.instagram" class="sz-footer__socials">
+                        <a
+                            :href="company.instagram"
+                            class="sz-social"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            :aria-label="t('footer.follow')"
+                        >
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
                                 <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.8" />
                                 <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8" />
                                 <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" />
                             </svg>
-                            <svg v-else-if="s.icon === 'linkedin'" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                                <path d="M6.5 8A1.5 1.5 0 1 0 6.5 5a1.5 1.5 0 0 0 0 3zM5 10h3v9H5zM10 10h3v1.3c.5-.8 1.5-1.5 3-1.5 2.3 0 3 1.5 3 4V19h-3v-4c0-1.2-.4-2-1.5-2S13 14 13 15v4h-3z" />
-                            </svg>
-                            <svg v-else viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                                <path d="M17 3h3l-7 8 8 10h-6l-5-6-5 6H2l8-9L2 3h6l4 5z" />
-                            </svg>
+                            <span>Instagram</span>
                         </a>
                     </div>
                 </div>
 
                 <div v-for="col in columns" :key="col.title" class="sz-footer__col">
-                    <h4>{{ col.title }}</h4>
+                    <h4>{{ t(col.title) }}</h4>
                     <ul>
                         <li v-for="link in col.links" :key="link.label">
-                            <a :href="link.href">{{ link.label }}</a>
+                            <a :href="link.href">{{ t(link.label) }}</a>
                         </li>
                     </ul>
                 </div>
 
                 <div class="sz-footer__col sz-footer__contact">
-                    <h4>Contact</h4>
+                    <h4>{{ t('footer.columns.contact') }}</h4>
                     <ul>
                         <li>
                             <span class="sz-footer__ci">📍</span>
-                            <span>Rabat, Maroc</span>
+                            <span>{{ company.address }}</span>
                         </li>
                         <li>
                             <span class="sz-footer__ci">📞</span>
-                            <a href="tel:+212500000000">+212 5 00 00 00 00</a>
+                            <a :href="`tel:${company.phone_link}`" dir="ltr">{{ company.phone }}</a>
                         </li>
                         <li>
                             <span class="sz-footer__ci">✉️</span>
-                            <a href="mailto:contact@speedzone.ma">contact@speedzone.ma</a>
+                            <a :href="`mailto:${company.email}`" dir="ltr">{{ company.email }}</a>
                         </li>
-                        <li>
-                            <span class="sz-footer__ci">🌐</span>
-                            <span>www.speedzone.ma</span>
+                        <li v-if="company.instagram">
+                            <span class="sz-footer__ci">📸</span>
+                            <a :href="company.instagram" target="_blank" rel="noopener noreferrer">
+                                {{ t('footer.follow') }}
+                            </a>
                         </li>
                     </ul>
                 </div>
             </div>
 
             <div class="sz-footer__bottom">
-                <p>© {{ year }} SpeedZone. Tous droits réservés.</p>
+                <p>{{ t('footer.rights', { year }) }}</p>
                 <div class="sz-footer__legal">
-                    <a href="#contact">Conditions générales</a>
-                    <a href="#contact">Politique de confidentialité</a>
+                    <a href="#contact">{{ t('footer.terms') }}</a>
+                    <a href="#contact">{{ t('footer.privacy') }}</a>
                 </div>
             </div>
         </div>
@@ -168,14 +168,17 @@ const socials = [
     gap: 0.6rem;
 }
 .sz-social {
-    width: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     height: 38px;
+    padding: 0 0.9rem;
     border-radius: 11px;
     background: rgba(255, 255, 255, 0.08);
     color: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
     transition: background 0.25s ease, transform 0.25s ease;
 }
 .sz-social:hover {
@@ -209,9 +212,14 @@ const socials = [
 }
 .sz-footer__contact li {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.55rem;
     font-size: 0.9rem;
+    line-height: 1.5;
+}
+.sz-footer__contact a,
+.sz-footer__contact span:not(.sz-footer__ci) {
+    overflow-wrap: anywhere;
 }
 .sz-footer__ci {
     font-size: 0.9rem;

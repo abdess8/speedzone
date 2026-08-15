@@ -1,17 +1,20 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { CountTo } from 'vue3-count-to';
+import { useLandingLocale } from '@/Components/Landing/i18n';
+
+const { t } = useLandingLocale();
 
 const visible = ref(false);
 const root = ref(null);
 let observer = null;
 
 const stats = [
-    { end: 15000, suffix: '+', decimals: 0, label: 'Colis / mois', separator: ' ' },
-    { end: 99.2, suffix: '%', decimals: 1, label: 'Livraisons réussies', separator: '' },
-    { end: 500, suffix: '+', decimals: 0, label: 'Entreprises', separator: '' },
-    { text: '24/7', label: 'Suivi en temps réel' },
-    { end: 4.9, suffix: '/5', decimals: 1, label: 'Satisfaction client', separator: '' },
+    { key: 'parcels', end: 15000, suffix: '+', decimals: 0, separator: ' ' },
+    { key: 'success', end: 99.2, suffix: '%', decimals: 1, separator: '' },
+    { key: 'companies', end: 500, suffix: '+', decimals: 0, separator: '' },
+    { key: 'tracking', text: '24/7' },
+    { key: 'satisfaction', end: 4.9, suffix: '/5', decimals: 1, separator: '' },
 ];
 
 onMounted(() => {
@@ -40,10 +43,10 @@ onBeforeUnmount(() => {
         <div class="sz-container sz-stats__grid">
             <div
                 v-for="(stat, index) in stats"
-                :key="stat.label"
+                :key="stat.key"
                 class="sz-stat"
                 data-aos="fade-up"
-                :data-aos-delay="index * 90"
+                :data-aos-delay="index * 45"
             >
                 <div class="sz-stat__value">
                     <template v-if="stat.text">{{ stat.text }}</template>
@@ -58,7 +61,7 @@ onBeforeUnmount(() => {
                     />
                     <span v-else>0{{ stat.suffix }}</span>
                 </div>
-                <p class="sz-stat__label">{{ stat.label }}</p>
+                <p class="sz-stat__label">{{ t(`stats.${stat.key}`) }}</p>
             </div>
         </div>
     </section>

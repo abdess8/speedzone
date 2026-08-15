@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Services\LandingCoverageService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,7 +20,28 @@ class LandingController extends Controller
     {
         return Inertia::render('landing/Home', [
             'authenticated' => auth()->check(),
+            'company' => $this->company(),
+            'coverage' => LandingCoverageService::payload(),
         ]);
+    }
+
+    /**
+     * Public contact details, shared by the footer and the structured data.
+     *
+     * @return array<string, mixed>
+     */
+    private function company(): array
+    {
+        return [
+            'name' => config('company.name'),
+            'address' => config('company.address'),
+            'city' => config('company.city'),
+            'country_code' => config('company.country_code'),
+            'phone' => config('company.phone'),
+            'phone_link' => config('company.phone_link'),
+            'email' => config('company.email'),
+            'instagram' => config('company.social.instagram'),
+        ];
     }
 
     /**
@@ -45,6 +67,7 @@ class LandingController extends Controller
                 'trackingNumber' => $trackingNumber,
                 'found' => false,
                 'order' => null,
+                'company' => $this->company(),
             ]);
         }
 
@@ -60,6 +83,7 @@ class LandingController extends Controller
         return Inertia::render('landing/Tracking', [
             'trackingNumber' => $order->tracking_number,
             'found' => true,
+            'company' => $this->company(),
             'order' => [
                 'tracking_number' => $order->tracking_number,
                 'status' => $order->status->value,

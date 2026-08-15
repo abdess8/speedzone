@@ -27,7 +27,7 @@ defineProps({
     text-align: center;
 }
 .sz-heading--left {
-    text-align: left;
+    text-align: start;
 }
 .sz-heading__eyebrow {
     display: inline-block;

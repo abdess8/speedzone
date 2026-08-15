@@ -1,49 +1,16 @@
 <script setup>
 import SectionHeading from '@/Components/Landing/SectionHeading.vue';
+import { useLandingLocale } from '@/Components/Landing/i18n';
+
+const { t } = useLandingLocale();
 
 const services = [
-    {
-        title: 'Ramassage',
-        description:
-            "Nos livreurs récupèrent vos colis directement dans votre boutique ou entrepôt, selon votre planning.",
-        icon: 'pickup',
-        color: 'blue',
-    },
-    {
-        title: 'Livraison Express',
-        description:
-            'Livraison le jour même à Rabat, Salé et Témara pour satisfaire vos clients les plus exigeants.',
-        icon: 'express',
-        color: 'green',
-    },
-    {
-        title: 'Livraison Nationale',
-        description:
-            'Expédiez partout au Maroc grâce à notre réseau logistique en pleine expansion et fiable.',
-        icon: 'national',
-        color: 'violet',
-    },
-    {
-        title: 'Paiement à la livraison',
-        description:
-            'Encaissement COD sécurisé et reversement rapide, avec un suivi précis de chaque transaction.',
-        icon: 'cod',
-        color: 'amber',
-    },
-    {
-        title: 'Gestion des retours',
-        description:
-            'Traitement automatique des retours clients de façon simple, tracée et sans friction.',
-        icon: 'returns',
-        color: 'rose',
-    },
-    {
-        title: 'Plateforme Web',
-        description:
-            'Pilotez toute votre logistique depuis une seule plateforme moderne et intuitive.',
-        icon: 'platform',
-        color: 'blue',
-    },
+    { key: 'pickup', icon: 'pickup', color: 'blue' },
+    { key: 'express', icon: 'express', color: 'green' },
+    { key: 'national', icon: 'national', color: 'violet' },
+    { key: 'cod', icon: 'cod', color: 'amber' },
+    { key: 'returns', icon: 'returns', color: 'rose' },
+    { key: 'platform', icon: 'platform', color: 'blue' },
 ];
 </script>
 
@@ -51,19 +18,19 @@ const services = [
     <section id="services" class="sz-section sz-services">
         <div class="sz-container">
             <SectionHeading
-                eyebrow="Nos services"
-                title="Tout ce qu'il vous faut pour livrer en toute sérénité"
-                subtitle="Une suite complète de services logistiques conçue pour les e-commerçants et les entreprises marocaines."
+                :eyebrow="t('services.eyebrow')"
+                :title="t('services.title')"
+                :subtitle="t('services.subtitle')"
             />
 
             <div class="sz-services__grid">
                 <article
                     v-for="(service, index) in services"
-                    :key="service.title"
+                    :key="service.key"
                     class="sz-scard"
                     :class="`sz-scard--${service.color}`"
                     data-aos="fade-up"
-                    :data-aos-delay="index * 80"
+                    :data-aos-delay="index * 40"
                 >
                     <div class="sz-scard__icon">
                         <!-- pickup -->
@@ -97,10 +64,10 @@ const services = [
                             <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
                         </svg>
                     </div>
-                    <h3 class="sz-scard__title">{{ service.title }}</h3>
-                    <p class="sz-scard__desc">{{ service.description }}</p>
+                    <h3 class="sz-scard__title">{{ t(`services.items.${service.key}.title`) }}</h3>
+                    <p class="sz-scard__desc">{{ t(`services.items.${service.key}.description`) }}</p>
                     <span class="sz-scard__link">
-                        En savoir plus
+                        {{ t('services.more') }}
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                             <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>

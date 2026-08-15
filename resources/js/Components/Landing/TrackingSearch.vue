@@ -1,10 +1,13 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { useLandingLocale } from '@/Components/Landing/i18n';
 
 const props = defineProps({
     variant: { type: String, default: 'hero' }, // hero | compact
 });
+
+const { t } = useLandingLocale();
 
 const trackingNumber = ref('');
 const loading = ref(false);
@@ -37,13 +40,13 @@ const submit = () => {
                 v-model="trackingNumber"
                 type="text"
                 class="sz-track__input"
-                placeholder="Entrez votre numéro de suivi"
-                aria-label="Numéro de suivi"
+                :placeholder="t('tracking.placeholder')"
+                :aria-label="t('tracking.inputLabel')"
                 autocomplete="off"
             />
         </div>
         <button type="submit" class="sz-track__btn" :disabled="!canSubmit || loading">
-            <span v-if="!loading">Suivre</span>
+            <span v-if="!loading">{{ t('tracking.submit') }}</span>
             <span v-else class="sz-track__spinner" aria-hidden="true"></span>
         </button>
     </form>

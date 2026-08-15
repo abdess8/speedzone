@@ -32,7 +32,11 @@ import { initBackNavigation } from './composables/useBackNavigation';
 
 AOS.init({
     easing: 'ease-out-back',
-    duration: 1000
+    duration: 1000,
+    // Elements stay visible once revealed: without this AOS removes the
+    // `aos-animate` class when scrolling back up and the sections fade out again.
+    once: true,
+    mirror: false
 });
 
 createInertiaApp({

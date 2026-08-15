@@ -51,6 +51,7 @@ const statusColor = (sector) => (sector.is_active ? "success" : "danger");
 const cardRows = (sector) => [
   { label: t("sectors.table.delivery_price"), value: money(sector.delivery_price), emphasis: true },
   { label: t("sectors.table.return_price"), value: money(sector.return_price) },
+  { label: t("sectors.table.delivery_delay"), value: sector.delivery_delay || t("common.empty_value") },
   { label: t("sectors.table.orders"), value: sector.orders_count ?? 0 },
 ];
 
@@ -171,6 +172,7 @@ onMounted(() => {
                 <th>{{ $t('sectors.filters.city') }}</th>
                 <th class="text-end">{{ $t('sectors.table.delivery_price') }}</th>
                 <th class="text-end">{{ $t('sectors.table.return_price') }}</th>
+                <th class="text-center">{{ $t('sectors.table.delivery_delay') }}</th>
                 <th class="text-center">{{ $t('sectors.table.orders') }}</th>
                 <th class="text-center">{{ $t('sectors.table.drivers') }}</th>
                 <th>{{ $t('common.status') }}</th>
@@ -183,6 +185,7 @@ onMounted(() => {
                 <td>{{ sector.city?.name ?? $t('common.empty_value') }}</td>
                 <td class="text-end fw-medium">{{ money(sector.delivery_price) }}</td>
                 <td class="text-end fw-medium">{{ money(sector.return_price) }}</td>
+                <td class="text-center">{{ sector.delivery_delay || $t('common.empty_value') }}</td>
                 <td class="text-center">{{ sector.orders_count ?? 0 }}</td>
                 <td class="text-center">{{ sector.drivers_count ?? 0 }}</td>
                 <td>

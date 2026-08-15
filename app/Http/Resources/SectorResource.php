@@ -23,6 +23,7 @@ class SectorResource extends JsonResource
             'delivery_price' => (float) $this->delivery_price,
             'return_price' => (float) $this->return_price,
             'delivery_driver_price' => (float) $this->delivery_driver_price,
+            'delivery_delay' => $this->delivery_delay,
             'is_active' => (bool) $this->is_active,
             'city' => $this->whenLoaded('city', fn () => $this->city ? [
                 'id' => $this->city->id,

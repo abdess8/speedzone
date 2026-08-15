@@ -18,7 +18,6 @@ use App\Models\Order;
 use App\Models\OrderReturn;
 use App\Models\PickupRequest;
 use App\Models\Role;
-use App\Models\Sector;
 use App\Models\User;
 use App\Services\InvoiceGeneratorService;
 use App\Services\PickupReferenceGenerator;
@@ -138,9 +137,6 @@ class FakeMoroccanDataSeeder extends Seeder
             return;
         }
 
-        $this->ensureSectorReturnPrices();
-        $cities = $cities->fresh(['sectors' => fn ($q) => $q->where('is_active', true)]);
-
         $admin = User::query()->where('email', 'superadmin@speedzone.ma')->first()
             ?? User::query()->whereHas('roles', fn ($q) => $q->where('name', Role::ADMIN))->first();
 
@@ -173,22 +169,6 @@ class FakeMoroccanDataSeeder extends Seeder
         $this->command?->info('  Pickup requests:   +'.(PickupRequest::query()->count() - $before['pickups']));
         $this->command?->info('  Returns:           +'.(OrderReturn::query()->count() - $before['returns']));
         $this->command?->info('  Invoices total:    '.Invoice::query()->count());
-    }
-
-    /**
-     * Make sure every active sector carries a sensible return fee so returned
-     * orders contribute a non-zero charge on invoices.
-     */
-    private function ensureSectorReturnPrices(): void
-    {
-        Sector::query()
-            ->where(fn ($q) => $q->whereNull('return_price')->orWhere('return_price', '<=', 0))
-            ->get()
-            ->each(function (Sector $sector): void {
-                $delivery = (float) $sector->delivery_price;
-                $base = $delivery > 0 ? $delivery * 0.6 : random_int(1500, 3500) / 100;
-                $sector->forceFill(['return_price' => round($base, 2)])->save();
-            });
     }
 
     /**

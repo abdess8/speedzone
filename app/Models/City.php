@@ -147,12 +147,21 @@ class City extends Model
         );
     }
 
+    /**
+     * Drop the cached dropdown payloads.
+     *
+     * Exposed for bulk rewrites of the table, which go through the query
+     * builder and so never fire the model events that keep these entries fresh.
+     */
+    public static function flushOptionsCache(): void
+    {
+        Cache::forget(self::OPTIONS_CACHE_KEY);
+        Cache::forget(self::HUB_OPTIONS_CACHE_KEY);
+    }
+
     protected static function booted(): void
     {
-        $flush = static function (): void {
-            Cache::forget(self::OPTIONS_CACHE_KEY);
-            Cache::forget(self::HUB_OPTIONS_CACHE_KEY);
-        };
+        $flush = static fn () => self::flushOptionsCache();
 
         static::saved($flush);
         static::deleted($flush);

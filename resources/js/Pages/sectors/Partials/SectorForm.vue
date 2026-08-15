@@ -95,6 +95,18 @@ const cityOptions = computed(() =>
               <div class="form-text">{{ $t('sectors.form.delivery_driver_price_hint') }}</div>
               <InputError :message="form.errors.delivery_driver_price" />
             </BCol>
+            <BCol md="6">
+              <label class="form-label">{{ $t('sectors.form.delivery_delay') }}</label>
+              <input
+                type="text"
+                class="form-control"
+                v-model="form.delivery_delay"
+                :class="{ 'is-invalid': form.errors.delivery_delay }"
+                :placeholder="$t('sectors.form.delivery_delay_placeholder')"
+              />
+              <div class="form-text">{{ $t('sectors.form.delivery_delay_hint') }}</div>
+              <InputError :message="form.errors.delivery_delay" />
+            </BCol>
             <BCol md="12">
               <div class="form-check form-switch fs-15 mt-2">
                 <input class="form-check-input" type="checkbox" role="switch" id="sectorActive" v-model="form.is_active" />

@@ -71,8 +71,8 @@ class StockDatasetSeeder extends Seeder
         // Shop names deliberately absent from MoroccanLocaleFaker's pool: the wider
         // dataset draws its shops from there, and two "Atlas Cosmétique" in the
         // admin list would make the stock demo impossible to pick out.
-        ['stock1@speedzone.ma', 'Yasmine', 'Berrada', 'Dar Argania', 'Cosmétique', 'Casablanca', 'Casablanca'],
-        ['stock2@speedzone.ma', 'Anas', 'Sekkat', 'Medina Tech', 'Électronique', 'Rabat', 'Marrakech'],
+        ['stock1@speedzone.ma', 'Yasmine', 'Berrada', 'Dar Argania', 'Cosmétique', 'CASABLANCA VILLE', 'CASABLANCA VILLE'],
+        ['stock2@speedzone.ma', 'Anas', 'Sekkat', 'Medina Tech', 'Électronique', 'RABAT VILLE', 'MARRAKECH VILLE'],
     ];
 
     private const DEMO_PASSWORD = '12345678';

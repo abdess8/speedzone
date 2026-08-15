@@ -61,52 +61,35 @@ class MoroccanDatasetSeeder extends Seeder
     private const SELLER_TARGET = 14;
 
     /**
-     * Delivery network: city => list of [sector name, delivery price in MAD].
-     * Return and driver prices are derived from the delivery price.
-     *
-     * @var array<string, array<int, array{0: string, 1: int}>>
-     */
-    private const NETWORK = [
-        'Casablanca' => [['Maarif', 35], ['Ain Sebaa', 40], ['Sidi Maarouf', 45], ['Hay Hassani', 38], ['Derb Sultan', 35], ['Sidi Bernoussi', 42], ['Bourgogne', 36]],
-        'Rabat' => [['Agdal', 38], ['Hay Riad', 42], ['Yacoub El Mansour', 36], ['Souissi', 45], ['Océan', 35]],
-        'Marrakech' => [['Gueliz', 40], ['Massira', 38], ['Daoudiate', 36], ['Mhamid', 39]],
-        'Fès' => [['Ville Nouvelle', 38], ['Médina', 40], ['Saiss', 37], ['Narjiss', 39]],
-        'Tanger' => [['Malabata', 42], ['Beni Makada', 38], ['Branes', 40], ['Centre Ville', 37]],
-        'Agadir' => [['Talborjt', 42], ['Hay Mohammadi', 40], ['Founty', 45], ['Dakhla', 41]],
-        'Meknès' => [['Hamria', 38], ['Toulal', 36], ['Marjane', 39], ['Sidi Baba', 37]],
-        'Oujda' => [['Al Qods', 45], ['Sidi Yahya', 47], ['Hay Andalous', 44], ['Centre', 43]],
-        'Kénitra' => [['Bir Rami', 36], ['Ouled Oujih', 35], ['Maamora', 38]],
-        'Tétouan' => [['Mhannech', 44], ['Wilaya', 42], ['Samsa', 43], ['Touilaa', 45]],
-        'Safi' => [['Biada', 40], ['Jrifat', 38], ['Sidi Bouzid', 39]],
-        'El Jadida' => [['Salam', 38], ['Lalla Zahra', 40], ['Mohammadia', 37]],
-        'Mohammedia' => [['Kasbah', 35], ['Alia', 36], ['Nassim', 38], ['Hassania', 37]],
-        'Béni Mellal' => [['Mghila', 44], ['Hay El Fath', 42], ['Ouled Hamdane', 45]],
-        'Nador' => [['Ihaddadene', 48], ['Selouane', 50], ['Hay Ouled Mimoun', 47]],
-    ];
-
-    /**
      * Share of the national volume absorbed by each city, used to weight both
      * delivery destinations and driver workload.
+     *
+     * Only the busy entries are listed; every other city served by the coverage
+     * grid falls back to {@see self::TAIL_WEIGHT}. The urban halves take the
+     * bulk of the volume, their outskirts a fraction of it.
      *
      * @var array<string, int>
      */
     private const CITY_WEIGHTS = [
-        'Casablanca' => 26,
-        'Rabat' => 13,
-        'Marrakech' => 10,
-        'Tanger' => 9,
-        'Fès' => 8,
-        'Agadir' => 7,
-        'Meknès' => 4,
-        'Kénitra' => 4,
-        'Oujda' => 3,
-        'Tétouan' => 3,
-        'El Jadida' => 3,
-        'Mohammedia' => 3,
-        'Safi' => 2,
-        'Béni Mellal' => 2,
-        'Nador' => 2,
+        'CASABLANCA VILLE' => 26,
+        'CASABLANCA REGION' => 7,
+        'RABAT VILLE' => 13,
+        'MARRAKECH VILLE' => 10,
+        'TANGER VILLE' => 9,
+        'FES VILLE' => 8,
+        'AGADIR VILLE' => 7,
+        'SALE VILLE' => 6,
+        'TEMARA VILLE' => 5,
+        'MEKNES VILLE' => 4,
+        'KENITRA VILLE' => 4,
+        'SAFI VILLE' => 3,
+        'NADOR VILLE' => 3,
+        'EL JADIDA VILLE' => 3,
+        'OUJDA' => 3,
     ];
+
+    /** Weight of a city absent from {@see self::CITY_WEIGHTS}. */
+    private const TAIL_WEIGHT = 1;
 
     /**
      * Operational tables wiped by DATASET_PURGE=1. Reference data (users, roles,
@@ -204,59 +187,15 @@ class MoroccanDatasetSeeder extends Seeder
 
     /**
      * Make sure every served city exists with priced, active sectors.
+     *
+     * The network is not invented here: it is re-imported from the commercial
+     * coverage grid, so running this dataset can never bring back a city the
+     * grid has dropped.
      */
     private function ensureNetwork(): void
     {
-        foreach (self::NETWORK as $cityName => $sectors) {
-            /** @var City $city */
-            $city = City::withTrashed()->firstWhere('name', $cityName) ?? City::create([
-                'name' => $cityName,
-                'code' => $this->cityCode($cityName),
-                'is_active' => true,
-            ]);
-
-            if ($city->trashed()) {
-                $city->restore();
-            }
-
-            if (! $city->is_active) {
-                $city->forceFill(['is_active' => true])->save();
-            }
-
-            foreach ($sectors as [$sectorName, $deliveryPrice]) {
-                /** @var Sector|null $sector */
-                $sector = Sector::withTrashed()
-                    ->where('city_id', $city->id)
-                    ->where('name', $sectorName)
-                    ->first();
-
-                if (! $sector) {
-                    Sector::create([
-                        'city_id' => $city->id,
-                        'name' => $sectorName,
-                        'delivery_price' => $deliveryPrice,
-                        'return_price' => round($deliveryPrice * 0.6, 2),
-                        'delivery_driver_price' => round($deliveryPrice * 0.6, 2),
-                        'is_active' => true,
-                    ]);
-
-                    continue;
-                }
-
-                if ($sector->trashed()) {
-                    $sector->restore();
-                }
-
-                // Backfill prices left at zero by earlier seeds: an unpriced
-                // sector would make invoices and driver payouts meaningless.
-                $sector->forceFill([
-                    'is_active' => true,
-                    'delivery_price' => (float) $sector->delivery_price > 0 ? $sector->delivery_price : $deliveryPrice,
-                    'return_price' => (float) $sector->return_price > 0 ? $sector->return_price : round($deliveryPrice * 0.6, 2),
-                    'delivery_driver_price' => (float) $sector->delivery_driver_price > 0 ? $sector->delivery_driver_price : round($deliveryPrice * 0.6, 2),
-                ])->save();
-            }
-        }
+        $this->callSilent(CitySeeder::class);
+        $this->callSilent(SectorSeeder::class);
 
         $this->ctx->cities = City::query()
             ->where('is_active', true)
@@ -264,20 +203,7 @@ class MoroccanDatasetSeeder extends Seeder
             ->with(['sectors' => fn ($query) => $query->where('is_active', true)])
             ->get();
 
-        $this->ctx->weightCities(self::CITY_WEIGHTS);
-    }
-
-    private function cityCode(string $cityName): string
-    {
-        $base = strtoupper(substr($this->ctx->faker->slug($cityName), 0, 3));
-        $code = $base;
-        $suffix = 1;
-
-        while (City::withTrashed()->where('code', $code)->exists()) {
-            $code = $base.$suffix++;
-        }
-
-        return $code;
+        $this->ctx->weightCities(self::CITY_WEIGHTS, self::TAIL_WEIGHT);
     }
 
     /**
@@ -299,8 +225,8 @@ class MoroccanDatasetSeeder extends Seeder
         $dispatcherRole = Role::query()->where('name', Role::DISPATCHER)->first();
 
         foreach ([
-            ['dispatcher.casa@speedzone.ma', 'Casablanca'],
-            ['dispatcher.rabat@speedzone.ma', 'Rabat'],
+            ['dispatcher.casa@speedzone.ma', 'CASABLANCA VILLE'],
+            ['dispatcher.rabat@speedzone.ma', 'RABAT VILLE'],
         ] as [$email, $cityName]) {
             $city = $this->ctx->cities->firstWhere('name', $cityName) ?? $this->ctx->anyCity();
             $person = $this->ctx->faker->person(false);

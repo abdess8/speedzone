@@ -36,9 +36,9 @@ return [
     ],
     'form' => [
         'info' => 'City Information',
-        'name_placeholder' => 'e.g. Casablanca',
-        'code_placeholder' => 'e.g. CASA',
-        'region_placeholder' => 'e.g. Casablanca-Settat',
+        'name_placeholder' => 'e.g. CASABLANCA VILLE',
+        'code_placeholder' => 'e.g. CASV',
+        'region_placeholder' => 'e.g. CASABLANCA-SETTAT',
         'stock_hub' => 'Stock hub',
         'stock_hub_on' => 'This city hosts a stock hub',
         'stock_hub_off' => 'No stock hub in this city',

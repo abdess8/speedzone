@@ -15,6 +15,7 @@ const form = useForm({
   delivery_price: props.sector.delivery_price,
   return_price: props.sector.return_price ?? "",
   delivery_driver_price: props.sector.delivery_driver_price ?? "",
+  delivery_delay: props.sector.delivery_delay ?? "",
   is_active: props.sector.is_active,
 });
 

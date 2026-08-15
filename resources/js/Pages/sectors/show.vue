@@ -100,6 +100,10 @@ onMounted(() => {
                 <div class="fw-bold fs-18 text-success">{{ money(sector.delivery_driver_price) }}</div>
               </BCol>
               <BCol md="6">
+                <div class="text-muted fs-13">{{ $t('sectors.table.delivery_delay') }}</div>
+                <div class="fw-semibold">{{ sector.delivery_delay || $t('common.empty_value') }}</div>
+              </BCol>
+              <BCol md="6">
                 <div class="text-muted fs-13">{{ $t('sectors.table.orders') }}</div>
                 <div class="fw-semibold">{{ sector.orders_count ?? 0 }}</div>
               </BCol>

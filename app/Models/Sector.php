@@ -21,6 +21,7 @@ class Sector extends Model
         'delivery_price',
         'return_price',
         'delivery_driver_price',
+        'delivery_delay',
         'is_active',
     ];
 

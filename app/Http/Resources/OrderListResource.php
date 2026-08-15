@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\OrderFailureReason;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Models\Order;
@@ -43,6 +44,8 @@ class OrderListResource extends JsonResource
         'total_amount',
         'status',
         'failed_attempts_count',
+        'failure_reason',
+        'failed_at',
         'is_fragile',
         'can_be_opened',
         'return_id',
@@ -64,6 +67,10 @@ class OrderListResource extends JsonResource
 
         $orderAmount = $this->order_amount !== null ? (float) $this->order_amount : null;
 
+        $failureReason = $this->failure_reason instanceof OrderFailureReason
+            ? $this->failure_reason
+            : OrderFailureReason::tryFrom((string) $this->failure_reason);
+
         return [
             'id' => $this->id,
             'tracking_number' => $this->tracking_number,
@@ -73,6 +80,14 @@ class OrderListResource extends JsonResource
             'status_color' => $status->color(),
             // Warns the driver that the address has already turned him away.
             'failed_attempts_count' => (int) $this->failed_attempts_count,
+            // A missed attempt does not move the order: it stays out for
+            // delivery. The status badge alone would then read as if nothing
+            // had happened, so the last reason travels with it as its own flag.
+            'failure_reason' => $failureReason?->value,
+            'failure_reason_label' => $failureReason?->label(),
+            'failure_reason_color' => $failureReason?->color(),
+            'failure_reason_icon' => $failureReason?->icon(),
+            'failed_at' => $this->failed_at?->toIso8601String(),
 
             'customer' => [
                 'full_name' => $this->customer_full_name,

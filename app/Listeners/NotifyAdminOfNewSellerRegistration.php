@@ -2,11 +2,13 @@
 
 namespace App\Listeners;
 
+use App\Enums\NotificationType;
 use App\Enums\UserStatus;
 use App\Events\NewSellerRegistered;
 use App\Models\User;
 use App\Notifications\NewSellerRegistrationNotification;
 use App\Services\NotificationDispatcher;
+use App\Support\NotificationPermissions;
 
 class NotifyAdminOfNewSellerRegistration
 {
@@ -14,11 +16,17 @@ class NotifyAdminOfNewSellerRegistration
 
     public function handle(NewSellerRegistered $event): void
     {
+        // Addressed by the notification grant rather than by `roles.read`: an
+        // account allowed to read the role list is not necessarily the desk
+        // that approves shops.
+        $permission = NotificationPermissions::for(NotificationType::SellerRegistered);
+
         $admins = User::query()
             ->where('status', UserStatus::Active->value)
-            ->where(function ($query) {
+            ->where(function ($query) use ($permission) {
                 $query->whereHas('roles', fn ($q) => $q->whereIn('name', User::SUPER_ADMIN_ROLES))
-                    ->orWhereHas('roles.permissions', fn ($q) => $q->where('name', 'roles.read'));
+                    ->orWhereHas('roles.permissions', fn ($q) => $q->where('name', $permission))
+                    ->orWhereHas('permissions', fn ($q) => $q->where('name', $permission));
             })
             ->get();
 

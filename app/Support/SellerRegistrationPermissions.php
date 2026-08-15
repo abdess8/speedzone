@@ -31,6 +31,7 @@ final class SellerRegistrationPermissions
             'sectors.read',
             'invoices.read.own',
             'invoices.print',
+            ...NotificationPermissions::sellerDefaults(),
         ];
     }
 
@@ -45,6 +46,10 @@ final class SellerRegistrationPermissions
             'pickup_requests.create',
             'returns.create_request',
             'support.create',
+            // A merchant who hears nothing about his own invoices and tickets
+            // has to go looking for them, so the topics that concern him are on
+            // from the start.
+            ...NotificationPermissions::sellerDefaults(),
         ];
     }
 }

@@ -54,7 +54,6 @@ final class TranslationBundle
         'support_ticket_statuses',
         'support_ticket_categories',
         'support_object_types',
-        'permissions',
         'notifications',
         'seller_registration',
         'user_statuses',

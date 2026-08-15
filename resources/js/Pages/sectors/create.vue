@@ -7,6 +7,7 @@ import SectorForm from "./Partials/SectorForm.vue";
 const props = defineProps({
   cities: { type: Array, default: () => [] },
   defaultCityId: { type: Number, default: null },
+  can: { type: Object, default: () => ({}) },
 });
 
 const form = useForm({
@@ -28,7 +29,7 @@ const submit = () => {
   <Layout>
     <PageHeader :title="$t('sectors.create_title')" :pageTitle="$t('sectors.title')" />
     <form @submit.prevent="submit">
-      <SectorForm :form="form" :cities="cities" />
+      <SectorForm :form="form" :cities="cities" :can-edit-driver-price="!!can.view_driver_price" />
 
       <BRow>
         <BCol xl="8" class="mx-auto">

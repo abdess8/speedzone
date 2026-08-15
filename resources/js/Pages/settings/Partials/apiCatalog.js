@@ -534,8 +534,8 @@ export const ENDPOINTS = [
         status: 200,
         sample: {
           data: [
-            { id: 21, city_id: 7, name: 'Centre Ville', delivery_price: 25, return_price: 15, delivery_driver_price: 10, is_active: true, created_at: '2026-01-12T10:00:00+00:00', updated_at: '2026-01-12T10:00:00+00:00' },
-            { id: 22, city_id: 7, name: 'Malabata', delivery_price: 30, return_price: 18, delivery_driver_price: 12, is_active: true, created_at: '2026-01-12T10:00:00+00:00', updated_at: '2026-01-12T10:00:00+00:00' },
+            { id: 21, city_id: 7, name: 'Centre Ville', delivery_price: 25, return_price: 15, is_active: true, created_at: '2026-01-12T10:00:00+00:00', updated_at: '2026-01-12T10:00:00+00:00' },
+            { id: 22, city_id: 7, name: 'Malabata', delivery_price: 30, return_price: 18, is_active: true, created_at: '2026-01-12T10:00:00+00:00', updated_at: '2026-01-12T10:00:00+00:00' },
           ],
         },
       },
@@ -558,7 +558,7 @@ export const ENDPOINTS = [
         status: 200,
         sample: {
           data: [
-            { id: 21, city_id: 7, name: 'Centre Ville', delivery_price: 25, return_price: 15, delivery_driver_price: 10, is_active: true, created_at: '2026-01-12T10:00:00+00:00', updated_at: '2026-01-12T10:00:00+00:00' },
+            { id: 21, city_id: 7, name: 'Centre Ville', delivery_price: 25, return_price: 15, is_active: true, created_at: '2026-01-12T10:00:00+00:00', updated_at: '2026-01-12T10:00:00+00:00' },
           ],
           ...PAGINATION('https://app.speedzone.ma/api/sectors', 214),
         },

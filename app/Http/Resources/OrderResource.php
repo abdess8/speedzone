@@ -44,6 +44,8 @@ class OrderResource extends JsonResource
             'failed_attempts_count' => (int) $this->failed_attempts_count,
             'failure_reason' => $this->failure_reason?->value,
             'failure_reason_label' => $this->failure_reason?->label(),
+            'failure_reason_color' => $this->failure_reason?->color(),
+            'failure_reason_icon' => $this->failure_reason?->icon(),
             'failure_note' => $this->failure_note,
             'failed_at' => $this->failed_at?->toIso8601String(),
 

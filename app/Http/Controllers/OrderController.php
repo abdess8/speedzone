@@ -11,6 +11,8 @@ use App\Enums\ReturnInitiatedByRole;
 use App\Enums\ReturnReason;
 use App\Enums\TransferStatus;
 use App\Http\Requests\AssignOrderDriverRequest;
+use App\Http\Requests\BulkAssignOrderDriverRequest;
+use App\Http\Requests\DispatchSectorRequest;
 use App\Http\Requests\StoreDeliveryOutcomeRequest;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
@@ -26,8 +28,10 @@ use App\Models\User;
 use App\Policies\OrderPolicy;
 use App\Services\DeliveryOutcomeService;
 use App\Services\OrderDriverAssignmentService;
+use App\Services\OrderExportService;
 use App\Services\OrderLabelPdfService;
 use App\Services\OrderQueryService;
+use App\Services\OrderSectorDispatchService;
 use App\Services\OrderService;
 use App\Services\OrderStockService;
 use App\Services\OrderTransitionService;
@@ -53,6 +57,7 @@ class OrderController extends Controller
         private readonly OrderQueryService $orderQuery,
         private readonly OrderTransitionService $transitionService,
         private readonly OrderDriverAssignmentService $driverAssignment,
+        private readonly OrderSectorDispatchService $sectorDispatch,
         private readonly PartnerDeliveryIngestionService $partnerIngestion,
         private readonly OrderStockService $orderStock,
         private readonly DeliveryOutcomeService $deliveryOutcome,
@@ -85,7 +90,28 @@ class OrderController extends Controller
             'filterOptions' => fn () => $this->filterOptions(),
             'can' => fn () => $this->abilities($request),
             'workflow' => fn () => $this->workflowOptions($request),
+            'dispatch' => fn () => $this->dispatchOptions($request),
         ]);
+    }
+
+    /**
+     * The rounds a dispatcher can hand out from this screen.
+     *
+     * @return array<string, mixed>
+     */
+    private function dispatchOptions(Request $request): array
+    {
+        $user = $request->user();
+
+        if (! $user->hasPermission('driver_invoices.assign_driver')
+            && ! $user->hasPermission('partners.deliveries.manage')) {
+            return ['sectors' => [], 'drivers' => []];
+        }
+
+        return [
+            'sectors' => $this->sectorDispatch->rounds($user),
+            'drivers' => $this->sectorDispatch->driverOptions(),
+        ];
     }
 
     /**
@@ -399,54 +425,24 @@ class OrderController extends Controller
     }
 
     /**
-     * Export selected orders (or the current filter) as CSV.
+     * Export the selected orders — or, failing a selection, the current filter.
+     *
+     * Built from the same query the list is built from, so what the operator
+     * sees on screen is what he opens in Excel. The previous export ran its own
+     * scope and silently ignored the filters, which is where the "informations
+     * incohérentes" came from.
      */
-    public function export(Request $request): StreamedResponse
+    public function export(Request $request, OrderExportService $exporter): StreamedResponse
     {
         $this->authorize('export', Order::class);
 
-        $query = $this->scopedQuery($request);
+        $query = $this->orderQuery->build($request, $request->user(), with: []);
 
         if ($request->filled('ids')) {
             $query->whereIn('id', $this->ids($request));
         }
 
-        $orders = $query->with(['city', 'sector', 'seller'])->orderByDesc('id')->get();
-
-        $fileName = 'orders-'.now()->format('Ymd-His').'.csv';
-
-        return response()->streamDownload(function () use ($orders) {
-            $handle = fopen('php://output', 'wb');
-
-            // Excel assumes the system codepage unless the file opens with a
-            // UTF-8 BOM, which turns Arabic customer data into mojibake.
-            fwrite($handle, "\u{FEFF}");
-
-            fputcsv($handle, [
-                'Tracking Number', 'Status', 'Customer', 'Phone', 'City', 'Sector',
-                'Payment', 'Order Value', 'To Collect', 'Delivery Price', 'Total', 'Seller', 'Created At',
-            ]);
-
-            foreach ($orders as $order) {
-                fputcsv($handle, [
-                    $order->tracking_number,
-                    $order->status->label(),
-                    $order->customer_full_name,
-                    $order->customer_phone,
-                    $order->city?->name,
-                    $order->sector?->name,
-                    $order->payment_method->label(),
-                    $order->order_value !== null ? number_format((float) $order->order_value, 2, '.', '') : '',
-                    $order->order_amount !== null ? number_format((float) $order->order_amount, 2, '.', '') : '',
-                    number_format((float) $order->delivery_price, 2, '.', ''),
-                    number_format((float) $order->total_amount, 2, '.', ''),
-                    $order->seller?->full_name,
-                    $order->created_at?->format('Y-m-d H:i'),
-                ]);
-            }
-
-            fclose($handle);
-        }, $fileName, ['Content-Type' => 'text/csv; charset=UTF-8']);
+        return $exporter->download($query, 'commandes-'.now()->format('Y-m-d_H-i').'.xlsx');
     }
 
     /**
@@ -484,6 +480,35 @@ class OrderController extends Controller
         $this->driverAssignment->assign($order, $driver, $request->user());
 
         return back()->with('success', __('driver_invoices.assign.assigned'));
+    }
+
+    /**
+     * Hand every parcel of a sector to one driver in a single move.
+     */
+    public function dispatchSector(DispatchSectorRequest $request): RedirectResponse
+    {
+        $result = $this->sectorDispatch->dispatchSector(
+            $request->user(),
+            $request->integer('sector_id'),
+            $request->integer('driver_id'),
+            $request->boolean('reassign'),
+        );
+
+        return back()->with('success', __('orders.dispatch.result', $result));
+    }
+
+    /**
+     * Assign one driver to the orders the dispatcher ticked.
+     */
+    public function bulkAssignDriver(BulkAssignOrderDriverRequest $request): RedirectResponse
+    {
+        $result = $this->sectorDispatch->assignSelected(
+            $request->user(),
+            $request->input('ids'),
+            $request->integer('driver_id'),
+        );
+
+        return back()->with('success', __('orders.dispatch.bulk_result', $result));
     }
 
     /**
@@ -770,6 +795,8 @@ class OrderController extends Controller
             'read_all' => $user->hasPermission('orders.read.all'),
             'export' => $user->hasPermission('orders.export'),
             'print' => $user->hasPermission('orders.print'),
+            'assign_driver' => $user->hasPermission('driver_invoices.assign_driver')
+                || $user->hasPermission('partners.deliveries.manage'),
             // Drives whether the list renders links to the detail screen at all,
             // mirroring OrderPolicy::viewDetails().
             'view_details' => OrderPolicy::grantsDetailAccess($user),

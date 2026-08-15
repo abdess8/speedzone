@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { formatMoney as money } from '@/common/formatMoney';
 import PaymentMethodBadge from '@/Components/PaymentMethodBadge.vue';
+import FailureReasonBadge from '@/Components/FailureReasonBadge.vue';
 
 /**
  * Order card for the mobile list of sellers and back-office staff.
@@ -66,12 +67,14 @@ const createdAt = computed(() =>
           </div>
         </div>
 
-        <span
-          class="badge flex-shrink-0"
-          :class="`bg-${order.status_color}-subtle text-${order.status_color}`"
-        >
-          {{ order.status_label }}
-        </span>
+        <div class="text-end flex-shrink-0">
+          <span class="badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
+            {{ order.status_label }}
+          </span>
+          <div v-if="order.failure_reason" class="mt-1">
+            <FailureReasonBadge :order="order" />
+          </div>
+        </div>
       </div>
 
       <div class="d-flex align-items-end justify-content-between gap-2 mt-3">

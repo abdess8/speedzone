@@ -307,6 +307,14 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('orders/bulk-status', [OrderController::class, 'bulkStatus'])
         ->middleware('permission:orders.update.all|orders.update.own|orders.update.assigned')
         ->name('orders.bulk-status');
+    // Handing out a round. Same guard as the one-by-one affectation, which the
+    // service re-checks per order before it touches anything.
+    Route::post('orders/bulk-assign-driver', [OrderController::class, 'bulkAssignDriver'])
+        ->middleware('permission:driver_invoices.assign_driver|partners.deliveries.manage')
+        ->name('orders.bulk-assign-driver');
+    Route::post('orders/dispatch-sector', [OrderController::class, 'dispatchSector'])
+        ->middleware('permission:driver_invoices.assign_driver|partners.deliveries.manage')
+        ->name('orders.dispatch-sector');
     Route::post('orders/create-and-new', [OrderController::class, 'storeAndNew'])
         ->middleware('permission:orders.create')
         ->name('orders.store-and-new');

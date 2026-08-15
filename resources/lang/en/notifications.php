@@ -33,6 +33,7 @@ return [
         'ticket_closed' => 'Ticket closed',
         'return_requested' => 'Return requests',
         'stock_pickup_requested' => 'Stock waiting at a vendor',
+        'seller_registered' => 'New seller registrations',
         'system_notifications' => 'System notifications',
     ],
 
@@ -57,6 +58,7 @@ return [
         'ticket_closed' => 'bx-check-circle',
         'return_requested' => 'bx-undo',
         'stock_pickup_requested' => 'bx-package',
+        'seller_registered' => 'bx-user-plus',
         'system_notifications' => 'bx-cog',
     ],
 ];

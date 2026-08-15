@@ -10,6 +10,9 @@ enum NotificationType: string
     case TicketClosed = 'ticket_closed';
     case ReturnRequested = 'return_requested';
     case StockPickupRequested = 'stock_pickup_requested';
+    // Split out of System so that "a shop signed up" can be addressed to the
+    // desk that approves shops rather than to everyone holding a staff account.
+    case SellerRegistered = 'seller_registered';
     case System = 'system_notifications';
 
     /**

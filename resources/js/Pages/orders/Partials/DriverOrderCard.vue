@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatMoney as money } from '@/common/formatMoney';
 import { telUrl, whatsAppUrl } from '@/common/phone';
+import FailureReasonBadge from '@/Components/FailureReasonBadge.vue';
 
 /**
  * Ergonomic order card for the driver's mobile list.
@@ -102,6 +103,11 @@ const whatsAppLink = computed(() =>
           <div v-if="attempts > 0" class="badge bg-warning-subtle text-warning mt-1">
             <i class="ri-history-line align-bottom me-1"></i>
             {{ $t('orders.delivery_outcome.attempts_badge', { count: attempts }) }}
+          </div>
+          <!-- Why the last attempt failed, so the driver knows what to do
+               differently before he rings again. -->
+          <div v-if="order.failure_reason" class="mt-1">
+            <FailureReasonBadge :order="order" :show-attempts="false" />
           </div>
         </div>
       </div>

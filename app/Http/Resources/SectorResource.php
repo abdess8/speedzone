@@ -22,7 +22,13 @@ class SectorResource extends JsonResource
             'name' => $this->name,
             'delivery_price' => (float) $this->delivery_price,
             'return_price' => (float) $this->return_price,
-            'delivery_driver_price' => (float) $this->delivery_driver_price,
+            // Withheld from the payload rather than merely hidden in the table:
+            // a vendor reading the Inertia props or the API must not be able to
+            // recover what the driver is paid.
+            'delivery_driver_price' => $this->when(
+                (bool) $request->user()?->hasPermission('sectors.read_driver_price'),
+                fn () => (float) $this->delivery_driver_price
+            ),
             'delivery_delay' => $this->delivery_delay,
             'is_active' => (bool) $this->is_active,
             'city' => $this->whenLoaded('city', fn () => $this->city ? [

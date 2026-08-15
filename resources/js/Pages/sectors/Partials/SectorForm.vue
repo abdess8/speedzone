@@ -7,6 +7,7 @@ import InputError from "@/Components/InputError.vue";
 const props = defineProps({
   form: { type: Object, required: true },
   cities: { type: Array, default: () => [] },
+  canEditDriverPrice: { type: Boolean, default: false },
 });
 
 const cityOptions = computed(() =>
@@ -79,7 +80,7 @@ const cityOptions = computed(() =>
               </div>
               <InputError :message="form.errors.return_price" />
             </BCol>
-            <BCol md="6">
+            <BCol v-if="canEditDriverPrice" md="6">
               <label class="form-label">{{ $t('sectors.form.delivery_driver_price') }}</label>
               <div class="input-group">
                 <input

@@ -56,26 +56,6 @@
         </tr>
     </table>
 
-    @if ($cashCollection)
-        <div class="collect">
-            <div class="collect-title">{{ __('orders.label_pdf.payment_required') }}</div>
-            <div class="collect-sub">
-                {{ __('orders.label_pdf.cash_collection') }}: <strong>{{ __('orders.label_pdf.yes') }}</strong>
-            </div>
-            <div class="collect-amount">
-                {{ __('orders.label_pdf.amount_to_collect') }}:
-                <strong>{{ number_format((float) $order->order_amount, 2) }} MAD</strong>
-            </div>
-        </div>
-    @else
-        <div class="collect paid">
-            <div class="collect-title">{{ __('orders.label_pdf.already_paid') }}</div>
-            <div class="collect-sub">
-                {{ __('orders.label_pdf.cash_collection') }}: <strong>{{ __('orders.label_pdf.no') }}</strong>
-            </div>
-        </div>
-    @endif
-
     <div class="details">
         <div class="details-title">{{ __('orders.label_pdf.order_details') }}</div>
         <table class="details-grid">
@@ -104,12 +84,8 @@
                 <span class="pay-name">{{ $order->payment_method->label() }}</span>
             </td>
             <td class="amount-cell">
-                @if ($cashCollection)
-                    <div class="amount-label">{{ __('orders.label_pdf.total') }}</div>
-                    <div class="amount-value">{{ number_format((float) $order->total_amount, 2) }} MAD</div>
-                @else
-                    <div class="amount-paid">{{ __('orders.label_pdf.already_paid') }}</div>
-                @endif
+                <div class="amount-label">{{ __('orders.label_pdf.total') }}</div>
+                <div class="amount-value">{{ number_format((float) $order->total_amount, 2) }} MAD</div>
             </td>
         </tr>
     </table>

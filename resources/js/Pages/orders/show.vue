@@ -8,6 +8,7 @@ import PageHeader from "@/Components/page-header.vue";
 import StatusTimeline from "@/Components/StatusTimeline.vue";
 import OrderModificationHistory from "./Partials/OrderModificationHistory.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
+import FailureReasonBadge from "@/Components/FailureReasonBadge.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import RelatedOperationsLookups from "@/Components/RelatedOperationsLookups.vue";
 import SupportTicketsPanel from "@/Components/SupportTicketsPanel.vue";
@@ -278,11 +279,14 @@ onMounted(() => {
         <span
           v-if="order.failed_attempts_count > 0"
           class="badge fs-13 bg-warning-subtle text-warning"
-          :title="order.failure_reason_label"
         >
           <i class="ri-history-line align-bottom me-1"></i>
           {{ $t('orders.delivery_outcome.attempts_badge', { count: order.failed_attempts_count }) }}
         </span>
+        <!-- The motif of the last attempt, spelled out rather than hidden in a
+             tooltip: the order is still out for delivery, so this badge is the
+             only thing on the page saying the round did not go to plan. -->
+        <FailureReasonBadge :order="order" :show-attempts="false" class="fs-13" />
         <div class="vr"></div>
 
         <button

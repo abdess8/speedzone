@@ -126,6 +126,7 @@ class RolePermissionMatrix
             ...DashboardPermissions::staffDefaults(),
             ...SupportPermissions::staffDefaults(),
             ...StockPermissions::staffDefaults(),
+            ...NotificationPermissions::dispatcherDefaults(),
         ];
     }
 
@@ -179,6 +180,7 @@ class RolePermissionMatrix
             // His round and his own numbers. A driver has no reason to read the
             // turnover of the shops he collects from.
             ...DashboardPermissions::driverDefaults(),
+            ...NotificationPermissions::driverDefaults(),
         ];
     }
 
@@ -217,6 +219,7 @@ class RolePermissionMatrix
             ...SupportPermissions::sellerDefaults(),
             ...StockPermissions::sellerDefaults(),
             ...EcommerceIntegrationPermissions::sellerDefaults(),
+            ...NotificationPermissions::sellerDefaults(),
         ];
     }
 

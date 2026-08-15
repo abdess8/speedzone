@@ -28,6 +28,7 @@ return [
         'permissions_selected' => ':selected of :total permissions selected',
         'select_all' => 'Select all',
         'no_permissions' => 'No permissions available. Run the permission seeder first.',
+        'permission_help' => 'What ":permission" allows',
     ],
     'delete_confirm_text' => 'Delete role ":name"? This cannot be undone.',
     'empty' => 'No roles found.',

@@ -17,6 +17,12 @@ class StoreSectorRequest extends FormRequest
         if ($this->has('is_active')) {
             $this->merge(['is_active' => $this->boolean('is_active')]);
         }
+
+        // The payout is invisible to whoever cannot read it, so a submitted
+        // value can only come from a hand-crafted request.
+        if (! $this->user()?->hasPermission('sectors.read_driver_price')) {
+            $this->request->remove('delivery_driver_price');
+        }
     }
 
     /**

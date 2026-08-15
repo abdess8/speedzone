@@ -127,9 +127,9 @@ test('the ticket never puts the delivery fee in front of the driver', function (
         'companyName' => 'SpeedZone Express',
     ])->render();
 
-    // Both money boxes on the label have to agree, and neither may leak the fee:
-    // the driver reads this to know what to bring back.
-    expect(substr_count($html, '100.00 MAD'))->toBe(2)
+    // The label shows a single amount — the total the driver brings back — and
+    // it may never leak the delivery fee.
+    expect(substr_count($html, '100.00 MAD'))->toBe(1)
         ->and($html)->not->toContain('25.00');
 });
 

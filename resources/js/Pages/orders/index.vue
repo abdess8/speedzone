@@ -14,6 +14,8 @@ import DeliveryOutcomeSheet from "./Partials/DeliveryOutcomeSheet.vue";
 import DriverReturnSheet from "./Partials/DriverReturnSheet.vue";
 import OrderCard from "./Partials/OrderCard.vue";
 import OrderDetailSheet from "./Partials/OrderDetailSheet.vue";
+import SectorDispatchModal from "./Partials/SectorDispatchModal.vue";
+import FailureReasonBadge from "@/Components/FailureReasonBadge.vue";
 import Swal from "sweetalert2";
 import { formatMoney as money } from "@/common/formatMoney";
 import { useBulkStatusAccess } from "@/composables/useBulkStatusAccess";
@@ -28,6 +30,7 @@ const props = defineProps({
   filterOptions: { type: Object, default: () => ({}) },
   can: { type: Object, default: () => ({}) },
   workflow: { type: Object, default: () => ({}) },
+  dispatch: { type: Object, default: () => ({ sectors: [], drivers: [] }) },
 });
 
 const filters = reactive({
@@ -182,12 +185,98 @@ const goToPage = (url) => {
 
 const openPdf = (order) => window.open(route("orders.pdf", order.id), "_blank");
 
-const exportSelected = () => {
-  window.location = route("orders.export", { ids: selected.value.join(",") });
+// Without a selection the export follows the filters on screen, which is what
+// "exporter mes commandes de la semaine" means.
+const exportOrders = () => {
+  const params = query();
+
+  if (selected.value.length) {
+    params.ids = selected.value.join(",");
+  }
+
+  window.location = route("orders.export", params);
 };
 
 const printSelected = () => {
   window.open(route("orders.labels", { ids: selected.value.join(",") }), "_blank");
+};
+
+/*
+ * Dispatch.
+ *
+ * Two ways in, one endpoint family: tick the rows and pick a driver, or hand
+ * out a whole sector at once from the modal. The second is what a dispatcher
+ * actually does every morning — a sector is a round.
+ */
+const canAssignDriver = computed(
+  () => props.can.assign_driver === true && (props.dispatch.drivers ?? []).length > 0
+);
+
+const bulkProcessing = ref(false);
+const bulkDriverId = ref("");
+
+const bulkAssignDriver = () => {
+  if (selected.value.length === 0 || !bulkDriverId.value) return;
+
+  Swal.fire({
+    title: t("orders.dispatch.bulk_confirm_title"),
+    text: t("orders.dispatch.bulk_confirm_text", { count: selected.value.length }),
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: t("orders.bulk.assign_driver"),
+    cancelButtonText: t("common.cancel"),
+    confirmButtonColor: "#0ab39c",
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+
+    bulkProcessing.value = true;
+    router.post(
+      route("orders.bulk-assign-driver"),
+      { ids: selected.value, driver_id: Number(bulkDriverId.value) },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          selected.value = [];
+          bulkDriverId.value = "";
+        },
+        onFinish: () => {
+          bulkProcessing.value = false;
+        },
+      }
+    );
+  });
+};
+
+const showDispatch = ref(false);
+const dispatchProcessing = ref(false);
+
+const submitDispatch = ({ sector_id, driver_id, reassign, count, sector, driver }) => {
+  Swal.fire({
+    title: t("orders.dispatch.confirm_title"),
+    text: t("orders.dispatch.confirm_text", { count, sector, driver }),
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: t("orders.dispatch.action"),
+    cancelButtonText: t("common.cancel"),
+    confirmButtonColor: "#0ab39c",
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+
+    dispatchProcessing.value = true;
+    router.post(
+      route("orders.dispatch-sector"),
+      { sector_id, driver_id, reassign },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          showDispatch.value = false;
+        },
+        onFinish: () => {
+          dispatchProcessing.value = false;
+        },
+      }
+    );
+  });
 };
 
 /*
@@ -358,6 +447,28 @@ onMounted(() => {
         </template>
 
         <template #actions>
+          <button
+            v-if="can.export"
+            type="button"
+            class="btn btn-soft-secondary text-nowrap"
+            :title="$t('orders.export.menu')"
+            :aria-label="$t('orders.export.menu')"
+            @click="exportOrders"
+          >
+            <i class="ri-file-excel-2-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('orders.export.menu') }}</span>
+          </button>
+          <button
+            v-if="canAssignDriver"
+            type="button"
+            class="btn btn-soft-info text-nowrap"
+            :title="$t('orders.dispatch.menu')"
+            :aria-label="$t('orders.dispatch.menu')"
+            @click="showDispatch = true"
+          >
+            <i class="ri-e-bike-2-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('orders.dispatch.menu') }}</span>
+          </button>
           <Link
             v-if="canBulkEditOrders"
             :href="route('bulk-status.index', { entity_type: 'ORDER' })"
@@ -483,12 +594,28 @@ onMounted(() => {
       <BCardBody v-if="selected.length" class="bg-light border-bottom-dashed py-2">
         <div class="d-flex flex-wrap align-items-center gap-2">
           <span class="fw-medium me-2">{{ $t('orders.bulk.selected', { count: selected.length }) }}</span>
-          <button v-if="can.export" class="btn btn-sm btn-soft-secondary" @click="exportSelected">
-            <i class="ri-download-2-line align-bottom me-1"></i> {{ $t('orders.bulk.export') }}
+          <button v-if="can.export" class="btn btn-sm btn-soft-secondary" @click="exportOrders">
+            <i class="ri-file-excel-2-line align-bottom me-1"></i> {{ $t('orders.bulk.export') }}
           </button>
           <button v-if="can.print" class="btn btn-sm btn-soft-secondary" @click="printSelected">
             <i class="ri-printer-line align-bottom me-1"></i> {{ $t('orders.bulk.print_labels') }}
           </button>
+          <template v-if="canAssignDriver">
+            <select v-model="bulkDriverId" class="form-select form-select-sm" style="max-width: 220px">
+              <option value="">{{ $t('orders.dispatch.select_driver') }}</option>
+              <option v-for="driver in dispatch.drivers" :key="driver.id" :value="driver.id">
+                {{ driver.name }}
+              </option>
+            </select>
+            <button
+              type="button"
+              class="btn btn-sm btn-soft-primary"
+              :disabled="bulkProcessing || !bulkDriverId"
+              @click="bulkAssignDriver"
+            >
+              <i class="ri-user-add-line align-bottom me-1"></i> {{ $t('orders.bulk.assign_driver') }}
+            </button>
+          </template>
         </div>
       </BCardBody>
 
@@ -515,7 +642,7 @@ onMounted(() => {
               v-for="order in rows"
               :key="order.id"
               :order="order"
-              :selectable="can.export || can.print"
+              :selectable="can.export || can.print || canAssignDriver"
               :selected="selected.includes(order.id)"
               @open="detailOrder = $event"
               @toggle-select="toggleSelect"
@@ -598,6 +725,9 @@ onMounted(() => {
                   <span class="badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
                     {{ order.status_label }}
                   </span>
+                  <div v-if="order.failure_reason" class="mt-1">
+                    <FailureReasonBadge :order="order" />
+                  </div>
                 </td>
                 <td class="text-muted">{{ new Date(order.created_at).toLocaleDateString() }}</td>
                 <td class="text-end">
@@ -688,6 +818,15 @@ onMounted(() => {
       :can="can"
       @close="detailOrder = null"
       @print="openPdf"
+    />
+
+    <SectorDispatchModal
+      :show="showDispatch"
+      :sectors="dispatch.sectors ?? []"
+      :drivers="dispatch.drivers ?? []"
+      :processing="dispatchProcessing"
+      @close="showDispatch = false"
+      @submit="submitDispatch"
     />
   </Layout>
 </template>

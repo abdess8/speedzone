@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Enums\NotificationType;
+
 class PermissionCatalog
 {
     /**
@@ -28,7 +30,30 @@ class PermissionCatalog
             self::teamPermissions(),
             self::stockPermissions(),
             self::ecommerceIntegrationPermissions(),
+            self::notificationPermissions(),
             self::statusTransitionPermissions()
+        );
+    }
+
+    /**
+     * One grant per notification topic: who the announcement concerns.
+     *
+     * Inside the seller ceiling, because which of his employees is told that an
+     * invoice was issued is the account owner's call, not ours.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    public static function notificationPermissions(): array
+    {
+        return array_map(
+            static fn (NotificationType $type) => self::make(
+                NotificationPermissions::for($type),
+                'notifications',
+                'receive',
+                $type->value,
+                'resource'
+            ),
+            NotificationType::cases()
         );
     }
 
@@ -362,6 +387,11 @@ class PermissionCatalog
     }
 
     /**
+     * Sector pricing is read by everyone who books a delivery, but the driver
+     * payout is not part of that conversation: a vendor reading `sectors.read`
+     * must not learn what we pay the man who carries his parcel. The payout is
+     * therefore split off into its own grant.
+     *
      * @return array<int, array<string, string|null>>
      */
     public static function sectorPermissions(): array
@@ -369,6 +399,7 @@ class PermissionCatalog
         return [
             self::make('sectors.create', 'sectors', 'create', null, 'admin'),
             self::make('sectors.read', 'sectors', 'read', null, 'admin'),
+            self::make('sectors.read_driver_price', 'sectors', 'read_driver_price', null, 'admin'),
             self::make('sectors.update', 'sectors', 'update', null, 'admin'),
             self::make('sectors.delete', 'sectors', 'delete', null, 'admin'),
         ];

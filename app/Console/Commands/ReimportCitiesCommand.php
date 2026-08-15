@@ -97,7 +97,11 @@ class ReimportCitiesCommand extends Command
             DB::table('sectors')->count(),
         ));
 
-        $this->components->info('Run `php artisan db:seed` to regenerate demo orders on the new network.');
+        // Deliberately withheld in production: DatabaseSeeder creates demo
+        // accounts on a shared password and thousands of fake orders.
+        if (! app()->isProduction()) {
+            $this->components->info('Run `php artisan db:seed` to regenerate demo orders on the new network.');
+        }
 
         return self::SUCCESS;
     }

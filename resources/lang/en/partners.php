@@ -177,6 +177,7 @@ return [
             'camera_unsupported' => 'This browser gives no access to the camera. Type the numbers by hand.',
             'camera_error' => 'Unable to access the camera.',
             'start_camera' => 'Start camera',
+            'aim' => 'Hold the QR code inside the frame',
             'scan_manual_label' => 'Scan or enter tracking number',
             'scan_placeholder' => 'SPD-2026-123456 or paste QR URL',
             'add' => 'Add',

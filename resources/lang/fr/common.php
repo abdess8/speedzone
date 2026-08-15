@@ -53,4 +53,9 @@ return [
     'no_notifications' => 'Vous n\'avez aucune notification',
     'unread_messages' => 'messages non lus',
     'chat' => 'Messages',
+
+    'scanner' => [
+        'sound_on' => 'Activer le son du scan',
+        'sound_off' => 'Couper le son du scan',
+    ],
 ];

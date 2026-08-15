@@ -87,6 +87,7 @@ return [
         'rejected' => 'Rejected',
         'camera_preview' => 'Camera preview',
         'start_camera' => 'Start camera',
+        'aim' => 'Hold the QR code inside the frame',
         'scan_manual_label' => 'Scan or paste tracking URL / number',
         'scan_placeholder' => 'SPD-2026-000001 or /orders/SPD-2026-000001',
         'add' => 'Add',

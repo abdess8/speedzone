@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import BottomSheet from '@/Components/BottomSheet.vue';
+import ScannerViewport from '@/Components/ScannerViewport.vue';
 import { useQrBatchScanner } from '@/composables/useQrBatchScanner';
 
 /**
@@ -31,6 +32,7 @@ const {
   cameraError,
   validating,
   videoRef,
+  feedback,
   startCamera,
   stopCamera,
   addToBatch,
@@ -45,6 +47,8 @@ const {
   unsupportedMessage: () => t('preparation.scanner.camera_unsupported'),
   cameraErrorMessage: () => t('preparation.scanner.camera_error'),
   unreachableMessage: () => t('preparation.scanner.unable_validate'),
+  onUnknownCode: () => toast('warning', t('preparation.scanner.invalid_tracking')),
+  onDuplicateCode: (tracking) => toast('info', t('preparation.scanner.already', { reference: tracking })),
 });
 
 const toast = (icon, title) =>
@@ -132,13 +136,14 @@ watch(
   <BottomSheet :show="show" :title="$t('preparation.scanner.title')" size="xl" @close="close">
     <div class="row g-3">
       <BCol lg="5">
-        <div class="ratio ratio-4x3 bg-light rounded border overflow-hidden">
-          <video v-show="scanning" ref="videoRef" class="w-100 h-100 scanner-video" playsinline muted></video>
-          <div v-if="!scanning" class="d-flex flex-column align-items-center justify-content-center text-muted p-3">
+        <ScannerViewport :scanning="scanning" :feedback="feedback" :hint="$t('preparation.scanner.aim')">
+          <video v-show="scanning" ref="videoRef" playsinline muted></video>
+
+          <template #idle>
             <i class="ri-qr-scan-2-line fs-1 mb-2"></i>
-            <span class="text-center">{{ $t('preparation.scanner.camera_preview') }}</span>
-          </div>
-        </div>
+            <span>{{ $t('preparation.scanner.camera_preview') }}</span>
+          </template>
+        </ScannerViewport>
 
         <div v-if="cameraError" class="alert alert-warning mt-2 mb-0 py-2">{{ cameraError }}</div>
 
@@ -240,10 +245,6 @@ watch(
 </template>
 
 <style scoped>
-.scanner-video {
-  object-fit: cover;
-}
-
 .scanner-batch {
   max-height: 320px;
   overflow-y: auto;

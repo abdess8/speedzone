@@ -6,6 +6,7 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 import Layout from '@/Layouts/main.vue';
 import PageHeader from '@/Components/page-header.vue';
+import ScannerViewport from '@/Components/ScannerViewport.vue';
 import { useQrBatchScanner } from '@/composables/useQrBatchScanner';
 
 const { t } = useI18n();
@@ -31,6 +32,7 @@ const {
   cameraError,
   validating,
   videoRef,
+  feedback,
   startCamera,
   stopCamera,
   addToBatch,
@@ -49,6 +51,8 @@ const {
   unsupportedMessage: () => t('returns.hand_back.camera_unsupported'),
   cameraErrorMessage: () => t('returns.hand_back.camera_error'),
   unreachableMessage: () => t('returns.hand_back.unreachable'),
+  onUnknownCode: () => toast('warning', t('returns.hand_back.unreadable')),
+  onDuplicateCode: (reference) => toast('info', t('returns.hand_back.already', { reference })),
 });
 
 const readyRows = computed(() => batch.value.filter((row) => row.valid));
@@ -200,14 +204,15 @@ onMounted(() => {
           </BCardHeader>
 
           <BCardBody>
-            <video
+            <ScannerViewport
               v-show="scanning"
-              ref="videoRef"
-              class="w-100 rounded mb-3 bg-dark"
-              style="max-height: 15rem; object-fit: cover"
-              muted
-              playsinline
-            ></video>
+              class="scanner-preview mb-3"
+              :scanning="scanning"
+              :feedback="feedback"
+              :hint="$t('returns.hand_back.aim')"
+            >
+              <video ref="videoRef" muted playsinline></video>
+            </ScannerViewport>
             <div v-if="cameraError" class="alert alert-warning py-2">{{ cameraError }}</div>
 
             <form class="input-group mb-3" @submit.prevent="submitScan">
@@ -332,3 +337,10 @@ onMounted(() => {
     </BRow>
   </Layout>
 </template>
+
+<style scoped>
+/* A viewfinder wide enough to aim with, not a wall of camera on a desktop. */
+.scanner-preview {
+  max-width: 24rem;
+}
+</style>

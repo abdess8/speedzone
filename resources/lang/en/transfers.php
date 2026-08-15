@@ -90,6 +90,8 @@ return [
         'submit' => 'Confirm Reception',
         'scanned_count' => '{count} order(s) scanned',
         'invalid' => 'Invalid scan',
+        'already' => ':reference is already scanned.',
+        'aim' => 'Hold the QR code inside the frame',
         'camera_unsupported' => 'This browser gives no access to the camera. Type the numbers by hand.',
         'camera_error' => 'Could not open the camera. Check the permission in your browser.',
     ],

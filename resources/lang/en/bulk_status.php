@@ -74,6 +74,7 @@ return [
         'add' => 'Add',
         'start' => 'Start camera',
         'stop' => 'Stop camera',
+        'aim' => 'Hold the QR code inside the frame',
         'added' => ':reference added to the selection.',
         'already' => ':reference is already selected.',
         'unreadable' => 'This QR code does not match any known reference.',

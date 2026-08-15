@@ -74,6 +74,7 @@ return [
         'add' => 'Ajouter',
         'start' => 'Activer la caméra',
         'stop' => 'Arrêter la caméra',
+        'aim' => 'Placez le QR Code dans le cadre',
         'added' => ':reference ajouté à la sélection.',
         'already' => ':reference est déjà sélectionné.',
         'unreadable' => 'Ce QR Code ne correspond à aucune référence connue.',

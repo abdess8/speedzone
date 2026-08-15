@@ -177,6 +177,7 @@ return [
             'camera_unsupported' => 'Ce navigateur ne donne pas accès à la caméra. Saisissez les numéros à la main.',
             'camera_error' => 'Impossible d\'accéder à la caméra.',
             'start_camera' => 'Activer la caméra',
+            'aim' => 'Placez le QR Code dans le cadre',
             'scan_manual_label' => 'Scanner ou saisir le numéro de suivi',
             'scan_placeholder' => 'SPD-2026-123456 ou URL QR',
             'add' => 'Ajouter',

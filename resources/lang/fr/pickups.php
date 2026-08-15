@@ -87,6 +87,7 @@ return [
         'rejected' => 'Rejeté',
         'camera_preview' => 'Aperçu caméra',
         'start_camera' => 'Démarrer la caméra',
+        'aim' => 'Placez le QR Code dans le cadre',
         'scan_manual_label' => 'Scanner ou coller l\'URL / numéro de suivi',
         'scan_placeholder' => 'SPD-2026-000001 ou /orders/SPD-2026-000001',
         'add' => 'Ajouter',

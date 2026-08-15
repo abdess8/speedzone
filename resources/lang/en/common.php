@@ -53,4 +53,9 @@ return [
     'no_notifications' => 'You have no notifications',
     'unread_messages' => 'unread messages',
     'chat' => 'Messages',
+
+    'scanner' => [
+        'sound_on' => 'Turn the scan sound on',
+        'sound_off' => 'Turn the scan sound off',
+    ],
 ];

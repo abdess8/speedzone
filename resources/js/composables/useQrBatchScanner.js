@@ -1,5 +1,6 @@
 import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
-import { createQrDetector } from '@/utils/qrDetector';
+import { QR_DETECT_INTERVAL_MS, createQrDetector, openQrCamera } from '@/utils/qrDetector';
+import { useScanFeedback } from '@/composables/useScanFeedback';
 
 /**
  * Camera and batch mechanics behind a "scan a pile of parcels, then act on them"
@@ -17,14 +18,19 @@ import { createQrDetector } from '@/utils/qrDetector';
 /** Frames are cheap; a code that stays in view must not be added ten times. */
 const REPEAT_GUARD_MS = 3000;
 
-const DETECT_INTERVAL_MS = 500;
+/**
+ * A decoder that throws on every frame is indistinguishable from a camera that
+ * sees nothing, so after this many failures in a row the operator is told.
+ */
+const MAX_DECODE_FAILURES = 6;
 
 /**
  * Pull a reference out of a scanned string.
  *
  * Shipping labels encode the public tracking URL, while a hand-held wedge
- * scanner types the bare reference, so both shapes are accepted. Return labels
- * carry the same shape under `/returns/`, which is why both paths are read.
+ * scanner types the bare reference, so both shapes are accepted. Returns and
+ * transfers carry the same shape under their own path, which is why all three
+ * are read.
  *
  * @param {string} raw
  * @returns {string|null}
@@ -36,7 +42,7 @@ export function parseTrackingNumber(raw) {
     return null;
   }
 
-  const fromUrl = value.match(/\/(?:orders|returns)\/([A-Za-z0-9]+-[0-9]{4}-[0-9]+)/i);
+  const fromUrl = value.match(/\/(?:orders|returns|transfers)\/([A-Za-z0-9]+-[0-9]{4}-[0-9]+)/i);
 
   if (fromUrl) {
     return fromUrl[1];
@@ -53,12 +59,20 @@ export function parseTrackingNumber(raw) {
  * @param {() => string} options.unsupportedMessage
  * @param {() => string} options.cameraErrorMessage
  * @param {() => string} options.unreachableMessage
+ * @param {(raw: string) => void} [options.onUnknownCode] Called when the camera
+ *   reads a code that is not one of ours, so the operator learns the scan
+ *   worked and the sticker was wrong rather than seeing nothing happen.
+ * @param {(tracking: string) => void} [options.onDuplicateCode] Called when the
+ *   camera reads a code already in the batch. Without it, re-pointing the lens
+ *   at a parcel just scanned looks like a camera that stopped working.
  */
 export function useQrBatchScanner({
   validate,
   unsupportedMessage,
   cameraErrorMessage,
   unreachableMessage,
+  onUnknownCode,
+  onDuplicateCode,
 }) {
   const manualInput = ref('');
   const batch = ref([]);
@@ -66,6 +80,7 @@ export function useQrBatchScanner({
   const cameraError = ref('');
   const validating = ref(false);
   const videoRef = ref(null);
+  const { feedback, flash, primeSound } = useScanFeedback();
 
   let stream = null;
   let detectInterval = null;
@@ -96,11 +111,15 @@ export function useQrBatchScanner({
     const tracking = parseTrackingNumber(rawValue);
 
     if (!tracking) {
-      return { added: false, valid: false, message: '' };
+      flash('warning');
+
+      return { added: false, valid: false, message: '', unknown: true };
     }
 
     if (batch.value.some((row) => row.tracking_number === tracking)) {
-      return { added: false, valid: false, message: '' };
+      flash('warning', tracking);
+
+      return { added: false, valid: false, message: '', duplicate: true, tracking };
     }
 
     validating.value = true;
@@ -115,6 +134,8 @@ export function useQrBatchScanner({
         ...(result.row ?? {}),
       });
 
+      flash(result.valid ? 'success' : 'error', tracking);
+
       return { added: true, valid: Boolean(result.valid), message: result.message ?? '' };
     } catch (error) {
       const message =
@@ -123,6 +144,7 @@ export function useQrBatchScanner({
         || unreachableMessage();
 
       batch.value.push({ tracking_number: tracking, valid: false, message });
+      flash('error', tracking);
 
       return { added: true, valid: false, message };
     } finally {
@@ -134,6 +156,7 @@ export function useQrBatchScanner({
   const startCamera = async () => {
     cameraError.value = '';
     stopCamera();
+    primeSound();
 
     // Only reached on a device with no camera API at all: a plain HTTP origin,
     // or a browser too old for getUserMedia.
@@ -144,45 +167,64 @@ export function useQrBatchScanner({
     }
 
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       await nextTick();
-
-      if (videoRef.value) {
-        videoRef.value.srcObject = stream;
-        await videoRef.value.play();
-      }
+      stream = await openQrCamera(videoRef.value);
 
       const detector = await createQrDetector();
       scanning.value = true;
       lastValue = '';
       lastAt = 0;
 
+      let failures = 0;
+
       detectInterval = setInterval(async () => {
         if (!videoRef.value || validating.value) {
           return;
         }
 
+        let codes = [];
+
         try {
-          const codes = await detector.detect(videoRef.value);
-
-          if (codes.length === 0) {
-            return;
-          }
-
-          const rawValue = codes[0].rawValue;
-          const now = Date.now();
-
-          if (rawValue === lastValue && now - lastAt < REPEAT_GUARD_MS) {
-            return;
-          }
-
-          lastValue = rawValue;
-          lastAt = now;
-          await addToBatch(rawValue);
+          codes = await detector.detect(videoRef.value);
+          failures = 0;
         } catch {
-          // A frame the detector cannot read is not an error worth reporting.
+          failures += 1;
+
+          // One unreadable frame is normal; a decoder that never manages one is
+          // a dead end, and leaving it spinning silently is what sends the
+          // operator looking for a supervisor instead of the manual field.
+          if (failures >= MAX_DECODE_FAILURES) {
+            stopCamera();
+            cameraError.value = cameraErrorMessage();
+          }
+
+          return;
         }
-      }, DETECT_INTERVAL_MS);
+
+        if (codes.length === 0) {
+          return;
+        }
+
+        const rawValue = codes[0].rawValue;
+        const now = Date.now();
+
+        if (rawValue === lastValue && now - lastAt < REPEAT_GUARD_MS) {
+          return;
+        }
+
+        lastValue = rawValue;
+        lastAt = now;
+
+        const result = await addToBatch(rawValue);
+
+        if (result.unknown) {
+          onUnknownCode?.(rawValue);
+        }
+
+        if (result.duplicate) {
+          onDuplicateCode?.(result.tracking);
+        }
+      }, QR_DETECT_INTERVAL_MS);
     } catch {
       cameraError.value = cameraErrorMessage();
     }
@@ -206,6 +248,7 @@ export function useQrBatchScanner({
     cameraError,
     validating,
     videoRef,
+    feedback,
     startCamera,
     stopCamera,
     addToBatch,

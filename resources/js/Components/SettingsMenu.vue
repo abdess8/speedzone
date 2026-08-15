@@ -10,7 +10,7 @@ import { usePermissions } from '@/composables/usePermissions';
  * how it talks to your other systems — and none of them is a place you work in,
  * so none of them earns a permanent seat in the menu.
  */
-const { can } = usePermissions();
+const { can, isSuperAdmin } = usePermissions();
 
 const items = computed(() =>
   [
@@ -34,6 +34,15 @@ const items = computed(() =>
       icon: 'ri-shield-keyhole-line',
       href: '/roles',
       visible: can('roles.read'),
+    },
+    {
+      key: 'status-transition-permissions',
+      labelKey: 'bulk_status.permissions.menu',
+      icon: 'ri-git-branch-line',
+      href: '/status-transition-permissions',
+      // Administrators only, mirroring the controller's own check: this screen
+      // decides who may move a parcel, so it is not itself delegable.
+      visible: isSuperAdmin.value,
     },
     {
       key: 'api-integrations',

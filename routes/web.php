@@ -7,6 +7,7 @@ use App\Http\Controllers\AlertController;
 use App\Http\Controllers\AlertDismissalController;
 use App\Http\Controllers\ApiIntegrationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\BulkStatusController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\DriverFinanceController;
 use App\Http\Controllers\DriverInvoiceController;
@@ -39,6 +40,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\SellerDashboardController;
 use App\Http\Controllers\SellerProfileController;
+use App\Http\Controllers\StatusTransitionPermissionController;
 use App\Http\Controllers\StockInventoryController;
 use App\Http\Controllers\StockMovementController;
 use App\Http\Controllers\StockReceptionController;
@@ -266,6 +268,29 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->whereNumber('driver')->name('driver-zones.assign');
     Route::delete('driver-zones/{driver}/sectors/{sector}', [DriverZoneController::class, 'remove'])
         ->whereNumber('driver')->whereNumber('sector')->name('driver-zones.remove');
+
+    // Bulk status editing, for orders and returns alike.
+    //
+    // No `permission:` middleware: the gate is "holds at least one source →
+    // target grant", which is a matrix lookup rather than a permission name,
+    // so the controller answers it through StatusTransitionAccessService.
+    Route::get('bulk-status', [BulkStatusController::class, 'index'])
+        ->name('bulk-status.index');
+    Route::get('bulk-status/options', [BulkStatusController::class, 'options'])
+        ->name('bulk-status.options');
+    Route::get('bulk-status/items', [BulkStatusController::class, 'items'])
+        ->name('bulk-status.items');
+    Route::post('bulk-status/scan', [BulkStatusController::class, 'scan'])
+        ->name('bulk-status.scan');
+    Route::post('bulk-status', [BulkStatusController::class, 'store'])
+        ->name('bulk-status.store');
+
+    // Who may make which of those changes. Administrator only, enforced in the
+    // controller rather than by a permission that could itself be granted away.
+    Route::get('status-transition-permissions', [StatusTransitionPermissionController::class, 'index'])
+        ->name('status-transition-permissions.index');
+    Route::put('status-transition-permissions', [StatusTransitionPermissionController::class, 'update'])
+        ->name('status-transition-permissions.update');
 
     // Order management (logistics).
     //

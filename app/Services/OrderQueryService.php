@@ -143,6 +143,18 @@ class OrderQueryService
 
     private function applyFilters(Builder $query, Request $request, bool $withStatusFilter = true): void
     {
+        // Single-box search across the identifiers an operator reads off a
+        // parcel, for screens that have no room for the field-by-field panel.
+        $query->when($request->input('search'), function (Builder $q, $value) {
+            $q->where(function (Builder $sub) use ($value) {
+                $sub->where('tracking_number', 'like', "%{$value}%")
+                    ->orWhere('customer_phone', 'like', "%{$value}%")
+                    ->orWhere('customer_first_name', 'like', "%{$value}%")
+                    ->orWhere('customer_last_name', 'like', "%{$value}%")
+                    ->orWhereRaw("CONCAT(customer_first_name, ' ', customer_last_name) like ?", ["%{$value}%"]);
+            });
+        });
+
         // Tracking number / order number (same field).
         $tracking = $request->input('tracking_number') ?? $request->input('order_number');
         $query->when($tracking, fn (Builder $q, $value) => $q->where('tracking_number', 'like', "%{$value}%"));

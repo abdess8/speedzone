@@ -16,9 +16,11 @@ import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import SortableTh from "@/Components/SortableTh.vue";
 import { useGuideSignals } from "@/composables/useGuideSignals";
 import { useTableSort } from "@/composables/useTableSort";
+import { useBulkStatusAccess } from "@/composables/useBulkStatusAccess";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
+const { canBulkEditReturns } = useBulkStatusAccess();
 
 const props = defineProps({
   returns: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
@@ -137,6 +139,16 @@ onMounted(() => {
         </template>
 
         <template #actions>
+          <Link
+            v-if="canBulkEditReturns"
+            :href="route('bulk-status.index', { entity_type: 'RETURN' })"
+            class="btn btn-soft-secondary"
+            :title="$t('bulk_status.menu')"
+            :aria-label="$t('bulk_status.menu')"
+          >
+            <i class="ri-list-check-3 align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('bulk_status.menu') }}</span>
+          </Link>
           <Link v-if="can.hand_back" :href="route('returns.hand-back')" class="btn btn-soft-success">
             <i class="ri-e-bike-2-line align-bottom"></i>
             <span class="d-none d-sm-inline ms-1">{{ $t('returns.hand_back.open') }}</span>

@@ -16,8 +16,10 @@ import OrderCard from "./Partials/OrderCard.vue";
 import OrderDetailSheet from "./Partials/OrderDetailSheet.vue";
 import Swal from "sweetalert2";
 import { formatMoney as money } from "@/common/formatMoney";
+import { useBulkStatusAccess } from "@/composables/useBulkStatusAccess";
 
 const { t } = useI18n();
+const { canBulkEditOrders } = useBulkStatusAccess();
 
 const props = defineProps({
   orders: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
@@ -356,6 +358,16 @@ onMounted(() => {
         </template>
 
         <template #actions>
+          <Link
+            v-if="canBulkEditOrders"
+            :href="route('bulk-status.index', { entity_type: 'ORDER' })"
+            class="btn btn-soft-secondary text-nowrap"
+            :title="$t('bulk_status.menu')"
+            :aria-label="$t('bulk_status.menu')"
+          >
+            <i class="ri-list-check-3 align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('bulk_status.menu') }}</span>
+          </Link>
           <Link
             v-if="can.create"
             :href="route('orders.import')"

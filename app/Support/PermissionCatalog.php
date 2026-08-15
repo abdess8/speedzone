@@ -27,8 +27,24 @@ class PermissionCatalog
             self::storePermissions(),
             self::teamPermissions(),
             self::stockPermissions(),
-            self::ecommerceIntegrationPermissions()
+            self::ecommerceIntegrationPermissions(),
+            self::statusTransitionPermissions()
         );
+    }
+
+    /**
+     * One grant per `source status → target status` edge, for both orders and
+     * returns.
+     *
+     * Derived from the transition graphs rather than listed, so an edge added
+     * to a graph becomes manageable by the administrator on the next seed
+     * instead of silently escaping the bulk-edit matrix.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    public static function statusTransitionPermissions(): array
+    {
+        return StatusTransitionPermissions::catalog();
     }
 
     /**

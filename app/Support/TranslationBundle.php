@@ -71,6 +71,8 @@ final class TranslationBundle
         'stock_movement_sources',
         'stock_reception_statuses',
         'integrations',
+        'bulk_status',
+        'return_statuses',
     ];
 
     /**

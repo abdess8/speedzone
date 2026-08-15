@@ -7,6 +7,7 @@ import TwoColumns from "./twocolumn.vue";
 import AlertBanner from "@/Components/AlertBanner.vue";
 import AlertModal from "@/Components/AlertModal.vue";
 import ChatbotWidget from "@/Components/Chatbot/ChatbotWidget.vue";
+import QuickActions from "@/Components/QuickActions/QuickActions.vue";
 import GuideHost from "@/Components/Guide/GuideHost.vue";
 
 export default {
@@ -17,6 +18,7 @@ export default {
         AlertBanner,
         AlertModal,
         ChatbotWidget,
+        QuickActions,
         GuideHost
     },
     data() {
@@ -55,6 +57,11 @@ export default {
         <!-- Sibling of every layout variant, like AlertModal: the assistant has
              to be reachable from any screen, in any layout mode. -->
         <ChatbotWidget />
+
+        <!-- Phone-only shortcuts, stacked directly under the assistant's
+             launcher: a driver reaches them without leaving the screen he is
+             working on. -->
+        <QuickActions />
 
         <!-- Same reason, plus one of its own: a guide outlives the page it
              started on, so its overlay cannot live inside one. -->

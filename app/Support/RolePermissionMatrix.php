@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Role;
+use Illuminate\Support\Str;
 
 /**
  * Single source of truth for the role → permission grants (RBAC layer).
@@ -60,6 +61,17 @@ class RolePermissionMatrix
      * @return array<int, string>
      */
     public static function dispatcher(): array
+    {
+        return [
+            ...StatusTransitionPermissions::derivedFrom(self::dispatcherBase()),
+            ...self::dispatcherBase(),
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function dispatcherBase(): array
     {
         return [
             'orders.read.all',
@@ -124,6 +136,17 @@ class RolePermissionMatrix
      * @return array<int, string>
      */
     public static function driver(): array
+    {
+        return [
+            ...StatusTransitionPermissions::derivedFrom(self::driverBase()),
+            ...self::driverBase(),
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function driverBase(): array
     {
         return [
             'orders.read.assigned',
@@ -312,6 +335,14 @@ class RolePermissionMatrix
             $target = strrchr((string) $permission['name'], '.');
 
             return $target === false ? 'any' : substr($target, 1);
+        }
+
+        // A bulk-edit grant is a pair, so the target alone would collapse every
+        // route into a status onto one line. The pair is the identity.
+        if ($permission['type'] === StatusTransitionPermissions::TYPE) {
+            return Str::of((string) $permission['name'])
+                ->after('.'.StatusTransitionPermissions::ACTION.'.')
+                ->toString();
         }
 
         return $permission['scope'] ?? 'any';

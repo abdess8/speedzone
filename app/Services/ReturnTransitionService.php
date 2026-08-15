@@ -48,6 +48,20 @@ class ReturnTransitionService
     public function __construct(private readonly ReturnService $returns) {}
 
     /**
+     * The whole reverse-logistics graph, keyed by source status.
+     *
+     * Mirrors {@see OrderTransitionService::transitionMap()} so a screen that
+     * reasons about "which statuses lead where" can treat both entities alike
+     * instead of special-casing returns.
+     *
+     * @return array<string, array<int, string>>
+     */
+    public static function transitionMap(): array
+    {
+        return self::ALLOWED_TRANSITIONS;
+    }
+
+    /**
      * @throws ValidationException
      * @throws AuthorizationException
      */

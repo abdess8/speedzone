@@ -175,12 +175,26 @@ class ReturnQueryService
         $query->when($request->filled('search'), fn (Builder $q) => $q->where(function (Builder $inner) use ($request): void {
             $search = $request->string('search')->toString();
             $inner->where('reference', 'like', '%'.$search.'%')
-                ->orWhereHas('order', fn (Builder $oq) => $oq->where('tracking_number', 'like', '%'.$search.'%'));
+                ->orWhere('updated_customer_name', 'like', '%'.$search.'%')
+                ->orWhere('updated_customer_phone', 'like', '%'.$search.'%')
+                ->orWhereHas('order', function (Builder $oq) use ($search): void {
+                    $oq->where('tracking_number', 'like', '%'.$search.'%')
+                        ->orWhere('customer_phone', 'like', '%'.$search.'%')
+                        ->orWhereRaw("CONCAT(customer_first_name, ' ', customer_last_name) like ?", ['%'.$search.'%']);
+                });
         }));
 
+        // Accepts a list as well as a single value: the bulk editor narrows the
+        // board to the several source statuses that lead to the chosen target.
         $query->when(
             $withStatusFilter && $request->filled('status'),
-            fn (Builder $q) => $q->where('status', $request->string('status'))
+            function (Builder $q) use ($request): void {
+                $statuses = array_filter((array) $request->input('status'), 'strlen');
+
+                count($statuses) === 1
+                    ? $q->where('status', reset($statuses))
+                    : $q->whereIn('status', $statuses);
+            }
         );
 
         $query->when($request->filled('city_id'), fn (Builder $q) => $q->where(

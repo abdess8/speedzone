@@ -3,10 +3,12 @@
 namespace App\Enums;
 
 /**
- * Why a delivery attempt ended in OrderStatus::FAILED.
+ * Why a delivery attempt did not end with the parcel in the customer's hands.
  *
  * Captured from the driver at the moment he marks the order as not delivered,
  * and mapped to a ReturnReason when a return is opened for the same order.
+ *
+ * The reason also decides what happens next: see {@see self::endsDelivery()}.
  */
 enum OrderFailureReason: string
 {
@@ -62,6 +64,22 @@ enum OrderFailureReason: string
     }
 
     /**
+     * Whether this reason closes the delivery for good.
+     *
+     * A refusal or a cancellation is the customer's final word, so the parcel
+     * leaves the round immediately and waits for the reverse leg. Every other
+     * reason describes a missed opportunity, not a lost one: the order stays
+     * out for delivery and the driver may try again.
+     */
+    public function endsDelivery(): bool
+    {
+        return match ($this) {
+            self::CUSTOMER_REFUSED, self::CUSTOMER_CANCELED => true,
+            default => false,
+        };
+    }
+
+    /**
      * Reason carried over when a return is opened for the failed order.
      */
     public function toReturnReason(): ReturnReason
@@ -74,7 +92,7 @@ enum OrderFailureReason: string
     }
 
     /**
-     * @return array<int, array{value: string, label: string, color: string, icon: string}>
+     * @return array<int, array{value: string, label: string, color: string, icon: string, ends_delivery: bool}>
      */
     public static function options(): array
     {
@@ -84,6 +102,9 @@ enum OrderFailureReason: string
                 'label' => $reason->label(),
                 'color' => $reason->color(),
                 'icon' => $reason->icon(),
+                // Lets the driver sheet warn that picking this reason takes the
+                // parcel off the round, instead of springing it on him after.
+                'ends_delivery' => $reason->endsDelivery(),
             ],
             self::cases()
         );

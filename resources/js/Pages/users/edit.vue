@@ -5,6 +5,8 @@ import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import InputError from "@/Components/InputError.vue";
+import DocumentPreview from "@/Components/DocumentPreview.vue";
+import FlipCardPreview from "@/Components/FlipCardPreview.vue";
 import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
 
@@ -69,6 +71,10 @@ const groupedSectorOptions = computed(() => {
 const onBillingFileChange = (field, event) => {
   form[field] = event.target.files[0] || null;
 };
+
+const hasBillingDocuments = computed(() =>
+  Boolean(props.user.rib_attachment_url || props.user.cin_front_attachment_url || props.user.cin_back_attachment_url)
+);
 
 const photoPreview = ref(null);
 
@@ -280,27 +286,36 @@ const submit = () => {
                   <input type="text" class="form-control" v-model="form.rib" :class="{ 'is-invalid': form.errors.rib }" />
                   <InputError :message="form.errors.rib" />
                 </BCol>
+                <BCol md="12" v-if="hasBillingDocuments">
+                  <label class="form-label">{{ $t('users.form.current_documents') }}</label>
+                  <BRow class="g-3">
+                    <BCol sm="6" md="4">
+                      <FlipCardPreview
+                        :front-url="user.cin_front_attachment_url"
+                        :back-url="user.cin_back_attachment_url"
+                        :label="$t('users.form.cin')"
+                      />
+                    </BCol>
+                    <BCol sm="6" md="4">
+                      <DocumentPreview
+                        :url="user.rib_attachment_url"
+                        :label="$t('users.form.rib_attachment')"
+                      />
+                    </BCol>
+                  </BRow>
+                </BCol>
                 <BCol md="4">
                   <label class="form-label">{{ $t('users.form.rib_attachment') }}</label>
-                  <a v-if="user.rib_attachment_url" :href="user.rib_attachment_url" target="_blank" class="d-block fs-12 mb-1 text-truncate">
-                    <i class="ri-file-line align-middle me-1"></i>{{ $t('users.form.current_file') }}
-                  </a>
                   <input type="file" class="form-control" accept=".pdf,image/*" @change="onBillingFileChange('rib_attachment', $event)" :class="{ 'is-invalid': form.errors.rib_attachment }" />
                   <InputError :message="form.errors.rib_attachment" />
                 </BCol>
                 <BCol md="4">
                   <label class="form-label">{{ $t('users.form.cin_front_attachment') }}</label>
-                  <a v-if="user.cin_front_attachment_url" :href="user.cin_front_attachment_url" target="_blank" class="d-block fs-12 mb-1 text-truncate">
-                    <i class="ri-file-line align-middle me-1"></i>{{ $t('users.form.current_file') }}
-                  </a>
                   <input type="file" class="form-control" accept=".pdf,image/*" @change="onBillingFileChange('cin_front_attachment', $event)" :class="{ 'is-invalid': form.errors.cin_front_attachment }" />
                   <InputError :message="form.errors.cin_front_attachment" />
                 </BCol>
                 <BCol md="4">
                   <label class="form-label">{{ $t('users.form.cin_back_attachment') }}</label>
-                  <a v-if="user.cin_back_attachment_url" :href="user.cin_back_attachment_url" target="_blank" class="d-block fs-12 mb-1 text-truncate">
-                    <i class="ri-file-line align-middle me-1"></i>{{ $t('users.form.current_file') }}
-                  </a>
                   <input type="file" class="form-control" accept=".pdf,image/*" @change="onBillingFileChange('cin_back_attachment', $event)" :class="{ 'is-invalid': form.errors.cin_back_attachment }" />
                   <InputError :message="form.errors.cin_back_attachment" />
                 </BCol>

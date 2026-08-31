@@ -53,6 +53,9 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+                // A batch action that partly succeeded is neither, and saying
+                // "success" over three failed parcels would be a lie.
+                'warning' => fn () => $request->session()->get('warning'),
             ],
             'locale' => $locale,
             'permissions' => fn () => $request->user()?->permissionNames() ?? [],
@@ -102,7 +105,6 @@ class HandleInertiaRequests extends Middleware
         }
 
         $roleNames = $user->roleNames();
-        $primaryRole = $roleNames[0] ?? null;
 
         // withoutRelations() keeps the model's own attributes and accessors but
         // drops loaded relations. Serialising the model as-is drags the eagerly
@@ -110,15 +112,16 @@ class HandleInertiaRequests extends Middleware
         // JSON per request for an admin).
         return array_merge($user->withoutRelations()->toArray(), [
             'roles' => $roleNames,
-            'role_label' => $primaryRole
-                ? trans('roles.'.$primaryRole, [], app()->getLocale())
-                : null,
+            'role_label' => $user->primaryRoleLabel(),
             'is_seller' => $user->isSeller(),
             'status' => $user->status?->value ?? UserStatus::Active->value,
             'is_account_active' => $user->isAccountActive(),
             'is_pending_approval' => $user->isPendingApproval(),
             'can_view_returns' => $user->canAccessReturnsModule(),
             'can_create_return_request' => $user->canCreateReturnRequest(),
+            // Only vendors are scored: the missing fields are all seller
+            // paperwork, so the gauge would be meaningless for staff accounts.
+            'profile_completion' => $user->isSeller() ? $user->profileCompletion() : null,
             'two_factor_enabled' => Features::enabled(Features::twoFactorAuthentication())
                 && ! is_null($user->two_factor_secret),
         ]);

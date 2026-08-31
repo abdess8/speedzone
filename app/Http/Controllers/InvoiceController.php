@@ -40,6 +40,7 @@ class InvoiceController extends Controller
 
         return Inertia::render('invoices/index', [
             'invoices' => InvoiceResource::collection($invoices)->response()->getData(true),
+            'stats' => $this->invoiceQuery->statusCounts($request, $request->user()),
             'filters' => $request->only([
                 'invoice_number', 'seller', 'status', 'created_from', 'created_to',
                 'sort', 'direction', 'per_page',

@@ -132,4 +132,8 @@ File: Main Css File
 
 @import "custom";
 
+// Last, so that its same-specificity overrides of the theme and of `custom`
+// win the cascade.
+@import "../../dark-mode";
+
 @import "@vueform/toggle/themes/default.css";

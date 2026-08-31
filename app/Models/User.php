@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use App\Enums\BillingFrequency;
+use App\Enums\ReturnStatus;
 use App\Enums\SellerPaymentMethod;
 use App\Enums\UserStatus;
 use App\Notifications\VerifySpeedZoneAccountEmail;
+use App\Support\ProfileCompletion;
+use App\Support\RoleLabel;
 use App\Support\StoreContext;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -42,6 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'first_name',
         'last_name',
         'email',
+        'google_id',
         'locale',
         'password',
         'city_id',
@@ -467,6 +472,17 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Human readable name of the role shown next to the user, whatever its
+     * origin. Vendor roles have no translation entry — see {@see RoleLabel}.
+     */
+    public function primaryRoleLabel(): ?string
+    {
+        $this->loadMissing('roles');
+
+        return RoleLabel::of($this->roles->first());
+    }
+
+    /**
      * Drop the memoized role/permission lookups (call after granting or
      * revoking access on an already-loaded instance).
      */
@@ -517,6 +533,23 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Users who can be considered part of a city.
+     *
+     * The query-side counterpart of cityIds(), narrowed to the two paths that
+     * matter when looking for somebody to send into the field: the sectors he
+     * drives and, failing that, the city on his profile. Shop cities are left out
+     * on purpose — owning a shop in Tangier does not make a vendor available to
+     * work there.
+     */
+    public function scopeCoveringCity(Builder $query, int $cityId): Builder
+    {
+        return $query->where(function (Builder $scoped) use ($cityId): void {
+            $scoped->whereHas('sectors', fn (Builder $sectors) => $sectors->where('sectors.city_id', $cityId))
+                ->orWhere('users.city_id', $cityId);
+        });
+    }
+
+    /**
      * Whether the user holds the Driver role.
      */
     public function isDriver(): bool
@@ -534,6 +567,17 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isSeller(): bool
     {
         return isset($this->roleNameMap()[Role::SELLER]) || $this->isTeamMember();
+    }
+
+    /**
+     * How complete the seller profile is, as a score out of 100 plus the list
+     * of what is still missing.
+     *
+     * @return array<string, mixed>
+     */
+    public function profileCompletion(): array
+    {
+        return ProfileCompletion::forUser($this);
     }
 
     /**
@@ -585,9 +629,15 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Roles that are granted unrestricted access across the application.
      *
+     * `Admin` is the seeded one; the two spellings after it are the legacy rows
+     * that predate the seeder and are still what live installations carry. They
+     * matter beyond this check: every permission migration grants to this list,
+     * so a name missing here silently skips the platform owner on each new
+     * permission shipped.
+     *
      * @var array<int, string>
      */
-    public const SUPER_ADMIN_ROLES = ['Admin', 'SuperAdmin'];
+    public const SUPER_ADMIN_ROLES = ['Admin', 'SuperAdmin', 'Super Admin'];
 
     /**
      * Whether the user belongs to an all-access (super admin) role.
@@ -659,6 +709,31 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Whether the user may advance a return through at least one of its steps.
+     *
+     * The workflow grants can be held one step at a time — a hub manager signs
+     * parcels in, a driver closes them at the seller's door — so the coarse
+     * "can this user touch return statuses?" question has to consider both the
+     * blanket permission and the per-step ones.
+     */
+    public function canUpdateReturnStatus(): bool
+    {
+        if ($this->hasPermission('returns.update_status') || $this->hasPermission('returns.manage')) {
+            return true;
+        }
+
+        foreach (ReturnStatus::pipeline() as $status) {
+            foreach ($status->allowedBy() as $permission) {
+                if (str_starts_with($permission, 'returns.transition.') && $this->hasPermission($permission)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Whether the returns module should appear in navigation.
      */
     public function canAccessReturnsModule(): bool
@@ -670,9 +745,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasRolePermission('returns.read.all')
             || $this->hasRolePermission('returns.read.own')
             || $this->hasRolePermission('returns.create_request')
-            || $this->hasRolePermission('returns.update_status')
             || $this->hasRolePermission('returns.create')
-            || $this->hasRolePermission('returns.manage');
+            || $this->hasRolePermission('returns.manage')
+            || $this->canUpdateReturnStatus();
     }
 
     /**
@@ -767,7 +842,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return in_array($action, ['read', 'update_status', 'scan'], true);
         }
 
-        if ($this->hasPermission('returns.update_status') || $this->hasPermission('returns.create')) {
+        if ($this->canUpdateReturnStatus() || $this->hasPermission('returns.create')) {
             return in_array($action, ['read', 'update_status', 'scan'], true);
         }
 

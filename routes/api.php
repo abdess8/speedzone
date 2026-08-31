@@ -9,11 +9,11 @@ use App\Http\Controllers\Api\OrderTransitionController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\PickupRequestController;
 use App\Http\Controllers\Api\ReturnController;
-use App\Http\Controllers\Api\TransferController;
-use App\Http\Controllers\ReturnController as WebReturnController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SectorController;
+use App\Http\Controllers\Api\TransferController;
 use App\Http\Controllers\Api\UserRoleController;
+use App\Http\Controllers\ReturnController as WebReturnController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -148,9 +148,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('returns/{return}/change-status', [ReturnController::class, 'changeStatus'])
         ->whereNumber('return')
         ->name('api.returns.change-status');
-    Route::post('returns/{return}/move-to-depot', [ReturnController::class, 'moveToDepot'])
+    Route::get('returns/{return}/drivers', [ReturnController::class, 'drivers'])
         ->whereNumber('return')
-        ->name('api.returns.move-to-depot');
+        ->name('api.returns.drivers');
+    Route::post('returns/{return}/assign-driver', [ReturnController::class, 'assignDriver'])
+        ->whereNumber('return')
+        ->name('api.returns.assign-driver');
+    Route::post('returns/{return}/receive-at-hub', [ReturnController::class, 'receiveAtHub'])
+        ->whereNumber('return')
+        ->name('api.returns.receive-at-hub');
     Route::put('returns/{return}/customer-data', [ReturnController::class, 'updateCustomerData'])
         ->whereNumber('return')
         ->name('api.returns.update-customer-data');

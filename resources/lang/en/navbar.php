@@ -8,4 +8,12 @@ return [
     'language' => 'Language',
     'french' => 'Français',
     'english' => 'English',
+    'app_name' => 'SpeedZone',
+    'app_launcher' => 'All sections',
+    'more' => 'More',
+    'nav_mode' => [
+        'label' => 'Navigation',
+        'sidebar' => 'Sidebar',
+        'topnav' => 'Top navigation',
+    ],
 ];

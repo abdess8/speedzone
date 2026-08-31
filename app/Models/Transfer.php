@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TransferContentType;
 use App\Enums\TransferStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,14 +22,18 @@ class Transfer extends Model
         'created_by',
         'assigned_to',
         'status',
+        'content_type',
         'number_of_packages',
+        'number_of_returns',
         'total_amount',
         'notes',
     ];
 
     protected $casts = [
         'status' => TransferStatus::class,
+        'content_type' => TransferContentType::class,
         'number_of_packages' => 'integer',
+        'number_of_returns' => 'integer',
         'total_amount' => 'decimal:2',
     ];
 
@@ -71,6 +76,24 @@ class Transfer extends Model
     public function transferOrders(): HasMany
     {
         return $this->hasMany(TransferOrder::class);
+    }
+
+    public function returns(): BelongsToMany
+    {
+        return $this->belongsToMany(OrderReturn::class, 'transfer_returns', 'transfer_id', 'return_id')
+            ->withPivot('created_at');
+    }
+
+    public function transferReturns(): HasMany
+    {
+        return $this->hasMany(TransferReturn::class);
+    }
+
+    public function contentType(): TransferContentType
+    {
+        return $this->content_type instanceof TransferContentType
+            ? $this->content_type
+            : TransferContentType::from($this->content_type ?? TransferContentType::ORDERS->value);
     }
 
     public function statusHistories(): HasMany

@@ -1,0 +1,525 @@
+// Dark mode
+//
+// The surface ramp itself lives in `config/corporate/_variables-dark.scss`;
+// everything below is the fallout from rules — in the vendor theme, in
+// `custom.scss` and in third-party stylesheets — that hardcode a light colour
+// and therefore survive the color-mode switch as light patches.
+//
+// This file is imported last so that same-specificity overrides win. When
+// fixing a new light patch, reach for a variable override in the first block
+// before adding a selector: one line there covers every component reading it.
+
+[data-bs-theme="dark"] {
+
+    // -----------------------------------------------------------------------
+    // Tokens
+    // -----------------------------------------------------------------------
+
+    // The brand blue is only legible on white. Dark mode keeps the hue and
+    // lifts the lightness so buttons, links and accents clear the surfaces
+    // they now sit on.
+    --#{$prefix}primary: #{$primary-dark};
+    --#{$prefix}primary-rgb: #{to-rgb($primary-dark)};
+
+    // Velzon points the tooltip at the emphasis colour, which is near-white in
+    // dark mode and produced a white bubble with white text.
+    --#{$prefix}tooltip-bg: #{$dark-surface-elevated};
+    --#{$prefix}tooltip-color: #{$body-color-dark};
+
+    // Cards are separated from the page by contrast rather than by a shadow
+    // here — a light-mode shadow over a near-black page reads as a grey smear.
+    --#{$prefix}card-shadow:
+        0 0 0 1px rgba($white, .04),
+        0 1px 2px rgba($black, .3),
+        0 6px 16px rgba($black, .25);
+
+    // -----------------------------------------------------------------------
+    // App shell (`custom.scss`)
+    // -----------------------------------------------------------------------
+
+    // `body` is pinned to white with a hardcoded value, which overrides
+    // `--vz-body-bg` and leaves the whole page light.
+    body {
+        background-color: var(--#{$prefix}body-bg);
+        color: var(--#{$prefix}body-color);
+    }
+
+    .card-title,
+    .card-header .card-title,
+    h4.text-primary,
+    h5.text-primary,
+    .text-primary.h4,
+    .text-primary.h5 {
+        color: var(--#{$prefix}primary) !important;
+    }
+
+    .btn-primary {
+        --#{$prefix}btn-bg: #{$primary-dark};
+        --#{$prefix}btn-border-color: #{$primary-dark};
+        --#{$prefix}btn-hover-bg: #{shade-color($primary-dark, 12%)};
+        --#{$prefix}btn-hover-border-color: #{shade-color($primary-dark, 12%)};
+        --#{$prefix}btn-active-bg: #{shade-color($primary-dark, 18%)};
+        --#{$prefix}btn-active-border-color: #{shade-color($primary-dark, 18%)};
+    }
+
+    .dashboard-logistics-card {
+        background: var(--#{$prefix}secondary-bg);
+        box-shadow: var(--#{$prefix}card-shadow);
+    }
+
+    .dashboard-logistics-card .icon-wrap {
+        background: rgba($primary-dark, .18);
+        color: #{tint-color($primary-dark, 25%)};
+    }
+
+    .app-launcher-child {
+        color: var(--#{$prefix}secondary-color);
+    }
+
+    .status-badge-in-transit {
+        background: rgba($primary-dark, .18);
+        color: #{tint-color($primary-dark, 25%)};
+    }
+
+    // -----------------------------------------------------------------------
+    // Tables
+    // -----------------------------------------------------------------------
+
+    // Sticky headers are painted with a hardcoded grey in `custom.scss`, so
+    // every `<thead>` in the app stayed light regardless of `.table-light`.
+    .table {
+        thead th {
+            background: var(--#{$prefix}light);
+            color: var(--#{$prefix}emphasis-color);
+        }
+
+        tbody tr:hover {
+            background-color: rgba($white, .04);
+        }
+    }
+
+    .table-light,
+    .table-light > th,
+    .table-light > td {
+        --#{$prefix}table-bg: #{$dark-surface-elevated};
+        --#{$prefix}table-color: #{$body-emphasis-color-dark};
+        background-color: $dark-surface-elevated;
+        color: $body-emphasis-color-dark;
+    }
+
+    // -----------------------------------------------------------------------
+    // Utility classes used in markup we do not own
+    // -----------------------------------------------------------------------
+
+    // `.bg-white` resolves through `--vz-white-rgb`, which has no dark
+    // counterpart, and `.text-dark` resolves to a near-black on a near-black
+    // surface. Both are used across the pages and cannot be edited out there.
+    .bg-white {
+        --#{$prefix}white-rgb: #{to-rgb($dark-surface-card)};
+    }
+
+    .text-dark {
+        --#{$prefix}dark-rgb: #{to-rgb($body-emphasis-color-dark)};
+    }
+
+    .text-body {
+        color: var(--#{$prefix}body-color) !important;
+    }
+
+    .text-body-emphasis {
+        color: var(--#{$prefix}emphasis-color) !important;
+    }
+
+    .text-muted {
+        color: var(--#{$prefix}secondary-color) !important;
+    }
+
+    .text-bg-light {
+        color: var(--#{$prefix}emphasis-color) !important;
+    }
+
+    // -----------------------------------------------------------------------
+    // Brand-blue accents
+    //
+    // The theme compiles `$primary` into `color:` declarations rather than
+    // reading `--vz-primary`, so these keep the light-mode blue and all but
+    // disappear against the dark surfaces. Only the variants this app actually
+    // renders are listed; the rest of the theme's colour permutations are
+    // unused here.
+    // -----------------------------------------------------------------------
+
+    .icon-dual-primary,
+    .icon-dual-info,
+    .nav-tabs-custom .nav-item .nav-link.active,
+    .pagination-prev,
+    .pagination-next,
+    .step-arrow-nav .nav .nav-link.active,
+    .step-arrow-nav .nav .nav-link.done,
+    .swiper-button-next,
+    .swiper-button-prev,
+    .card-header-pills .nav-link,
+    .custom-verti-nav-pills .nav-link,
+    .nav-pills-justified .nav-link,
+    .nav-custom-outline .nav-link,
+    .vertical-nav-tabs .nav-link,
+    .card-radio .form-check-input:checked + .form-check-label {
+        color: var(--#{$prefix}primary);
+    }
+
+    .icon-dual-dark {
+        color: var(--#{$prefix}secondary-color);
+    }
+
+    .form-check-outline.form-check-primary .form-check-input:checked[type="checkbox"],
+    .form-check-outline.form-check-info .form-check-input:checked[type="checkbox"],
+    .form-radio-outline.form-radio-primary .form-check-input:checked[type="radio"],
+    .form-radio-outline.form-radio-info .form-check-input:checked[type="radio"],
+    .form-switch-custom.form-switch-primary .form-check-input:checked::before,
+    .form-switch-custom.form-switch-info .form-check-input:checked::before {
+        color: var(--#{$prefix}primary);
+    }
+
+    // -----------------------------------------------------------------------
+    // Elevated surfaces
+    // -----------------------------------------------------------------------
+
+    // These all default to the card surface; lifting them one step keeps a
+    // modal or dropdown readable when it opens over a card.
+    .modal-content {
+        --#{$prefix}modal-bg: #{$dark-surface-elevated};
+        --#{$prefix}modal-border-color: #{$border-color-dark};
+    }
+
+    .offcanvas,
+    .offcanvas-lg,
+    .offcanvas-md,
+    .offcanvas-sm,
+    .offcanvas-xl,
+    .offcanvas-xxl {
+        --#{$prefix}offcanvas-bg: #{$dark-surface-elevated};
+        --#{$prefix}offcanvas-border-color: #{$border-color-dark};
+    }
+
+    .popover {
+        --#{$prefix}popover-bg: #{$dark-surface-elevated};
+        --#{$prefix}popover-border-color: #{$border-color-dark};
+        --#{$prefix}popover-header-bg: #{$dark-surface-chrome};
+    }
+
+    .toast {
+        --#{$prefix}toast-bg: #{$dark-surface-elevated};
+        --#{$prefix}toast-border-color: #{$border-color-dark};
+        --#{$prefix}toast-header-bg: #{$dark-surface-chrome};
+        --#{$prefix}toast-header-color: #{$body-color-dark};
+    }
+
+    .dropdown-menu {
+        --#{$prefix}dropdown-border-color: #{$border-color-dark};
+        box-shadow: 0 5px 20px rgba($black, .4);
+    }
+
+    .modal-content,
+    .offcanvas {
+        box-shadow: 0 10px 40px rgba($black, .5);
+    }
+
+    // -----------------------------------------------------------------------
+    // Forms
+    // -----------------------------------------------------------------------
+
+    .form-control,
+    .form-select,
+    .form-control-plaintext,
+    textarea.form-control {
+        border-color: var(--#{$prefix}input-border-custom);
+        color: var(--#{$prefix}body-color);
+    }
+
+    .form-control::placeholder,
+    .form-select::placeholder,
+    textarea.form-control::placeholder {
+        color: #6b7590;
+        opacity: 1;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #{$primary-dark};
+        box-shadow: 0 0 0 0.2rem rgba($primary-dark, .25);
+    }
+
+    // Chrome paints autofilled inputs with its own near-white; the inset
+    // shadow is the only way to repaint the background it draws.
+    .form-control:-webkit-autofill,
+    .form-control:-webkit-autofill:focus,
+    .form-select:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 1000px $input-bg-custom-dark inset;
+        -webkit-text-fill-color: $body-color-dark;
+    }
+
+    .form-control:disabled,
+    .form-select:disabled,
+    .form-control[readonly] {
+        background-color: #{$dark-surface-chrome};
+        color: var(--#{$prefix}secondary-color);
+    }
+
+    .input-group-text {
+        background-color: #{$dark-surface-elevated};
+        border-color: var(--#{$prefix}input-border-custom);
+        color: var(--#{$prefix}secondary-color);
+    }
+
+    .form-check-input:not(:checked) {
+        border-color: #{$input-border-custom-dark};
+    }
+
+    // Browsers render `date`/`time` pickers with a black glyph.
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator,
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+    input[type="month"]::-webkit-calendar-picker-indicator {
+        filter: invert(1) opacity(.6);
+    }
+
+    // -----------------------------------------------------------------------
+    // Velzon "-light" component variants
+    //
+    // These are hardcoded to `#f3f6f9` throughout the theme and become bright
+    // rectangles on a dark page. Redirecting them at `--vz-light` keeps their
+    // meaning (the neutral variant) without the light patch.
+    // -----------------------------------------------------------------------
+
+    .card-light,
+    .nav-custom-light,
+    .list-group-fill-light,
+    .btn-light.btn-animation,
+    .nav-light .nav-link.active,
+    .nav-light.nav-tab-custom .nav-link.active::after,
+    .accordion-fill-light .accordion-item .accordion-button:not(.collapsed),
+    .input-step.step-light button,
+    .ribbon-box .ribbon-light,
+    .ribbon-box.right .ribbon-light,
+    .ribbon-box .ribbon-two-light span,
+    .ribbon-three-light span,
+    .ribbon-three-light span::before {
+        background-color: var(--#{$prefix}light) !important;
+        color: var(--#{$prefix}emphasis-color);
+    }
+
+    .navtab-bg li > a {
+        background-color: var(--#{$prefix}light);
+    }
+
+    .progress-light .progress-bar,
+    .form-check-light .form-check-input:checked,
+    .form-radio-light .form-check-input:checked,
+    .form-switch-light .form-check-input:checked,
+    [data-slider-color="light"] .noUi-connect,
+    [data-slider-color="light"] .noUi-handle,
+    [data-simplebar-track="light"] .simplebar-scrollbar::before {
+        background-color: var(--#{$prefix}light);
+    }
+
+    // -----------------------------------------------------------------------
+    // Plugins
+    // -----------------------------------------------------------------------
+
+    // Dropzone and the map placeholder paint themselves white.
+    .dropzone,
+    .job-panel-filter .form-control {
+        background-color: var(--#{$prefix}input-bg-custom);
+    }
+
+    .gmaps,
+    .gmaps-panaroma {
+        background: var(--#{$prefix}light);
+    }
+
+    // The calendar surface already follows `--vz-secondary-bg`; only the
+    // header band and the selected day are painted with the literal brand blue.
+    .flatpickr-months,
+    .flatpickr-calendar .flatpickr-rContainer .flatpickr-weekdays,
+    .flatpickr-day.selected,
+    .flatpickr-day.startRange,
+    .flatpickr-day.endRange {
+        background-color: #{$primary-dark} !important;
+        border-color: #{$primary-dark};
+    }
+
+    .flatpickr-day.today:not(.selected) {
+        border-color: #{$primary-dark};
+    }
+
+    .flatpickr-day.flatpickr-disabled,
+    .flatpickr-day.prevMonthDay,
+    .flatpickr-day.nextMonthDay {
+        color: #6b7590 !important;
+    }
+
+    // Prism renders code blocks on `#eff2f7`.
+    :not(pre) > code[class*="language-"],
+    pre[class*="language-"] {
+        background: #{$dark-surface-page};
+        color: #{$body-color-dark};
+    }
+
+    // ApexCharts draws its tooltip, axis tooltips and export menu light. The
+    // series colours themselves are set per-component in the dashboard Vue
+    // files and are not reachable from here.
+    .apexcharts-tooltip,
+    .apexcharts-menu {
+        background: #{$dark-surface-elevated} !important;
+        border-color: #{$border-color-dark} !important;
+        color: #{$body-color-dark} !important;
+        box-shadow: 0 5px 20px rgba($black, .4);
+    }
+
+    .apexcharts-tooltip .apexcharts-tooltip-title,
+    .apexcharts-menu-item:hover {
+        background: #{$dark-surface-chrome} !important;
+        border-color: #{$border-color-dark} !important;
+        color: #{$body-emphasis-color-dark} !important;
+    }
+
+    .apexcharts-xaxistooltip,
+    .apexcharts-yaxistooltip {
+        background: #{$dark-surface-elevated} !important;
+        border-color: #{$border-color-dark} !important;
+        color: #{$body-color-dark} !important;
+    }
+
+    .apexcharts-xaxistooltip::before,
+    .apexcharts-xaxistooltip::after,
+    .apexcharts-yaxistooltip::before,
+    .apexcharts-yaxistooltip::after {
+        border-bottom-color: #{$dark-surface-elevated};
+        border-top-color: #{$dark-surface-elevated};
+    }
+
+    .apexcharts-text,
+    .apexcharts-legend-text,
+    .apexcharts-datalabel,
+    .apexcharts-title-text,
+    .apexcharts-yaxis-label,
+    .apexcharts-xaxis-label {
+        fill: #{$body-secondary-color-dark} !important;
+        color: #{$body-secondary-color-dark} !important;
+    }
+
+    .apexcharts-gridline,
+    .apexcharts-grid-borders line {
+        stroke: #{$border-color-dark};
+    }
+
+    // FullCalendar keeps its own greys for the header row and "today".
+    .fc th.fc-widget-header,
+    .fc .fc-col-header-cell {
+        background: var(--#{$prefix}light);
+    }
+
+    .fc-unthemed td.fc-today,
+    .fc .fc-day-today {
+        background: rgba($primary-dark, .12) !important;
+    }
+
+    .fg-emoji-picker .fg-emoji-picker-categories,
+    a.fg-emoji-picker-close-button {
+        background-color: var(--#{$prefix}light) !important;
+    }
+
+    // -----------------------------------------------------------------------
+    // SweetAlert2
+    //
+    // Injects its own stylesheet at runtime, so specificity rather than order
+    // is what makes these stick.
+    // -----------------------------------------------------------------------
+
+    .swal2-popup {
+        background: #{$dark-surface-elevated};
+        color: #{$body-color-dark};
+        box-shadow: 0 10px 40px rgba($black, .5);
+    }
+
+    .swal2-title,
+    .swal2-close {
+        color: #{$body-emphasis-color-dark};
+    }
+
+    .swal2-html-container,
+    .swal2-content,
+    .swal2-label,
+    .swal2-validation-message {
+        color: #{$body-color-dark};
+    }
+
+    .swal2-validation-message {
+        background: rgba($danger, .16);
+    }
+
+    .swal2-input,
+    .swal2-file,
+    .swal2-textarea,
+    .swal2-select {
+        background: #{$input-bg-custom-dark};
+        border-color: #{$input-border-custom-dark};
+        color: #{$body-color-dark};
+
+        &::placeholder {
+            color: #6b7590;
+        }
+    }
+
+    .swal2-footer {
+        border-top-color: #{$border-color-dark};
+        color: #{$body-secondary-color-dark};
+    }
+
+    .swal2-timer-progress-bar {
+        background: rgba($white, .2);
+    }
+}
+
+// The backdrop is a sibling of `<html>`'s subtree in the stacking sense but
+// still inside it, so the attribute selector above reaches it — except that
+// SweetAlert2 sets the colour inline-equivalent at a higher specificity.
+[data-bs-theme="dark"] .swal2-container {
+    background-color: rgba($black, .6);
+}
+
+// -----------------------------------------------------------------------
+// @vueform/multiselect
+//
+// Ships a variable-driven theme, so a token block is enough.
+// -----------------------------------------------------------------------
+
+[data-bs-theme="dark"] .multiselect {
+    --ms-bg: #{$input-bg-custom-dark};
+    --ms-bg-disabled: #{$dark-surface-chrome};
+    --ms-border-color: #{$input-border-custom-dark};
+    --ms-border-color-active: #{$primary-dark};
+    --ms-ring-color: #{rgba($primary-dark, .25)};
+    --ms-placeholder-color: #6b7590;
+    --ms-caret-color: #{$body-secondary-color-dark};
+    --ms-clear-color: #{$body-secondary-color-dark};
+    --ms-clear-color-hover: #{$body-emphasis-color-dark};
+    --ms-spinner-color: #{$primary-dark};
+    --ms-dropdown-bg: #{$dark-surface-elevated};
+    --ms-dropdown-border-color: #{$border-color-dark};
+    --ms-empty-color: #{$body-secondary-color-dark};
+    --ms-group-label-bg: #{$dark-surface-chrome};
+    --ms-group-label-color: #{$body-secondary-color-dark};
+    --ms-group-label-bg-pointed: #{$border-color-dark};
+    --ms-group-label-color-pointed: #{$body-emphasis-color-dark};
+    --ms-option-bg-pointed: #{$border-color-dark};
+    --ms-option-color-pointed: #{$body-emphasis-color-dark};
+    --ms-option-bg-selected: #{$primary-dark};
+    --ms-option-color-selected: #{$white};
+    --ms-option-bg-selected-pointed: #{shade-color($primary-dark, 12%)};
+    --ms-option-color-selected-pointed: #{$white};
+    --ms-option-color-disabled: #6b7590;
+    --ms-tag-bg: #{rgba($primary-dark, .22)};
+    --ms-tag-color: #{tint-color($primary-dark, 35%)};
+
+    color: $body-color-dark;
+}

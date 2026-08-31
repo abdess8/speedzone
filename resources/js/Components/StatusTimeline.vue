@@ -49,6 +49,30 @@ const formatDate = (value) => (value ? new Date(value).toLocaleString() : "");
 
         <p class="text-muted mb-0 mt-1" v-if="entry.comment">{{ entry.comment }}</p>
 
+        <!--
+          Proof of a non-delivery: a thumbnail when it is a photo, because the
+          picture answers the question on its own, and a named link otherwise.
+        -->
+        <div v-if="entry.attachment" class="mt-2">
+          <a
+            :href="entry.attachment.url"
+            target="_blank"
+            rel="noopener"
+            :title="$t('orders.timeline.open_attachment')"
+          >
+            <img
+              v-if="entry.attachment.is_image"
+              :src="entry.attachment.url"
+              :alt="entry.attachment.name || $t('orders.timeline.attachment')"
+              class="rounded border timeline-attachment"
+            />
+            <span v-else class="badge bg-light text-body border">
+              <i class="ri-attachment-2 align-bottom me-1"></i>
+              {{ entry.attachment.name || $t('orders.timeline.attachment') }}
+            </span>
+          </a>
+        </div>
+
         <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
           <span v-if="entry.is_system" class="badge bg-secondary-subtle text-secondary">
             <i class="ri-settings-3-line me-1"></i>{{ $t("orders.timeline.system") }}
@@ -79,3 +103,11 @@ const formatDate = (value) => (value ? new Date(value).toLocaleString() : "");
     </div>
   </div>
 </template>
+
+<style scoped>
+.timeline-attachment {
+  max-height: 8rem;
+  max-width: 100%;
+  object-fit: cover;
+}
+</style>

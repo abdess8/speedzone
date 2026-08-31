@@ -10,6 +10,7 @@ use App\Services\OrderLabelPdfService;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 beforeEach(function () {
     $this->seed([
@@ -63,14 +64,26 @@ test('the label endpoint serves an arabic order', function () {
         ->assertHeader('content-type', 'application/pdf');
 });
 
-test('the csv export opens as utf-8 so arabic survives the round trip', function () {
+test('the excel export carries arabic through the workbook unchanged', function () {
     $response = $this->actingAs($this->admin)->get(route('orders.export'));
 
-    $response->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
+    $response->assertOk()->assertHeader(
+        'content-type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
 
-    $csv = $response->streamedContent();
+    $path = tempnam(sys_get_temp_dir(), 'export').'.xlsx';
+    file_put_contents($path, $response->streamedContent());
 
-    expect($csv)->toStartWith("\u{FEFF}")
-        ->and($csv)->toContain('محمد العلمي')
-        ->and($csv)->toContain('الدار البيضاء');
+    $sheet = IOFactory::load($path)->getActiveSheet();
+
+    // Read back through a reader rather than grepping the archive: xlsx is a
+    // zip, so a string assertion would pass on compressed noise.
+    $values = collect($sheet->toArray())->flatten()->filter()->all();
+
+    expect($values)->toContain('محمد العلمي')
+        ->and($values)->toContain('الدار البيضاء')
+        ->and($values)->toContain('ARB-2026-000001');
+
+    unlink($path);
 });

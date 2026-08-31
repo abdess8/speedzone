@@ -121,24 +121,30 @@ class MoroccanLocaleFaker
         'تم إخبار الزبون بموعد التسليم.',
     ];
 
-    /** @var array<string, string> Arabic name of each city served. */
+    /** @var array<string, string> Arabic name of each city served, bare of any VILLE / REGION qualifier. */
     private array $arabicCities = [
-        'Casablanca' => 'الدار البيضاء',
-        'Rabat' => 'الرباط',
-        'Marrakech' => 'مراكش',
-        'Fès' => 'فاس',
-        'Tanger' => 'طنجة',
-        'Agadir' => 'أكادير',
-        'Meknès' => 'مكناس',
-        'Oujda' => 'وجدة',
-        'Kénitra' => 'القنيطرة',
-        'Tétouan' => 'تطوان',
-        'Safi' => 'آسفي',
-        'El Jadida' => 'الجديدة',
-        'Mohammedia' => 'المحمدية',
-        'Béni Mellal' => 'بني ملال',
-        'Nador' => 'الناظور',
-        'Salé' => 'سلا',
+        'AGADIR' => 'أكادير',
+        'AL HOCEIMA' => 'الحسيمة',
+        'BENI MELLAL' => 'بني ملال',
+        'BERRECHID' => 'برشيد',
+        'CASABLANCA' => 'الدار البيضاء',
+        'EL JADIDA' => 'الجديدة',
+        'FES' => 'فاس',
+        'KENITRA' => 'القنيطرة',
+        'KHENIFRA' => 'خنيفرة',
+        'KHOURIBGA' => 'خريبكة',
+        'LAAYOUNE' => 'العيون',
+        'MARRAKECH' => 'مراكش',
+        'MEKNES' => 'مكناس',
+        'NADOR' => 'الناظور',
+        'OUARZAZATE' => 'ورزازات',
+        'OUJDA' => 'وجدة',
+        'RABAT' => 'الرباط',
+        'SAFI' => 'آسفي',
+        'SALE' => 'سلا',
+        'SETTAT' => 'سطات',
+        'TANGER' => 'طنجة',
+        'TEMARA' => 'تمارة',
     ];
 
     /** @var array<int, string> */
@@ -260,9 +266,25 @@ class MoroccanLocaleFaker
         return $arabic ? $this->pick($this->arabicNotes) : $this->pick($this->latinNotes);
     }
 
+    /**
+     * The coverage grid splits a metropolis in two — "TANGER VILLE" for the
+     * boroughs, "TANGER REGION" for the towns around it — so the Arabic name is
+     * looked up on the bare city and the outskirts marked with نواحي.
+     */
     public function cityName(string $cityName, bool $arabic = false): string
     {
-        return $arabic ? ($this->arabicCities[$cityName] ?? $cityName) : $cityName;
+        if (! $arabic) {
+            return $cityName;
+        }
+
+        $bare = trim(str_ireplace(['REGION', 'VILLE'], '', $cityName));
+        $translated = $this->arabicCities[mb_strtoupper($bare)] ?? null;
+
+        if ($translated === null) {
+            return $cityName;
+        }
+
+        return stripos($cityName, 'REGION') === false ? $translated : 'نواحي '.$translated;
     }
 
     /**

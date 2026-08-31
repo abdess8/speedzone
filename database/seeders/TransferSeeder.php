@@ -18,8 +18,8 @@ class TransferSeeder extends Seeder
             return;
         }
 
-        $fromCity = City::query()->where('name', 'Casablanca')->first() ?? $cities->first();
-        $toCity = City::query()->where('name', 'Rabat')->first() ?? $cities->skip(1)->first();
+        $fromCity = City::query()->where('code', 'CASV')->first() ?? $cities->first();
+        $toCity = City::query()->where('code', 'RABV')->first() ?? $cities->skip(1)->first();
 
         $orders = Order::query()
             ->eligibleForTransfer($fromCity->id, $toCity->id)

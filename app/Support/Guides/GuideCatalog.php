@@ -66,6 +66,30 @@ final class GuideCatalog
             'permissions' => ['invoices.read.own', 'invoices.read.all'],
             'minutes' => 3,
         ],
+        'stock-catalog' => [
+            'route' => 'products.index',
+            'icon' => 'ri-archive-2-line',
+            'category' => 'stock',
+            // Not `stock.view`: the tour walks the reader through the creation
+            // form, and a reader who may only read the catalog would hit a
+            // screen with no "Create" button on the third step.
+            'permissions' => ['stock.create_product'],
+            'minutes' => 4,
+        ],
+        'stock-shipment' => [
+            'route' => 'stock-receptions.index',
+            'icon' => 'ri-truck-line',
+            'category' => 'stock',
+            'permissions' => ['stock.create_inbound'],
+            'minutes' => 4,
+        ],
+        'stock-inventory' => [
+            'route' => 'stock.inventory',
+            'icon' => 'ri-list-check-2',
+            'category' => 'stock',
+            'permissions' => ['stock.adjust'],
+            'minutes' => 4,
+        ],
         'stores-manage' => [
             'route' => 'stores.index',
             'icon' => 'ri-store-2-line',

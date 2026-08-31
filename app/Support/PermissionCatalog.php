@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Enums\NotificationType;
+
 class PermissionCatalog
 {
     /**
@@ -11,6 +13,7 @@ class PermissionCatalog
     {
         return array_merge(
             self::adminPermissions(),
+            self::dashboardPermissions(),
             self::orderPermissions(),
             self::pickupRequestPermissions(),
             self::transferPermissions(),
@@ -24,8 +27,114 @@ class PermissionCatalog
             self::driverZonePermissions(),
             self::partnerPermissions(),
             self::storePermissions(),
-            self::teamPermissions()
+            self::teamPermissions(),
+            self::stockPermissions(),
+            self::ecommerceIntegrationPermissions(),
+            self::notificationPermissions(),
+            self::statusTransitionPermissions()
         );
+    }
+
+    /**
+     * One grant per notification topic: who the announcement concerns.
+     *
+     * Inside the seller ceiling, because which of his employees is told that an
+     * invoice was issued is the account owner's call, not ours.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    public static function notificationPermissions(): array
+    {
+        return array_map(
+            static fn (NotificationType $type) => self::make(
+                NotificationPermissions::for($type),
+                'notifications',
+                'receive',
+                $type->value,
+                'resource'
+            ),
+            NotificationType::cases()
+        );
+    }
+
+    /**
+     * One grant per `source status → target status` edge, for both orders and
+     * returns.
+     *
+     * Derived from the transition graphs rather than listed, so an edge added
+     * to a graph becomes manageable by the administrator on the next seed
+     * instead of silently escaping the bulk-edit matrix.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    public static function statusTransitionPermissions(): array
+    {
+        return StatusTransitionPermissions::catalog();
+    }
+
+    /**
+     * Plugging a vendor's own shop (Shopify, YouCan, WooCommerce, PrestaShop)
+     * into the platform.
+     *
+     * Inside the seller ceiling: the shop is the vendor's, and whether the
+     * person who runs his back office may connect it is his call. Reading is
+     * split from managing because the credentials are the sensitive half —
+     * seeing that a store is connected is not.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    public static function ecommerceIntegrationPermissions(): array
+    {
+        return [
+            self::make(EcommerceIntegrationPermissions::READ, 'integrations', 'read', null, 'resource'),
+            self::make(EcommerceIntegrationPermissions::MANAGE, 'integrations', 'manage', null, 'resource'),
+        ];
+    }
+
+    /**
+     * Dashboard panels, one grant per family of widgets.
+     *
+     * All of them are read-only and all of them are inside the seller ceiling:
+     * whether a warehouse employee sees the shop's turnover next to the parcels
+     * he has to pack is the account owner's decision, not ours.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    public static function dashboardPermissions(): array
+    {
+        return [
+            self::make(DashboardPermissions::VIEW, 'dashboard', 'view', null, 'resource'),
+            self::make(DashboardPermissions::VIEW_FINANCIALS, 'dashboard', 'view_financials', null, 'resource'),
+            self::make(DashboardPermissions::VIEW_OPERATIONS, 'dashboard', 'view_operations', null, 'resource'),
+            self::make(DashboardPermissions::VIEW_PERFORMANCE, 'dashboard', 'view_performance', null, 'resource'),
+            self::make(DashboardPermissions::VIEW_CUSTOMERS, 'dashboard', 'view_customers', null, 'resource'),
+            self::make(DashboardPermissions::VIEW_NETWORK, 'dashboard', 'view_network', null, 'resource'),
+        ];
+    }
+
+    /**
+     * Vendor fulfilment: catalog, inbound shipments, inventory.
+     *
+     * The five vendor grants are inside the seller ceiling — delegating them to
+     * a warehouse employee is the point of the module. The three hub grants are
+     * not: collecting stock from a shop, counting it in at the depot and auditing
+     * every vendor's movements are our operations on someone else's goods.
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    public static function stockPermissions(): array
+    {
+        return [
+            self::make(StockPermissions::VIEW, 'stock', 'view', null, 'resource'),
+            self::make(StockPermissions::CREATE_PRODUCT, 'stock', 'create_product', null, 'resource'),
+            self::make(StockPermissions::IMPORT_PRODUCTS, 'stock', 'import_products', null, 'resource'),
+            self::make(StockPermissions::CREATE_INBOUND, 'stock', 'create_inbound', null, 'resource'),
+            self::make(StockPermissions::ADJUST, 'stock', 'adjust', null, 'resource'),
+            self::make(StockPermissions::ORDERS_CREATE_WITH_STOCK, 'orders', 'create_with_stock', null, 'resource'),
+            self::make(StockPermissions::COLLECT_INBOUND, 'stock', 'collect_inbound', null, 'resource'),
+            self::make(StockPermissions::RECEIVE_INBOUND, 'stock', 'receive_inbound', null, 'resource'),
+            self::make(StockPermissions::ADMIN_OVERRIDE, 'stock', 'admin_override', null, 'admin'),
+        ];
     }
 
     /**
@@ -123,6 +232,10 @@ class PermissionCatalog
             self::make('orders.delete.all', 'orders', 'delete', 'all', 'resource'),
             self::make('orders.export', 'orders', 'export', null, 'resource'),
             self::make('orders.print', 'orders', 'print', null, 'resource'),
+            // Picking and packing a stock order at the depot. There is no
+            // matching grant for AWAITING_PREPARATION: that status is stamped at
+            // creation, never chosen.
+            self::make('orders.transition.to_prepared', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_pickup_requested', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_waiting_pickup', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_picked_up', 'orders', 'transition', null, 'workflow_transition'),
@@ -134,6 +247,7 @@ class PermissionCatalog
             self::make('orders.transition.to_out_for_delivery', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_delivered', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_failed', 'orders', 'transition', null, 'workflow_transition'),
+            self::make('orders.transition.to_ready_to_return', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_rejected', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_canceled', 'orders', 'transition', null, 'workflow_transition'),
             self::make('orders.transition.to_returned', 'orders', 'transition', null, 'workflow_transition'),
@@ -184,6 +298,14 @@ class PermissionCatalog
             self::make('returns.manage', 'returns', 'manage', null, 'resource'),
             self::make('returns.update_status', 'returns', 'update_status', null, 'resource'),
             self::make('returns.edit_customer_data', 'returns', 'edit_customer_data', null, 'resource'),
+            // Per-step grants, so a hub manager can stamp arrivals without also
+            // being able to close the return at the seller's door. The blanket
+            // `returns.update_status` still satisfies all of them.
+            self::make('returns.transition.to_received_at_hub', 'returns', 'transition', null, 'workflow_transition'),
+            self::make('returns.transition.to_in_transit_to_depot', 'returns', 'transition', null, 'workflow_transition'),
+            self::make('returns.transition.to_arrived_vendor_hub', 'returns', 'transition', null, 'workflow_transition'),
+            self::make('returns.transition.to_in_delivery_to_vendor', 'returns', 'transition', null, 'workflow_transition'),
+            self::make('returns.transition.to_delivered_to_vendor', 'returns', 'transition', null, 'workflow_transition'),
         ];
     }
 
@@ -265,6 +387,11 @@ class PermissionCatalog
     }
 
     /**
+     * Sector pricing is read by everyone who books a delivery, but the driver
+     * payout is not part of that conversation: a vendor reading `sectors.read`
+     * must not learn what we pay the man who carries his parcel. The payout is
+     * therefore split off into its own grant.
+     *
      * @return array<int, array<string, string|null>>
      */
     public static function sectorPermissions(): array
@@ -272,6 +399,7 @@ class PermissionCatalog
         return [
             self::make('sectors.create', 'sectors', 'create', null, 'admin'),
             self::make('sectors.read', 'sectors', 'read', null, 'admin'),
+            self::make('sectors.read_driver_price', 'sectors', 'read_driver_price', null, 'admin'),
             self::make('sectors.update', 'sectors', 'update', null, 'admin'),
             self::make('sectors.delete', 'sectors', 'delete', null, 'admin'),
         ];

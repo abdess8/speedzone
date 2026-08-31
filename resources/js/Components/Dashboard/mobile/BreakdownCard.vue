@@ -34,9 +34,12 @@ const palette = getChartColorsArray(
 /**
  * ApexCharts puts the arc gap colour on an SVG attribute, where `var()` never
  * resolves — so the theme's card background is read once, here, as a literal.
+ * It comes from `--vz-secondary-bg` rather than `--vz-card-bg`: the latter is
+ * declared as an indirection, and `getPropertyValue` hands back the `var(…)`
+ * text rather than the colour it points at.
  */
 const arcGapColor =
-  getComputedStyle(document.documentElement).getPropertyValue('--vz-card-bg').trim() || '#fff';
+  getComputedStyle(document.documentElement).getPropertyValue('--vz-secondary-bg').trim() || '#fff';
 
 const activeTab = ref(props.tabs[0]?.key ?? '');
 

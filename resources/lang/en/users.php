@@ -18,9 +18,14 @@ return [
         'full_name' => 'Full Name',
         'email' => 'Email',
         'phone' => 'Phone',
+        'city' => 'City',
         'cin' => 'CIN',
         'ice' => 'ICE',
         'role' => 'Role',
+    ],
+    'team' => [
+        'sub_users' => 'Sub-users',
+        'toggle' => 'Show or hide the sub-users of :name',
     ],
     'show' => [
         'info' => 'Information',
@@ -91,6 +96,7 @@ return [
         'cin_front_attachment' => 'CIN (Front)',
         'cin_back_attachment' => 'CIN (Back)',
         'current_file' => 'Current file',
+        'current_documents' => 'Current documents',
         'replace_file' => 'Upload to replace',
         'sectors_info' => 'Sector and city',
         'sectors_description' => 'Select the delivery sectors this driver should serve.',

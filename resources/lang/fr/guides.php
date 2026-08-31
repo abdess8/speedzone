@@ -38,6 +38,7 @@ return [
         'returns' => 'Retours',
         'invoices' => 'Facturation',
         'finance' => 'Caisse',
+        'stock' => 'Stock',
         'stores' => 'Boutiques',
         'team' => 'Équipe',
         'settings' => 'Réglages',
@@ -115,6 +116,21 @@ return [
             'title' => 'Lire vos factures',
             'summary' => 'Comprenez une facture ligne par ligne : période, montants livrés, frais de livraison et de retour, net à percevoir et export PDF.',
             'audience' => 'Vendeur, Administrateur',
+        ],
+        'stock_catalog' => [
+            'title' => 'Gérer votre catalogue produits',
+            'summary' => 'Créez une référence de bout en bout : nom et code-barres, prix de vente et prix d\'achat, poids et dimensions, photo. Vous verrez aussi comment lire les indicateurs de rupture et importer un catalogue entier depuis Excel.',
+            'audience' => 'Vendeur, Équipe',
+        ],
+        'stock_shipment' => [
+            'title' => 'Envoyer du stock au dépôt',
+            'summary' => 'Préparez un bon d\'envoi : produits et quantités, dépôt de destination, date d\'expédition. Vous suivrez ensuite la collecte chez vous et le comptage à l\'arrivée.',
+            'audience' => 'Vendeur, Équipe',
+        ],
+        'stock_inventory' => [
+            'title' => 'Faire l\'inventaire de votre stock',
+            'summary' => 'Comptez vos références en une seule passe : saisie au clavier ou au scanner, écarts calculés en direct, motif obligatoire sur chaque correction et traçabilité complète sur la fiche produit.',
+            'audience' => 'Vendeur, Équipe',
         ],
         'stores_manage' => [
             'title' => 'Ajouter et changer de boutique',
@@ -299,6 +315,130 @@ return [
             'done' => [
                 'title' => 'Vous savez lire une facture !',
                 'body' => 'En cas d\'écart sur un montant, ouvrez un ticket de support en citant le numéro de facture et la commande concernée.',
+            ],
+        ],
+
+        'stock_catalog' => [
+            'welcome' => [
+                'title' => 'Votre catalogue produits',
+                'body' => 'Le catalogue est la liste de ce que vous vendez. Une fois vos références créées, vous composerez vos commandes en les choisissant au lieu de saisir un montant à la main.',
+            ],
+            'summary' => [
+                'title' => 'L\'état de votre stock en un coup d\'œil',
+                'body' => 'Nombre de références, unités disponibles, ruptures et stocks bas, valeur totale. C\'est la ligne à regarder en arrivant : elle vous dit s\'il faut réapprovisionner avant même de lire le tableau.',
+            ],
+            'list' => [
+                'title' => 'Retrouver une référence',
+                'body' => 'Recherchez par nom, référence ou code-barres, ou filtrez par catégorie et par niveau de stock. Un produit archivé disparaît des ventes sans être supprimé : son historique reste consultable.',
+            ],
+            'create' => [
+                'title' => 'Créez votre première référence',
+                'body' => 'Chaque produit vendu depuis votre stock a besoin d\'une fiche. C\'est elle qui porte le prix, le code-barres et les dimensions utilisés partout ailleurs.',
+                'hint' => 'Cliquez sur « Nouveau produit » pour ouvrir le formulaire.',
+            ],
+            'identity' => [
+                'title' => 'L\'identité du produit',
+                'body' => 'Seul le nom est obligatoire : laissez la référence vide et nous la générons pour vous. Le code-barres, lui, est ce qui permet de scanner le produit à la préparation et à l\'inventaire — renseignez-le si vos articles en portent un.',
+            ],
+            'pricing' => [
+                'title' => 'Prix de vente et prix d\'achat',
+                'body' => 'Le prix de vente est repris automatiquement quand vous ajoutez le produit à une commande. Le prix d\'achat reste privé : il ne sert qu\'à calculer la marge affichée juste en dessous.',
+            ],
+            'logistics' => [
+                'title' => 'Fragilité, poids et dimensions',
+                'body' => 'Un produit signalé fragile transmet l\'alerte au livreur sur chaque commande qui le contient. Poids et dimensions sont facultatifs, mais ce sont eux qui permettent d\'estimer un colis avant de l\'expédier.',
+            ],
+            'media' => [
+                'title' => 'La photo et l\'état du produit',
+                'body' => 'Une photo rend la référence reconnaissable en un coup d\'œil dans les listes et à la préparation. L\'interrupteur en bas retire le produit de la vente sans toucher à son stock ni à son historique.',
+            ],
+            'submit' => [
+                'title' => 'Enregistrez la fiche',
+                'body' => 'Notez que la quantité en stock ne se saisit pas ici : elle est le résultat des mouvements. Un produit naît à zéro et se remplit par une réception au dépôt ou par un inventaire.',
+                'hint' => 'Enregistrez le produit pour continuer.',
+            ],
+            'import' => [
+                'title' => 'Importer tout un catalogue',
+                'body' => 'Pour démarrer avec des dizaines de références, ne les saisissez pas une à une : téléchargez le modèle Excel, remplissez-le et importez-le. Les colonnes sont reconnues automatiquement et vous corrigez les erreurs avant de valider.',
+            ],
+            'done' => [
+                'title' => 'Votre catalogue est lancé !',
+                'body' => 'Prochaine étape : faire entrer la marchandise. Le guide « Envoyer du stock au dépôt » vous montre comment déclarer un envoi et suivre son arrivée.',
+            ],
+        ],
+
+        'stock_shipment' => [
+            'welcome' => [
+                'title' => 'Envoyer du stock au dépôt',
+                'body' => 'Vos produits sont stockés chez nous avant d\'être livrés. Un bon d\'envoi déclare ce que vous expédiez : c\'est le document que le collecteur comptera chez vous, puis le dépôt à l\'arrivée.',
+            ],
+            'create' => [
+                'title' => 'Créez un bon d\'envoi',
+                'body' => 'Cette page liste vos envois passés et en cours, avec ce qui a été déclaré, collecté et réellement reçu. Créons-en un nouveau.',
+                'hint' => 'Cliquez sur « Nouvel envoi » pour ouvrir le formulaire.',
+            ],
+            'items' => [
+                'title' => 'Ce que contient l\'envoi',
+                'body' => 'Recherchez par nom, référence ou code-barres, puis indiquez la quantité expédiée. Les produits en rupture apparaissent aussi : envoyer du stock est justement ce qu\'on fait pour une étagère vide. La note par ligne sert à signaler un lot ou un défaut.',
+            ],
+            'shipping' => [
+                'title' => 'Destination et date',
+                'body' => 'Le dépôt de destination est celui où votre marchandise sera entreposée. Vous ne le choisissez qu\'au premier envoi : les suivants y sont rattachés automatiquement. Les notes d\'expédition sont lues par le collecteur.',
+            ],
+            'submit' => [
+                'title' => 'Brouillon ou demande de collecte',
+                'body' => 'Deux sorties : le brouillon reste modifiable, la demande de collecte fige les quantités parce que c\'est ce document que le collecteur comptera face à vous.',
+                'hint' => 'Enregistrez l\'envoi pour continuer.',
+            ],
+            'actions' => [
+                'title' => 'Faire avancer l\'envoi',
+                'body' => 'Tant qu\'il est en brouillon, l\'envoi se modifie et « Demander la collecte » le met en file d\'attente. Un livreur passera compter les colis chez vous avant de les acheminer au dépôt.',
+            ],
+            'timeline' => [
+                'title' => 'Suivre l\'arrivée',
+                'body' => 'Chaque étape est horodatée et signée : collecte chez vous, acheminement, comptage au dépôt. Votre stock n\'est crédité qu\'à la validation finale, sur les quantités réellement comptées à l\'arrivée — pas sur celles déclarées au départ.',
+            ],
+            'done' => [
+                'title' => 'Envoi enregistré !',
+                'body' => 'Vous suivrez son avancement depuis la liste des envois. En cas d\'écart entre déclaré et reçu, la fiche vous dit exactement où il se situe.',
+                'cta' => 'Voir mes envois',
+            ],
+        ],
+
+        'stock_inventory' => [
+            'welcome' => [
+                'title' => 'Faire l\'inventaire',
+                'body' => 'Un inventaire compare ce que le système croit avoir avec ce qu\'il y a réellement sur l\'étagère. Tout se fait sur une seule feuille : on compte, on justifie les écarts, on enregistre.',
+            ],
+            'summary' => [
+                'title' => 'Le point de départ',
+                'body' => 'Les références et les unités que le système enregistre aujourd\'hui, et la valeur que cela représente. C\'est le chiffre que votre comptage va confirmer ou corriger.',
+            ],
+            'filters' => [
+                'title' => 'Comptez par zone',
+                'body' => 'Un inventaire complet se fait rarement d\'un bloc. Filtrez sur une catégorie ou sur une recherche pour ne voir que l\'étagère devant vous : vos comptages déjà saisis sont conservés quand vous changez de filtre ou de page.',
+            ],
+            'sheet' => [
+                'title' => 'La feuille de comptage',
+                'body' => 'Trois colonnes : ce qui est enregistré, ce que vous comptez, l\'écart calculé en direct. Sur ordinateur, Entrée et les flèches descendent la colonne — la feuille entière se remplit sans lâcher le clavier ni toucher la souris.',
+            ],
+            'match_all' => [
+                'title' => 'Tout est conforme ?',
+                'body' => 'Ce bouton recopie le stock enregistré sur toutes les lignes encore vides. Pratique pour finir une zone où rien n\'a bougé : une ligne comptée sans écart est tracée, mais ne crée aucun mouvement de stock.',
+            ],
+            'reason' => [
+                'title' => 'Un écart demande un motif',
+                'body' => 'Saisissez un comptage différent du stock enregistré : la colonne « Motif » s\'ouvre et devient obligatoire. Casse, vol, erreur de saisie, retour non enregistré — c\'est ce motif qui rendra l\'écart lisible dans six mois.',
+                'hint' => 'Saisissez une quantité différente du stock enregistré sur une ligne.',
+            ],
+            'save' => [
+                'title' => 'Enregistrez le comptage',
+                'body' => 'La barre reste sous la main tant qu\'il y a des lignes en attente. À l\'enregistrement, seuls les écarts corrigent le stock — et chaque ligne comptée est tracée sur la fiche produit avec votre nom, l\'heure, la machine utilisée et, si votre navigateur l\'autorise, votre position.',
+            ],
+            'done' => [
+                'title' => 'Vous savez inventorier !',
+                'body' => 'Retrouvez chaque comptage dans l\'onglet « Inventaires » de la fiche produit, et chaque correction dans l\'historique des mouvements. Rien n\'est modifiable après coup : c\'est ce qui donne sa valeur à la trace.',
+                'cta' => 'Voir mon catalogue',
             ],
         ],
 

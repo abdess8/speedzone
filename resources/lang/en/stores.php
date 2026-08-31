@@ -36,6 +36,7 @@ return [
         'contact_phone' => 'Phone',
         'contact_email' => 'Email',
         'city' => 'City',
+        'stock_hub_city' => 'Stock depot city',
         'address' => 'Address',
         'pickup_address_1' => 'Pickup address 1',
         'pickup_address_2' => 'Pickup address 2',
@@ -51,6 +52,9 @@ return [
         'category_placeholder' => 'e.g. Cosmetics',
         'logo_hint' => 'PNG, JPG or WEBP — 2 MB max. A square format prints best on thermal labels.',
         'default_hint' => 'The default store is the one offered first at login.',
+        'fulfilment' => 'Stock and preparation',
+        'fulfilment_hint' => 'The depot holding this store\'s stock. It is also the city orders picked from your catalog ship out of.',
+        'no_stock_hub' => 'No depot — I do not warehouse with you',
     ],
 
     'delete_confirm_title' => 'Delete this store?',
@@ -65,5 +69,6 @@ return [
 
     'errors' => [
         'not_accessible' => 'You do not have access to this store.',
+        'depot_not_empty' => 'The depot cannot be changed: :units unit(s) are still held in the current one. Sell out or count down that stock before moving.',
     ],
 ];

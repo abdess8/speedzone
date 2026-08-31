@@ -9,6 +9,7 @@ const form = useForm({
   code: "",
   region: "",
   is_active: true,
+  is_stock_hub: false,
 });
 
 const submit = () => {

@@ -7,9 +7,12 @@ return [
     'clear_filters' => 'Effacer les filtres',
     'apply_filters' => 'Appliquer les filtres',
     'apply' => 'Appliquer',
+    'refresh' => 'Actualiser',
     'search' => 'Rechercher',
+    'settings' => 'Réglages',
     'select' => 'Sélectionner',
     'status' => 'Statut',
+    'type' => 'Type',
     'all' => 'Tous',
     'all_statuses' => 'Tous les statuts',
     'none' => 'Aucune',
@@ -23,6 +26,7 @@ return [
     'view' => 'Voir',
     'edit' => 'Modifier',
     'delete' => 'Supprimer',
+    'download' => 'Télécharger',
     'cancel' => 'Annuler',
     'back' => 'Retour',
     'close' => 'Fermer',
@@ -49,4 +53,9 @@ return [
     'no_notifications' => 'Vous n\'avez aucune notification',
     'unread_messages' => 'messages non lus',
     'chat' => 'Messages',
+
+    'scanner' => [
+        'sound_on' => 'Activer le son du scan',
+        'sound_off' => 'Couper le son du scan',
+    ],
 ];

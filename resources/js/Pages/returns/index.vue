@@ -10,15 +10,21 @@ import EntityLink from "@/Components/EntityLink.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import FilterPanel from "@/Components/FilterPanel.vue";
 import StatusPills from "@/Components/StatusPills.vue";
+import StatusKpiCards from "@/Components/StatusKpiCards.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
+import SortableTh from "@/Components/SortableTh.vue";
 import { useGuideSignals } from "@/composables/useGuideSignals";
+import { useTableSort } from "@/composables/useTableSort";
+import { useBulkStatusAccess } from "@/composables/useBulkStatusAccess";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
+const { canBulkEditReturns } = useBulkStatusAccess();
 
 const props = defineProps({
   returns: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
+  stats: { type: Array, default: () => [] },
   filters: { type: Object, default: () => ({}) },
   filterOptions: { type: Object, default: () => ({}) },
   can: { type: Object, default: () => ({}) },
@@ -72,7 +78,7 @@ const sheetRows = (row) => [
 ];
 
 const query = () => {
-  const params = { per_page: perPage.value };
+  const params = { per_page: perPage.value, sort: sort.value, direction: direction.value };
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== "" && value !== null) params[key] = value;
   });
@@ -86,6 +92,8 @@ const reload = () => {
     replace: true,
   });
 };
+
+const { sort, direction, sortBy } = useTableSort(props.filters, reload);
 
 const applyFilters = () => reload();
 const resetFilters = () => {
@@ -117,6 +125,13 @@ onMounted(() => {
   <Layout>
     <PageHeader :title="$t('returns.title')" :pageTitle="$t('returns.page_title')" />
 
+    <StatusKpiCards
+      :stats="stats"
+      :model-value="filters.status"
+      :all-label="$t('common.all_statuses')"
+      @select="selectStatus"
+    />
+
     <BCard no-body>
       <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
         <template #title>
@@ -124,6 +139,20 @@ onMounted(() => {
         </template>
 
         <template #actions>
+          <Link
+            v-if="canBulkEditReturns"
+            :href="route('bulk-status.index', { entity_type: 'RETURN' })"
+            class="btn btn-soft-secondary"
+            :title="$t('bulk_status.menu')"
+            :aria-label="$t('bulk_status.menu')"
+          >
+            <i class="ri-list-check-3 align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('bulk_status.menu') }}</span>
+          </Link>
+          <Link v-if="can.hand_back" :href="route('returns.hand-back')" class="btn btn-soft-success">
+            <i class="ri-e-bike-2-line align-bottom"></i>
+            <span class="d-none d-sm-inline ms-1">{{ $t('returns.hand_back.open') }}</span>
+          </Link>
           <button v-if="can.scan" type="button" class="btn btn-soft-primary" @click="showQrScanner = true">
             <i class="ri-qr-scan-2-line align-bottom"></i>
             <span class="d-none d-sm-inline ms-1">{{ $t('returns.qr_scan') }}</span>
@@ -211,20 +240,39 @@ onMounted(() => {
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light">
               <tr>
-                <th>{{ $t('returns.table.reference') }}</th>
-                <th>{{ $t('returns.table.order_tracking') }}</th>
-                <th>{{ $t('returns.table.customer') }}</th>
-                <th>{{ $t('returns.table.seller') }}</th>
-                <th>{{ $t('returns.table.reason') }}</th>
-                <th>{{ $t('returns.table.status') }}</th>
-                <th>{{ $t('returns.table.current_city') }}</th>
-                <th>{{ $t('returns.table.created') }}</th>
+                <SortableTh field="reference" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.reference') }}
+                </SortableTh>
+                <SortableTh field="order_tracking" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.order_tracking') }}
+                </SortableTh>
+                <SortableTh field="customer" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.customer') }}
+                </SortableTh>
+                <SortableTh field="seller" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.seller') }}
+                </SortableTh>
+                <SortableTh field="reason" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.reason') }}
+                </SortableTh>
+                <SortableTh field="status" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.status') }}
+                </SortableTh>
+                <SortableTh field="driver" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.hand_back.driver') }}
+                </SortableTh>
+                <SortableTh field="current_city" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.current_city') }}
+                </SortableTh>
+                <SortableTh field="created_at" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('returns.table.created') }}
+                </SortableTh>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="rows.length === 0">
-                <td colspan="9" class="text-center text-muted py-4">{{ $t('returns.empty') }}</td>
+                <td colspan="10" class="text-center text-muted py-4">{{ $t('returns.empty') }}</td>
               </tr>
               <tr v-for="row in rows" :key="row.id">
                 <td><span class="fw-medium">{{ row.reference }}</span></td>
@@ -240,6 +288,10 @@ onMounted(() => {
                 <td>{{ row.reason_label }}</td>
                 <td>
                   <span class="badge" :class="`bg-${row.status_color}-subtle text-${row.status_color}`">{{ row.status_label }}</span>
+                </td>
+                <td>
+                  <UserAvatar v-if="row.assigned_driver" :user="row.assigned_driver" :size="24" clickable show-name />
+                  <span v-else class="text-muted">{{ $t('returns.hand_back.unassigned') }}</span>
                 </td>
                 <td>{{ row.current_location_city?.name || '—' }}</td>
                 <td>{{ formatDate(row.created_at) }}</td>

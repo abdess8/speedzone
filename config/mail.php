@@ -100,9 +100,13 @@ return [
     |
     */
 
+    // The sender falls back to the authenticated SMTP account — which is what
+    // Gmail rewrites the header to anyway — and then to a fixed address, so an
+    // unconfigured mailbox degrades delivery instead of throwing "an email must
+    // have a From header" in the middle of a registration.
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS') ?: (env('MAIL_USERNAME') ?: 'no-reply@speedzoneexpress.ma'),
+        'name' => env('MAIL_FROM_NAME') ?: env('APP_NAME', 'Speed Zone'),
     ],
 
     /*

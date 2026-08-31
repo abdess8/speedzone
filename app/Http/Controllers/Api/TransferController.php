@@ -70,7 +70,9 @@ class TransferController extends Controller
             $request->integer('to_city_id'),
             $request->input('order_ids', []),
             $request->input('notes'),
-            $request->input('assigned_to')
+            $request->input('assigned_to'),
+            $request->contentType(),
+            $request->input('return_ids', []),
         );
 
         return TransferResource::make($transfer)
@@ -91,6 +93,7 @@ class TransferController extends Controller
             'orders.sector',
             'orders.seller.roles',
             'orders.seller.city',
+            'orders.stockHubCity',
             'statusHistories.changedBy.roles',
         ]);
 

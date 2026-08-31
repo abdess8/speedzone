@@ -18,7 +18,10 @@ class StoreReturnRequest extends FormRequest
             return false;
         }
 
-        return $user->canCreateReturnRequest() || $user->canCreateDriverReturn();
+        return $user->canCreateReturnRequest()
+            || $user->canCreateDriverReturn()
+            // Back-office staff opening one for a seller who called in.
+            || $user->hasPermission('returns.manage');
     }
 
     /**

@@ -13,11 +13,11 @@ use App\Enums\ReturnStatus;
 use App\Enums\SellerPaymentMethod;
 use App\Enums\TransferStatus;
 use App\Models\City;
+use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\OrderReturn;
 use App\Models\PickupRequest;
 use App\Models\Role;
-use App\Models\Sector;
 use App\Models\User;
 use App\Services\InvoiceGeneratorService;
 use App\Services\PickupReferenceGenerator;
@@ -137,9 +137,6 @@ class FakeMoroccanDataSeeder extends Seeder
             return;
         }
 
-        $this->ensureSectorReturnPrices();
-        $cities = $cities->fresh(['sectors' => fn ($q) => $q->where('is_active', true)]);
-
         $admin = User::query()->where('email', 'superadmin@speedzone.ma')->first()
             ?? User::query()->whereHas('roles', fn ($q) => $q->where('name', Role::ADMIN))->first();
 
@@ -171,23 +168,7 @@ class FakeMoroccanDataSeeder extends Seeder
         $this->command?->info('  Orders:            +'.(Order::query()->count() - $before['orders']));
         $this->command?->info('  Pickup requests:   +'.(PickupRequest::query()->count() - $before['pickups']));
         $this->command?->info('  Returns:           +'.(OrderReturn::query()->count() - $before['returns']));
-        $this->command?->info('  Invoices total:    '.\App\Models\Invoice::query()->count());
-    }
-
-    /**
-     * Make sure every active sector carries a sensible return fee so returned
-     * orders contribute a non-zero charge on invoices.
-     */
-    private function ensureSectorReturnPrices(): void
-    {
-        Sector::query()
-            ->where(fn ($q) => $q->whereNull('return_price')->orWhere('return_price', '<=', 0))
-            ->get()
-            ->each(function (Sector $sector): void {
-                $delivery = (float) $sector->delivery_price;
-                $base = $delivery > 0 ? $delivery * 0.6 : random_int(1500, 3500) / 100;
-                $sector->forceFill(['return_price' => round($base, 2)])->save();
-            });
+        $this->command?->info('  Invoices total:    '.Invoice::query()->count());
     }
 
     /**
@@ -305,7 +286,7 @@ class FakeMoroccanDataSeeder extends Seeder
             $order = $this->makeOrder($seller, $admin, $cities->random());
             $this->walkTo($order, $this->pick([OrderStatus::DELIVERED, OrderStatus::FAILED]), $admin);
             // Most returns complete (order RETURNED -> billable); one stays mid-flow.
-            $target = $i === 0 ? ReturnStatus::IN_TRANSIT_TO_DEPOT : ReturnStatus::DELIVERED_TO_SELLER;
+            $target = $i === 0 ? ReturnStatus::IN_TRANSIT_TO_DEPOT : ReturnStatus::DELIVERED_TO_VENDOR;
             $this->makeReturn($order, $admin, $target);
         }
 
@@ -503,10 +484,11 @@ class FakeMoroccanDataSeeder extends Seeder
         $order->recordStatus(OrderStatus::RETURN_REQUESTED, $admin, "Retour {$return->reference} créé.", returnId: $return->id);
 
         $flow = [
+            ReturnStatus::RECEIVED_AT_HUB,
             ReturnStatus::IN_TRANSIT_TO_DEPOT,
-            ReturnStatus::RECEIVED_AT_DEPOT,
-            ReturnStatus::IN_TRANSIT_TO_SELLER,
-            ReturnStatus::DELIVERED_TO_SELLER,
+            ReturnStatus::ARRIVED_VENDOR_HUB,
+            ReturnStatus::IN_DELIVERY_TO_VENDOR,
+            ReturnStatus::DELIVERED_TO_VENDOR,
         ];
 
         foreach ($flow as $status) {
@@ -524,8 +506,8 @@ class FakeMoroccanDataSeeder extends Seeder
         $return->recordStatus($to, $admin, $from, "Retour : {$to->label()}.");
 
         $orderStatus = match ($to) {
-            ReturnStatus::IN_TRANSIT_TO_DEPOT => OrderStatus::RETURN_IN_PROGRESS,
-            ReturnStatus::DELIVERED_TO_SELLER => OrderStatus::RETURNED,
+            ReturnStatus::RECEIVED_AT_HUB => OrderStatus::RETURN_IN_PROGRESS,
+            ReturnStatus::DELIVERED_TO_VENDOR => OrderStatus::RETURNED,
             default => null,
         };
 
@@ -534,7 +516,7 @@ class FakeMoroccanDataSeeder extends Seeder
         }
 
         $updates = ['status' => $orderStatus->value];
-        if ($to === ReturnStatus::DELIVERED_TO_SELLER) {
+        if ($to === ReturnStatus::DELIVERED_TO_VENDOR) {
             $updates['is_returned'] = true;
         }
 
@@ -615,7 +597,7 @@ class FakeMoroccanDataSeeder extends Seeder
      */
     private function randomiseInvoiceStatuses(User $admin): void
     {
-        $invoices = \App\Models\Invoice::query()
+        $invoices = Invoice::query()
             ->where('status', InvoiceStatus::GENERATED->value)
             ->get();
 

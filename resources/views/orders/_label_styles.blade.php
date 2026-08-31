@@ -98,30 +98,6 @@
         padding-top: 3px;
     }
 
-    /* Collection band ------------------------------------------------------ */
-    .collect {
-        margin-top: 7px;
-        background: #1E3A5C;
-        border-radius: 4px;
-        color: #FFFFFF;
-        padding: 6px 8px 7px;
-        text-align: center;
-    }
-    .collect.paid { background: #33556F; }
-    .collect-title {
-        font-size: 16px;
-        font-weight: bold;
-        letter-spacing: 0.6px;
-    }
-    .collect-sub { font-size: 10.5px; padding-top: 2px; }
-    .collect-amount {
-        font-size: 11px;
-        margin-top: 5px;
-        padding-top: 5px;
-        border-top: 1px solid #6E88A5;
-    }
-    .collect-amount strong { font-size: 12.5px; }
-
     /* Order details -------------------------------------------------------- */
     .details { margin-top: 7px; }
     .details-title {
@@ -148,10 +124,11 @@
     .totals {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 7px;
-        border-top: 1px solid #D5DDE6;
+        margin-top: 8px;
+        border: 1px solid #BFD2E4;
+        border-radius: 4px;
     }
-    .totals td { vertical-align: middle; padding: 6px 0 0; }
+    .totals td { vertical-align: middle; padding: 7px 8px; }
     .totals-label { font-size: 8.5px; color: #5A6B80; padding-bottom: 3px; }
     .pay-icon { width: 20px; }
     .pay-name { font-size: 14px; font-weight: bold; padding-left: 4px; }
@@ -161,8 +138,7 @@
         font-weight: bold;
         letter-spacing: 0.5px;
     }
-    .amount-value { font-size: 14px; font-weight: bold; }
-    .amount-paid { font-size: 13px; font-weight: bold; }
+    .amount-value { font-size: 17px; font-weight: bold; }
 
     /* Flags ---------------------------------------------------------------- */
     .flags { text-align: right; padding-top: 5px; }

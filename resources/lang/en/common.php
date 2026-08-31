@@ -7,9 +7,12 @@ return [
     'clear_filters' => 'Clear filters',
     'apply_filters' => 'Apply Filters',
     'apply' => 'Apply',
+    'refresh' => 'Refresh',
     'search' => 'Search',
+    'settings' => 'Settings',
     'select' => 'Select',
     'status' => 'Status',
+    'type' => 'Type',
     'all' => 'All',
     'all_statuses' => 'All statuses',
     'none' => 'None',
@@ -23,6 +26,7 @@ return [
     'view' => 'View',
     'edit' => 'Edit',
     'delete' => 'Delete',
+    'download' => 'Download',
     'cancel' => 'Cancel',
     'back' => 'Back',
     'close' => 'Close',
@@ -49,4 +53,9 @@ return [
     'no_notifications' => 'You have no notifications',
     'unread_messages' => 'unread messages',
     'chat' => 'Messages',
+
+    'scanner' => [
+        'sound_on' => 'Turn the scan sound on',
+        'sound_off' => 'Turn the scan sound off',
+    ],
 ];

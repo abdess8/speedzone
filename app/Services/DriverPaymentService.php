@@ -10,6 +10,7 @@ use App\Models\DriverTransaction;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 /**
  * Creates and manages driver financial transactions: the automatic delivery
@@ -78,6 +79,9 @@ class DriverPaymentService
 
     /**
      * Add a manual adjustment / bonus / penalty for a driver.
+     *
+     * @throws InvalidArgumentException when asked to forge a delivery payment,
+     *                                  which may only come from a delivered order.
      */
     public function recordManualTransaction(
         User $driver,
@@ -87,6 +91,10 @@ class DriverPaymentService
         ?User $actor = null,
         ?Order $order = null,
     ): DriverTransaction {
+        if (! $type->isManual()) {
+            throw new InvalidArgumentException("Transaction type {$type->value} cannot be created manually.");
+        }
+
         // Penalties are stored as negative amounts so totals net out correctly.
         $signed = $type === DriverTransactionType::PENALTY ? -abs($amount) : abs($amount);
 
@@ -114,6 +122,44 @@ class DriverPaymentService
             ]);
 
             return $transaction;
+        });
+    }
+
+    /**
+     * Undo a manual entry captured by mistake.
+     *
+     * Only ever a correction of a typo: a delivery payment mirrors a delivered
+     * order, and any transaction already carried by an invoice is frozen.
+     *
+     * @throws InvalidArgumentException when the transaction is not a reversible manual entry.
+     */
+    public function deleteManualTransaction(DriverTransaction $transaction, ?User $actor = null): void
+    {
+        $type = $transaction->transaction_type instanceof DriverTransactionType
+            ? $transaction->transaction_type
+            : DriverTransactionType::from((string) $transaction->transaction_type);
+
+        if (! $type->isManual()) {
+            throw new InvalidArgumentException("Transaction type {$type->value} cannot be deleted manually.");
+        }
+
+        if ($transaction->isLocked()) {
+            throw new InvalidArgumentException("Transaction {$transaction->id} is already settled.");
+        }
+
+        DB::transaction(function () use ($transaction, $type, $actor): void {
+            DriverFinanceLog::create([
+                'driver_id' => $transaction->driver_id,
+                'action' => DriverFinanceLog::ACTION_ADJUSTMENT,
+                'user_id' => $actor?->id,
+                'old_value' => json_encode([
+                    'type' => $type->value,
+                    'amount' => round((float) $transaction->amount, 2),
+                    'note' => $transaction->note,
+                ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ]);
+
+            $transaction->delete();
         });
     }
 }

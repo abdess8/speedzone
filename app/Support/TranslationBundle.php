@@ -24,6 +24,7 @@ final class TranslationBundle
     public const GROUPS = [
         'sidebar',
         'navbar',
+        'search',
         'roles',
         'common',
         'orders',
@@ -39,6 +40,7 @@ final class TranslationBundle
         'billing_frequencies',
         'seller_payment_methods',
         'users',
+        'documents',
         'stores',
         'team',
         'cities',
@@ -52,7 +54,6 @@ final class TranslationBundle
         'support_ticket_statuses',
         'support_ticket_categories',
         'support_object_types',
-        'permissions',
         'notifications',
         'seller_registration',
         'user_statuses',
@@ -62,6 +63,15 @@ final class TranslationBundle
         'api_docs',
         'chatbot',
         'guides',
+        'help',
+        'stock',
+        'preparation',
+        'stock_adjustment_reasons',
+        'stock_movement_sources',
+        'stock_reception_statuses',
+        'integrations',
+        'bulk_status',
+        'return_statuses',
     ];
 
     /**
@@ -101,9 +111,23 @@ final class TranslationBundle
     }
 
     /**
-     * Short hash over the language files' modification times.
+     * Short hash over everything the built bundle depends on.
+     *
+     * The group list is folded in alongside the files: adding a group touches
+     * no language file, so a fingerprint built from mtimes alone would keep
+     * serving the previous bundle — with the new group missing from it — until
+     * the TTL ran out. That failure is silent and looks like broken
+     * translations in the browser.
      */
     private static function fingerprint(): string
+    {
+        return substr(md5(self::fileStamp().'|'.implode(',', self::GROUPS)), 0, 12);
+    }
+
+    /**
+     * Short hash over the language files' modification times.
+     */
+    private static function fileStamp(): string
     {
         return Cache::remember(
             'translations.fingerprint',

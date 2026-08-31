@@ -38,6 +38,7 @@ return [
         'returns' => 'Returns',
         'invoices' => 'Billing',
         'finance' => 'Cash',
+        'stock' => 'Stock',
         'stores' => 'Stores',
         'team' => 'Team',
         'settings' => 'Settings',
@@ -115,6 +116,21 @@ return [
             'title' => 'Read your invoices',
             'summary' => 'Understand an invoice line by line: period, delivered amounts, delivery and return fees, net payout and PDF export.',
             'audience' => 'Seller, Administrator',
+        ],
+        'stock_catalog' => [
+            'title' => 'Manage your product catalog',
+            'summary' => 'Create a reference end to end: name and barcode, selling and cost price, weight and dimensions, photo. You will also learn to read the out-of-stock indicators and to import a whole catalog from Excel.',
+            'audience' => 'Seller, Team',
+        ],
+        'stock_shipment' => [
+            'title' => 'Send stock to the depot',
+            'summary' => 'Prepare a shipment slip: products and quantities, destination depot, dispatch date. You will then follow the collection at your shop and the count on arrival.',
+            'audience' => 'Seller, Team',
+        ],
+        'stock_inventory' => [
+            'title' => 'Count your stock',
+            'summary' => 'Count your references in a single pass: keyboard or scanner entry, gaps computed live, a mandatory motive on every correction and a full audit trail on the product sheet.',
+            'audience' => 'Seller, Team',
         ],
         'stores_manage' => [
             'title' => 'Add and switch stores',
@@ -299,6 +315,130 @@ return [
             'done' => [
                 'title' => 'You can read an invoice!',
                 'body' => 'If an amount looks wrong, open a support ticket quoting the invoice number and the order concerned.',
+            ],
+        ],
+
+        'stock_catalog' => [
+            'welcome' => [
+                'title' => 'Your product catalog',
+                'body' => 'The catalog is the list of what you sell. Once your references exist, you build orders by picking them instead of typing an amount by hand.',
+            ],
+            'summary' => [
+                'title' => 'The state of your stock at a glance',
+                'body' => 'References, available units, out-of-stock and low-stock counts, total value. This is the row to read on arrival: it tells you whether to restock before you even look at the table.',
+            ],
+            'list' => [
+                'title' => 'Finding a reference',
+                'body' => 'Search by name, SKU or barcode, or filter by category and stock level. An archived product leaves the sales flow without being deleted: its history stays readable.',
+            ],
+            'create' => [
+                'title' => 'Create your first reference',
+                'body' => 'Every product sold from your stock needs a sheet. That sheet carries the price, the barcode and the dimensions used everywhere else.',
+                'hint' => 'Click "New product" to open the form.',
+            ],
+            'identity' => [
+                'title' => 'The product identity',
+                'body' => 'Only the name is required: leave the SKU empty and we generate one. The barcode is what lets the product be scanned at preparation and at inventory — fill it in if your items carry one.',
+            ],
+            'pricing' => [
+                'title' => 'Selling price and cost price',
+                'body' => 'The selling price is carried over automatically when you add the product to an order. The cost price stays private: it only feeds the margin shown just below.',
+            ],
+            'logistics' => [
+                'title' => 'Fragility, weight and dimensions',
+                'body' => 'A product flagged as fragile passes the warning on to the driver on every order containing it. Weight and dimensions are optional, but they are what lets a parcel be estimated before it ships.',
+            ],
+            'media' => [
+                'title' => 'The photo and the product state',
+                'body' => 'A photo makes the reference recognisable at a glance in lists and at preparation. The switch at the bottom pulls the product out of sales without touching its stock or its history.',
+            ],
+            'submit' => [
+                'title' => 'Save the sheet',
+                'body' => 'Note that the stock quantity is not entered here: it is the result of movements. A product is born at zero and fills up through a depot reception or an inventory count.',
+                'hint' => 'Save the product to continue.',
+            ],
+            'import' => [
+                'title' => 'Importing a whole catalog',
+                'body' => 'To start with dozens of references, do not type them one by one: download the Excel template, fill it in and import it. Columns are matched automatically and you fix the errors before validating.',
+            ],
+            'done' => [
+                'title' => 'Your catalog is live!',
+                'body' => 'Next step: getting the goods in. The "Send stock to the depot" guide shows you how to declare a shipment and follow its arrival.',
+            ],
+        ],
+
+        'stock_shipment' => [
+            'welcome' => [
+                'title' => 'Sending stock to the depot',
+                'body' => 'Your products are warehoused with us before being delivered. A shipment slip declares what you are sending: it is the document the collector counts at your shop, then the depot on arrival.',
+            ],
+            'create' => [
+                'title' => 'Create a shipment slip',
+                'body' => 'This page lists your past and pending shipments, with what was declared, collected and actually received. Let us create a new one.',
+                'hint' => 'Click "New shipment" to open the form.',
+            ],
+            'items' => [
+                'title' => 'What the shipment contains',
+                'body' => 'Search by name, SKU or barcode, then enter the quantity sent. Out-of-stock products show up too: sending stock in is exactly what you do about an empty shelf. The per-line note is for flagging a batch or a defect.',
+            ],
+            'shipping' => [
+                'title' => 'Destination and date',
+                'body' => 'The destination depot is where your goods will be warehoused. You only choose it on the first shipment: the following ones are attached to it automatically. Shipping notes are read by the collector.',
+            ],
+            'submit' => [
+                'title' => 'Draft or collection request',
+                'body' => 'Two exits: a draft stays editable, a collection request freezes the quantities because that is the document the collector will count in front of you.',
+                'hint' => 'Save the shipment to continue.',
+            ],
+            'actions' => [
+                'title' => 'Moving the shipment along',
+                'body' => 'While it is a draft, the shipment can be edited and "Request collection" puts it in the queue. A driver will come and count the parcels at your shop before taking them to the depot.',
+            ],
+            'timeline' => [
+                'title' => 'Following the arrival',
+                'body' => 'Every step is timestamped and signed: collection at your shop, transport, count at the depot. Your stock is only credited on final validation, on the quantities actually counted on arrival — not on those declared at departure.',
+            ],
+            'done' => [
+                'title' => 'Shipment recorded!',
+                'body' => 'You will follow its progress from the shipment list. When declared and received differ, the sheet tells you exactly where the gap is.',
+                'cta' => 'See my shipments',
+            ],
+        ],
+
+        'stock_inventory' => [
+            'welcome' => [
+                'title' => 'Counting your stock',
+                'body' => 'An inventory compares what the system believes it holds with what is actually on the shelf. It all happens on one sheet: count, justify the gaps, save.',
+            ],
+            'summary' => [
+                'title' => 'The starting point',
+                'body' => 'The references and units the system records today, and the value they represent. That is the figure your count will confirm or correct.',
+            ],
+            'filters' => [
+                'title' => 'Count zone by zone',
+                'body' => 'A full inventory is rarely done in one block. Filter on a category or a search to see only the shelf in front of you: counts already entered are kept when you change filter or turn the page.',
+            ],
+            'sheet' => [
+                'title' => 'The counting sheet',
+                'body' => 'Three columns: what is recorded, what you count, the gap computed live. On a computer, Enter and the arrow keys walk down the column — the whole sheet fills without leaving the keyboard or touching the mouse.',
+            ],
+            'match_all' => [
+                'title' => 'Everything matches?',
+                'body' => 'This button copies the recorded stock onto every line still empty. Handy to close a zone where nothing moved: a line counted without a gap is traced, but creates no stock movement.',
+            ],
+            'reason' => [
+                'title' => 'A gap owes a motive',
+                'body' => 'Enter a count different from the recorded stock: the "Reason" column opens and becomes mandatory. Breakage, theft, entry mistake, unrecorded return — that motive is what will make the gap readable six months from now.',
+                'hint' => 'Enter a quantity different from the recorded stock on one line.',
+            ],
+            'save' => [
+                'title' => 'Save the count',
+                'body' => 'The bar stays within reach as long as lines are pending. On save, only the gaps correct the stock — and every counted line is traced on the product sheet with your name, the time, the machine used and, if your browser allows it, your position.',
+            ],
+            'done' => [
+                'title' => 'You know how to count!',
+                'body' => 'Find every count in the "Inventories" tab of the product sheet, and every correction in the movement history. Nothing can be edited afterwards: that is what gives the trail its value.',
+                'cta' => 'See my catalog',
             ],
         ],
 

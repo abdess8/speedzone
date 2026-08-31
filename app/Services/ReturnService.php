@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\ReturnInitiatedByRole;
 use App\Enums\ReturnReason;
 use App\Enums\ReturnStatus;
+use App\Enums\UserStatus;
 use App\Events\ReturnRequested;
 use App\Models\Order;
 use App\Models\OrderReturn;
@@ -19,6 +20,19 @@ use Illuminate\Validation\ValidationException;
 
 class ReturnService
 {
+    /**
+     * Permissions that let a driver close a return at the seller's door. A
+     * driver holding none of them would be given a parcel he cannot sign off,
+     * which is why the hand-back dropdown never offers him.
+     *
+     * @var array<int, string>
+     */
+    private const HAND_BACK_PERMISSIONS = [
+        'returns.transition.to_delivered_to_vendor',
+        'returns.update_status',
+        'returns.manage',
+    ];
+
     public function __construct(private readonly ReturnReferenceGenerator $references) {}
 
     /**
@@ -32,6 +46,7 @@ class ReturnService
             ReturnInitiatedByRole::DRIVER => [
                 OrderStatus::OUT_FOR_DELIVERY->value,
                 OrderStatus::FAILED->value,
+                OrderStatus::READY_TO_RETURN->value,
             ],
             ReturnInitiatedByRole::SELLER => [
                 OrderStatus::IN_TRANSIT->value,
@@ -43,6 +58,7 @@ class ReturnService
             ReturnInitiatedByRole::ADMIN, ReturnInitiatedByRole::SYSTEM => [
                 OrderStatus::OUT_FOR_DELIVERY->value,
                 OrderStatus::FAILED->value,
+                OrderStatus::READY_TO_RETURN->value,
                 OrderStatus::DELIVERED->value,
                 OrderStatus::IN_TRANSIT->value,
                 OrderStatus::RECEIVED_IN_DESTINATION->value,
@@ -146,7 +162,7 @@ class ReturnService
 
         if (! $return->canEditCustomerData()) {
             throw ValidationException::withMessages([
-                'return' => 'Customer data can only be updated when the return is CREATED or IN_TRANSIT_TO_SELLER.',
+                'return' => 'Customer data can only be updated while the return is CREATED or IN_DELIVERY_TO_VENDOR.',
             ]);
         }
 
@@ -197,6 +213,104 @@ class ReturnService
                 'statusHistories.changedBy',
             ]);
         });
+    }
+
+    /**
+     * Name the driver who will carry the parcel back to the seller.
+     *
+     * Kept separate from the transition so the assignment can be corrected on a
+     * return already out for restitution — a driver falling ill mid-round is
+     * not a reason to rewind the workflow.
+     *
+     * @throws ValidationException
+     * @throws AuthorizationException
+     */
+    public function assignDriver(OrderReturn $return, User $driver, User $actor): OrderReturn
+    {
+        if (! $this->canAssignDrivers($actor)) {
+            throw new AuthorizationException(__('returns.errors.assign_forbidden'));
+        }
+
+        $status = $return->status instanceof ReturnStatus ? $return->status : ReturnStatus::from($return->status);
+
+        if (! in_array($status, [ReturnStatus::ARRIVED_VENDOR_HUB, ReturnStatus::IN_DELIVERY_TO_VENDOR], true)) {
+            throw ValidationException::withMessages([
+                'driver_id' => __('returns.errors.assign_wrong_status'),
+            ]);
+        }
+
+        if (! $this->isEligibleDriver($driver, $return)) {
+            throw ValidationException::withMessages([
+                'driver_id' => __('returns.errors.driver_not_eligible'),
+            ]);
+        }
+
+        if ((int) $return->assigned_to === $driver->id) {
+            return $return;
+        }
+
+        $return->update([
+            'assigned_to' => $driver->id,
+            'assigned_at' => now(),
+        ]);
+
+        $return->recordStatus(
+            $status,
+            $actor,
+            $status->value,
+            __('returns.history.driver_assigned', ['name' => $driver->full_name]),
+        );
+
+        return $return;
+    }
+
+    public function canAssignDrivers(User $actor): bool
+    {
+        return $actor->hasPermission('returns.manage')
+            || $actor->hasPermission('returns.update_status')
+            || $actor->hasPermission('returns.transition.to_in_delivery_to_vendor');
+    }
+
+    /**
+     * Drivers who may be handed this parcel: they work the city it sits in, and
+     * they hold a grant that lets them close the return once delivered.
+     *
+     * @return Collection<int, User>
+     */
+    public function driverOptions(?int $cityId = null): Collection
+    {
+        return $this->driverQuery($cityId)
+            ->orderBy('first_name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'first_name', 'last_name', 'email', 'phone_number', 'city_id']);
+    }
+
+    private function isEligibleDriver(User $driver, OrderReturn $return): bool
+    {
+        return $this->driverQuery($return->handBackCityId())
+            ->whereKey($driver->id)
+            ->exists();
+    }
+
+    /**
+     * @return Builder<User>
+     */
+    private function driverQuery(?int $cityId): Builder
+    {
+        $query = User::query()
+            ->where('status', UserStatus::Active->value)
+            ->whereHas('roles', fn (Builder $q) => $q->where('name', Role::DRIVER))
+            ->where(function (Builder $q): void {
+                // Granted through a role, or pinned directly on the user.
+                $q->whereHas('roles.permissions', fn (Builder $p) => $p->whereIn('name', self::HAND_BACK_PERMISSIONS))
+                    ->orWhereHas('permissions', fn (Builder $p) => $p->whereIn('name', self::HAND_BACK_PERMISSIONS));
+            });
+
+        if ($cityId) {
+            $query->coveringCity($cityId);
+        }
+
+        return $query;
     }
 
     /**
@@ -291,13 +405,15 @@ class ReturnService
         }
 
         $orderStatus = match ($toStatus) {
-            ReturnStatus::IN_TRANSIT_TO_DEPOT => OrderStatus::RETURN_IN_PROGRESS,
-            ReturnStatus::DELIVERED_TO_SELLER => OrderStatus::RETURNED,
+            ReturnStatus::RECEIVED_AT_HUB => OrderStatus::RETURN_IN_PROGRESS,
+            ReturnStatus::DELIVERED_TO_VENDOR => OrderStatus::RETURNED,
             ReturnStatus::CANCELLED => $this->resolveCancelOrderStatus($order),
             default => null,
         };
 
         if (! $orderStatus) {
+            $this->recordReturnProgress($order, $return, $toStatus, $actor, $comment);
+
             return;
         }
 
@@ -305,7 +421,7 @@ class ReturnService
 
         // The parcel is back in the seller's hands: stamp the date the invoice
         // will quote for this line.
-        if ($toStatus === ReturnStatus::DELIVERED_TO_SELLER) {
+        if ($toStatus === ReturnStatus::DELIVERED_TO_VENDOR) {
             $orderUpdates['is_returned'] = true;
             $orderUpdates['returned_at'] = now();
         }
@@ -323,6 +439,39 @@ class ReturnService
             $actor,
             $comment ?? "Return {$return->reference} status: {$toStatus->label()}.",
             returnId: $toStatus === ReturnStatus::CANCELLED ? null : $return->id,
+        );
+    }
+
+    /**
+     * Mirror a return step that does not move the order onto the order timeline.
+     *
+     * The order sits on RETURN_IN_PROGRESS from the hub drop-off until the
+     * hand-back, which is correct but tells a seller nothing about where his
+     * parcel actually is. Stamping the unchanged status — the same trick the
+     * delivery attempts use — turns those three weeks into a readable trail.
+     */
+    private function recordReturnProgress(
+        Order $order,
+        OrderReturn $return,
+        ReturnStatus $toStatus,
+        User $actor,
+        ?string $comment,
+    ): void {
+        if ($toStatus->step() === null) {
+            return;
+        }
+
+        $status = $order->status instanceof OrderStatus ? $order->status : OrderStatus::tryFrom((string) $order->status);
+
+        if (! $status) {
+            return;
+        }
+
+        $order->recordStatus(
+            $status,
+            $actor,
+            $comment ?? "Return {$return->reference}: {$toStatus->label()}.",
+            returnId: $return->id,
         );
     }
 
@@ -345,7 +494,7 @@ class ReturnService
             return OrderStatus::from($previous);
         }
 
-        return OrderStatus::FAILED;
+        return OrderStatus::READY_TO_RETURN;
     }
 
     private function assertCanCreate(User $actor, ReturnInitiatedByRole $role, Order $order): void
@@ -354,7 +503,10 @@ class ReturnService
             ReturnInitiatedByRole::DRIVER => $actor->canCreateDriverReturn(),
             ReturnInitiatedByRole::SELLER => $actor->canCreateReturnRequest()
                 && $order->seller_id === $actor->id,
-            ReturnInitiatedByRole::ADMIN, ReturnInitiatedByRole::SYSTEM => false,
+            // Back-office staff open returns on behalf of a seller who called
+            // in, or for a parcel a driver forgot to declare.
+            ReturnInitiatedByRole::ADMIN => $actor->hasPermission('returns.manage'),
+            ReturnInitiatedByRole::SYSTEM => false,
         };
 
         if (! $allowed) {

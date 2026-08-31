@@ -19,7 +19,9 @@ class OrderReturnPolicy
 
     public function create(User $user): bool
     {
-        return $user->canCreateReturnRequest() || $user->canCreateDriverReturn();
+        return $user->canCreateReturnRequest()
+            || $user->canCreateDriverReturn()
+            || $user->hasPermission('returns.manage');
     }
 
     public function createForOrder(User $user): bool
@@ -34,12 +36,27 @@ class OrderReturnPolicy
         }
 
         return $user->hasPermission('returns.manage')
-            || ($user->hasPermission('returns.update_status') && $user->hasReturnScopePermission('update_status', $return));
+            || ($user->canUpdateReturnStatus() && $user->hasReturnScopePermission('update_status', $return));
     }
 
     public function changeStatus(User $user, OrderReturn $return): bool
     {
         return $this->updateStatus($user, $return);
+    }
+
+    /**
+     * Naming the driver for the last mile is a dispatch act, so it follows the
+     * grant that opens that step rather than the blanket status permission.
+     */
+    public function assignDriver(User $user, OrderReturn $return): bool
+    {
+        if ($return->isTerminal()) {
+            return false;
+        }
+
+        return $user->hasPermission('returns.manage')
+            || $user->hasPermission('returns.update_status')
+            || $user->hasPermission('returns.transition.to_in_delivery_to_vendor');
     }
 
     public function editCustomerData(User $user, OrderReturn $return): bool
@@ -62,9 +79,8 @@ class OrderReturnPolicy
             return false;
         }
 
-        return $user->hasPermission('returns.update_status')
-            || $user->hasPermission('returns.create')
-            || $user->hasPermission('returns.manage');
+        return $user->canUpdateReturnStatus()
+            || $user->hasPermission('returns.create');
     }
 
     public function printQr(User $user, OrderReturn $return): bool

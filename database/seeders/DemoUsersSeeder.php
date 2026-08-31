@@ -17,7 +17,11 @@ class DemoUsersSeeder extends Seeder
     {
         $password = Hash::make(self::DEMO_PASSWORD);
 
-        $casablancaId = City::query()->where('name', 'Casablanca')->value('id');
+        // By code rather than name: the coverage grid splits a metropolis into
+        // several cities ("CASABLANCA VILLE", "CASABLANCA REGION") and renames
+        // them more readily than it renumbers them.
+        $casablancaId = City::query()->where('code', 'CASV')->value('id')
+            ?? City::query()->orderBy('id')->value('id');
 
         $adminRole = Role::query()->where('name', Role::ADMIN)->firstOrFail();
         $driverRole = Role::query()->where('name', Role::DRIVER)->firstOrFail();

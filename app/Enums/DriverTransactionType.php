@@ -30,6 +30,31 @@ enum DriverTransactionType: string
         return $this !== self::PENALTY;
     }
 
+    /**
+     * Whether an admin may create this type by hand. A delivery payment is
+     * derived from a delivered order and must never be typed in.
+     */
+    public function isManual(): bool
+    {
+        return $this !== self::DELIVERY_PAYMENT;
+    }
+
+    /**
+     * @return array<int, self>
+     */
+    public static function manualCases(): array
+    {
+        return array_values(array_filter(self::cases(), static fn (self $type) => $type->isManual()));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function manualValues(): array
+    {
+        return array_map(static fn (self $type) => $type->value, self::manualCases());
+    }
+
     public function color(): string
     {
         return match ($this) {
@@ -55,6 +80,23 @@ enum DriverTransactionType: string
      */
     public static function options(): array
     {
+        return self::optionsFor(self::cases());
+    }
+
+    /**
+     * @return array<int, array{value: string, label: string, color: string, icon: string}>
+     */
+    public static function manualOptions(): array
+    {
+        return self::optionsFor(self::manualCases());
+    }
+
+    /**
+     * @param  array<int, self>  $types
+     * @return array<int, array{value: string, label: string, color: string, icon: string}>
+     */
+    private static function optionsFor(array $types): array
+    {
         return array_map(
             static fn (self $type) => [
                 'value' => $type->value,
@@ -62,7 +104,7 @@ enum DriverTransactionType: string
                 'color' => $type->color(),
                 'icon' => $type->icon(),
             ],
-            self::cases()
+            $types
         );
     }
 }

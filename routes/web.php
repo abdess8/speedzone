@@ -1,16 +1,23 @@
 <?php
 
+use App\Http\Controllers\AccountEmailController;
 use App\Http\Controllers\ActiveStoreController;
 use App\Http\Controllers\Admin\PendingUserController;
 use App\Http\Controllers\AlertController;
 use App\Http\Controllers\AlertDismissalController;
 use App\Http\Controllers\ApiIntegrationController;
+use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\BulkStatusController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\DriverFinanceController;
 use App\Http\Controllers\DriverInvoiceController;
+use App\Http\Controllers\DriverTransactionController;
 use App\Http\Controllers\DriverZoneController;
+use App\Http\Controllers\EcommerceIntegrationController;
+use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\GuideAccessController;
 use App\Http\Controllers\GuideController;
+use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LocaleController;
@@ -18,16 +25,25 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\NotificationPreferenceController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderImportController;
+use App\Http\Controllers\OrderPreparationController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerDeliveryController;
 use App\Http\Controllers\PartnerOrderController;
 use App\Http\Controllers\PartnerUserAssignmentController;
 use App\Http\Controllers\PendingApprovalController;
 use App\Http\Controllers\PickupRequestController;
+use App\Http\Controllers\ProductBlockController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImportController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\SellerDashboardController;
+use App\Http\Controllers\SellerProfileController;
+use App\Http\Controllers\StatusTransitionPermissionController;
+use App\Http\Controllers\StockInventoryController;
+use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\StockReceptionController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\TeamMemberController;
@@ -62,25 +78,63 @@ Route::get('/tracking/{trackingNumber}', [LandingController::class, 'track'])
 
 Route::get('/verify-email', fn () => redirect()->route('verification.notice'))->name('verify-email');
 
+// Social sign-in. Guest-only: an authenticated visitor has nothing to gain from
+// walking through Google's consent screen again.
+Route::middleware('guest')->group(function () {
+    Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])
+        ->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])
+        ->name('auth.google.callback');
+});
+
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
     Route::get('/account/pending-approval', [PendingApprovalController::class, 'show'])
         ->name('account.pending-approval');
 });
 
+// The single thing an account still waiting on the platform may change about
+// itself. Deliberately outside the `verified` and `account.active` guards: a
+// typo in the address is exactly what locks these users out.
+Route::middleware(['auth:sanctum', config('jetstream.auth_session')])->group(function () {
+    Route::put('/account/email', [AccountEmailController::class, 'update'])
+        ->name('account.email.update');
+});
+
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'account.active'])->group(function () {
 
-    Route::get('/dashboard/seller', [SellerDashboardController::class, 'index'])->name('dashboard.seller');
+    Route::get('/dashboard/seller', [SellerDashboardController::class, 'index'])
+        ->middleware('permission:dashboard.view')
+        ->name('dashboard.seller');
+
+    // Identity, pickup and banking details a vendor maintains himself; they
+    // feed the profile completion score.
+    Route::put('user/seller-profile', [SellerProfileController::class, 'update'])
+        ->name('user-seller-profile.update');
+    Route::delete('user/seller-profile/documents/{document}', [SellerProfileController::class, 'destroyDocument'])
+        ->name('user-seller-profile.documents.destroy');
 
     Route::prefix('admin')->name('admin.')->middleware('permission:users.read')->group(function () {
         Route::get('pending-users', [PendingUserController::class, 'index'])->name('pending-users.index');
         Route::get('pending-users/{user}', [PendingUserController::class, 'show'])->name('pending-users.show');
+        Route::put('pending-users/{user}', [PendingUserController::class, 'update'])->name('pending-users.update');
+        Route::put('pending-users/{user}/password', [PendingUserController::class, 'updatePassword'])
+            ->name('pending-users.password.update');
+        Route::post('pending-users/{user}/resend-verification', [PendingUserController::class, 'resendVerification'])
+            ->middleware('throttle:6,1')
+            ->name('pending-users.resend-verification');
         Route::post('users/{user}/approve', [PendingUserController::class, 'approve'])->name('users.approve');
         Route::post('users/{user}/reject', [PendingUserController::class, 'reject'])->name('users.reject');
+        Route::post('users/{user}/reactivate', [PendingUserController::class, 'reactivate'])->name('users.reactivate');
     });
 
     Route::redirect('/admin/users/pending', '/admin/pending-users');
 
     Route::post('locale', [LocaleController::class, 'update'])->name('locale.update');
+
+    // Global search bar. Deliberately behind no `permission:` middleware: each
+    // searchable object gates itself, so the endpoint answers with whatever
+    // slice of the platform the caller may already read.
+    Route::get('search', GlobalSearchController::class)->name('search.global');
 
     // Notifications
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -215,6 +269,29 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::delete('driver-zones/{driver}/sectors/{sector}', [DriverZoneController::class, 'remove'])
         ->whereNumber('driver')->whereNumber('sector')->name('driver-zones.remove');
 
+    // Bulk status editing, for orders and returns alike.
+    //
+    // No `permission:` middleware: the gate is "holds at least one source →
+    // target grant", which is a matrix lookup rather than a permission name,
+    // so the controller answers it through StatusTransitionAccessService.
+    Route::get('bulk-status', [BulkStatusController::class, 'index'])
+        ->name('bulk-status.index');
+    Route::get('bulk-status/options', [BulkStatusController::class, 'options'])
+        ->name('bulk-status.options');
+    Route::get('bulk-status/items', [BulkStatusController::class, 'items'])
+        ->name('bulk-status.items');
+    Route::post('bulk-status/scan', [BulkStatusController::class, 'scan'])
+        ->name('bulk-status.scan');
+    Route::post('bulk-status', [BulkStatusController::class, 'store'])
+        ->name('bulk-status.store');
+
+    // Who may make which of those changes. Administrator only, enforced in the
+    // controller rather than by a permission that could itself be granted away.
+    Route::get('status-transition-permissions', [StatusTransitionPermissionController::class, 'index'])
+        ->name('status-transition-permissions.index');
+    Route::put('status-transition-permissions', [StatusTransitionPermissionController::class, 'update'])
+        ->name('status-transition-permissions.update');
+
     // Order management (logistics).
     //
     // The permission middleware here duplicates the controller's authorize()
@@ -230,6 +307,14 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('orders/bulk-status', [OrderController::class, 'bulkStatus'])
         ->middleware('permission:orders.update.all|orders.update.own|orders.update.assigned')
         ->name('orders.bulk-status');
+    // Handing out a round. Same guard as the one-by-one affectation, which the
+    // service re-checks per order before it touches anything.
+    Route::post('orders/bulk-assign-driver', [OrderController::class, 'bulkAssignDriver'])
+        ->middleware('permission:driver_invoices.assign_driver|partners.deliveries.manage')
+        ->name('orders.bulk-assign-driver');
+    Route::post('orders/dispatch-sector', [OrderController::class, 'dispatchSector'])
+        ->middleware('permission:driver_invoices.assign_driver|partners.deliveries.manage')
+        ->name('orders.dispatch-sector');
     Route::post('orders/create-and-new', [OrderController::class, 'storeAndNew'])
         ->middleware('permission:orders.create')
         ->name('orders.store-and-new');
@@ -239,6 +324,19 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('orders/import', [OrderImportController::class, 'store'])
         ->middleware('permission:orders.create')
         ->name('orders.import.store');
+    // Picking bench for stock orders. Grouped rather than annotated one by one:
+    // the four routes are a single workstation and must never drift apart.
+    Route::middleware('permission:orders.transition.to_prepared')->group(function () {
+        Route::get('orders/preparation', [OrderPreparationController::class, 'index'])
+            ->name('orders.preparation.index');
+        Route::post('orders/preparation', [OrderPreparationController::class, 'prepare'])
+            ->name('orders.preparation.prepare');
+        Route::post('orders/preparation/scan', [OrderPreparationController::class, 'scan'])
+            ->name('orders.preparation.scan');
+        Route::post('orders/preparation/bulk-scan', [OrderPreparationController::class, 'bulkScan'])
+            ->name('orders.preparation.bulk-scan');
+    });
+
     Route::get('orders/{order}/pdf', [OrderController::class, 'pdf'])
         ->whereNumber('order')
         ->middleware('permission:orders.print')
@@ -246,6 +344,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('orders/{order}/assign-driver', [OrderController::class, 'assignDriver'])
         ->whereNumber('order')
         ->name('orders.assign-driver');
+    // Closing a delivery attempt. Same guard as a bulk status change: the
+    // ownership half is re-checked per order by OrderPolicy::updateStatus().
+    Route::post('orders/{order}/delivery-outcome', [OrderController::class, 'deliveryOutcome'])
+        ->whereNumber('order')
+        ->middleware('permission:orders.update.all|orders.update.own|orders.update.assigned')
+        ->name('orders.delivery-outcome');
     Route::post('orders/{order}/sync-partner', [OrderController::class, 'syncPartner'])
         ->whereNumber('order')
         ->name('orders.sync-partner');
@@ -256,6 +360,67 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('orders/{trackingNumber}', [OrderController::class, 'track'])
         ->where('trackingNumber', '[A-Za-z0-9]+-[0-9]{4}-[0-9]+')
         ->name('orders.track');
+
+    // Vendor fulfilment: catalog, inventory, inbound shipments.
+    //
+    // Like the order routes above, the permission middleware duplicates the
+    // controller's authorize() calls so that "hidden in the sidebar" and "403 on
+    // direct URL" stay two views of the same rule. Custom paths are registered
+    // before the resources so `products/import` is not swallowed by
+    // `products/{product}`.
+    Route::get('products/import', [ProductImportController::class, 'create'])
+        ->middleware('permission:stock.import_products')
+        ->name('products.import');
+    Route::post('products/import', [ProductImportController::class, 'store'])
+        ->middleware('permission:stock.import_products')
+        ->name('products.import.store');
+    Route::put('products/{product}/block', ProductBlockController::class)
+        ->whereNumber('product')
+        ->middleware('permission:stock.admin_override')
+        ->name('products.block');
+    Route::resource('products', ProductController::class)
+        ->whereNumber('product')
+        ->middleware('permission:stock.view|stock.receive_inbound|stock.admin_override');
+
+    // Mass inventory. Reading the sheet only needs stock.view; writing a
+    // correction is guarded per product by ProductPolicy::adjust().
+    Route::get('stock/inventory', [StockInventoryController::class, 'index'])
+        ->middleware('permission:stock.view|stock.admin_override')
+        ->name('stock.inventory');
+    Route::post('stock/inventory', [StockInventoryController::class, 'store'])
+        ->middleware('permission:stock.adjust|stock.admin_override')
+        ->name('stock.inventory.store');
+
+    // Cross-vendor movement audit.
+    Route::get('stock/movements', [StockMovementController::class, 'index'])
+        ->middleware('permission:stock.admin_override')
+        ->name('stock.movements');
+
+    Route::put('stock-receptions/{reception}/send', [StockReceptionController::class, 'send'])
+        ->whereNumber('reception')
+        ->middleware('permission:stock.create_inbound')
+        ->name('stock-receptions.send');
+    Route::put('stock-receptions/{reception}/collect', [StockReceptionController::class, 'collect'])
+        ->whereNumber('reception')
+        ->middleware('permission:stock.collect_inbound|stock.admin_override')
+        ->name('stock-receptions.collect');
+    Route::put('stock-receptions/{reception}/dispatch', [StockReceptionController::class, 'dispatchToDepot'])
+        ->whereNumber('reception')
+        ->middleware('permission:stock.collect_inbound|stock.receive_inbound|stock.admin_override')
+        ->name('stock-receptions.dispatch');
+    Route::put('stock-receptions/{reception}/validate', [StockReceptionController::class, 'validateReception'])
+        ->whereNumber('reception')
+        ->middleware('permission:stock.receive_inbound')
+        ->name('stock-receptions.validate');
+    Route::put('stock-receptions/{reception}/cancel', [StockReceptionController::class, 'cancel'])
+        ->whereNumber('reception')
+        ->middleware('permission:stock.create_inbound|stock.collect_inbound|stock.receive_inbound')
+        ->name('stock-receptions.cancel');
+    Route::resource('stock-receptions', StockReceptionController::class)
+        ->except(['destroy'])
+        ->whereNumber('reception')
+        ->parameters(['stock-receptions' => 'reception'])
+        ->middleware('permission:stock.view|stock.create_inbound|stock.collect_inbound|stock.receive_inbound|stock.admin_override');
 
     // Pickup requests (Ramassages)
     Route::post('pickup/scan', [PickupRequestController::class, 'scan'])
@@ -281,6 +446,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     // Inter-city transfers — QR scan URL must be registered before numeric {transfer} routes
     Route::get('transfers/eligible-orders', [TransferController::class, 'eligibleOrders'])
         ->name('transfers.eligible-orders');
+    Route::get('transfers/eligible-returns', [TransferController::class, 'eligibleReturns'])
+        ->name('transfers.eligible-returns');
     Route::get('transfers/{reference}', [TransferController::class, 'track'])
         ->where('reference', 'TRF-[0-9]{4}-[0-9]+')
         ->name('transfers.track');
@@ -313,6 +480,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     // Returns (reverse logistics)
     Route::get('returns/eligible-orders', [ReturnController::class, 'eligibleOrders'])
         ->name('returns.eligible-orders');
+    Route::get('returns/hand-back', [ReturnController::class, 'handBack'])
+        ->name('returns.hand-back');
+    Route::post('returns/hand-back/scan', [ReturnController::class, 'handBackScan'])
+        ->name('returns.hand-back.scan');
+    Route::post('returns/hand-back/dispatch', [ReturnController::class, 'handBackDispatch'])
+        ->name('returns.hand-back.dispatch');
     Route::get('returns/{reference}', [ReturnController::class, 'track'])
         ->where('reference', 'RTN-[0-9]{4}-[0-9]+')
         ->name('returns.track');
@@ -320,12 +493,15 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->name('returns.scan');
     Route::post('returns/process-scan', [ReturnController::class, 'processScan'])
         ->name('returns.process-scan');
+    Route::post('returns/{return}/assign-driver', [ReturnController::class, 'assignDriver'])
+        ->whereNumber('return')
+        ->name('returns.assign-driver');
     Route::post('returns/{return}/change-status', [ReturnController::class, 'changeStatus'])
         ->whereNumber('return')
         ->name('returns.change-status');
-    Route::post('returns/{return}/move-to-depot', [ReturnController::class, 'moveToDepot'])
+    Route::post('returns/{return}/receive-at-hub', [ReturnController::class, 'receiveAtHub'])
         ->whereNumber('return')
-        ->name('returns.move-to-depot');
+        ->name('returns.receive-at-hub');
     Route::put('returns/{return}/customer-data', [ReturnController::class, 'updateCustomerData'])
         ->whereNumber('return')
         ->name('returns.update-customer-data');
@@ -357,6 +533,14 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('driver-finance', [DriverFinanceController::class, 'dashboard'])
         ->middleware('permission:driver_invoices.read.own|driver_invoices.read.all')
         ->name('driver-finance.dashboard');
+    // Manual ledger entries (bonus / penalty / adjustment) for a driver
+    Route::post('driver-transactions', [DriverTransactionController::class, 'store'])
+        ->middleware('permission:driver_invoices.adjust')
+        ->name('driver-transactions.store');
+    Route::delete('driver-transactions/{driverTransaction}', [DriverTransactionController::class, 'destroy'])
+        ->whereNumber('driverTransaction')
+        ->middleware('permission:driver_invoices.adjust')
+        ->name('driver-transactions.destroy');
     Route::get('driver-invoices/pending', [DriverInvoiceController::class, 'pending'])->name('driver-invoices.pending');
     Route::get('driver-invoices/payments', [DriverInvoiceController::class, 'payments'])->name('driver-invoices.payments');
     Route::post('driver-invoices/preview', [DriverInvoiceController::class, 'preview'])->name('driver-invoices.preview');
@@ -395,6 +579,19 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         ->middleware('permission:orders.create')
         ->name('api-integrations.index');
 
+    // Storefront connectors (Shopify, YouCan, WooCommerce, PrestaShop).
+    Route::get('integrations', [EcommerceIntegrationController::class, 'index'])
+        ->middleware('permission:integrations.read|integrations.manage')
+        ->name('integrations.index');
+
+    // Help Center. No permission guard: both pages document rules the reader is
+    // already subject to, and hiding the contract from the people it binds
+    // helps nobody.
+    Route::get('help/partnership', [HelpCenterController::class, 'partnership'])
+        ->name('help.partnership');
+    Route::get('help/processes', [HelpCenterController::class, 'processes'])
+        ->name('help.processes');
+
     // Interactive guides. No permission guard on the Help Center itself: the
     // catalog is already filtered per reader, and an empty list is a fine page.
     Route::get('guides', [GuideController::class, 'index'])->name('guides.index');
@@ -410,7 +607,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         // dashboards
         // NOTE: "/" is intentionally handled by the public LandingController
         // (registered at the top of this file). The dashboard lives at "/dashboard".
-        Route::get('/dashboard', 'dashboard');
+        Route::get('/dashboard', 'dashboard')->middleware('permission:dashboard.view');
 
         // Route::get('/dashboard/analytics', 'dashboard_analytics');
         // Route::get('/dashboard/crm', 'dashboard_crm');

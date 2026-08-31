@@ -30,6 +30,21 @@ class OrderTransitionService
             OrderStatus::REJECTED->value,
             OrderStatus::CANCELED->value,
         ],
+        // Stock orders skip the pickup leg entirely: the goods are already on our
+        // shelves, so the only thing left is for the depot to pick and pack them.
+        OrderStatus::AWAITING_PREPARATION->value => [
+            OrderStatus::PREPARED->value,
+            OrderStatus::REJECTED->value,
+            OrderStatus::CANCELED->value,
+        ],
+        // A packed parcel sits exactly where a picked-up one does after it
+        // reaches the depot, so it rejoins the normal flow here: straight to the
+        // delivery city when the depot is already there, on a transfer otherwise.
+        OrderStatus::PREPARED->value => [
+            OrderStatus::IN_DELIVERY_CITY->value,
+            OrderStatus::TRANSFER_CREATED->value,
+            OrderStatus::CANCELED->value,
+        ],
         OrderStatus::PICKUP_REQUESTED->value => [
             OrderStatus::WAITING_PICKUP->value,
             OrderStatus::CANCELED->value,
@@ -65,23 +80,32 @@ class OrderTransitionService
             OrderStatus::OUT_FOR_DELIVERY->value,
             OrderStatus::CANCELED->value,
         ],
+        // A missed delivery is not an outcome here: it leaves the order on this
+        // status with one more attempt on the clock. Only a refusal or a
+        // cancellation takes the parcel off the round, and it goes straight to
+        // the return pipeline rather than to the retired FAILED status.
         OrderStatus::OUT_FOR_DELIVERY->value => [
             OrderStatus::DELIVERED->value,
-            OrderStatus::FAILED->value,
+            OrderStatus::READY_TO_RETURN->value,
             OrderStatus::REJECTED->value,
             OrderStatus::CANCELED->value,
         ],
         OrderStatus::DELIVERED->value => [],
-        OrderStatus::FAILED->value => [],
+        // Orders stranded on the retired status still need a way into the
+        // reverse leg.
+        OrderStatus::FAILED->value => [
+            OrderStatus::READY_TO_RETURN->value,
+        ],
         OrderStatus::REJECTED->value => [],
         OrderStatus::CANCELED->value => [],
+        OrderStatus::READY_TO_RETURN->value => [],
         OrderStatus::RETURN_REQUESTED->value => [],
         OrderStatus::RETURN_IN_PROGRESS->value => [],
         OrderStatus::RETURNED->value => [],
     ];
 
     /**
-     * @param  array{failure_reason?: string|null, failure_note?: string|null}  $context
+     * @param  array{failure_reason?: string|null, failure_note?: string|null, attachment_path?: string|null, attachment_name?: string|null}  $context
      *
      * @throws ValidationException
      * @throws AuthorizationException
@@ -102,7 +126,7 @@ class OrderTransitionService
     /**
      * Apply a validated status transition without triggering outbound partner sync.
      *
-     * @param  array{failure_reason?: string|null, failure_note?: string|null}  $context
+     * @param  array{failure_reason?: string|null, failure_note?: string|null, attachment_path?: string|null, attachment_name?: string|null}  $context
      *
      * @throws ValidationException
      * @throws AuthorizationException
@@ -126,7 +150,7 @@ class OrderTransitionService
 
             // A non-delivered order must always carry a reason so the seller and
             // the return workflow can tell a refusal from an unreachable customer.
-            if ($toStatus === OrderStatus::FAILED->value) {
+            if (OrderStatus::from($toStatus)->carriesFailureReason()) {
                 $attributes['failure_reason'] = OrderFailureReason::tryFrom(
                     (string) ($context['failure_reason'] ?? '')
                 ) ?? OrderFailureReason::OTHER;
@@ -138,11 +162,17 @@ class OrderTransitionService
             $order->recordStatus(
                 $toStatus,
                 $actor,
-                $this->historyComment($comment, $attributes['failure_reason'] ?? null, $attributes['failure_note'] ?? null)
+                $this->historyComment($comment, $attributes['failure_reason'] ?? null, $attributes['failure_note'] ?? null),
+                attachmentPath: $context['attachment_path'] ?? null,
+                attachmentName: $context['attachment_name'] ?? null,
             );
 
             if ($toStatus === OrderStatus::IN_DEPOT->value) {
                 $this->orderStatus->handleAutoCityDeliveryTransition($order);
+            }
+
+            if ($toStatus === OrderStatus::PREPARED->value) {
+                $this->orderStatus->handlePreparedRouting($order);
             }
 
             if ($toStatus === OrderStatus::RECEIVED_IN_DESTINATION->value) {
@@ -215,7 +245,16 @@ class OrderTransitionService
             ]);
         }
 
-        $permission = 'orders.transition.to_'.strtolower($toStatus);
+        // The enum owns the naming so the catalog, the help matrix and this check
+        // can never drift apart. A null permission marks a status that is only
+        // ever stamped as a side effect, which this service must refuse to set.
+        $permission = OrderStatus::tryFrom($toStatus)?->transitionPermission();
+
+        if ($permission === null) {
+            throw ValidationException::withMessages([
+                'to_status' => "Status {$toStatus} cannot be set by hand.",
+            ]);
+        }
 
         if (! $actor->hasPermission($permission)) {
             throw new AuthorizationException("Missing required permission: {$permission}");

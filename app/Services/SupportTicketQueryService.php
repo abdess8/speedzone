@@ -6,6 +6,7 @@ use App\Enums\SupportTicketCategory;
 use App\Enums\SupportTicketStatus;
 use App\Models\SupportTicket;
 use App\Models\User;
+use App\Support\StatusCounts;
 use App\Support\SupportPermissions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class SupportTicketQueryService
     /**
      * Build the filtered, scoped and sorted support ticket query.
      */
-    public function build(Request $request, User $user): Builder
+    public function build(Request $request, User $user, bool $withStatusFilter = true): Builder
     {
         $query = SupportTicket::query()->with(['creator', 'assignee']);
 
@@ -40,10 +41,22 @@ class SupportTicketQueryService
             });
         }
 
-        $this->applyFilters($query, $request);
+        $this->applyFilters($query, $request, $withStatusFilter);
         $this->applySorting($query, $request);
 
         return $query;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function statusCounts(Request $request, User $user): array
+    {
+        return StatusCounts::build(
+            $this->build($request, $user, withStatusFilter: false),
+            SupportTicketStatus::options(),
+            'support_tickets.status',
+        );
     }
 
     public function perPage(Request $request): int
@@ -57,7 +70,7 @@ class SupportTicketQueryService
         return min($perPage, self::MAX_PAGE_SIZE);
     }
 
-    private function applyFilters(Builder $query, Request $request): void
+    private function applyFilters(Builder $query, Request $request, bool $withStatusFilter = true): void
     {
         $query->when($request->input('reference'), fn (Builder $q, $value) => $q->where('reference', 'like', "%{$value}%"));
 
@@ -88,7 +101,7 @@ class SupportTicketQueryService
             $q->where('assigned_to', (int) $value);
         });
 
-        $query->when($request->input('status'), function (Builder $q, $value) {
+        $query->when($withStatusFilter ? $request->input('status') : null, function (Builder $q, $value) {
             $values = array_values(array_intersect((array) $value, SupportTicketStatus::values()));
             if ($values !== []) {
                 $q->whereIn('status', $values);

@@ -34,6 +34,58 @@ const RETURN_READ = [
   'returns.manage',
 ];
 const SUPPORT_READ = ['support.read.all', 'support.read.own', 'support.manage'];
+const STOCK_READ = ['stock.view', 'stock.receive_inbound', 'stock.admin_override'];
+// A collector holds nothing else in this module, so the shipment list is the only
+// entry he needs — and the only one the parent menu should appear for on his account.
+const INBOUND_READ = [...STOCK_READ, 'stock.create_inbound', 'stock.collect_inbound'];
+
+/**
+ * Reverse logistics pipeline, in the order the parcel travels it. Mirrors
+ * `App\Enums\ReturnStatus::pipeline()`; the values are the ones the returns
+ * index filters on, so a mismatch shows up as an empty list rather than a
+ * silent wrong result.
+ */
+const RETURN_STATUS_VIEWS = [
+  { key: 'created', status: 'CREATED' },
+  { key: 'received_at_hub', status: 'RECEIVED_AT_HUB' },
+  { key: 'in_transit_to_depot', status: 'IN_TRANSIT_TO_DEPOT' },
+  { key: 'arrived_vendor_hub', status: 'ARRIVED_VENDOR_HUB' },
+  { key: 'in_delivery_to_vendor', status: 'IN_DELIVERY_TO_VENDOR' },
+  { key: 'delivered_to_vendor', status: 'DELIVERED_TO_VENDOR' },
+];
+
+/** Naming a driver for the last mile, in bulk. */
+const RETURN_DISPATCH = [
+  'returns.manage',
+  'returns.update_status',
+  'returns.transition.to_in_delivery_to_vendor',
+];
+
+/** Sidebar children filtering the returns list down to one workflow step. */
+const returnStatusChildren = () => [
+  {
+    key: 'returns-all',
+    labelKey: 'sidebar.returns_views.all',
+    href: '/returns',
+    permissions: RETURN_READ,
+  },
+  {
+    key: 'returns-hand-back',
+    labelKey: 'sidebar.returns_views.hand_back',
+    href: '/returns/hand-back',
+    permissions: RETURN_DISPATCH,
+  },
+  ...RETURN_STATUS_VIEWS.map(({ key, status }) => ({
+    key: `returns-${key}`,
+    labelKey: `sidebar.returns_views.${key}`,
+    href: `/returns?status=${status}`,
+    permissions: RETURN_READ,
+  })),
+];
+
+/** The seller shortcut is resolved server side in canAccessReturnsModule(). */
+const canSeeReturns = ({ canAny, user }) =>
+  user?.can_view_returns === true || canAny(RETURN_READ);
 
 export const menuItems = [
   {
@@ -43,7 +95,7 @@ export const menuItems = [
     // Not "/": that path serves the public marketing site, for guests and signed-in
     // users alike. The application dashboard lives at /dashboard.
     href: '/dashboard',
-    permissions: [],
+    permissions: ['dashboard.view'],
   },
   {
     key: 'orders',
@@ -104,6 +156,13 @@ export const menuItems = [
       isDriver || canAny(['partners.read', 'partners.deliveries.manage']),
   },
   {
+    key: 'preparation',
+    labelKey: 'sidebar.preparation',
+    icon: 'ri-inbox-unarchive-line',
+    href: '/orders/preparation',
+    permissions: ['orders.transition.to_prepared'],
+  },
+  {
     key: 'pickups',
     labelKey: 'sidebar.pickups',
     icon: 'ri-truck-line',
@@ -121,10 +180,47 @@ export const menuItems = [
     key: 'returns',
     labelKey: 'sidebar.returns',
     icon: 'ri-arrow-go-back-line',
-    href: '/returns',
     permissions: RETURN_READ,
-    // The server already resolves the seller shortcut in canAccessReturnsModule().
-    visible: ({ canAny, user }) => user?.can_view_returns === true || canAny(RETURN_READ),
+    visible: canSeeReturns,
+    children: returnStatusChildren(),
+  },
+  {
+    key: 'stock',
+    labelKey: 'sidebar.stock',
+    icon: 'ri-archive-2-line',
+    permissions: INBOUND_READ,
+    children: [
+      {
+        key: 'stock-products',
+        labelKey: 'sidebar.stock_views.products',
+        href: '/products',
+        permissions: STOCK_READ,
+      },
+      {
+        key: 'stock-import',
+        labelKey: 'sidebar.stock_views.import',
+        href: '/products/import',
+        permissions: ['stock.import_products'],
+      },
+      {
+        key: 'stock-inventory',
+        labelKey: 'sidebar.stock_views.inventory',
+        href: '/stock/inventory',
+        permissions: ['stock.view', 'stock.admin_override'],
+      },
+      {
+        key: 'stock-receptions',
+        labelKey: 'sidebar.stock_views.receptions',
+        href: '/stock-receptions',
+        permissions: INBOUND_READ,
+      },
+      {
+        key: 'stock-movements',
+        labelKey: 'sidebar.stock_views.movements',
+        href: '/stock/movements',
+        permissions: ['stock.admin_override'],
+      },
+    ],
   },
   {
     key: 'invoices',
@@ -242,27 +338,16 @@ export const menuItems = [
     ],
   },
   {
-    key: 'guides',
-    labelKey: 'sidebar.guides',
-    icon: 'ri-graduation-cap-line',
-    href: '/guides',
-    footer: true,
-    // The catalog filters itself per role, so the entry is offered to everyone.
-    permissions: [],
-  },
-  {
-    key: 'settings',
-    labelKey: 'sidebar.settings.title',
-    icon: 'ri-settings-3-line',
+    // Everything that administers *people*: the accounts themselves, the ones
+    // still waiting to be let in, and the B2B partners with their assignments.
+    // Configuration knobs live in the topbar gear instead, which is why this
+    // group replaced the old Settings menu rather than sitting next to it.
+    key: 'user-admin',
+    labelKey: 'sidebar.user_admin',
+    icon: 'ri-team-line',
     footer: true,
     permissions: [],
     children: [
-      {
-        key: 'profile',
-        labelKey: 'sidebar.settings.profile',
-        route: 'profile.show',
-        permissions: [],
-      },
       {
         key: 'users',
         labelKey: 'sidebar.settings.users',
@@ -276,18 +361,6 @@ export const menuItems = [
         permissions: ['users.read'],
       },
       {
-        key: 'roles',
-        labelKey: 'sidebar.settings.roles_permissions',
-        href: '/roles',
-        permissions: ['roles.read'],
-      },
-      {
-        key: 'alerts',
-        labelKey: 'sidebar.settings.alerts',
-        href: '/alerts',
-        permissions: ['alerts.read'],
-      },
-      {
         key: 'partners',
         labelKey: 'sidebar.settings.partners',
         href: '/partners',
@@ -299,11 +372,34 @@ export const menuItems = [
         route: 'partner-assignments.index',
         permissions: ['partners.update'],
       },
+    ],
+  },
+  {
+    key: 'help-center',
+    labelKey: 'sidebar.help_center',
+    icon: 'ri-book-open-line',
+    footer: true,
+    // All three document rules the reader already lives under, and the guide
+    // catalogue filters itself per role.
+    permissions: [],
+    children: [
       {
-        key: 'api-integrations',
-        labelKey: 'sidebar.settings.api_integrations',
-        route: 'api-integrations.index',
-        permissions: ['orders.create'],
+        key: 'help-partnership',
+        labelKey: 'sidebar.help_views.partnership',
+        route: 'help.partnership',
+        permissions: [],
+      },
+      {
+        key: 'help-processes',
+        labelKey: 'sidebar.help_views.processes',
+        route: 'help.processes',
+        permissions: [],
+      },
+      {
+        key: 'guides',
+        labelKey: 'sidebar.guides',
+        href: '/guides',
+        permissions: [],
       },
     ],
   },
@@ -321,7 +417,7 @@ export const menuSections = [
   {
     key: 'operations',
     labelKey: 'sidebar.sections.operations',
-    keys: ['partner-orders', 'pickups', 'transfers', 'returns'],
+    keys: ['partner-orders', 'preparation', 'pickups', 'transfers', 'returns', 'stock'],
   },
   {
     key: 'finance',
@@ -346,7 +442,7 @@ export const mobileTabs = [
     icon: 'ri-home-5-line',
     activeIcon: 'ri-home-5-fill',
     href: '/dashboard',
-    permissions: [],
+    permissions: ['dashboard.view'],
   },
   {
     key: 'orders',
@@ -361,8 +457,22 @@ export const mobileTabs = [
     labelKey: 'sidebar.bottom_nav.operations',
     icon: 'ri-truck-line',
     activeIcon: 'ri-truck-fill',
-    permissions: [...PICKUP_READ, ...TRANSFER_READ, ...RETURN_READ],
+    permissions: [
+      ...PICKUP_READ,
+      ...TRANSFER_READ,
+      ...RETURN_READ,
+      ...INBOUND_READ,
+      'orders.transition.to_prepared',
+    ],
     children: [
+      {
+        // On the bench itself, phone in hand: this is where the QR scanner lives.
+        key: 'preparation',
+        labelKey: 'sidebar.preparation',
+        icon: 'ri-inbox-unarchive-line',
+        href: '/orders/preparation',
+        permissions: ['orders.transition.to_prepared'],
+      },
       {
         key: 'pickups',
         labelKey: 'sidebar.pickups',
@@ -381,9 +491,35 @@ export const mobileTabs = [
         key: 'returns',
         labelKey: 'sidebar.returns',
         icon: 'ri-arrow-go-back-line',
-        href: '/returns',
         permissions: RETURN_READ,
-        visible: ({ canAny, user }) => user?.can_view_returns === true || canAny(RETURN_READ),
+        visible: canSeeReturns,
+        children: returnStatusChildren(),
+      },
+      {
+        key: 'stock',
+        labelKey: 'sidebar.stock',
+        icon: 'ri-archive-2-line',
+        permissions: INBOUND_READ,
+        children: [
+          {
+            key: 'stock-products',
+            labelKey: 'sidebar.stock_views.products',
+            href: '/products',
+            permissions: STOCK_READ,
+          },
+          {
+            key: 'stock-inventory',
+            labelKey: 'sidebar.stock_views.inventory',
+            href: '/stock/inventory',
+            permissions: ['stock.view', 'stock.admin_override'],
+          },
+          {
+            key: 'stock-receptions',
+            labelKey: 'sidebar.stock_views.receptions',
+            href: '/stock-receptions',
+            permissions: INBOUND_READ,
+          },
+        ],
       },
     ],
   },
@@ -448,31 +584,36 @@ function isVisible(item, context) {
 }
 
 /**
+ * Prune a branch against the permission context, at any depth.
+ *
+ * Returns null when the entry itself is hidden, or when it is a group left
+ * without a single reachable destination — a collapse or a sheet with nothing
+ * inside is a dead end the user can still tap.
+ */
+function pruneItem(item, context) {
+  if (!isVisible(item, context)) {
+    return null;
+  }
+
+  if (!item.children) {
+    return item;
+  }
+
+  const children = item.children
+    .map((child) => pruneItem(child, context))
+    .filter(Boolean);
+
+  return children.length > 0 ? { ...item, children } : null;
+}
+
+/**
  * Filter the tree down to what the current user may see.
  *
  * @param {object} context result of `usePermissions()` flattened to plain values
  * @returns {Array} the visible menu items, children already pruned
  */
 export function resolveMenuItems(context) {
-  return menuItems.reduce((visible, item) => {
-    if (!isVisible(item, context)) {
-      return visible;
-    }
-
-    if (!item.children) {
-      visible.push(item);
-
-      return visible;
-    }
-
-    const children = item.children.filter((child) => isVisible(child, context));
-
-    if (children.length > 0) {
-      visible.push({ ...item, children });
-    }
-
-    return visible;
-  }, []);
+  return menuItems.map((item) => pruneItem(item, context)).filter(Boolean);
 }
 
 /**
@@ -535,10 +676,10 @@ export function resolveMobileTabs(context) {
     }
 
     if (tab.children) {
-      const children = tab.children.filter((child) => isVisible(child, context));
+      const pruned = pruneItem(tab, context);
 
-      if (children.length > 0) {
-        visible.push({ ...tab, children });
+      if (pruned) {
+        visible.push(pruned);
       }
 
       return visible;

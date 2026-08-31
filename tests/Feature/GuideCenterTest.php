@@ -45,6 +45,30 @@ test('a seller is offered the order guides', function () {
         });
 });
 
+test('a seller is offered the stock guides', function () {
+    $this->actingAs(guideUserWithRole('Seller'))
+        ->get(route('guides.index'))
+        ->assertOk()
+        ->assertInertia(function (AssertableInertia $page) {
+            $keys = collect($page->toArray()['props']['guides'])->pluck('key');
+
+            expect($keys)->toContain('stock-catalog', 'stock-shipment', 'stock-inventory');
+        });
+});
+
+// The depot side counts other people's goods; it never adjusts a vendor's own
+// catalog, so the inventory walkthrough would end on a screen it cannot save.
+test('a dispatcher is not offered the vendor stock guides', function () {
+    $this->actingAs(guideUserWithRole('Dispatcher'))
+        ->get(route('guides.index'))
+        ->assertOk()
+        ->assertInertia(function (AssertableInertia $page) {
+            $keys = collect($page->toArray()['props']['guides'])->pluck('key');
+
+            expect($keys)->not->toContain('stock-catalog', 'stock-shipment', 'stock-inventory');
+        });
+});
+
 test('a driver is not offered a guide he could not follow', function () {
     $this->actingAs(guideUserWithRole('Driver'))
         ->get(route('guides.index'))

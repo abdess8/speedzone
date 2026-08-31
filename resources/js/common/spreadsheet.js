@@ -113,8 +113,9 @@ export async function readSpreadsheet(file) {
  *
  * @param {Array<{header: string, example: string}>} columns
  * @param {string} fileName
+ * @param {string} sheetName
  */
-export async function downloadTemplate(columns, fileName = 'template_commandes.xlsx') {
+export async function downloadTemplate(columns, fileName = 'template_commandes.xlsx', sheetName = 'Commandes') {
   const XLSX = await import('xlsx');
 
   const sheet = XLSX.utils.aoa_to_sheet([
@@ -127,6 +128,6 @@ export async function downloadTemplate(columns, fileName = 'template_commandes.x
   }));
 
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, sheet, 'Commandes');
+  XLSX.utils.book_append_sheet(workbook, sheet, sheetName);
   XLSX.writeFile(workbook, fileName);
 }

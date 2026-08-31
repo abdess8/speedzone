@@ -18,9 +18,14 @@ return [
         'full_name' => 'Nom complet',
         'email' => 'Email',
         'phone' => 'Téléphone',
+        'city' => 'Ville',
         'cin' => 'CIN',
         'ice' => 'ICE',
         'role' => 'Rôle',
+    ],
+    'team' => [
+        'sub_users' => 'Sous-utilisateurs',
+        'toggle' => 'Afficher ou masquer les sous-utilisateurs de :name',
     ],
     'show' => [
         'info' => 'Informations',
@@ -91,6 +96,7 @@ return [
         'cin_front_attachment' => 'CIN (Recto)',
         'cin_back_attachment' => 'CIN (Verso)',
         'current_file' => 'Fichier actuel',
+        'current_documents' => 'Documents actuels',
         'replace_file' => 'Téléverser pour remplacer',
         'sectors_info' => 'Secteur et ville',
         'sectors_description' => 'Sélectionnez les secteurs de livraison que ce livreur doit desservir.',

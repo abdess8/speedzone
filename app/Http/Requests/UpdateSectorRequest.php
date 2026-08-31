@@ -17,6 +17,12 @@ class UpdateSectorRequest extends FormRequest
         if ($this->has('is_active')) {
             $this->merge(['is_active' => $this->boolean('is_active')]);
         }
+
+        // The payout is invisible to whoever cannot read it, so a submitted
+        // value can only come from a hand-crafted request.
+        if (! $this->user()?->hasPermission('sectors.read_driver_price')) {
+            $this->request->remove('delivery_driver_price');
+        }
     }
 
     /**
@@ -43,6 +49,7 @@ class UpdateSectorRequest extends FormRequest
             'delivery_price' => ['sometimes', 'required', 'numeric', 'min:0', 'max:99999999.99'],
             'return_price' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'delivery_driver_price' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'delivery_delay' => ['sometimes', 'nullable', 'string', 'max:40'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

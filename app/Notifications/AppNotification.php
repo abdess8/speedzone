@@ -34,6 +34,14 @@ abstract class AppNotification extends Notification implements ShouldQueue
         return $channels;
     }
 
+    /**
+     * Entitlement, then preference.
+     *
+     * The recipient lists are built by the listeners, but they are chosen for
+     * who can *act* on an event; who should be *told* about it is a separate
+     * question, and one the sender must not be trusted to answer alone. The
+     * last word therefore belongs to the recipient's own role.
+     */
     protected function shouldSendTo(User $notifiable): bool
     {
         return app(NotificationPreferenceService::class)

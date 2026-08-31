@@ -21,6 +21,9 @@ class ReturnScanRequest extends FormRequest
         return [
             'scan' => ['required', 'string', 'max:500'],
             'comment' => ['nullable', 'string', 'max:2000'],
+            // Only read on the hand-back step, where the parcel needs a name on
+            // it; every other step ignores it.
+            'driver_id' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
 }

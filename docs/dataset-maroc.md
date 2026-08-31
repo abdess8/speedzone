@@ -57,9 +57,16 @@ Les mots de passe et jetons de `users` sont masqués sauf avec `--with-credentia
 | Décharges de caisse livreurs | ~16 | 5 à 10 livraisons, montant arrêté par le livreur |
 | Réclamations | 30 | 2 à 4 messages, pièces jointes référencées |
 
-Contexte marocain : 15 villes (Casablanca, Rabat, Marrakech, Fès, Tanger, Agadir,
-Meknès, Oujda, Kénitra, Tétouan, Safi, El Jadida, Mohammedia, Béni Mellal, Nador),
-65 secteurs, 14 vendeurs et 15 boutiques, 18 livreurs, 2 dispatcheurs, 1 admin.
+Contexte marocain : le réseau est importé de la grille commerciale
+(`database/data/cities-sectors.csv`), soit 55 villes et 561 secteurs couvrant les
+12 régions du royaume. Chaque grande ville y est scindée entre sa partie urbaine
+(`CASABLANCA VILLE`) et sa périphérie (`CASABLANCA REGION`), qui portent des
+prix et des délais distincts. S'y ajoutent 14 vendeurs et 15 boutiques,
+18 livreurs, 2 dispatcheurs, 1 admin.
+
+Le volume n'est pas réparti uniformément : `CITY_WEIGHTS` concentre les
+commandes sur les grandes agglomérations et laisse le reste du réseau en
+arrière-plan.
 
 **Langue** : exactement 20 % des clients (nom, prénom, adresse, note de livraison)
 sont en arabe, via un quota et non un tirage aléatoire — par exemple
@@ -102,10 +109,11 @@ Le statut « injoignable » n'est pas un statut distinct en base : il est porté
 | Libellé métier | Valeur en base |
 | --- | --- |
 | retour demandé | `CREATED` |
-| retour en cours (vers le dépôt) | `IN_TRANSIT_TO_DEPOT` |
-| retour reçu au hub | `RECEIVED_AT_DEPOT` |
-| retour en route vers le vendeur | `IN_TRANSIT_TO_SELLER` |
-| retour restitué au vendeur | `DELIVERED_TO_SELLER` |
+| retour reçu au dépôt de la ville de livraison | `RECEIVED_AT_HUB` |
+| retour en transit vers le hub du vendeur | `IN_TRANSIT_TO_DEPOT` |
+| retour arrivé au hub du vendeur | `ARRIVED_VENDOR_HUB` |
+| retour en cours de restitution | `IN_DELIVERY_TO_VENDOR` |
+| retour restitué au vendeur | `DELIVERED_TO_VENDOR` |
 | retour annulé | `CANCELLED` |
 
 ### Ramassages (`pickup_requests.status`)

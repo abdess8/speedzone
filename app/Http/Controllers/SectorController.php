@@ -40,6 +40,7 @@ class SectorController extends Controller
         return Inertia::render('sectors/create', [
             'cities' => $this->cityOptions(),
             'defaultCityId' => $request->integer('city_id') ?: null,
+            'can' => $this->abilities($request),
         ]);
     }
 
@@ -78,6 +79,7 @@ class SectorController extends Controller
         return Inertia::render('sectors/edit', [
             'sector' => SectorResource::make($sector)->resolve($request),
             'cities' => $this->cityOptions(),
+            'can' => $this->abilities($request),
         ]);
     }
 
@@ -138,6 +140,7 @@ class SectorController extends Controller
             'create' => $user->can('create', Sector::class),
             'update' => $user->hasPermission('sectors.update'),
             'delete' => $user->hasPermission('sectors.delete'),
+            'view_driver_price' => $user->hasPermission('sectors.read_driver_price'),
         ];
     }
 }

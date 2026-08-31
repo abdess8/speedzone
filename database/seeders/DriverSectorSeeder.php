@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\City;
 use App\Models\Role;
 use App\Models\Sector;
 use App\Models\User;
@@ -20,9 +21,13 @@ class DriverSectorSeeder extends Seeder
             return;
         }
 
-        $sectors = Sector::query()->where('is_active', true)->get();
+        $cities = City::query()
+            ->whereHas('sectors', fn ($query) => $query->where('is_active', true))
+            ->with(['sectors' => fn ($query) => $query->where('is_active', true)])
+            ->orderBy('id')
+            ->get();
 
-        if ($sectors->isEmpty()) {
+        if ($cities->isEmpty()) {
             $this->command?->warn('DriverSectorSeeder skipped: no active sectors found.');
 
             return;
@@ -58,11 +63,18 @@ class DriverSectorSeeder extends Seeder
             });
         }
 
-        foreach ($drivers as $driver) {
-            // Assign each driver a random handful of sectors.
-            $assigned = $sectors->random(min(3, $sectors->count()));
+        foreach ($drivers->values() as $index => $driver) {
+            // A courier works one city. Drawing his sectors from the whole
+            // country would put the same man in Tanger and Laayoune on the same
+            // round, and the dispatch screens filter drivers by city.
+            $city = $cities->firstWhere('id', $driver->city_id)
+                ?? $cities[$index % $cities->count()];
 
-            $payload = $assigned->mapWithKeys(
+            if ($driver->city_id !== $city->id) {
+                $driver->forceFill(['city_id' => $city->id])->save();
+            }
+
+            $payload = $city->sectors->shuffle()->take(3)->mapWithKeys(
                 fn (Sector $sector) => [$sector->id => ['assigned_at' => now()]]
             )->all();
 

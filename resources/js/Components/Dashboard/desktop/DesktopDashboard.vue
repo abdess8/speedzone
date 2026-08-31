@@ -37,11 +37,20 @@ import { formatMoney, formatMoneyRounded } from '@/common/formatMoney';
  */
 const props = defineProps({
   dashboard: { type: Object, default: null },
+  widgets: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
   error: { type: String, default: '' },
   period: { type: String, required: true },
   customRange: { type: String, default: '' },
 });
+
+/**
+ * Whether a family of panels is open to this role.
+ *
+ * The server decides and also omits the matching figures, so this only spares
+ * the reader an empty frame — it is not what keeps the numbers private.
+ */
+const shows = (section) => props.widgets?.[section] === true;
 
 const emit = defineEmits(['update:period', 'update:customRange', 'refresh']);
 
@@ -105,26 +114,31 @@ const flatpickrConfig = computed(() => ({
 
 const ordersByDay = computed(() => charts.value?.ordersByDay ?? { labels: [], series: [] });
 
-const heroStats = computed(() => [
-  {
-    key: 'delivered',
-    label: t('dashboard.desktop.hero.delivered'),
-    value: String(number(summary.value.delivered_orders)),
-    href: '/orders?status_group=delivered',
-  },
-  {
-    key: 'in_transit',
-    label: t('dashboard.desktop.hero.in_transit'),
-    value: String(number(summary.value.in_transit)),
-    href: '/orders?status_group=delivery',
-  },
-  {
-    key: 'returns',
-    label: t('dashboard.desktop.hero.returns'),
-    value: String(number(summary.value.returned_orders)),
-    href: '/orders?status_group=failed',
-  },
-]);
+const heroStats = computed(() =>
+  [
+    {
+      key: 'delivered',
+      label: t('dashboard.desktop.hero.delivered'),
+      value: String(number(summary.value.delivered_orders)),
+      href: '/orders?status_group=delivered',
+      section: null,
+    },
+    {
+      key: 'in_transit',
+      label: t('dashboard.desktop.hero.in_transit'),
+      value: String(number(summary.value.in_transit)),
+      href: '/orders?status_group=delivery',
+      section: 'operations',
+    },
+    {
+      key: 'returns',
+      label: t('dashboard.desktop.hero.returns'),
+      value: String(number(summary.value.returned_orders)),
+      href: '/orders?status_group=failed',
+      section: 'operations',
+    },
+  ].filter((stat) => stat.section === null || shows(stat.section))
+);
 
 const successGauge = computed(() => charts.value?.deliverySuccessRate ?? {});
 
@@ -347,7 +361,7 @@ const statusBadgeClass = (color) => `badge bg-${color}-subtle text-${color}`;
     <BRow class="g-4">
       <BCol xl="8">
         <BRow class="g-4">
-          <BCol lg="6">
+          <BCol v-if="shows('financials')" :lg="shows('operations') ? 6 : 12">
             <HeroPanel
               :label="t('dashboard.desktop.cash_headline')"
               :amount="summary.cash_to_collect"
@@ -359,7 +373,7 @@ const statusBadgeClass = (color) => `badge bg-${color}-subtle text-${color}`;
             />
           </BCol>
 
-          <BCol lg="6">
+          <BCol v-if="shows('operations')" :lg="shows('financials') ? 6 : 12">
             <StatusDonutCard
               :title="t('dashboard.charts.orders_by_status')"
               :total-label="t('dashboard.desktop.status.total')"
@@ -390,6 +404,7 @@ const statusBadgeClass = (color) => `badge bg-${color}-subtle text-${color}`;
       <BCol xl="4">
         <div class="ddash-side">
           <MetricBarCard
+            v-if="shows('performance')"
             :value="`${successRate}%`"
             :label="t('dashboard.desktop.success.label')"
             :caption="deliveredFailedLabel"
@@ -414,6 +429,7 @@ const statusBadgeClass = (color) => `badge bg-${color}-subtle text-${color}`;
           </div>
 
           <MetricBarCard
+            v-if="shows('financials')"
             :value="formatMoneyRounded(summary.cod_collected)"
             :label="t('dashboard.desktop.collected.label')"
             :caption="
@@ -429,7 +445,7 @@ const statusBadgeClass = (color) => `badge bg-${color}-subtle text-${color}`;
       </BCol>
     </BRow>
 
-    <section class="ddash-band">
+    <section v-if="shows('operations')" class="ddash-band">
       <h2 class="ddash-band-title">{{ t('dashboard.desktop.tasks.title') }}</h2>
       <TaskTiles
         :items="tasks"
@@ -466,63 +482,75 @@ const statusBadgeClass = (color) => `badge bg-${color}-subtle text-${color}`;
         <BCol xl="3" md="6">
           <KpiCard :title="t('dashboard.kpis.delivered_orders')" :value="summary.delivered_orders" icon="bx bx-check-shield" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
         </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.pending_pickup')" :value="summary.pending_pickup" icon="ri-time-line" icon-class="text-warning" icon-bg="bg-warning-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.in_transit')" :value="summary.in_transit" icon="ri-truck-line" icon-class="text-primary" icon-bg="bg-primary-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.out_for_delivery')" :value="summary.out_for_delivery" icon="ri-e-bike-2-line" icon-class="text-warning" icon-bg="bg-warning-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.returned_orders')" :value="summary.returned_orders" icon="ri-arrow-go-back-line" icon-class="text-dark" icon-bg="bg-dark-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.cancelled_orders')" :value="summary.cancelled_orders" icon="ri-stop-circle-line" icon-class="text-secondary" icon-bg="bg-secondary-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.cash_to_collect')" :value="summary.cash_to_collect" suffix=" MAD" :decimals="2" icon="ri-money-dollar-box-line" icon-class="text-warning" icon-bg="bg-warning-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.cod_collected')" :value="summary.cod_collected" suffix=" MAD" :decimals="2" icon="ri-hand-coin-line" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.delivery_success_rate')" :value="summary.delivery_success_rate ?? 0" suffix="%" :decimals="1" icon="ri-percent-line" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.average_delivery_time')" :value="summary.average_delivery_time_hours ?? 0" suffix=" h" :decimals="1" icon="ri-timer-line" icon-class="text-info" icon-bg="bg-info-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.active_sellers')" :value="summary.active_sellers" icon="ri-store-2-line" icon-class="text-primary" icon-bg="bg-primary-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.active_delivery_agents')" :value="summary.active_delivery_agents" icon="bx bx-id-card" icon-class="text-primary" icon-bg="bg-primary-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
+        <template v-if="shows('operations')">
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.pending_pickup')" :value="summary.pending_pickup" icon="ri-time-line" icon-class="text-warning" icon-bg="bg-warning-subtle" :loading="loading" />
+          </BCol>
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.in_transit')" :value="summary.in_transit" icon="ri-truck-line" icon-class="text-primary" icon-bg="bg-primary-subtle" :loading="loading" />
+          </BCol>
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.out_for_delivery')" :value="summary.out_for_delivery" icon="ri-e-bike-2-line" icon-class="text-warning" icon-bg="bg-warning-subtle" :loading="loading" />
+          </BCol>
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.returned_orders')" :value="summary.returned_orders" icon="ri-arrow-go-back-line" icon-class="text-dark" icon-bg="bg-dark-subtle" :loading="loading" />
+          </BCol>
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.cancelled_orders')" :value="summary.cancelled_orders" icon="ri-stop-circle-line" icon-class="text-secondary" icon-bg="bg-secondary-subtle" :loading="loading" />
+          </BCol>
+        </template>
+        <template v-if="shows('financials')">
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.cash_to_collect')" :value="summary.cash_to_collect" suffix=" MAD" :decimals="2" icon="ri-money-dollar-box-line" icon-class="text-warning" icon-bg="bg-warning-subtle" :loading="loading" />
+          </BCol>
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.cod_collected')" :value="summary.cod_collected" suffix=" MAD" :decimals="2" icon="ri-hand-coin-line" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
+          </BCol>
+        </template>
+        <template v-if="shows('performance')">
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.delivery_success_rate')" :value="summary.delivery_success_rate ?? 0" suffix="%" :decimals="1" icon="ri-percent-line" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
+          </BCol>
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.average_delivery_time')" :value="summary.average_delivery_time_hours ?? 0" suffix=" h" :decimals="1" icon="ri-timer-line" icon-class="text-info" icon-bg="bg-info-subtle" :loading="loading" />
+          </BCol>
+        </template>
+        <template v-if="shows('network')">
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.active_sellers')" :value="summary.active_sellers" icon="ri-store-2-line" icon-class="text-primary" icon-bg="bg-primary-subtle" :loading="loading" />
+          </BCol>
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.active_delivery_agents')" :value="summary.active_delivery_agents" icon="bx bx-id-card" icon-class="text-primary" icon-bg="bg-primary-subtle" :loading="loading" />
+          </BCol>
+        </template>
+        <BCol v-if="shows('customers')" xl="3" md="6">
           <KpiCard :title="t('dashboard.kpis.new_customers')" :value="summary.new_customers" icon="ri-user-add-line" icon-class="text-info" icon-bg="bg-info-subtle" :loading="loading" />
         </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.revenue_in_period')" :value="summary.revenue_in_period" suffix=" MAD" :decimals="2" icon="bx bx-dollar-circle" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.revenue_today')" :value="summary.revenue_today" suffix=" MAD" :decimals="2" icon="ri-funds-line" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.revenue_this_month')" :value="summary.revenue_this_month" suffix=" MAD" :decimals="2" icon="ri-line-chart-line" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.average_order_value')" :value="summary.average_order_value" suffix=" MAD" :decimals="2" icon="ri-scales-3-line" icon-class="text-secondary" icon-bg="bg-secondary-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.pending_transfers')" :value="summary.pending_transfers" icon="ri-truck-line" icon-class="text-warning" icon-bg="bg-warning-subtle" :loading="loading" :link="route('transfers.index')" :link-label="t('dashboard.view_transfers')" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.orders_at_agency')" :value="summary.orders_at_agency" icon="ri-building-line" icon-class="text-primary" icon-bg="bg-primary-subtle" :loading="loading" />
-        </BCol>
-        <BCol xl="3" md="6">
-          <KpiCard :title="t('dashboard.kpis.failed_deliveries')" :value="summary.failed_deliveries" icon="ri-close-circle-line" icon-class="text-danger" icon-bg="bg-danger-subtle" :loading="loading" />
-        </BCol>
+        <template v-if="shows('financials')">
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.revenue_in_period')" :value="summary.revenue_in_period" suffix=" MAD" :decimals="2" icon="bx bx-dollar-circle" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
+          </BCol>
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.revenue_today')" :value="summary.revenue_today" suffix=" MAD" :decimals="2" icon="ri-funds-line" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
+          </BCol>
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.revenue_this_month')" :value="summary.revenue_this_month" suffix=" MAD" :decimals="2" icon="ri-line-chart-line" icon-class="text-success" icon-bg="bg-success-subtle" :loading="loading" />
+          </BCol>
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.average_order_value')" :value="summary.average_order_value" suffix=" MAD" :decimals="2" icon="ri-scales-3-line" icon-class="text-secondary" icon-bg="bg-secondary-subtle" :loading="loading" />
+          </BCol>
+        </template>
+        <template v-if="shows('operations')">
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.pending_transfers')" :value="summary.pending_transfers" icon="ri-truck-line" icon-class="text-warning" icon-bg="bg-warning-subtle" :loading="loading" :link="route('transfers.index')" :link-label="t('dashboard.view_transfers')" />
+          </BCol>
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.orders_at_agency')" :value="summary.orders_at_agency" icon="ri-building-line" icon-class="text-primary" icon-bg="bg-primary-subtle" :loading="loading" />
+          </BCol>
+          <BCol xl="3" md="6">
+            <KpiCard :title="t('dashboard.kpis.failed_deliveries')" :value="summary.failed_deliveries" icon="ri-close-circle-line" icon-class="text-danger" icon-bg="bg-danger-subtle" :loading="loading" />
+          </BCol>
+        </template>
         <BCol xl="3" md="6">
           <KpiCard :title="t('dashboard.kpis.orders_in_period')" :value="summary.orders_in_period" icon="ri-file-list-3-line" icon-class="text-info" icon-bg="bg-info-subtle" :loading="loading" />
         </BCol>
@@ -534,7 +562,7 @@ const statusBadgeClass = (color) => `badge bg-${color}-subtle text-${color}`;
             <apexchart type="line" height="320" :series="ordersByDaySeries" :options="ordersByDayOptions" />
           </ChartCard>
         </BCol>
-        <BCol xl="4">
+        <BCol v-if="shows('performance')" xl="4">
           <ChartCard :title="t('dashboard.charts.delivery_success_rate')" :loading="loading" :empty="successGauge.rate == null" :empty-message="t('dashboard.empty.chart')">
             <apexchart type="radialBar" height="300" :series="successGaugeSeries" :options="successGaugeOptions" />
             <div class="text-center text-muted fs-13">{{ deliveredFailedLabel }}</div>
@@ -543,12 +571,12 @@ const statusBadgeClass = (color) => `badge bg-${color}-subtle text-${color}`;
       </BRow>
 
       <BRow class="mt-1">
-        <BCol xl="6">
+        <BCol v-if="shows('operations')" xl="6">
           <ChartCard :title="t('dashboard.charts.orders_by_city')" :loading="loading" :empty="!ordersByCitySeries[0]?.data?.length" :empty-message="t('dashboard.empty.chart')">
             <apexchart type="bar" height="320" :series="ordersByCitySeries" :options="ordersByCityOptions" />
           </ChartCard>
         </BCol>
-        <BCol xl="6">
+        <BCol v-if="shows('financials')" xl="6">
           <ChartCard :title="t('dashboard.charts.payment_methods')" :loading="loading" :empty="!paymentMethodsSeries.length" :empty-message="t('dashboard.empty.chart')">
             <apexchart type="pie" height="300" :series="paymentMethodsSeries" :options="paymentMethodsOptions" />
             <p v-if="paymentMethods.note" class="text-muted fs-12 mb-0 mt-2">{{ paymentMethods.note }}</p>
@@ -557,12 +585,12 @@ const statusBadgeClass = (color) => `badge bg-${color}-subtle text-${color}`;
       </BRow>
 
       <BRow class="mt-1">
-        <BCol xl="8">
+        <BCol v-if="shows('financials')" xl="8">
           <ChartCard :title="t('dashboard.charts.monthly_revenue')" :loading="loading" :empty="!monthlyRevenueSeries[0]?.data?.length" :empty-message="t('dashboard.empty.chart')">
             <apexchart type="area" height="320" :series="monthlyRevenueSeries" :options="monthlyRevenueOptions" />
           </ChartCard>
         </BCol>
-        <BCol xl="4">
+        <BCol v-if="shows('operations')" xl="4">
           <ChartCard :title="t('dashboard.charts.orders_by_status_summary')" :loading="loading" :empty="!(charts.ordersByStatus?.series ?? []).length" :empty-message="t('dashboard.empty.chart')">
             <div class="row g-3">
               <div v-for="(label, idx) in charts.ordersByStatus?.labels ?? []" :key="label" class="col-6">
@@ -577,12 +605,12 @@ const statusBadgeClass = (color) => `badge bg-${color}-subtle text-${color}`;
       </BRow>
 
       <BRow class="mt-1">
-        <BCol xl="6">
+        <BCol v-if="shows('network')" xl="6">
           <ChartCard :title="t('dashboard.charts.orders_per_seller')" :loading="loading" :empty="!sellersChartSeries[0]?.data?.length" :empty-message="t('dashboard.empty.chart')">
             <apexchart type="bar" height="320" :series="sellersChartSeries" :options="sellersChartOptions" />
           </ChartCard>
         </BCol>
-        <BCol xl="6">
+        <BCol v-if="shows('performance')" xl="6">
           <ChartCard :title="t('dashboard.charts.delivery_agents_performance')" :loading="loading" :empty="!agentPerformance.length" :empty-message="t('dashboard.empty.chart')">
             <apexchart type="bar" :height="Math.max(280, agentPerformance.length * 36)" :series="agentChartSeries" :options="agentChartOptions" />
             <div v-if="agentPerformance.length" class="table-responsive mt-3">
@@ -710,7 +738,7 @@ const statusBadgeClass = (color) => `badge bg-${color}-subtle text-${color}`;
         </BCol>
       </BRow>
 
-      <BRow class="mt-1 mb-4">
+      <BRow v-if="shows('customers')" class="mt-1 mb-4">
         <BCol cols="12">
           <BCard no-body>
             <BCardHeader>

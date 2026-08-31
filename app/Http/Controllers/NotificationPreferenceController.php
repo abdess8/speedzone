@@ -19,20 +19,18 @@ class NotificationPreferenceController extends Controller
 
     public function update(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'enabled' => ['sometimes', 'boolean'],
-            'invoice_generated' => ['sometimes', 'boolean'],
-            'ticket_created' => ['sometimes', 'boolean'],
-            'ticket_message' => ['sometimes', 'boolean'],
-            'ticket_closed' => ['sometimes', 'boolean'],
-            'return_requested' => ['sometimes', 'boolean'],
-            'system_notifications' => ['sometimes', 'boolean'],
-        ]);
+        // Only the topics the user's role entitles him to are accepted: an
+        // unlisted key is not a preference he owns.
+        $rules = [];
 
-        $preference = $this->preferences->update($request->user(), $validated);
+        foreach ($this->preferences->editableKeys($request->user()) as $key) {
+            $rules[$key] = ['sometimes', 'boolean'];
+        }
+
+        $preference = $this->preferences->update($request->user(), $request->validate($rules));
 
         return response()->json([
-            'data' => $preference->only(array_keys($this->preferences->defaults())),
+            'data' => $preference->only($this->preferences->editableKeys($request->user())),
         ]);
     }
 }

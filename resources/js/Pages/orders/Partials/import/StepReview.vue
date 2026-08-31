@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { formatMoney as money } from '@/common/formatMoney';
 import { IMPORT_FIELDS } from '@/composables/useOrderImport';
-import ImportCell from './ImportCell.vue';
+import ImportCell from '@/Components/ImportCell.vue';
 
 /**
  * Step 3: the review table.

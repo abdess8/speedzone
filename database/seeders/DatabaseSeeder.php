@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             DemoDataSeeder::class,
             TransferSeeder::class,
             FakeMoroccanDataSeeder::class,
+            StockDatasetSeeder::class,
         ]);
     }
 }

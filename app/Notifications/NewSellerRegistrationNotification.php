@@ -11,7 +11,7 @@ class NewSellerRegistrationNotification extends AppNotification
 
     public function notificationType(): NotificationType
     {
-        return NotificationType::System;
+        return NotificationType::SellerRegistered;
     }
 
     /**

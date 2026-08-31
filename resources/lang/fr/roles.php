@@ -31,6 +31,7 @@ return [
         'permissions_selected' => ':selected sur :total permissions sélectionnées',
         'select_all' => 'Tout sélectionner',
         'no_permissions' => 'Aucune permission disponible. Exécutez d\'abord le seeder des permissions.',
+        'permission_help' => 'Ce que permet « :permission »',
     ],
     'delete_confirm_text' => 'Supprimer le rôle « :name » ? Cette action est irréversible.',
     'empty' => 'Aucun rôle trouvé.',

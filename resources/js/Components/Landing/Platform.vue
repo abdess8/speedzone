@@ -1,17 +1,11 @@
 <script setup>
 import SectionHeading from '@/Components/Landing/SectionHeading.vue';
 import LandingButton from '@/Components/Landing/LandingButton.vue';
+import { useLandingLocale } from '@/Components/Landing/i18n';
 
-const features = [
-    'Gestion des commandes',
-    'Suivi temps réel (GPS)',
-    'Gestion des livreurs',
-    'Paiements COD',
-    'Historique complet',
-    'Notifications instantanées',
-    'Facturation & reversement',
-    'QR Codes & scan',
-];
+const { t } = useLandingLocale();
+
+const features = ['orders', 'tracking', 'drivers', 'cod', 'history', 'notifications', 'billing', 'qr'];
 </script>
 
 <template>
@@ -27,12 +21,12 @@ const features = [
                         <div class="sz-laptop__content">
                             <div class="sz-laptop__cards">
                                 <div class="sz-lcard">
-                                    <span class="sz-lcard__k">Commandes</span>
+                                    <span class="sz-lcard__k">{{ t('platform.mock.orders') }}</span>
                                     <span class="sz-lcard__v">3 942</span>
                                     <span class="sz-lcard__bar"><i style="width: 78%"></i></span>
                                 </div>
                                 <div class="sz-lcard">
-                                    <span class="sz-lcard__k">Livrées</span>
+                                    <span class="sz-lcard__k">{{ t('platform.mock.delivered') }}</span>
                                     <span class="sz-lcard__v">3 705</span>
                                     <span class="sz-lcard__bar"><i style="width: 92%; background: var(--sz-accent)"></i></span>
                                 </div>
@@ -59,10 +53,10 @@ const features = [
 
                 <div class="sz-platform__phone">
                     <div class="sz-platform__phone-inner">
-                        <span class="sz-platform__phone-label">Notifications</span>
-                        <div class="sz-pnote"><span>📦</span> Nouvelle commande</div>
-                        <div class="sz-pnote"><span>✅</span> Colis livré · COD 240 DH</div>
-                        <div class="sz-pnote"><span>🚚</span> Transfert en transit</div>
+                        <span class="sz-platform__phone-label">{{ t('platform.mock.notifications') }}</span>
+                        <div class="sz-pnote"><span>📦</span> {{ t('platform.mock.newOrder') }}</div>
+                        <div class="sz-pnote"><span>✅</span> {{ t('platform.mock.parcelDelivered') }}</div>
+                        <div class="sz-pnote"><span>🚚</span> {{ t('platform.mock.transferInTransit') }}</div>
                     </div>
                 </div>
             </div>
@@ -70,23 +64,23 @@ const features = [
             <div class="sz-platform__text">
                 <SectionHeading
                     align="left"
-                    eyebrow="Plateforme"
-                    title="Une plateforme intelligente pour gérer toute votre logistique"
-                    subtitle="Centralisez commandes, livreurs, paiements et retours. Prenez des décisions plus rapidement grâce à des données claires en temps réel."
+                    :eyebrow="t('platform.eyebrow')"
+                    :title="t('platform.title')"
+                    :subtitle="t('platform.subtitle')"
                 />
                 <ul class="sz-platform__features">
-                    <li v-for="(feature, i) in features" :key="feature" data-aos="fade-up" :data-aos-delay="i * 60">
+                    <li v-for="(feature, i) in features" :key="feature" data-aos="fade-up" :data-aos-delay="i * 30">
                         <span class="sz-check">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </span>
-                        {{ feature }}
+                        {{ t(`platform.features.${feature}`) }}
                     </li>
                 </ul>
                 <div class="sz-platform__cta" data-aos="fade-up">
                     <LandingButton href="/register" variant="primary" size="lg">
-                        Découvrir la plateforme
+                        {{ t('platform.cta') }}
                     </LandingButton>
                 </div>
             </div>

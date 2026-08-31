@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class OrderStatusHistory extends Model
 {
@@ -17,6 +18,8 @@ class OrderStatusHistory extends Model
         'user_id',
         'is_system',
         'comment',
+        'attachment_path',
+        'attachment_name',
         'pickup_request_id',
         'transfer_id',
         'return_id',
@@ -26,6 +29,16 @@ class OrderStatusHistory extends Model
         'status' => OrderStatus::class,
         'is_system' => 'boolean',
     ];
+
+    /**
+     * Publicly reachable URL of the proof attached to this entry, if any.
+     */
+    public function attachmentUrl(): ?string
+    {
+        return $this->attachment_path
+            ? Storage::disk('public')->url($this->attachment_path)
+            : null;
+    }
 
     public function order(): BelongsTo
     {

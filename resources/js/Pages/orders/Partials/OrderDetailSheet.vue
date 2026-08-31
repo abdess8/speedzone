@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import BottomSheet from '@/Components/BottomSheet.vue';
 import PaymentMethodBadge from '@/Components/PaymentMethodBadge.vue';
+import FailureReasonBadge from '@/Components/FailureReasonBadge.vue';
 import { formatMoney as money } from '@/common/formatMoney';
 import { telUrl, whatsAppUrl } from '@/common/phone';
 import { useI18n } from 'vue-i18n';
@@ -100,6 +101,7 @@ const rows = computed(() => {
         <span class="badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
           {{ order.status_label }}
         </span>
+        <FailureReasonBadge :order="order" />
         <PaymentMethodBadge
           :label="order.payment_method_label"
           :emoji="order.payment_method_emoji"

@@ -20,10 +20,6 @@ export default {
     if (localStorage.getItem('hoverd') === 'true') {
       document.documentElement.setAttribute('data-sidebar-size', 'sm-hover-active');
     }
-
-    document.getElementById('overlay')?.addEventListener('click', () => {
-      document.body.classList.remove('vertical-sidebar-enable');
-    });
   },
   created() {
     document.body.removeAttribute('data-layout');
@@ -36,10 +32,7 @@ export default {
 <template>
   <div id="layout-wrapper">
     <NavBar />
-    <div>
-      <AppSidebar />
-      <div class="vertical-overlay" id="overlay"></div>
-    </div>
+    <AppSidebar />
 
     <div class="main-content">
       <div class="page-content">

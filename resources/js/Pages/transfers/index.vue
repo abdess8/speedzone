@@ -8,14 +8,18 @@ import CreateTransferModal from "./Partials/CreateTransferModal.vue";
 import EntityLink from "@/Components/EntityLink.vue";
 import FilterPanel from "@/Components/FilterPanel.vue";
 import StatusPills from "@/Components/StatusPills.vue";
+import StatusKpiCards from "@/Components/StatusKpiCards.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
+import SortableTh from "@/Components/SortableTh.vue";
+import { useTableSort } from "@/composables/useTableSort";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
 
 const props = defineProps({
   transfers: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
+  stats: { type: Array, default: () => [] },
   filters: { type: Object, default: () => ({}) },
   filterOptions: { type: Object, default: () => ({}) },
   eligibleOrders: { type: Array, default: () => [] },
@@ -54,6 +58,7 @@ const leg = (transfer) =>
   `${transfer.from_city?.name ?? t("common.empty_value")} → ${transfer.to_city?.name ?? t("common.empty_value")}`;
 
 const cardRows = (transfer) => [
+  { label: t("common.type"), value: transfer.content_type_label },
   { label: t("transfers.table.packages"), value: transfer.number_of_packages },
   { label: t("transfers.table.total_amount"), value: money(transfer.total_amount), emphasis: true },
   { label: t("transfers.table.created"), value: formatDate(transfer.created_at) },
@@ -66,7 +71,7 @@ const sheetRows = (transfer) => [
 ];
 
 const query = () => {
-  const params = { per_page: perPage.value };
+  const params = { per_page: perPage.value, sort: sort.value, direction: direction.value };
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== "" && value !== null) params[key] = value;
   });
@@ -80,6 +85,8 @@ const reload = () => {
     replace: true,
   });
 };
+
+const { sort, direction, sortBy } = useTableSort(props.filters, reload);
 
 const applyFilters = () => reload();
 const resetFilters = () => {
@@ -118,6 +125,13 @@ onMounted(() => {
 <template>
   <Layout>
     <PageHeader :title="$t('transfers.title')" :pageTitle="$t('transfers.page_title')" />
+
+    <StatusKpiCards
+      :stats="stats"
+      :model-value="filters.status"
+      :all-label="$t('common.all_statuses')"
+      @select="selectStatus"
+    />
 
     <BCard no-body>
       <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
@@ -196,13 +210,27 @@ onMounted(() => {
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
               <tr>
-                <th>{{ $t('transfers.filters.reference') }}</th>
-                <th>{{ $t('transfers.table.from_city') }}</th>
-                <th>{{ $t('transfers.table.to_city') }}</th>
-                <th class="text-center">{{ $t('transfers.table.packages') }}</th>
-                <th class="text-end">{{ $t('transfers.table.total_amount') }}</th>
-                <th>{{ $t('common.status') }}</th>
-                <th>{{ $t('transfers.table.created') }}</th>
+                <SortableTh field="reference" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('transfers.filters.reference') }}
+                </SortableTh>
+                <SortableTh field="from_city" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('transfers.table.from_city') }}
+                </SortableTh>
+                <SortableTh field="to_city" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('transfers.table.to_city') }}
+                </SortableTh>
+                <SortableTh field="number_of_packages" align="center" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('transfers.table.packages') }}
+                </SortableTh>
+                <SortableTh field="total_amount" align="end" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('transfers.table.total_amount') }}
+                </SortableTh>
+                <SortableTh field="status" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('common.status') }}
+                </SortableTh>
+                <SortableTh field="created_at" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('transfers.table.created') }}
+                </SortableTh>
                 <th class="text-end">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
@@ -210,6 +238,13 @@ onMounted(() => {
               <tr v-for="transfer in rows" :key="transfer.id">
                 <td>
                   <EntityLink type="transfer" :entity="transfer" :show-status="false" size="sm" />
+                  <span
+                    class="badge ms-1"
+                    :class="`bg-${transfer.content_type_color}-subtle text-${transfer.content_type_color}`"
+                    :title="transfer.content_type_label"
+                  >
+                    <i :class="transfer.content_type_icon"></i>
+                  </span>
                 </td>
                 <td>{{ transfer.from_city?.name ?? $t('common.empty_value') }}</td>
                 <td>{{ transfer.to_city?.name ?? $t('common.empty_value') }}</td>
@@ -258,6 +293,7 @@ onMounted(() => {
     <CreateTransferModal
       :show="showCreateModal"
       :cities="filterOptions.cities ?? []"
+      :content-types="filterOptions.contentTypes ?? []"
       :default-from-city-id="filterOptions.defaultFromCityId"
       :staff="staff"
       @close="showCreateModal = false"

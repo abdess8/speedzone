@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { Link, router, useForm, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
@@ -18,11 +18,36 @@ const props = defineProps({
   allowedTransitions: { type: Array, default: () => [] },
   qrCode: { type: String, default: null },
   cities: { type: Array, default: () => [] },
+  /** Drivers covering the hand-back city; empty outside the last leg. */
+  drivers: { type: Array, default: () => [] },
   can: { type: Object, default: () => ({}) },
 });
 
 const showQrScanner = ref(false);
 const editingCustomer = ref(false);
+
+const HAND_BACK_STATUSES = ["ARRIVED_VENDOR_HUB", "IN_DELIVERY_TO_VENDOR"];
+
+const driverForm = useForm({
+  driver_id: props.orderReturn.assigned_to ?? "",
+  dispatch: false,
+  comment: "",
+});
+
+/** The driver panel only makes sense once the parcel is at the seller's hub. */
+const showDriverPanel = computed(
+  () => props.can.assign_driver && HAND_BACK_STATUSES.includes(props.orderReturn.status)
+);
+
+const isAtVendorHub = computed(() => props.orderReturn.status === "ARRIVED_VENDOR_HUB");
+
+const driverOptions = computed(() =>
+  props.drivers.reduce((options, driver) => {
+    options[driver.id] = driver.phone ? `${driver.name} (${driver.phone})` : driver.name;
+
+    return options;
+  }, {})
+);
 
 const customerForm = useForm({
   updated_customer_name: props.orderReturn.updated_customer_name ?? props.orderReturn.order?.customer?.full_name ?? "",
@@ -34,9 +59,9 @@ const customerForm = useForm({
 const formatDate = (value) => (value ? new Date(value).toLocaleString() : t("common.empty_value"));
 const empty = () => t("common.empty_value");
 
-const moveToDepot = () => {
+const receiveAtHub = () => {
   Swal.fire({
-    title: t("returns.swal.move_to_depot_confirm"),
+    title: t("returns.swal.receive_at_hub_confirm"),
     input: "textarea",
     inputLabel: t("returns.swal.optional_comment"),
     showCancelButton: true,
@@ -44,11 +69,19 @@ const moveToDepot = () => {
     cancelButtonText: t("common.cancel"),
   }).then((result) => {
     if (!result.isConfirmed) return;
-    router.post(route("returns.move-to-depot", props.orderReturn.id), { comment: result.value }, { preserveScroll: true });
+    router.post(route("returns.receive-at-hub", props.orderReturn.id), { comment: result.value }, { preserveScroll: true });
   });
 };
 
 const changeStatus = (status) => {
+  // Going out for restitution needs a name on the parcel, so this one step asks
+  // for a driver instead of a free-text comment.
+  if (status.value === "IN_DELIVERY_TO_VENDOR") {
+    dispatchToDriver();
+
+    return;
+  }
+
   Swal.fire({
     title: t("returns.swal.status_confirm", { label: status.label }),
     input: "textarea",
@@ -64,6 +97,42 @@ const changeStatus = (status) => {
       { preserveScroll: true }
     );
   });
+};
+
+const dispatchToDriver = () => {
+  if (!props.drivers.length) {
+    Swal.fire({ icon: "warning", title: t("returns.hand_back.no_drivers") });
+
+    return;
+  }
+
+  Swal.fire({
+    title: t("returns.hand_back.dispatch_one"),
+    input: "select",
+    inputOptions: driverOptions.value,
+    inputValue: props.orderReturn.assigned_to ?? "",
+    inputPlaceholder: t("returns.hand_back.select_driver"),
+    showCancelButton: true,
+    confirmButtonText: t("returns.swal.confirm"),
+    cancelButtonText: t("common.cancel"),
+    inputValidator: (value) => (value ? null : t("returns.errors.driver_required")),
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+    router.post(
+      route("returns.assign-driver", props.orderReturn.id),
+      { driver_id: Number(result.value), dispatch: true },
+      { preserveScroll: true }
+    );
+  });
+};
+
+/** Correct the carrier without rewinding the workflow. */
+const saveDriver = () => {
+  if (!driverForm.driver_id) return;
+
+  driverForm
+    .transform((data) => ({ ...data, driver_id: Number(data.driver_id), dispatch: false }))
+    .post(route("returns.assign-driver", props.orderReturn.id), { preserveScroll: true });
 };
 
 const saveCustomerData = () => {
@@ -99,11 +168,11 @@ onMounted(() => {
         <button
           v-if="can.update_status && orderReturn.status === 'CREATED'"
           class="btn btn-sm btn-primary"
-          :title="$t('returns.show.move_to_depot')"
-          @click="moveToDepot"
+          :title="$t('returns.show.receive_at_hub')"
+          @click="receiveAtHub"
         >
-          <i class="ri-truck-line align-bottom"></i>
-          <span class="d-none d-sm-inline ms-1">{{ $t('returns.show.move_to_depot') }}</span>
+          <i class="ri-store-3-line align-bottom"></i>
+          <span class="d-none d-sm-inline ms-1">{{ $t('returns.show.receive_at_hub') }}</span>
         </button>
 
         <div class="dropdown" v-if="allowedTransitions.length">
@@ -156,6 +225,11 @@ onMounted(() => {
               </dd>
               <dt class="col-5 text-muted">{{ $t('returns.show.current_city') }}</dt>
               <dd class="col-7">{{ orderReturn.current_location_city?.name || empty() }}</dd>
+              <dt class="col-5 text-muted">{{ $t('returns.hand_back.driver') }}</dt>
+              <dd class="col-7">
+                <UserAvatar v-if="orderReturn.assigned_driver" :user="orderReturn.assigned_driver" :size="24" clickable show-name />
+                <span v-else class="text-muted">{{ $t('returns.hand_back.unassigned') }}</span>
+              </dd>
               <dt class="col-5 text-muted">{{ $t('returns.show.creation_date') }}</dt>
               <dd class="col-7">{{ formatDate(orderReturn.created_at) }}</dd>
               <dt class="col-5 text-muted">{{ $t('returns.show.notes') }}</dt>
@@ -248,6 +322,43 @@ onMounted(() => {
       </BCol>
 
       <BCol xl="4">
+        <BCard v-if="showDriverPanel" no-body class="mb-3">
+          <BCardHeader>
+            <h5 class="card-title mb-0">{{ $t('returns.hand_back.driver') }}</h5>
+          </BCardHeader>
+          <BCardBody>
+            <div v-if="!drivers.length" class="alert alert-warning mb-0">
+              {{ $t('returns.hand_back.no_drivers') }}
+            </div>
+            <form v-else @submit.prevent="saveDriver">
+              <label class="form-label">{{ $t('returns.hand_back.driver') }}</label>
+              <select v-model="driverForm.driver_id" class="form-select mb-3">
+                <option value="">{{ $t('returns.hand_back.select_driver') }}</option>
+                <option v-for="driver in drivers" :key="driver.id" :value="driver.id">
+                  {{ driver.name }}{{ driver.phone ? ` (${driver.phone})` : '' }}
+                </option>
+              </select>
+              <div class="hstack gap-2">
+                <button
+                  type="submit"
+                  class="btn btn-sm btn-soft-primary"
+                  :disabled="driverForm.processing || !driverForm.driver_id"
+                >
+                  {{ orderReturn.assigned_to ? $t('returns.hand_back.reassign') : $t('returns.hand_back.assign') }}
+                </button>
+                <button
+                  v-if="isAtVendorHub"
+                  type="button"
+                  class="btn btn-sm btn-success ms-auto"
+                  @click="dispatchToDriver"
+                >
+                  <i class="ri-e-bike-2-line align-bottom me-1"></i>{{ $t('returns.hand_back.dispatch_one') }}
+                </button>
+              </div>
+            </form>
+          </BCardBody>
+        </BCard>
+
         <BCard no-body>
           <BCardHeader><h5 class="card-title mb-0">{{ $t('returns.show.status_history') }}</h5></BCardHeader>
           <BCardBody>

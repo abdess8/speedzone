@@ -13,20 +13,35 @@ const props = defineProps({
   cities: { type: Array, default: () => [] },
   sectors: { type: Array, default: () => [] },
   paymentMethods: { type: Array, default: () => [] },
+  /**
+   * True when the order is composed from stock, so the collected amount is the
+   * sum of the picked lines. The field becomes read-only rather than hidden:
+   * the seller still needs to see the figure he is about to send out.
+   */
+  stockDriven: { type: Boolean, default: false },
 });
 
 import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
 
 const isCashPayment = computed(() => props.form.payment_method === "CASH");
 
+// Mirrors Order::customerDeliveryShare(): a delivered price already covers the
+// shipping, so the customer is not asked for it a second time at the door.
 const totalAmount = computed(() => {
   const collectible = isCashPayment.value ? Number(props.form.order_amount || 0) : 0;
-  return collectible + Number(props.form.delivery_price || 0);
+  const shipping = props.form.delivery_included ? 0 : Number(props.form.delivery_price || 0);
+  return collectible + shipping;
 });
 
 watch(
   () => props.form.payment_method,
   (method) => {
+    // The pick-list re-derives both fields from the basket, so clearing them
+    // here would only race it.
+    if (props.stockDriven) {
+      return;
+    }
+
     if (method === "CASH") {
       props.form.order_value = "";
     } else {
@@ -229,9 +244,10 @@ watch(
           <div v-if="isCashPayment" class="mb-3">
             <label class="form-label">{{ $t('orders.form.order_amount') }} <span class="text-danger">*</span></label>
             <div class="input-group">
-              <input type="number" step="0.01" min="0" class="form-control" v-model="form.order_amount" :class="{ 'is-invalid': form.errors.order_amount }" />
+              <input type="number" step="0.01" min="0" class="form-control" v-model="form.order_amount" :class="{ 'is-invalid': form.errors.order_amount }" :readonly="stockDriven" />
               <span class="input-group-text">{{ $t('common.currency_mad') }}</span>
             </div>
+            <div v-if="stockDriven" class="form-text">{{ $t('stock.picklist.amount_from_stock') }}</div>
             <InputError :message="form.errors.order_amount" />
           </div>
 
@@ -241,9 +257,10 @@ watch(
               <small class="text-muted">{{ $t('orders.form.order_value_optional') }}</small>
             </label>
             <div class="input-group">
-              <input type="number" step="0.01" min="0" class="form-control" v-model="form.order_value" :class="{ 'is-invalid': form.errors.order_value }" :placeholder="$t('orders.form.order_value_placeholder')" />
+              <input type="number" step="0.01" min="0" class="form-control" v-model="form.order_value" :class="{ 'is-invalid': form.errors.order_value }" :placeholder="$t('orders.form.order_value_placeholder')" :readonly="stockDriven" />
               <span class="input-group-text">{{ $t('common.currency_mad') }}</span>
             </div>
+            <div v-if="stockDriven" class="form-text">{{ $t('stock.picklist.amount_from_stock') }}</div>
             <InputError :message="form.errors.order_value" />
           </div>
 
@@ -259,9 +276,29 @@ watch(
             <InputError :message="form.errors.delivery_price" />
           </div>
 
-          <div class="d-flex justify-content-between align-items-center border-top pt-3">
-            <span class="fs-15 fw-medium">{{ $t('orders.form.total_amount') }}</span>
-            <span class="fs-18 fw-bold text-primary">{{ money(totalAmount) }}</span>
+          <div class="form-check form-switch mb-3">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="deliveryIncluded"
+              v-model="form.delivery_included"
+            />
+            <label class="form-check-label fw-medium" for="deliveryIncluded">
+              {{ $t('orders.form.delivery_included') }}
+            </label>
+            <div class="form-text">{{ $t('orders.form.delivery_included_hint') }}</div>
+          </div>
+
+          <div class="border-top pt-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fs-15 fw-medium">{{ $t('orders.form.total_amount') }}</span>
+              <span class="fs-18 fw-bold text-primary">{{ money(totalAmount) }}</span>
+            </div>
+            <div v-if="form.delivery_included" class="form-text mt-2 mb-0">
+              <i class="ri-information-line align-bottom me-1"></i>
+              {{ $t('orders.form.delivery_included_note', { amount: money(form.delivery_price || 0) }) }}
+            </div>
           </div>
         </BCardBody>
       </BCard>

@@ -1,20 +1,26 @@
 <script setup>
+import { onMounted, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import Navbar from '@/Components/Landing/Navbar.vue';
 import Footer from '@/Components/Landing/Footer.vue';
 import TrackingSearch from '@/Components/Landing/TrackingSearch.vue';
 import LandingButton from '@/Components/Landing/LandingButton.vue';
+import { useLandingLocale } from '@/Components/Landing/i18n';
+import '@/Components/Landing/landing.css';
 
 const props = defineProps({
     trackingNumber: { type: String, default: '' },
     found: { type: Boolean, default: false },
     order: { type: Object, default: null },
+    company: { type: Object, default: () => ({}) },
 });
+
+const { locale, dir, t } = useLandingLocale();
 
 const formatDate = (iso) => {
     if (!iso) return '';
     try {
-        return new Intl.DateTimeFormat('fr-MA', {
+        return new Intl.DateTimeFormat(`${locale.value}-MA`, {
             day: '2-digit',
             month: 'short',
             year: 'numeric',
@@ -25,6 +31,18 @@ const formatDate = (iso) => {
         return iso;
     }
 };
+
+/** The server labels statuses in fr/en only, so Arabic falls back to ours. */
+const statusLabel = (status, fallback) => {
+    const translated = t(`statuses.${status}`);
+
+    return translated === `statuses.${status}` ? fallback : translated;
+};
+
+const syncLang = (value) => document.documentElement.setAttribute('lang', value);
+
+onMounted(() => syncLang(locale.value));
+watch(locale, syncLang);
 
 const colorHex = (color) => {
     const map = {
@@ -42,25 +60,25 @@ const colorHex = (color) => {
 
 <template>
     <Head>
-        <title>Suivi de colis {{ trackingNumber }} | SpeedZone</title>
+        <title>{{ t('tracking.pageTitle', { number: trackingNumber }) }}</title>
         <meta name="robots" content="noindex" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
-            href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap"
             rel="stylesheet"
         />
     </Head>
 
-    <div class="sz-landing">
+    <div class="sz-landing" :dir="dir" :lang="locale">
         <Navbar />
 
         <main class="sz-tracking">
             <div class="sz-tracking__bg" aria-hidden="true"></div>
             <div class="sz-tracking__container">
                 <header class="sz-tracking__head" data-aos="fade-up">
-                    <span class="sz-tracking__eyebrow">Suivi de colis</span>
-                    <h1 class="sz-tracking__title">Suivez votre colis en temps réel</h1>
+                    <span class="sz-tracking__eyebrow">{{ t('tracking.eyebrow') }}</span>
+                    <h1 class="sz-tracking__title">{{ t('tracking.title') }}</h1>
                     <div class="sz-tracking__search">
                         <TrackingSearch variant="compact" />
                     </div>
@@ -70,9 +88,11 @@ const colorHex = (color) => {
                 <div v-if="found && order" class="sz-tresult" data-aos="fade-up">
                     <div class="sz-tresult__top">
                         <div>
-                            <p class="sz-tresult__k">Numéro de suivi</p>
-                            <p class="sz-tresult__num">{{ order.tracking_number }}</p>
-                            <p v-if="order.city" class="sz-tresult__city">Destination : {{ order.city }}</p>
+                            <p class="sz-tresult__k">{{ t('tracking.number') }}</p>
+                            <p class="sz-tresult__num" dir="ltr">{{ order.tracking_number }}</p>
+                            <p v-if="order.city" class="sz-tresult__city">
+                                {{ t('tracking.destination', { city: order.city }) }}
+                            </p>
                         </div>
                         <span
                             class="sz-tresult__status"
@@ -82,7 +102,7 @@ const colorHex = (color) => {
                             }"
                         >
                             <i :class="order.status_icon"></i>
-                            {{ order.status_label }}
+                            {{ statusLabel(order.status, order.status_label) }}
                         </span>
                     </div>
 
@@ -100,12 +120,12 @@ const colorHex = (color) => {
                                 <i :class="event.icon"></i>
                             </span>
                             <div class="sz-tl__body">
-                                <p class="sz-tl__label">{{ event.label }}</p>
+                                <p class="sz-tl__label">{{ statusLabel(event.status, event.label) }}</p>
                                 <span class="sz-tl__date">{{ formatDate(event.date) }}</span>
                             </div>
                         </div>
                     </div>
-                    <p v-else class="sz-tresult__empty">Aucun historique disponible pour le moment.</p>
+                    <p v-else class="sz-tresult__empty">{{ t('tracking.empty') }}</p>
                 </div>
 
                 <!-- Not found -->
@@ -116,13 +136,10 @@ const colorHex = (color) => {
                             <path d="M20 20l-3.5-3.5M9 11h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                         </svg>
                     </div>
-                    <h2 class="sz-tnotfound__title">Numéro introuvable.</h2>
-                    <p class="sz-tnotfound__text">
-                        Aucun colis ne correspond au numéro
-                        <strong>« {{ trackingNumber }} »</strong>. Vérifiez le numéro et réessayez.
-                    </p>
+                    <h2 class="sz-tnotfound__title">{{ t('tracking.notFoundTitle') }}</h2>
+                    <p class="sz-tnotfound__text">{{ t('tracking.notFoundText', { number: trackingNumber }) }}</p>
                     <div class="sz-tnotfound__cta">
-                        <LandingButton href="/" variant="outline" size="md">Retour à l'accueil</LandingButton>
+                        <LandingButton href="/" variant="outline" size="md">{{ t('tracking.back') }}</LandingButton>
                     </div>
                 </div>
             </div>
@@ -237,7 +254,7 @@ const colorHex = (color) => {
 .sz-tl::before {
     content: '';
     position: absolute;
-    left: 17px;
+    inset-inline-start: 17px;
     top: 36px;
     bottom: 0;
     width: 2px;

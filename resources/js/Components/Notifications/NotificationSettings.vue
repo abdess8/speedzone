@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import axios from 'axios';
 
 const props = defineProps({
@@ -12,34 +12,19 @@ const props = defineProps({
 const saving = ref(false);
 const saved = ref(false);
 
-const form = reactive({
-    enabled: true,
-    invoice_generated: true,
-    ticket_created: true,
-    ticket_message: true,
-    ticket_closed: true,
-    return_requested: true,
-    system_notifications: true,
-});
+// The server sends the topics this role may receive, so the screen never offers
+// a switch for an announcement the user would not be sent anyway.
+const form = reactive({ enabled: true });
 
-const typeKeys = [
-    'invoice_generated',
-    'ticket_created',
-    'ticket_message',
-    'ticket_closed',
-    'return_requested',
-    'system_notifications',
-];
+const typeKeys = computed(() => Object.keys(form).filter((key) => key !== 'enabled'));
 
 const applyPreferences = (data) => {
     if (!data) {
         return;
     }
 
-    Object.keys(form).forEach((key) => {
-        if (key in data) {
-            form[key] = Boolean(data[key]);
-        }
+    Object.entries(data).forEach(([key, value]) => {
+        form[key] = Boolean(value);
     });
 };
 

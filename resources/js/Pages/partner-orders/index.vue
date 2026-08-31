@@ -465,7 +465,7 @@ onMounted(() => {
 
         <div v-if="meta.total" class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3">
           <div class="text-muted fs-13">
-            {{ $t('common.showing') }} {{ meta.from }}–{{ meta.to }} {{ $t('common.of') }} {{ meta.total }}
+            {{ $t('common.pagination_range', { from: meta.from, to: meta.to, total: meta.total }) }}
           </div>
           <nav v-if="meta.links?.length">
             <ul class="pagination pagination-sm mb-0">

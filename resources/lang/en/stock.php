@@ -1,0 +1,603 @@
+<?php
+
+return [
+
+    'page_title' => 'Stock',
+    'module_title' => 'Stock management',
+
+    'errors' => [
+        'insufficient' => 'Not enough stock for ":product": :available available, :requested requested.',
+        'unknown_product' => 'Product not found in your catalog.',
+        'inactive_product' => 'Product ":product" is archived and can no longer be ordered.',
+        'blocked_product' => 'Product ":product" has been blocked by our team and cannot be shipped.',
+        'not_allowed' => 'You are not allowed to create an order from stock.',
+        'no_depot' => 'No depot is set for this shop. Fill in the depot city in the shop settings, or send an inbound shipment first.',
+    ],
+
+    'history' => [
+        'title' => 'Change history',
+        'empty' => 'No change recorded for this product.',
+        'created' => 'Product sheet created',
+        'blocked' => 'Product blocked',
+        'released' => 'Product released',
+        'photo_updated' => 'Photo updated',
+        'by' => 'by :author',
+        'system' => 'System',
+        'columns' => [
+            'field' => 'Field',
+            'old_value' => 'Old value',
+            'new_value' => 'New value',
+            'author' => 'Changed by',
+            'date' => 'Date and time',
+        ],
+        'fields' => [
+            'created' => 'Creation',
+            'blocked' => 'Block',
+            'name' => 'Product name',
+            'sku' => 'Reference (SKU)',
+            'barcode' => 'Barcode',
+            'category' => 'Category',
+            'description' => 'Description',
+            'unit_price' => 'Selling price',
+            'cost_price' => 'Purchase cost',
+            'is_fragile' => 'Fragile',
+            'weight_grams' => 'Weight',
+            'length_cm' => 'Length',
+            'width_cm' => 'Width',
+            'height_cm' => 'Height',
+            'photo_path' => 'Photo',
+            'is_active' => 'Active',
+        ],
+    ],
+
+    'products' => [
+        'title' => 'Product catalog',
+        'list_title' => 'My products',
+        'create_title' => 'New product',
+        'edit_title' => 'Edit product',
+        'create_button' => 'Add a product',
+        'import_button' => 'Import a file',
+        'empty' => 'No product in your catalog yet.',
+        'empty_hint' => 'Add products one by one, or import your catalog from Excel.',
+        'no_results' => 'No product matches your search.',
+        'no_category' => 'Uncategorised',
+
+        'summary' => [
+            'products' => 'References',
+            'units' => 'Units in stock',
+            'out_of_stock' => 'Out of stock',
+            'low_stock' => 'Low stock',
+            'stock_value' => 'Stock value',
+        ],
+
+        'columns' => [
+            'product' => 'Product',
+            'sku' => 'Reference',
+            'barcode' => 'Barcode',
+            'category' => 'Category',
+            'unit_price' => 'Selling price',
+            'cost_price' => 'Purchase cost',
+            'margin' => 'Margin',
+            'stock' => 'Stock',
+            'status' => 'Status',
+            'actions' => 'Actions',
+        ],
+
+        'form' => [
+            'identity' => 'Identification',
+            'pricing' => 'Price & margin',
+            'logistics' => 'Logistics',
+            'media' => 'Visual',
+            'name' => 'Product name',
+            'name_placeholder' => 'e.g. Organic cotton T-shirt — Size M',
+            'sku' => 'Reference / SKU',
+            'sku_hint' => 'Leave empty to generate one automatically.',
+            'barcode' => 'Barcode (EAN / UPC)',
+            'barcode_hint' => 'Scan or type the code printed on the product.',
+            'category' => 'Category',
+            'category_placeholder' => 'e.g. Clothing',
+            'description' => 'Description',
+            'unit_price' => 'Unit selling price',
+            'cost_price' => 'Purchase cost',
+            'cost_price_hint' => 'Optional — used to compute the margin.',
+            'margin_preview' => 'Unit margin',
+            'margin_rate' => 'Margin rate',
+            'fragility' => 'Fragility',
+            'fragile' => 'Fragile',
+            'fragile_hint' => 'Handled with care at the depot.',
+            'unbreakable' => 'Unbreakable',
+            'unbreakable_hint' => 'No special handling required.',
+            'weight' => 'Weight (g)',
+            'length' => 'Length (cm)',
+            'width' => 'Width (cm)',
+            'height' => 'Height (cm)',
+            'dimensions_hint' => 'Optional — useful for volume calculation at the depot.',
+            'photo' => 'Product photo',
+            'photo_hint' => 'JPG, PNG or WebP — 4 MB maximum. Without a photo, a thumbnail is generated automatically.',
+            'photo_replace' => 'Replace photo',
+            'is_active' => 'Active product',
+            'is_active_hint' => 'An inactive product stays in history but disappears from orders.',
+            'stock_readonly' => 'Stock is not edited here: use the inventory or an inbound shipment.',
+        ],
+
+        'detail' => [
+            'sheet' => 'Product sheet',
+            'movements' => 'Stock movements',
+            'movements_empty' => 'No movement recorded.',
+            'counts_empty' => 'This product has never been counted yet.',
+            'receptions_empty' => 'This product does not appear on any inbound slip.',
+            'receptions_incoming' => ':count slip(s) in progress, carrying :units unit(s) to the depot.',
+            'dimensions' => 'Dimensions',
+            'weight' => 'Weight',
+            'blocked_banner' => 'Product blocked by our team: :reason',
+            'blocked_by' => 'Blocked by :author on :date',
+        ],
+
+        'actions' => [
+            'adjust_stock' => 'Correct stock',
+            'block' => 'Block product',
+            'release' => 'Release',
+            'archive' => 'Archive',
+            'view_history' => 'History',
+        ],
+
+        'block' => [
+            'title' => 'Block this product',
+            'text' => 'The product stays visible and countable, but can no longer be added to an order.',
+            'reason' => 'Reason for blocking',
+            'reason_placeholder' => 'e.g. Defective batch — supplier return in progress',
+            'confirm' => 'Block',
+            'release_title' => 'Release this product?',
+            'release_text' => 'It becomes available for sale again immediately.',
+        ],
+
+        'archive' => [
+            'title' => 'Archive this product?',
+            'text' => 'It disappears from the catalog and from orders, but its history and movements are kept.',
+            'confirm' => 'Archive',
+        ],
+
+        'filters' => [
+            'search' => 'Name, reference or barcode',
+            'category' => 'All categories',
+            'stock_status' => 'All stock levels',
+            'in_stock' => 'In stock',
+            'low_stock' => 'Low stock',
+            'out_of_stock' => 'Out of stock',
+            'blocked' => 'Blocked',
+            'status' => 'Active and archived',
+            'active' => 'Active',
+            'archived' => 'Archived',
+        ],
+
+        'badges' => [
+            'out_of_stock' => 'Out of stock',
+            'low_stock' => 'Low stock',
+            'blocked' => 'Blocked',
+            'archived' => 'Archived',
+            'fragile' => 'Fragile',
+        ],
+
+        'flash' => [
+            'created' => 'Product created with reference :sku.',
+            'updated' => 'Product sheet updated.',
+            'archived' => 'Product archived.',
+            'blocked' => 'Product blocked: it can no longer be ordered.',
+            'released' => 'Product released.',
+        ],
+
+        'validation' => [
+            'sku_format' => 'A reference may only contain letters, digits, dots, dashes and slashes.',
+            'sku_taken' => 'This reference is already used in your catalog.',
+            'sku_duplicated_in_file' => 'This reference appears more than once in the file.',
+            'barcode_taken' => 'This barcode is already used in your catalog.',
+            'barcode_duplicated_in_file' => 'This barcode appears more than once in the file.',
+            'too_many_rows' => 'The file contains too many rows (maximum :max).',
+        ],
+
+        'import' => [
+            'title' => 'Import a product catalog',
+            'opening_stock_note' => 'Opening stock declared when the catalog was imported.',
+
+            'steps' => [
+                'upload' => 'File',
+                'mapping' => 'Columns',
+                'review' => 'Review',
+            ],
+
+            'fields' => [
+                'name' => 'Product name',
+                'sku' => 'Reference / SKU',
+                'barcode' => 'Barcode',
+                'category' => 'Category',
+                'description' => 'Description',
+                'unit_price' => 'Selling price',
+                'cost_price' => 'Purchase cost',
+                'is_fragile' => 'Fragile',
+                'weight_grams' => 'Weight (g)',
+                'stock_quantity' => 'Opening stock',
+            ],
+
+            'upload' => [
+                'drop_title' => 'Drop your file here',
+                'drop_hint' => 'or click to browse your files',
+                'parsing' => 'Reading the file…',
+                'rows_detected' => '{count} row detected|{count} rows detected',
+                'remove_file' => 'Remove file',
+                'unsupported' => 'Unsupported format. Use a CSV, XLS or XLSX file.',
+                'too_large' => 'File too large (5 MB maximum).',
+                'empty_file' => 'The file contains no usable row.',
+                'too_many_rows' => 'The file contains too many rows (maximum :max).',
+                'parse_failed' => 'Could not read the file: :message',
+                'template_title' => 'Excel template',
+                'template_hint' => 'Start from the template so your columns are recognised automatically.',
+                'download_template' => 'Download template',
+                'rules_title' => 'File rules',
+                'rule_header' => 'The first row holds the column headers.',
+                'rule_max_rows' => ':max rows maximum per import.',
+                'rule_required' => 'Only the name and the selling price are required.',
+                'rule_sku' => 'Empty reference = generated automatically.',
+                'rule_booleans' => 'Fragile: Yes / No, 1 / 0, True / False.',
+            ],
+
+            'mapping' => [
+                'title' => 'Match your columns',
+                'hint' => 'We guessed the matches. Correct the ones that are wrong.',
+                'column' => 'File column',
+                'field' => 'Product field',
+                'sample' => 'Sample (first row)',
+                'ignore' => '— Ignore —',
+                'auto_matched' => 'Detected automatically',
+                'required' => 'Required',
+                'reset' => 'Run detection again',
+                'missing_required' => 'Required fields not mapped: :fields',
+                'rows_ready' => '{count} row ready to review|{count} rows ready to review',
+            ],
+
+            'review' => [
+                'title' => 'Review your products',
+                'hint' => 'Fix values directly in the table. Red cells block the import.',
+                'valid' => '{count} valid row|{count} valid rows',
+                'errors' => '{count} error|{count} errors',
+                'duplicate_sku' => 'Duplicate reference in the file',
+                'remove_row' => 'Remove row',
+                'remove_invalid' => 'Remove rows in error',
+                'verify_success' => '{count} row checked, no error.|{count} rows checked, no error.',
+                'verify_failed' => '{count} row to fix.|{count} rows to fix.',
+                'total_value' => 'Value of the imported catalog',
+                'total_units' => 'Opening stock units',
+            ],
+
+            'errors' => [
+                'required' => 'Required field',
+                'too_long' => 'Too long (:max characters maximum)',
+                'price' => 'Unreadable price',
+                'price_negative' => 'A price cannot be negative',
+                'price_too_large' => 'Price too large',
+                'integer' => 'A whole number is expected',
+                'sku_format' => 'Invalid characters in the reference',
+                'sku_duplicate' => 'Reference already used in the file',
+                'barcode_duplicate' => 'Barcode already used in the file',
+                'boolean' => 'Unrecognised value (":value") — expected Yes or No',
+            ],
+
+            'next' => 'Continue',
+            'back' => 'Back',
+            'validate_mapping' => 'Confirm columns',
+            'verify' => 'Verify',
+            'save' => 'Import {count} product|Import {count} products',
+            'save_blocked_errors' => 'Fix the errors in the table before importing.',
+            'save_blocked_dirty' => 'Run the verification again after your corrections.',
+            'save_failed' => 'Import failed',
+            'save_failed_rows' => ':count row(s) rejected by the server. The errors are shown in the table.',
+
+            'confirm' => [
+                'title' => 'Confirm the import?',
+                'text' => '{count} product will be added to your catalog.|{count} products will be added to your catalog.',
+                'confirm' => 'Import',
+            ],
+
+            'flash' => [
+                'created' => '{count} product imported successfully.|{count} products imported successfully.',
+            ],
+        ],
+    ],
+
+    /*
+     * The counting log, kept apart from the movement ledger.
+     *
+     * The ledger only hears about counts that changed something; this records
+     * the act of counting, including the times it confirmed the screen.
+     */
+    'counts' => [
+        'title' => 'Inventory counts',
+        'last_counted' => 'Last counted',
+        'confirmed' => 'Confirmed',
+        'no_location' => 'Position not shared',
+        'accuracy' => 'Accuracy ±:meters m',
+
+        'columns' => [
+            'date' => 'Date and time',
+            'author' => 'Counted by',
+            'recorded' => 'System stock',
+            'counted' => 'Counted',
+            'result' => 'Result',
+            'device' => 'Machine',
+            'location' => 'Location',
+        ],
+    ],
+
+    'inventory' => [
+        'title' => 'Inventory',
+        'subtitle' => 'Count your products and correct the gaps.',
+        'table_title' => 'Counting sheet',
+        'hint_desktop' => 'Type the counted quantity in the "Counted" column. The gap is computed automatically.',
+        'hint_mobile' => 'Tap a product to enter the counted quantity.',
+        'empty' => 'No product to count.',
+
+        'columns' => [
+            'product' => 'Product',
+            'recorded' => 'System stock',
+            'counted' => 'Counted',
+            'delta' => 'Gap',
+            'reason' => 'Reason',
+        ],
+
+        'counted_placeholder' => '—',
+        'set_reason' => 'Pick a reason',
+        'change_reason' => 'Change reason',
+        'reason_missing' => 'Reason required',
+        'no_change' => 'No gap',
+        'pending_lines' => '{count} line changed|{count} lines changed',
+        'reset_line' => 'Undo this entry',
+        'reset_all' => 'Reset everything',
+        'apply' => 'Save the inventory',
+        'apply_short' => 'Save',
+        'match_all' => 'All correct',
+        'match_all_hint' => 'Copies the system stock as the counted quantity on empty lines.',
+
+        'reason_modal' => [
+            'title' => 'Reason for the gap',
+            'subtitle' => ':product — gap of :delta unit(s)',
+            'reason' => 'Reason for the gap',
+            'note' => 'Explanation note',
+            'note_placeholder' => 'Describe what happened…',
+            'note_required' => 'A note is required for this reason.',
+            'confirm' => 'Confirm reason',
+        ],
+
+        'confirm' => [
+            'title' => 'Save the inventory?',
+            'text' => '{count} line will be corrected. Every correction is written to an immutable audit trail.|{count} lines will be corrected. Every correction is written to an immutable audit trail.',
+            'traced' => 'Every counted line is traced on the product sheet with your name, the time, the machine used and, if your browser allows it, your position.',
+            'confirm' => 'Save',
+        ],
+
+        'errors' => [
+            'reason_required' => 'A reason is required as soon as there is a stock gap.',
+            'note_required' => 'An explanation note is required for this reason.',
+            'duplicate_product' => 'This product appears more than once in the counting sheet.',
+        ],
+
+        'flash' => [
+            'applied' => '{count} stock correction recorded.|{count} stock corrections recorded.',
+            'nothing' => 'Nothing to record: the stock already matched.',
+            // Server-side message, no plural forms: it is rendered by PHP and
+            // not by vue-i18n, and has to stay accurate whether the inventory
+            // corrected one line, several, or none.
+            'saved' => 'Inventory saved: :counted line(s) counted, :corrections stock correction(s). Every count is traced on the product sheet.',
+        ],
+    ],
+
+    'movements' => [
+        'title' => 'Stock movement audit',
+        'subtitle' => 'Every movement, across all vendors.',
+        'empty' => 'No movement matches these filters.',
+
+        'columns' => [
+            'date' => 'Date',
+            'product' => 'Product',
+            'store' => 'Shop',
+            'source' => 'Origin',
+            'reason' => 'Reason',
+            'before' => 'Before',
+            'after' => 'After',
+            'delta' => 'Gap',
+            'author' => 'Author',
+            'document' => 'Document',
+        ],
+
+        'filters' => [
+            'product' => 'Name, reference or barcode',
+            'source' => 'All origins',
+            'reason' => 'All reasons',
+            'from' => 'From',
+            'to' => 'To',
+            'clear' => 'Reset',
+        ],
+    ],
+
+    'receptions' => [
+        'title' => 'Inbound shipments',
+        'list_title' => 'Shipment slips',
+        'create_title' => 'New inbound shipment',
+        'edit_title' => 'Edit slip',
+        'detail_title' => 'Slip :reference',
+        'create_button' => 'Send stock',
+        'empty' => 'No shipment slip yet.',
+        'empty_hint' => 'Create a slip to announce the stock you are sending to our depot.',
+        'empty_collector' => 'No stock to collect in your cities.',
+        'empty_collector_hint' => 'You will be notified as soon as a vendor has a parcel ready.',
+
+        'sections' => [
+            'shipping' => 'Shipping details',
+            'items' => 'Products sent',
+            'collection' => 'Collection at the shop',
+            'reception' => 'Reception at the depot',
+            'summary' => 'Summary',
+            'history' => 'Slip journey',
+        ],
+
+        'columns' => [
+            'reference' => 'Reference',
+            'status' => 'Status',
+            'seller' => 'Vendor',
+            'shop' => 'Shop',
+            'items' => 'References',
+            'sent' => 'Declared',
+            'collected' => 'Collected',
+            'received' => 'Received',
+            'rejected' => 'Rejected',
+            'sent_at' => 'Sent on',
+            'collected_at' => 'Collected on',
+            'dispatched_at' => 'Dispatched on',
+            'received_at' => 'Received on',
+            'pickup_city' => 'Collection city',
+            'destination' => 'Destination depot',
+            'product' => 'Product',
+            'collection_gap' => 'Collection gap',
+            'discrepancy' => 'Gap',
+            'note' => 'Note',
+        ],
+
+        'form' => [
+            'sent_at' => 'Shipping date',
+            'destination_city' => 'Destination city',
+            'destination_city_placeholder' => 'Pick the depot…',
+            'destination_hint' => 'Only cities where we run a depot are offered. This choice sets your shop\'s depot.',
+            'destination_locked' => 'This shop\'s stock is warehoused in :city. Every shipment goes to that depot.',
+            'no_hub_cities' => 'No depot is open at the moment. Get in touch with us before shipping your stock.',
+            'sending_notes' => 'Shipping notes',
+            'sending_notes_placeholder' => 'e.g. 2 sealed boxes, pallet #4',
+            'quantity_sent' => 'Quantity sent',
+            'item_note' => 'Line note',
+            'add_product' => 'Add a product',
+            'no_items' => 'Add at least one product to this slip.',
+            'save_draft' => 'Save as draft',
+            'save_and_send' => 'Save and request collection',
+            'total_units' => 'Total units sent',
+        ],
+
+        'collection_form' => [
+            'title' => 'Check and take the stock',
+            'hint' => 'Count what you are loading in front of the vendor. Your count replaces his declaration for the rest of the journey.',
+            'quantity_collected' => 'Quantity taken',
+            'collection_notes' => 'Collection notes',
+            'collection_notes_placeholder' => 'e.g. the vendor only had 8 of the 10 units announced',
+            'match_all' => 'All correct',
+            'match_all_hint' => 'Copies the declared quantities as taken quantities.',
+            'confirm_title' => 'Confirm this collection?',
+            'confirm_text' => 'You are signing for :units unit(s). The depot will count your load, not the vendor\'s declaration.',
+            'confirm' => 'Confirm collection',
+        ],
+
+        'reception_form' => [
+            'title' => 'Receive and validate',
+            'hint' => 'Enter what you actually counted. Only these quantities are credited to the vendor\'s stock.',
+            'received_at' => 'Actual reception date',
+            'quantity_received' => 'Quantity received',
+            'quantity_rejected' => 'Quantity rejected',
+            'reception_notes' => 'Post-reception notes',
+            'reception_notes_placeholder' => 'e.g. 3 items damaged in transit',
+            'match_all' => 'All correct',
+            'match_all_hint' => 'Copies the quantities the collector loaded as received quantities.',
+            'confirm_title' => 'Validate this reception?',
+            'confirm_text' => ':units unit(s) will be credited to the vendor\'s stock. This cannot be undone.',
+            'confirm' => 'Validate and credit stock',
+        ],
+
+        'people' => [
+            'sent_by' => 'Sent by',
+            'collected_by' => 'Collected by',
+            'received_by' => 'Received and scanned by',
+            'pending' => 'Pending',
+        ],
+
+        'actions' => [
+            'send' => 'Request collection',
+            'collect' => 'Check and take the stock',
+            'dispatch' => 'Send to the depot',
+            'receive' => 'Receive',
+            'cancel' => 'Cancel slip',
+            'edit' => 'Edit',
+        ],
+
+        'send_confirm' => [
+            'title' => 'Request collection of this stock?',
+            'text' => 'Drivers in your city will be alerted. You will no longer be able to change the declared quantities: this is the document that will be counted at your counter.',
+            'confirm' => 'Request collection',
+        ],
+
+        'dispatch_confirm' => [
+            'title' => 'Send this stock to the depot?',
+            'text' => 'The :city depot will be told a parcel is on its way and will be able to receive it.',
+            'confirm' => 'Send to the depot',
+        ],
+
+        'cancel_confirm' => [
+            'title' => 'Cancel this slip?',
+            'text' => 'No stock will be credited. The document stays readable.',
+            'reason' => 'Reason for cancelling',
+            'confirm' => 'Cancel slip',
+        ],
+
+        'filters' => [
+            'reference' => 'Slip reference',
+            'status' => 'All statuses',
+            'destination' => 'All depots',
+        ],
+
+        'history' => [
+            'empty' => 'Nothing recorded on this slip yet.',
+            'collection_gap' => 'Collected :collected unit(s) of the :declared declared.',
+        ],
+
+        'flash' => [
+            'created' => 'Slip :reference created.',
+            'updated' => 'Slip updated.',
+            'sent' => 'Collection requested. Drivers in your city are on their way for the stock.',
+            'collected' => 'Collection of slip :reference confirmed.',
+            'dispatched' => 'Stock sent to the destination depot.',
+            'validated' => 'Reception :reference validated: stock has been credited.',
+            'cancelled' => 'Slip cancelled.',
+        ],
+
+        'errors' => [
+            'no_items' => 'A slip must contain at least one product.',
+            'not_editable' => 'This slip can no longer be edited: collection has already been requested.',
+            'invalid_transition' => 'Cannot move from ":from" to ":to".',
+            'duplicate_product' => 'This product appears more than once in the slip.',
+            'over_declared' => 'Quantity above what was handed over (:sent units). Check your count.',
+            'no_destination' => 'Pick the depot you are shipping this stock to.',
+            'not_a_hub' => 'This city does not host a stock depot.',
+            'wrong_destination' => 'This shop\'s stock is warehoused in :city. Every shipment must go to that depot.',
+        ],
+    ],
+
+    'picklist' => [
+        'title' => 'Order products',
+        'hint' => 'Search by name, reference or barcode.',
+        'search_placeholder' => 'Search for a product…',
+        'no_results' => 'No product matches ":term".',
+        'empty_catalog' => 'Your catalog is empty. Add products to sell them from your stock.',
+        'out_of_stock' => 'Out of stock (0 available)',
+        'blocked' => 'Blocked product',
+        'available' => ':count available',
+        'add' => 'Add',
+        'quantity' => 'Qty',
+        'unit_price' => 'Unit price',
+        'line_total' => 'Line total',
+        'remove' => 'Remove',
+        'empty_selection' => 'No product selected.',
+        'empty_selection_hint' => 'Use the search above to build the order.',
+        'max_quantity' => 'Maximum stock reached for this product (:count available).',
+        'already_added' => 'This product is already in the order.',
+        'items_total' => 'Products subtotal',
+        'discount' => 'Global discount',
+        'stock_after' => 'Stock left after this order: :count',
+        'toggle_hint' => 'Build the order from my stock',
+        'toggle_off_hint' => 'Uncheck to enter a free amount without linking any product.',
+        'amount_from_stock' => 'Computed automatically from the selected products.',
+    ],
+
+];

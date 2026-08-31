@@ -19,6 +19,7 @@ class DriverInvoicePolicy
             'viewAny' => $this->viewAny($user),
             'view' => $invoice ? $this->view($user, $invoice) : false,
             'generate' => $this->generate($user),
+            'adjust' => $this->adjust($user),
             'pay' => $invoice ? $this->pay($user, $invoice) : false,
             'cancel' => $invoice ? $this->cancel($user, $invoice) : false,
             'delete' => $invoice ? $this->delete($user, $invoice) : false,
@@ -48,6 +49,15 @@ class DriverInvoicePolicy
     public function generate(User $user): bool
     {
         return $user->hasPermission('driver_invoices.generate');
+    }
+
+    /**
+     * Adding a bonus, a penalty or an adjustment to a driver's ledger. It moves
+     * money outside of any invoice, so it is granted on its own.
+     */
+    public function adjust(User $user): bool
+    {
+        return $user->hasPermission('driver_invoices.adjust');
     }
 
     public function pay(User $user, DriverInvoice $invoice): bool

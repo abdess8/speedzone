@@ -25,7 +25,9 @@ class ApprovePendingUserRequest extends FormRequest
             ->all();
 
         return [
-            'permission_ids' => ['required', 'array', 'min:1'],
+            // Optional: the review screen no longer picks permissions one by
+            // one, and the controller falls back to the seller defaults.
+            'permission_ids' => ['nullable', 'array', 'min:1'],
             'permission_ids.*' => ['integer', Rule::in($allowedIds)],
         ];
     }

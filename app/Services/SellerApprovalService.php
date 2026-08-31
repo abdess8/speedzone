@@ -7,43 +7,12 @@ use App\Events\SellerApproved;
 use App\Events\SellerRejected;
 use App\Models\Permission;
 use App\Models\User;
-use App\Support\PermissionLabels;
 use App\Support\SellerRegistrationPermissions;
 use Illuminate\Support\Facades\DB;
 
 class SellerApprovalService
 {
     public function __construct(private readonly StoreService $stores) {}
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    public function groupedSellerPermissions(): array
-    {
-        return Permission::query()
-            ->whereIn('name', SellerRegistrationPermissions::assignable())
-            ->orderBy('resource')
-            ->orderBy('name')
-            ->get()
-            ->groupBy('resource')
-            ->map(function ($permissions, $resource) {
-                return [
-                    'resource' => $resource,
-                    'label' => PermissionLabels::resourceLabel((string) $resource),
-                    'permissions' => $permissions->map(fn (Permission $permission) => [
-                        'id' => $permission->id,
-                        'name' => $permission->name,
-                        'action' => $permission->action,
-                        'scope' => $permission->scope,
-                        'type' => $permission->type,
-                        'label' => PermissionLabels::permissionLabel($permission),
-                        'description' => PermissionLabels::permissionDescription($permission),
-                    ])->values(),
-                ];
-            })
-            ->values()
-            ->all();
-    }
 
     /**
      * @return array<int, int>
@@ -106,5 +75,40 @@ class SellerApprovalService
     {
         return $user->isSeller()
             && in_array($user->status, [UserStatus::PendingApproval, UserStatus::PendingEmailVerification], true);
+    }
+
+    /**
+     * Whether the account is still going through registration review.
+     *
+     * Deliberately status-only, unlike {@see self::isPendingSeller()}: the
+     * review screen lets an admin change the role of the account he is
+     * looking at, and the page must not 404 on him right after he did.
+     */
+    public function isReviewable(User $user): bool
+    {
+        return in_array($user->status, [
+            UserStatus::PendingEmailVerification,
+            UserStatus::PendingApproval,
+            UserStatus::Rejected,
+        ], true);
+    }
+
+    public function canApprove(User $user): bool
+    {
+        return $user->status === UserStatus::PendingApproval;
+    }
+
+    public function canReject(User $user): bool
+    {
+        return in_array($user->status, [UserStatus::PendingApproval, UserStatus::PendingEmailVerification], true);
+    }
+
+    /**
+     * A rejection is not a dead end: the vendor can send in the missing paper
+     * and be let in without registering all over again.
+     */
+    public function canReactivate(User $user): bool
+    {
+        return $user->status === UserStatus::Rejected;
     }
 }

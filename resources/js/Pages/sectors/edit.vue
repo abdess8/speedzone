@@ -7,6 +7,7 @@ import SectorForm from "./Partials/SectorForm.vue";
 const props = defineProps({
   sector: { type: Object, required: true },
   cities: { type: Array, default: () => [] },
+  can: { type: Object, default: () => ({}) },
 });
 
 const form = useForm({
@@ -14,7 +15,12 @@ const form = useForm({
   name: props.sector.name,
   delivery_price: props.sector.delivery_price,
   return_price: props.sector.return_price ?? "",
-  delivery_driver_price: props.sector.delivery_driver_price ?? "",
+  // Omitted entirely when the payout is not readable, so saving the form cannot
+  // overwrite a value the editor was never shown.
+  ...(props.can.view_driver_price
+    ? { delivery_driver_price: props.sector.delivery_driver_price ?? "" }
+    : {}),
+  delivery_delay: props.sector.delivery_delay ?? "",
   is_active: props.sector.is_active,
 });
 
@@ -27,7 +33,7 @@ const submit = () => {
   <Layout>
     <PageHeader :title="$t('sectors.edit_title', { name: sector.name })" :pageTitle="$t('sectors.title')" />
     <form @submit.prevent="submit">
-      <SectorForm :form="form" :cities="cities" />
+      <SectorForm :form="form" :cities="cities" :can-edit-driver-price="!!can.view_driver_price" />
 
       <BRow>
         <BCol xl="8" class="mx-auto">

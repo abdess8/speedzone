@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Role;
+use Illuminate\Support\Str;
 
 /**
  * Single source of truth for the role → permission grants (RBAC layer).
@@ -62,6 +63,17 @@ class RolePermissionMatrix
     public static function dispatcher(): array
     {
         return [
+            ...StatusTransitionPermissions::derivedFrom(self::dispatcherBase()),
+            ...self::dispatcherBase(),
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function dispatcherBase(): array
+    {
+        return [
             'orders.read.all',
             'orders.update.all',
             'orders.export',
@@ -74,6 +86,7 @@ class RolePermissionMatrix
             'pickup_requests.read.all',
             'pickup_requests.assign',
             'pickup_requests.change_status',
+            'orders.transition.to_prepared',
             'orders.transition.to_pickup_requested',
             'orders.transition.to_waiting_pickup',
             'orders.transition.to_picked_up',
@@ -85,6 +98,7 @@ class RolePermissionMatrix
             'orders.transition.to_out_for_delivery',
             'orders.transition.to_delivered',
             'orders.transition.to_failed',
+            'orders.transition.to_ready_to_return',
             'orders.transition.to_rejected',
             'orders.transition.to_canceled',
             'partners.read',
@@ -99,12 +113,20 @@ class RolePermissionMatrix
             'returns.manage',
             'returns.update_status',
             'returns.edit_customer_data',
+            'returns.transition.to_received_at_hub',
+            'returns.transition.to_in_transit_to_depot',
+            'returns.transition.to_arrived_vendor_hub',
+            'returns.transition.to_in_delivery_to_vendor',
+            'returns.transition.to_delivered_to_vendor',
             'invoices.read.all',
             'invoices.print',
             'driver_invoices.read.all',
             'driver_invoices.print',
             'driver_invoices.assign_driver',
+            ...DashboardPermissions::staffDefaults(),
             ...SupportPermissions::staffDefaults(),
+            ...StockPermissions::staffDefaults(),
+            ...NotificationPermissions::dispatcherDefaults(),
         ];
     }
 
@@ -117,6 +139,17 @@ class RolePermissionMatrix
     public static function driver(): array
     {
         return [
+            ...StatusTransitionPermissions::derivedFrom(self::driverBase()),
+            ...self::driverBase(),
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function driverBase(): array
+    {
+        return [
             'orders.read.assigned',
             // Scoped to rows where driver_id = auth id, and further narrowed to
             // status-only edits by OrderPolicy::updateStatus().
@@ -124,15 +157,30 @@ class RolePermissionMatrix
             'orders.print',
             'pickup_requests.read.assigned',
             'pickup_requests.pickup',
+            // Collecting a vendor's stock is the same round as collecting his
+            // parcels. It carries no depot rights: he counts what he loads, and
+            // the hub counts it again on arrival.
+            StockPermissions::COLLECT_INBOUND,
             'transfers.read.assigned',
             'transfers.receive',
             'orders.transition.to_out_for_delivery',
             'orders.transition.to_delivered',
             'orders.transition.to_failed',
+            // Taking a refused or cancelled parcel off the round. Every other
+            // non-delivery leaves the order out for delivery and needs no grant
+            // beyond `orders.update.assigned`.
+            'orders.transition.to_ready_to_return',
             'returns.create',
-            'returns.update_status',
+            // The hand-back leg only: signing a parcel into a hub belongs to
+            // the hub manager, not to the driver who dropped it there.
+            'returns.transition.to_in_delivery_to_vendor',
+            'returns.transition.to_delivered_to_vendor',
             'driver_invoices.read.own',
             'driver_invoices.print',
+            // His round and his own numbers. A driver has no reason to read the
+            // turnover of the shops he collects from.
+            ...DashboardPermissions::driverDefaults(),
+            ...NotificationPermissions::driverDefaults(),
         ];
     }
 
@@ -167,7 +215,11 @@ class RolePermissionMatrix
             'team.update',
             'team.suspend',
             'team_roles.manage',
+            ...DashboardPermissions::sellerDefaults(),
             ...SupportPermissions::sellerDefaults(),
+            ...StockPermissions::sellerDefaults(),
+            ...EcommerceIntegrationPermissions::sellerDefaults(),
+            ...NotificationPermissions::sellerDefaults(),
         ];
     }
 
@@ -216,6 +268,12 @@ class RolePermissionMatrix
         'tickets' => [
             'resource' => 'support',
             'note' => 'Support tickets (SupportTicket) live under the "support" resource.',
+        ],
+        'depots' => [
+            'resource' => 'stock',
+            'note' => 'Stock is held per vendor shop (Store), not per warehouse: a vendor\'s '
+                .'inventory is a single figure across our depots. Inbound shipments (StockReception) '
+                .'are the document trail of goods physically arriving at one.',
         ],
         'cashboxes' => [
             'resource' => 'driver_invoices',
@@ -280,6 +338,14 @@ class RolePermissionMatrix
             $target = strrchr((string) $permission['name'], '.');
 
             return $target === false ? 'any' : substr($target, 1);
+        }
+
+        // A bulk-edit grant is a pair, so the target alone would collapse every
+        // route into a status onto one line. The pair is the identity.
+        if ($permission['type'] === StatusTransitionPermissions::TYPE) {
+            return Str::of((string) $permission['name'])
+                ->after('.'.StatusTransitionPermissions::ACTION.'.')
+                ->toString();
         }
 
         return $permission['scope'] ?? 'any';

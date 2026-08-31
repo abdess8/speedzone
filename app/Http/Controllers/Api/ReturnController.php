@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ReturnStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ReturnController as WebReturnController;
+use App\Http\Requests\AssignReturnDriverRequest;
 use App\Http\Requests\ChangeReturnStatusRequest;
 use App\Http\Requests\ReturnScanRequest;
 use App\Http\Requests\StoreReturnRequest;
@@ -11,6 +13,7 @@ use App\Http\Requests\UpdateReturnCustomerDataRequest;
 use App\Http\Resources\OrderReturnResource;
 use App\Models\Order;
 use App\Models\OrderReturn;
+use App\Models\User;
 use App\Services\ReturnQueryService;
 use App\Services\ReturnScanService;
 use App\Services\ReturnService;
@@ -80,16 +83,57 @@ class ReturnController extends Controller
 
     public function changeStatus(ChangeReturnStatusRequest $request, OrderReturn $return): JsonResponse
     {
-        $return = $this->transitions->transition(
-            $return,
-            $request->string('status')->toString(),
-            $request->user(),
-            $request->input('comment'),
-            $request->input('current_location_city_id'),
-        );
+        $status = $request->string('status')->toString();
+
+        // Going out for restitution and naming the carrier are the same act.
+        $return = $status === ReturnStatus::IN_DELIVERY_TO_VENDOR->value
+            ? $this->transitions->handBack(
+                $return,
+                $request->user(),
+                User::query()->findOrFail($request->integer('driver_id')),
+                $request->input('comment'),
+            )
+            : $this->transitions->transition(
+                $return,
+                $status,
+                $request->user(),
+                $request->input('comment'),
+                $request->input('current_location_city_id'),
+            );
 
         return response()->json([
             'data' => OrderReturnResource::make($return)->resolve($request),
+        ]);
+    }
+
+    public function assignDriver(AssignReturnDriverRequest $request, OrderReturn $return): JsonResponse
+    {
+        $driver = User::query()->findOrFail($request->integer('driver_id'));
+
+        $return = $request->boolean('dispatch')
+            ? $this->transitions->handBack($return, $request->user(), $driver, $request->input('comment'))
+            : $this->returns->assignDriver($return, $driver, $request->user());
+
+        return response()->json([
+            'data' => OrderReturnResource::make($return->refresh())->resolve($request),
+        ]);
+    }
+
+    /**
+     * Drivers eligible to carry this parcel the last mile.
+     */
+    public function drivers(Request $request, OrderReturn $return): JsonResponse
+    {
+        $this->authorize('assignDriver', $return);
+
+        return response()->json([
+            'data' => $this->returns->driverOptions($return->handBackCityId())
+                ->map(fn (User $driver) => [
+                    'id' => $driver->id,
+                    'name' => $driver->full_name,
+                    'phone' => $driver->phone_number,
+                ])
+                ->values(),
         ]);
     }
 
@@ -102,11 +146,11 @@ class ReturnController extends Controller
         ]);
     }
 
-    public function moveToDepot(Request $request, OrderReturn $return): JsonResponse
+    public function receiveAtHub(Request $request, OrderReturn $return): JsonResponse
     {
         $this->authorize('updateStatus', $return);
 
-        $return = $this->transitions->moveToDepot(
+        $return = $this->transitions->receiveAtHub(
             $return,
             $request->user(),
             $request->input('comment'),
@@ -134,6 +178,7 @@ class ReturnController extends Controller
             $request->user(),
             $request->string('scan')->toString(),
             $request->input('comment'),
+            $request->input('driver_id'),
         );
 
         return response()->json([

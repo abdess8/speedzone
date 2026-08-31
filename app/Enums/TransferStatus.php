@@ -58,6 +58,22 @@ enum TransferStatus: string
         };
     }
 
+    /**
+     * Corresponding status for the returns riding this manifest.
+     *
+     * A return only moves on the two legs that change its physical location;
+     * while the manifest is still being filled it stays parked at the hub,
+     * which is why CREATED and WAITING_DISPATCH map to nothing.
+     */
+    public function returnStatus(): ?ReturnStatus
+    {
+        return match ($this) {
+            self::IN_TRANSIT => ReturnStatus::IN_TRANSIT_TO_DEPOT,
+            self::RECEIVED => ReturnStatus::ARRIVED_VENDOR_HUB,
+            self::CREATED, self::WAITING_DISPATCH, self::CANCELLED => null,
+        };
+    }
+
     public function isEditable(): bool
     {
         return in_array($this, [self::CREATED, self::WAITING_DISPATCH], true);

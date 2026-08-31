@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import InputError from "@/Components/InputError.vue";
+import InfoHint from "@/Components/InfoHint.vue";
 
 const props = defineProps({
   form: { type: Object, required: true },
@@ -161,27 +162,23 @@ const badgeClass = (permission) => {
                     :checked="isChecked(permission.id)"
                     @change="toggle(permission.id)"
                   />
-                  <label
-                    class="form-check-label d-flex align-items-center gap-2"
-                    :for="`perm-${permission.id}`"
-                  >
-                    <span>{{ permission.label }}</span>
+                  <label class="form-check-label" :for="`perm-${permission.id}`">
+                    {{ permission.label }}
                     <span
-                      v-if="permission.scope"
-                      class="badge"
+                      v-if="permission.scope_label"
+                      class="badge ms-1"
                       :class="badgeClass(permission)"
                     >
-                      {{ $te(`permissions.scopes.${permission.scope}`)
-                        ? $t(`permissions.scopes.${permission.scope}`)
-                        : permission.scope }}
+                      {{ permission.scope_label }}
                     </span>
                   </label>
-                  <div v-if="permission.description" class="text-muted fs-11 ms-4 mb-1">
-                    {{ permission.description }}
-                  </div>
-                  <div class="text-muted fs-11 ms-4">
-                    <code>{{ permission.name }}</code>
-                  </div>
+                  <InfoHint
+                    v-if="permission.description"
+                    class="ms-1"
+                    :text="permission.description"
+                    :meta="permission.name"
+                    :label="$t('roles.form.permission_help', { permission: permission.label })"
+                  />
                 </div>
               </div>
             </BCol>

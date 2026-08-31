@@ -225,6 +225,52 @@ it('hands the edit form a flat announcement it can read straight away', function
         );
 });
 
+it('lets an announcement aimed at everyone be saved again unchanged', function () {
+    $admin = alertAdmin();
+    managedCity();
+    $alert = Alert::factory()->create([
+        'target_roles' => [Alert::EVERYONE],
+        'target_cities' => [Alert::EVERYONE],
+    ]);
+
+    // The round trip is what matters: the form posts back whatever the edit page
+    // handed it. Casting the everyone marker to an identifier turned it into
+    // city 0, which the validator refused on an indexed key the form never
+    // rendered — the save died silently.
+    $page = $this->actingAs($admin)
+        ->get(route('alerts.edit', $alert))
+        ->assertOk()
+        ->viewData('page');
+
+    $handedBack = $page['props']['alert'];
+    expect($handedBack['target_cities'])->toBe([Alert::EVERYONE]);
+
+    $this->actingAs($admin)
+        ->put(route('alerts.update', $alert), alertPayload([
+            'title' => 'Still everyone',
+            'target_roles' => $handedBack['target_roles'],
+            'target_cities' => $handedBack['target_cities'],
+            'target_user_ids' => $handedBack['target_user_ids'],
+        ]))
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('alerts.index'));
+
+    expect($alert->fresh()->target_cities)->toBe([Alert::EVERYONE])
+        ->and($alert->fresh()->title)->toBe('Still everyone');
+});
+
+it('still hands city identifiers back as numbers', function () {
+    $admin = alertAdmin();
+    $city = managedCity();
+    $alert = Alert::factory()->create(['target_cities' => [$city->id]]);
+
+    $this->actingAs($admin)
+        ->get(route('alerts.edit', $alert))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('alert.target_cities', [$city->id])
+        );
+});
+
 it('edits and deletes an announcement', function () {
     $admin = alertAdmin();
     $alert = Alert::factory()->create();

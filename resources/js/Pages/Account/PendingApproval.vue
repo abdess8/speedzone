@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
+import ChangeAccountEmailForm from '@/Components/Auth/ChangeAccountEmailForm.vue';
 
 defineProps({
     user: { type: Object, required: true },
@@ -61,6 +62,8 @@ defineProps({
                                         {{ $t('seller_registration.pending.sign_out') }}
                                     </Link>
                                 </div>
+
+                                <ChangeAccountEmailForm :email="user.email" />
                             </BCardBody>
                         </BCard>
                     </BCol>

@@ -8,18 +8,27 @@ import PageHeader from "@/Components/page-header.vue";
 import StatusTimeline from "@/Components/StatusTimeline.vue";
 import OrderModificationHistory from "./Partials/OrderModificationHistory.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
+import FailureReasonBadge from "@/Components/FailureReasonBadge.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import RelatedOperationsLookups from "@/Components/RelatedOperationsLookups.vue";
 import SupportTicketsPanel from "@/Components/SupportTicketsPanel.vue";
 import EntityLink from "@/Components/EntityLink.vue";
+import ProductThumb from "../stock/Partials/ProductThumb.vue";
 import CreateReturnModal from "../returns/Partials/CreateReturnModal.vue";
+import DeliveryOutcomeSheet from "./Partials/DeliveryOutcomeSheet.vue";
 import Swal from "sweetalert2";
+import { usePermissions } from "@/composables/usePermissions";
 
 const { t } = useI18n();
+const { canAny } = usePermissions();
 
 const props = defineProps({
   order: { type: Object, required: true },
   allowedTransitions: { type: Array, default: () => [] },
+  deliveryOutcome: {
+    type: Object,
+    default: () => ({ reportable: false, outcomes: [], failure_reasons: [] }),
+  },
   can: { type: Object, default: () => ({}) },
   returnFilterOptions: { type: Object, default: () => ({ reasons: [] }) },
   driverOptions: { type: Array, default: () => [] },
@@ -102,6 +111,20 @@ const empty = () => t("common.empty_value");
 
 const isPartnerDelivery = computed(() => Boolean(props.order.is_partner_delivery || props.order.partner_id));
 
+/**
+ * The catalog lines of a stock order.
+ *
+ * Empty for the parcel-only flow, where the seller declares an amount without
+ * saying what is in the box — the card then stays out of the way entirely.
+ */
+const items = computed(() => props.order.items ?? []);
+const canOpenProduct = computed(() =>
+  canAny('stock.view', 'stock.receive_inbound', 'stock.admin_override')
+);
+const itemsTotal = computed(() => items.value.reduce((sum, line) => sum + Number(line.line_total ?? 0), 0));
+const totalUnits = computed(() => items.value.reduce((sum, line) => sum + Number(line.quantity ?? 0), 0));
+const discount = computed(() => Number(props.order.discount_amount ?? 0));
+
 const openPdf = () => window.open(route("orders.pdf", props.order.id), "_blank");
 const downloadPdf = () => window.open(route("orders.pdf", { order: props.order.id, download: 1 }), "_blank");
 
@@ -148,6 +171,32 @@ const changeStatus = (status) => {
       options
     );
   });
+};
+
+/*
+ * Closing the delivery leg. The same sheet the driver sees on his phone, which
+ * BottomSheet renders as a centered dialog from tablets up — one flow, so the
+ * failure reason can never be skipped just because the operator sits at a desk.
+ */
+const canReportOutcome = computed(() => props.deliveryOutcome.reportable === true);
+const showOutcomeSheet = ref(false);
+const outcomeProcessing = ref(false);
+
+const submitDeliveryOutcome = ({ outcome, failure_reason, note, attachment }) => {
+  outcomeProcessing.value = true;
+
+  router.post(
+    route("orders.delivery-outcome", props.order.id),
+    { outcome, failure_reason, note, attachment },
+    {
+      forceFormData: true,
+      preserveScroll: true,
+      onFinish: () => {
+        outcomeProcessing.value = false;
+        showOutcomeSheet.value = false;
+      },
+    }
+  );
 };
 
 const syncPartner = async () => {
@@ -227,7 +276,28 @@ onMounted(() => {
         <span class="badge fs-13" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
           {{ order.status_label }}
         </span>
+        <span
+          v-if="order.failed_attempts_count > 0"
+          class="badge fs-13 bg-warning-subtle text-warning"
+        >
+          <i class="ri-history-line align-bottom me-1"></i>
+          {{ $t('orders.delivery_outcome.attempts_badge', { count: order.failed_attempts_count }) }}
+        </span>
+        <!-- The motif of the last attempt, spelled out rather than hidden in a
+             tooltip: the order is still out for delivery, so this badge is the
+             only thing on the page saying the round did not go to plan. -->
+        <FailureReasonBadge :order="order" :show-attempts="false" class="fs-13" />
         <div class="vr"></div>
+
+        <button
+          v-if="canReportOutcome"
+          class="btn btn-sm btn-primary"
+          :title="$t('orders.delivery_outcome.title')"
+          @click="showOutcomeSheet = true"
+        >
+          <i class="ri-truck-line align-bottom"></i>
+          <span class="d-none d-sm-inline ms-1">{{ $t('orders.delivery_outcome.title') }}</span>
+        </button>
 
         <!-- Ten actions on one row: labels collapse below `sm` so the row stays
              a single line of icons, and `title` is what still names each one. -->
@@ -508,6 +578,76 @@ onMounted(() => {
           </BCardBody>
         </BCard>
 
+        <BCard v-if="items.length" no-body>
+          <BCardHeader class="d-flex align-items-center justify-content-between">
+            <h5 class="card-title mb-0">{{ $t('stock.picklist.title') }}</h5>
+            <span class="badge bg-primary-subtle text-primary">
+              {{ $t('orders.show.units', { count: totalUnits }) }}
+            </span>
+          </BCardHeader>
+          <BCardBody>
+            <div class="table-responsive">
+              <table class="table align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>{{ $t('stock.products.columns.product') }}</th>
+                    <th class="text-end">{{ $t('stock.picklist.unit_price') }}</th>
+                    <th class="text-center" style="width: 80px">{{ $t('stock.picklist.quantity') }}</th>
+                    <th class="text-end">{{ $t('stock.picklist.line_total') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="line in items" :key="line.id">
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <ProductThumb
+                          :name="line.name"
+                          :photo-url="line.photo_url"
+                          :initials="line.initials"
+                          :size="36"
+                        />
+                        <div class="min-w-0">
+                          <Link
+                            v-if="line.product_id && canOpenProduct"
+                            :href="route('products.show', line.product_id)"
+                            class="d-block fw-medium text-truncate"
+                          >
+                            {{ line.name }}
+                          </Link>
+                          <span v-else class="d-block fw-medium text-truncate">{{ line.name }}</span>
+                          <span class="d-block text-muted fs-12">{{ line.sku }}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-end">{{ money(line.unit_price) }}</td>
+                    <td class="text-center">{{ line.quantity }}</td>
+                    <td class="text-end fw-semibold">{{ money(line.line_total) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <BRow class="border-top mt-3 pt-3 justify-content-end">
+              <BCol md="6">
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-muted">{{ $t('stock.picklist.items_total') }}</span>
+                  <span class="fw-medium">{{ money(itemsTotal) }}</span>
+                </div>
+                <div v-if="discount > 0" class="d-flex justify-content-between text-danger">
+                  <span>{{ $t('stock.picklist.discount') }}</span>
+                  <span>&minus; {{ money(discount) }}</span>
+                </div>
+                <div class="d-flex justify-content-between border-top mt-2 pt-2">
+                  <span class="fw-medium">
+                    {{ order.cash_collection_required ? $t('orders.form.order_amount') : $t('orders.form.order_value') }}
+                  </span>
+                  <span class="fs-16 fw-bold text-primary">{{ money(itemsTotal - discount) }}</span>
+                </div>
+              </BCol>
+            </BRow>
+          </BCardBody>
+        </BCard>
+
         <BCard no-body>
           <BCardHeader><h5 class="card-title mb-0">{{ $t('orders.show.modification_history') }}</h5></BCardHeader>
           <BCardBody>
@@ -547,6 +687,10 @@ onMounted(() => {
               <span class="fw-semibold">{{ $t('orders.show.total_amount') }}</span>
               <span class="fw-bold fs-16 text-primary">{{ money(order.total_amount) }} MAD</span>
             </div>
+            <div v-if="order.delivery_included" class="text-muted fs-13 mt-2">
+              <i class="ri-information-line align-bottom me-1"></i>
+              {{ $t('orders.show.delivery_included_note', { amount: money(order.delivery_price) }) }}
+            </div>
           </BCardBody>
         </BCard>
 
@@ -561,6 +705,16 @@ onMounted(() => {
         </BCard>
       </BCol>
     </BRow>
+
+    <DeliveryOutcomeSheet
+      :show="showOutcomeSheet"
+      :order="order"
+      :outcomes="deliveryOutcome.outcomes"
+      :failure-reasons="deliveryOutcome.failure_reasons"
+      :processing="outcomeProcessing"
+      @close="showOutcomeSheet = false"
+      @submit="submitDeliveryOutcome"
+    />
 
     <CreateReturnModal
       v-if="can.request_return"

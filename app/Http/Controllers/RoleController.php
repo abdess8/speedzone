@@ -136,6 +136,7 @@ class RoleController extends Controller
                         'scope' => $permission->scope,
                         'type' => $permission->type,
                         'label' => PermissionLabels::permissionLabel($permission),
+                        'scope_label' => PermissionLabels::scopeLabel($permission->scope),
                         'description' => PermissionLabels::permissionDescription($permission),
                     ])->values(),
                 ];

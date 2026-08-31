@@ -28,10 +28,18 @@ import 'aos/dist/aos.css';
 import store from "./state/store";
 import i18n, { syncLocaleFromPage } from './i18n'
 import { router } from '@inertiajs/vue3';
+import { initBackNavigation } from './composables/useBackNavigation';
 
 AOS.init({
-    easing: 'ease-out-back',
-    duration: 1000
+    easing: 'ease-out-cubic',
+    duration: 500,
+    // Trigger slightly before the element reaches the fold so the content is
+    // already settled by the time the reader gets to it.
+    offset: 160,
+    // Elements stay visible once revealed: without this AOS removes the
+    // `aos-animate` class when scrolling back up and the sections fade out again.
+    once: true,
+    mirror: false
 });
 
 createInertiaApp({
@@ -39,6 +47,7 @@ createInertiaApp({
     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
     setup({ el, App, props, plugin }) {
         syncLocaleFromPage(props.initialPage?.props);
+        initBackNavigation();
 
         router.on('success', (event) => {
             syncLocaleFromPage(event.detail.page.props);

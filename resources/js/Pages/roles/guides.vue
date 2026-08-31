@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import Layout from '@/Layouts/main.vue';
 import PageHeader from '@/Components/page-header.vue';
 import { guideI18nKey, hasGuide } from '@/guides/index.js';
+import { roleLabel as sharedRoleLabel } from '@/utils/roleLabel';
 
 /**
  * Which roles are invited to which interactive guide.
@@ -43,10 +44,8 @@ const rows = computed(() =>
   })
 );
 
-function roleLabel(name) {
-  const key = `roles.${name}`;
-
-  return t(key) === key ? name : t(key);
+function roleLabel(role) {
+  return sharedRoleLabel(role, t);
 }
 
 function isAssigned(guideKey, roleId) {
@@ -118,7 +117,7 @@ function submit() {
                   :title="$t('guides.access.toggle_column')"
                   @click="can.update && toggleRoleColumn(role.id)"
                 >
-                  {{ roleLabel(role.name) }}
+                  {{ roleLabel(role) }}
                 </th>
               </tr>
             </thead>
@@ -157,7 +156,7 @@ function submit() {
                       @change="toggle(row.key, role.id)"
                     />
                     <label class="visually-hidden" :for="`guide-${row.key}-${role.id}`">
-                      {{ row.title }} — {{ roleLabel(role.name) }}
+                      {{ row.title }} — {{ roleLabel(role) }}
                     </label>
                   </div>
                 </td>

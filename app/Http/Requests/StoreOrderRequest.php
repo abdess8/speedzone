@@ -4,12 +4,15 @@ namespace App\Http\Requests;
 
 use App\Enums\PaymentMethod;
 use App\Http\Requests\Concerns\NormalizesOrderPaymentAmounts;
+use App\Http\Requests\Concerns\NormalizesOrderStockLines;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreOrderRequest extends FormRequest
 {
     use NormalizesOrderPaymentAmounts;
+    use NormalizesOrderStockLines;
 
     public function authorize(): bool
     {
@@ -26,8 +29,12 @@ class StoreOrderRequest extends FormRequest
             'is_fragile' => $this->boolean('is_fragile'),
             'can_be_opened' => $this->boolean('can_be_opened'),
             'option_exchange' => $this->boolean('option_exchange'),
+            'delivery_included' => $this->boolean('delivery_included'),
         ]);
 
+        // Catalog lines decide the amount, so they are folded in first and the
+        // payment normalisation below then routes the figure to the right column.
+        $this->mergeAmountFromStockLines();
         $this->mergeNormalizedPaymentAmounts();
     }
 
@@ -38,6 +45,7 @@ class StoreOrderRequest extends FormRequest
     {
         return [
             'sector_id.exists' => 'The selected sector does not belong to the chosen city or is inactive.',
+            'items.*.product_id.exists' => __('stock.errors.unknown_product'),
         ];
     }
 
@@ -62,11 +70,18 @@ class StoreOrderRequest extends FormRequest
             ],
             'payment_method' => ['required', Rule::in(PaymentMethod::values())],
             ...$this->paymentAmountRules(),
+            ...$this->stockLineRules(),
             'delivery_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'delivery_included' => ['boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'is_fragile' => ['boolean'],
             'can_be_opened' => ['boolean'],
             'option_exchange' => ['boolean'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(fn (Validator $v) => $this->validateStockAvailability($v));
     }
 }

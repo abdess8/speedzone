@@ -29,7 +29,11 @@ return [
      |
      */
 
-    'middleware' => ['web'],
+    // `account.active` keeps the profile, API token and session screens — every
+    // one of which renders the authenticated shell — out of reach of accounts
+    // that have not been approved yet. Guests pass straight through, so the
+    // terms and privacy pages stay public.
+    'middleware' => ['web', 'account.active'],
 
     'auth_session' => AuthenticateSession::class,
 

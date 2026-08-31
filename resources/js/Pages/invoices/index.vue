@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import FilterPanel from "@/Components/FilterPanel.vue";
+import StatusKpiCards from "@/Components/StatusKpiCards.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
 import Swal from "sweetalert2";
@@ -13,6 +14,7 @@ const { t } = useI18n();
 
 const props = defineProps({
   invoices: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
+  stats: { type: Array, default: () => [] },
   filters: { type: Object, default: () => ({}) },
   filterOptions: { type: Object, default: () => ({}) },
   can: { type: Object, default: () => ({}) },
@@ -84,6 +86,11 @@ const reload = () => {
 
 const applyFilters = () => reload();
 
+const selectStatus = (value) => {
+  filters.status = value;
+  reload();
+};
+
 const resetFilters = () => {
   Object.keys(filters).forEach((key) => (filters[key] = ""));
   sort.value = "created_at";
@@ -129,6 +136,13 @@ onMounted(() => {
 <template>
   <Layout>
     <PageHeader :title="$t('invoices.title')" :pageTitle="$t('invoices.page_title')" />
+
+    <StatusKpiCards
+      :stats="stats"
+      :model-value="filters.status"
+      :all-label="$t('invoices.filters.all_statuses')"
+      @select="selectStatus"
+    />
 
     <BCard no-body>
       <FilterPanel

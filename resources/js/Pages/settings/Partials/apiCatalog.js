@@ -72,6 +72,7 @@ const ORDER_LIST_ITEM = {
   order_value: null,
   amount_to_collect: 250,
   delivery_price: 25,
+  delivery_included: false,
   total_amount: 275,
   notes: 'Call before delivery',
   is_fragile: false,
@@ -256,6 +257,7 @@ export const ENDPOINTS = [
       { name: 'order_amount', type: 'number', required: 'conditional', desc: 'fields.order_amount' },
       { name: 'order_value', type: 'number', desc: 'fields.order_value' },
       { name: 'delivery_price', type: 'number', desc: 'fields.delivery_price' },
+      { name: 'delivery_included', type: 'boolean', desc: 'fields.delivery_included', default: 'false' },
       { name: 'notes', type: 'string', desc: 'fields.notes', rule: 'max:2000' },
       { name: 'is_fragile', type: 'boolean', desc: 'fields.is_fragile', default: 'false' },
       { name: 'can_be_opened', type: 'boolean', desc: 'fields.can_be_opened', default: 'false' },
@@ -270,12 +272,13 @@ export const ENDPOINTS = [
       sector_id: 21,
       payment_method: 'CASH',
       order_amount: 250,
+      delivery_included: false,
       notes: 'Call before delivery',
       is_fragile: false,
       can_be_opened: true,
       option_exchange: false,
     },
-    notes: ['orders_create_amount', 'orders_create_sector'],
+    notes: ['orders_create_amount', 'orders_create_delivery_included', 'orders_create_sector'],
     responses: [
       { status: 201, sample: { data: CREATED_ORDER } },
       { status: 422, sample: VALIDATION_ERROR },
@@ -354,6 +357,7 @@ export const ENDPOINTS = [
       { name: 'order_amount', type: 'number', desc: 'fields.order_amount' },
       { name: 'order_value', type: 'number', desc: 'fields.order_value' },
       { name: 'delivery_price', type: 'number', desc: 'fields.delivery_price' },
+      { name: 'delivery_included', type: 'boolean', desc: 'fields.delivery_included' },
       { name: 'notes', type: 'string', desc: 'fields.notes' },
       { name: 'is_fragile', type: 'boolean', desc: 'fields.is_fragile' },
       { name: 'can_be_opened', type: 'boolean', desc: 'fields.can_be_opened' },
@@ -530,8 +534,8 @@ export const ENDPOINTS = [
         status: 200,
         sample: {
           data: [
-            { id: 21, city_id: 7, name: 'Centre Ville', delivery_price: 25, return_price: 15, delivery_driver_price: 10, is_active: true, created_at: '2026-01-12T10:00:00+00:00', updated_at: '2026-01-12T10:00:00+00:00' },
-            { id: 22, city_id: 7, name: 'Malabata', delivery_price: 30, return_price: 18, delivery_driver_price: 12, is_active: true, created_at: '2026-01-12T10:00:00+00:00', updated_at: '2026-01-12T10:00:00+00:00' },
+            { id: 21, city_id: 7, name: 'Centre Ville', delivery_price: 25, return_price: 15, is_active: true, created_at: '2026-01-12T10:00:00+00:00', updated_at: '2026-01-12T10:00:00+00:00' },
+            { id: 22, city_id: 7, name: 'Malabata', delivery_price: 30, return_price: 18, is_active: true, created_at: '2026-01-12T10:00:00+00:00', updated_at: '2026-01-12T10:00:00+00:00' },
           ],
         },
       },
@@ -554,7 +558,7 @@ export const ENDPOINTS = [
         status: 200,
         sample: {
           data: [
-            { id: 21, city_id: 7, name: 'Centre Ville', delivery_price: 25, return_price: 15, delivery_driver_price: 10, is_active: true, created_at: '2026-01-12T10:00:00+00:00', updated_at: '2026-01-12T10:00:00+00:00' },
+            { id: 21, city_id: 7, name: 'Centre Ville', delivery_price: 25, return_price: 15, is_active: true, created_at: '2026-01-12T10:00:00+00:00', updated_at: '2026-01-12T10:00:00+00:00' },
           ],
           ...PAGINATION('https://app.speedzone.ma/api/sectors', 214),
         },

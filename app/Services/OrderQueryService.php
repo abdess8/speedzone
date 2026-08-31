@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
+use App\Support\StatusCounts;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -46,6 +47,7 @@ class OrderQueryService
         'failed' => [
             OrderStatus::FAILED,
             OrderStatus::REJECTED,
+            OrderStatus::READY_TO_RETURN,
         ],
         'delivered' => [
             OrderStatus::DELIVERED,
@@ -79,8 +81,12 @@ class OrderQueryService
      *                                    render a narrow list can pass a
      *                                    reduced set instead of the full API one.
      */
-    public function build(Request $request, User $user, array $with = self::DEFAULT_RELATIONS): Builder
-    {
+    public function build(
+        Request $request,
+        User $user,
+        array $with = self::DEFAULT_RELATIONS,
+        bool $withStatusFilter = true,
+    ): Builder {
         $query = Order::query()->with($with);
 
         // Native orders only — partner-ingested orders live on /partner-orders.
@@ -99,10 +105,26 @@ class OrderQueryService
             $query->whereRaw('1 = 0');
         }
 
-        $this->applyFilters($query, $request);
+        $this->applyFilters($query, $request, $withStatusFilter);
         $this->applySorting($query, $request);
 
         return $query;
+    }
+
+    /**
+     * A pre-filtered sidebar view narrows the cards to its own bucket: a board
+     * showing "being picked up" has no use for a Delivered counter.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function statusCounts(Request $request, User $user): array
+    {
+        return StatusCounts::build(
+            $this->build($request, $user, with: [], withStatusFilter: false),
+            OrderStatus::options(),
+            'orders.status',
+            self::statusGroup($request->string('status_group')->toString()),
+        );
     }
 
     /**
@@ -119,8 +141,20 @@ class OrderQueryService
         return min($perPage, self::MAX_PAGE_SIZE);
     }
 
-    private function applyFilters(Builder $query, Request $request): void
+    private function applyFilters(Builder $query, Request $request, bool $withStatusFilter = true): void
     {
+        // Single-box search across the identifiers an operator reads off a
+        // parcel, for screens that have no room for the field-by-field panel.
+        $query->when($request->input('search'), function (Builder $q, $value) {
+            $q->where(function (Builder $sub) use ($value) {
+                $sub->where('tracking_number', 'like', "%{$value}%")
+                    ->orWhere('customer_phone', 'like', "%{$value}%")
+                    ->orWhere('customer_first_name', 'like', "%{$value}%")
+                    ->orWhere('customer_last_name', 'like', "%{$value}%")
+                    ->orWhereRaw("CONCAT(customer_first_name, ' ', customer_last_name) like ?", ["%{$value}%"]);
+            });
+        });
+
         // Tracking number / order number (same field).
         $tracking = $request->input('tracking_number') ?? $request->input('order_number');
         $query->when($tracking, fn (Builder $q, $value) => $q->where('tracking_number', 'like', "%{$value}%"));
@@ -154,17 +188,20 @@ class OrderQueryService
         $query->when($request->filled('city_id'), fn (Builder $q) => $q->where('city_id', $request->integer('city_id')));
         $query->when($request->filled('sector_id'), fn (Builder $q) => $q->where('sector_id', $request->integer('sector_id')));
 
-        $query->when($request->input('status'), function (Builder $q, $value) {
-            $values = array_values(array_intersect((array) $value, OrderStatus::values()));
-            if ($values !== []) {
-                $q->whereIn('status', $values);
-            }
-        });
+        if ($withStatusFilter) {
+            $query->when($request->input('status'), function (Builder $q, $value) {
+                $values = array_values(array_intersect((array) $value, OrderStatus::values()));
+                if ($values !== []) {
+                    $q->whereIn('status', $values);
+                }
+            });
+        }
 
         // Sidebar shortcut. An explicit status filter always wins so that
         // narrowing a pre-filtered view from the filter panel behaves as
-        // expected instead of intersecting two status constraints.
-        if (! $request->filled('status')) {
+        // expected instead of intersecting two status constraints — except when
+        // counting for the KPI cards, where the group *is* the population.
+        if (! $withStatusFilter || ! $request->filled('status')) {
             $group = self::statusGroup($request->string('status_group')->toString());
 
             if ($group !== []) {

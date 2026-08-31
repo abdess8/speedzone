@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\DeliveryOutcome;
 use App\Enums\OrderFailureReason;
 use App\Enums\OrderStatus;
 use App\Enums\PartnerOrderStatus;
@@ -10,6 +11,9 @@ use App\Enums\ReturnInitiatedByRole;
 use App\Enums\ReturnReason;
 use App\Enums\TransferStatus;
 use App\Http\Requests\AssignOrderDriverRequest;
+use App\Http\Requests\BulkAssignOrderDriverRequest;
+use App\Http\Requests\DispatchSectorRequest;
+use App\Http\Requests\StoreDeliveryOutcomeRequest;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Resources\OrderListResource;
@@ -17,18 +21,24 @@ use App\Http\Resources\OrderResource;
 use App\Models\City;
 use App\Models\Order;
 use App\Models\Partner;
+use App\Models\Product;
 use App\Models\Role;
 use App\Models\Sector;
 use App\Models\User;
 use App\Policies\OrderPolicy;
+use App\Services\DeliveryOutcomeService;
 use App\Services\OrderDriverAssignmentService;
+use App\Services\OrderExportService;
 use App\Services\OrderLabelPdfService;
 use App\Services\OrderQueryService;
+use App\Services\OrderSectorDispatchService;
 use App\Services\OrderService;
+use App\Services\OrderStockService;
 use App\Services\OrderTransitionService;
 use App\Services\Partners\PartnerApiException;
 use App\Services\Partners\PartnerDeliveryIngestionService;
 use App\Services\ReturnService;
+use App\Support\StockPermissions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -47,7 +57,10 @@ class OrderController extends Controller
         private readonly OrderQueryService $orderQuery,
         private readonly OrderTransitionService $transitionService,
         private readonly OrderDriverAssignmentService $driverAssignment,
+        private readonly OrderSectorDispatchService $sectorDispatch,
         private readonly PartnerDeliveryIngestionService $partnerIngestion,
+        private readonly OrderStockService $orderStock,
+        private readonly DeliveryOutcomeService $deliveryOutcome,
     ) {}
 
     public function index(Request $request): Response
@@ -65,6 +78,7 @@ class OrderController extends Controller
 
         return Inertia::render('orders/index', [
             'orders' => OrderListResource::collection($orders)->response()->getData(true),
+            'stats' => fn () => $this->orderQuery->statusCounts($request, $request->user()),
             'filters' => $request->only([
                 'tracking_number', 'order_number', 'customer_name', 'customer_phone',
                 'seller', 'city_id', 'sector_id', 'status', 'status_group', 'payment_method',
@@ -76,7 +90,28 @@ class OrderController extends Controller
             'filterOptions' => fn () => $this->filterOptions(),
             'can' => fn () => $this->abilities($request),
             'workflow' => fn () => $this->workflowOptions($request),
+            'dispatch' => fn () => $this->dispatchOptions($request),
         ]);
+    }
+
+    /**
+     * The rounds a dispatcher can hand out from this screen.
+     *
+     * @return array<string, mixed>
+     */
+    private function dispatchOptions(Request $request): array
+    {
+        $user = $request->user();
+
+        if (! $user->hasPermission('driver_invoices.assign_driver')
+            && ! $user->hasPermission('partners.deliveries.manage')) {
+            return ['sectors' => [], 'drivers' => []];
+        }
+
+        return [
+            'sectors' => $this->sectorDispatch->rounds($user),
+            'drivers' => $this->sectorDispatch->driverOptions(),
+        ];
     }
 
     /**
@@ -100,7 +135,7 @@ class OrderController extends Controller
                     'label' => OrderStatus::from($status)->label(),
                     'color' => OrderStatus::from($status)->color(),
                     'icon' => OrderStatus::from($status)->icon(),
-                    'requires_reason' => $status === OrderStatus::FAILED->value,
+                    'requires_reason' => OrderStatus::from($status)->carriesFailureReason(),
                 ])
                 ->values()
                 ->all())
@@ -110,6 +145,10 @@ class OrderController extends Controller
         return [
             'transitions' => $transitions,
             'failure_reasons' => OrderFailureReason::options(),
+            // The delivery leg is reported as an outcome rather than picked
+            // from the transition list: see OrderController::deliveryOutcome().
+            'delivery_outcomes' => DeliveryOutcome::options(),
+            'delivery_outcome_statuses' => DeliveryOutcomeService::reportableStatuses(),
             // Drivers only ever see orders assigned to them, so holding the
             // scoped permission is enough to enable the quick actions.
             'can_update_status' => $user->hasPermission('orders.update.all')
@@ -143,12 +182,43 @@ class OrderController extends Controller
             }
         }
 
+        $canUseStock = $request->user()->hasPermission(StockPermissions::ORDERS_CREATE_WITH_STOCK);
+
         return Inertia::render('orders/create', [
             'cities' => $this->cityOptions(),
             'sectors' => $sectors,
             'paymentMethods' => PaymentMethod::options(),
             'cloneData' => $cloneData,
+            'canUseStock' => $canUseStock,
+            // The catalog travels with the page rather than behind a search
+            // endpoint: the pick-list has to answer a keystroke instantly, and a
+            // vendor's catalog is orders of magnitude smaller than the sector
+            // table this screen already ships.
+            'products' => $canUseStock ? $this->pickableProducts() : [],
         ]);
+    }
+
+    /**
+     * Catalog options for the order pick-list.
+     *
+     * Out-of-stock references are included on purpose: hiding them makes the
+     * seller wonder whether he mistyped the name, while showing them disabled
+     * answers the question he actually has.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function pickableProducts(): array
+    {
+        return Product::query()
+            ->active()
+            ->orderBy('name')
+            ->limit((int) config('stock.picklist_limit', 2000))
+            ->get([
+                'id', 'store_id', 'name', 'sku', 'barcode', 'category',
+                'unit_price', 'stock_quantity', 'is_fragile', 'photo_path', 'blocked_at',
+            ])
+            ->map(fn (Product $product) => $product->toPickOption())
+            ->all();
     }
 
     public function store(StoreOrderRequest $request): RedirectResponse
@@ -195,6 +265,7 @@ class OrderController extends Controller
             'driverTransactions.driverInvoice',
             'seller.roles',
             'seller.city',
+            'stockHubCity',
             'pickupRequest.createdBy.roles',
             'pickupRequest.assignedDriver.roles',
             'transfers' => fn ($q) => $q->where('transfers.status', '!=', TransferStatus::CANCELLED->value),
@@ -204,11 +275,21 @@ class OrderController extends Controller
             'statusHistories.orderReturn',
             'orderReturn.statusHistories',
             'changeHistories.changedByUser.roles',
+            'items.product',
         ]);
 
         return Inertia::render('orders/show', [
             'order' => OrderResource::make($order)->resolve($request),
             'allowedTransitions' => $this->transitionOptions($order),
+            // A parcel on the round is closed through the outcome flow instead
+            // of the transition dropdown, so the page gets what that sheet needs.
+            'deliveryOutcome' => [
+                'reportable' => ! $order->isPartnerDelivery()
+                    && DeliveryOutcomeService::isReportable($order)
+                    && $request->user()->can('updateStatus', $order),
+                'outcomes' => DeliveryOutcome::options(),
+                'failure_reasons' => OrderFailureReason::options(),
+            ],
             'returnFilterOptions' => ['reasons' => ReturnReason::options()],
             'can' => array_merge($this->abilities($request), [
                 'update' => $request->user()->can('update', $order),
@@ -268,7 +349,7 @@ class OrderController extends Controller
     {
         $this->authorize('update', $order);
 
-        $order->load(['city', 'sector', 'seller', 'seller.city']);
+        $order->load(['city', 'sector', 'seller', 'seller.city', 'stockHubCity']);
 
         return Inertia::render('orders/edit', [
             'order' => OrderResource::make($order)->resolve($request),
@@ -292,6 +373,11 @@ class OrderController extends Controller
     public function destroy(Request $request, Order $order): RedirectResponse
     {
         $this->authorize('delete', $order);
+
+        // An order picked from the catalog took units off the shelf. Deleting it
+        // has to put them back, otherwise the vendor's next inventory count is
+        // short for a reason nobody can explain.
+        $this->orderStock->detach($order, $request->user());
 
         $order->delete();
 
@@ -339,54 +425,24 @@ class OrderController extends Controller
     }
 
     /**
-     * Export selected orders (or the current filter) as CSV.
+     * Export the selected orders — or, failing a selection, the current filter.
+     *
+     * Built from the same query the list is built from, so what the operator
+     * sees on screen is what he opens in Excel. The previous export ran its own
+     * scope and silently ignored the filters, which is where the "informations
+     * incohérentes" came from.
      */
-    public function export(Request $request): StreamedResponse
+    public function export(Request $request, OrderExportService $exporter): StreamedResponse
     {
         $this->authorize('export', Order::class);
 
-        $query = $this->scopedQuery($request);
+        $query = $this->orderQuery->build($request, $request->user(), with: []);
 
         if ($request->filled('ids')) {
             $query->whereIn('id', $this->ids($request));
         }
 
-        $orders = $query->with(['city', 'sector', 'seller'])->orderByDesc('id')->get();
-
-        $fileName = 'orders-'.now()->format('Ymd-His').'.csv';
-
-        return response()->streamDownload(function () use ($orders) {
-            $handle = fopen('php://output', 'wb');
-
-            // Excel assumes the system codepage unless the file opens with a
-            // UTF-8 BOM, which turns Arabic customer data into mojibake.
-            fwrite($handle, "\u{FEFF}");
-
-            fputcsv($handle, [
-                'Tracking Number', 'Status', 'Customer', 'Phone', 'City', 'Sector',
-                'Payment', 'Order Value', 'To Collect', 'Delivery Price', 'Total', 'Seller', 'Created At',
-            ]);
-
-            foreach ($orders as $order) {
-                fputcsv($handle, [
-                    $order->tracking_number,
-                    $order->status->label(),
-                    $order->customer_full_name,
-                    $order->customer_phone,
-                    $order->city?->name,
-                    $order->sector?->name,
-                    $order->payment_method->label(),
-                    $order->order_value !== null ? number_format((float) $order->order_value, 2, '.', '') : '',
-                    $order->order_amount !== null ? number_format((float) $order->order_amount, 2, '.', '') : '',
-                    number_format((float) $order->delivery_price, 2, '.', ''),
-                    number_format((float) $order->total_amount, 2, '.', ''),
-                    $order->seller?->full_name,
-                    $order->created_at?->format('Y-m-d H:i'),
-                ]);
-            }
-
-            fclose($handle);
-        }, $fileName, ['Content-Type' => 'text/csv; charset=UTF-8']);
+        return $exporter->download($query, 'commandes-'.now()->format('Y-m-d_H-i').'.xlsx');
     }
 
     /**
@@ -427,6 +483,73 @@ class OrderController extends Controller
     }
 
     /**
+     * Hand every parcel of a sector to one driver in a single move.
+     */
+    public function dispatchSector(DispatchSectorRequest $request): RedirectResponse
+    {
+        $result = $this->sectorDispatch->dispatchSector(
+            $request->user(),
+            $request->integer('sector_id'),
+            $request->integer('driver_id'),
+            $request->boolean('reassign'),
+        );
+
+        return back()->with('success', __('orders.dispatch.result', $result));
+    }
+
+    /**
+     * Assign one driver to the orders the dispatcher ticked.
+     */
+    public function bulkAssignDriver(BulkAssignOrderDriverRequest $request): RedirectResponse
+    {
+        $result = $this->sectorDispatch->assignSelected(
+            $request->user(),
+            $request->input('ids'),
+            $request->integer('driver_id'),
+        );
+
+        return back()->with('success', __('orders.dispatch.bulk_result', $result));
+    }
+
+    /**
+     * Close a delivery attempt: delivered, or not delivered and why.
+     *
+     * Kept apart from `bulkStatus` because the driver does not pick a status
+     * here — he reports what happened, and the failure reason decides whether
+     * the parcel leaves the round or stays on it for another try.
+     */
+    public function deliveryOutcome(StoreDeliveryOutcomeRequest $request, Order $order): RedirectResponse
+    {
+        $this->authorize('updateStatus', $order);
+
+        if ($order->isPartnerDelivery()) {
+            return back()->with('error', __('partners.orders.sync.use_partner_endpoint'));
+        }
+
+        $order = $this->deliveryOutcome->record(
+            $order,
+            $request->user(),
+            $request->outcome(),
+            $request->failureReason(),
+            $request->input('note'),
+            $request->file('attachment'),
+        );
+
+        return back()->with('success', $this->deliveryOutcomeMessage($order, $request->outcome()));
+    }
+
+    private function deliveryOutcomeMessage(Order $order, DeliveryOutcome $outcome): string
+    {
+        if ($outcome === DeliveryOutcome::DELIVERED) {
+            return __('orders.delivery_outcome.flash.delivered', ['tracking' => $order->tracking_number]);
+        }
+
+        return $order->status === OrderStatus::READY_TO_RETURN
+            ? __('orders.delivery_outcome.flash.ready_to_return', ['tracking' => $order->tracking_number])
+            : __('orders.delivery_outcome.flash.attempt_recorded', ['count' => $order->failed_attempts_count]);
+    }
+
+    /**
      * Apply a status transition to several orders at once.
      */
     public function bulkStatus(Request $request): RedirectResponse
@@ -437,7 +560,9 @@ class OrderController extends Controller
             'to_status' => ['required', 'string', Rule::in(OrderStatus::values())],
             'comment' => ['nullable', 'string', 'max:1000'],
             'failure_reason' => [
-                Rule::requiredIf(fn () => $request->input('to_status') === OrderStatus::FAILED->value),
+                Rule::requiredIf(fn () => OrderStatus::tryFrom(
+                    (string) $request->input('to_status')
+                )?->carriesFailureReason() === true),
                 'nullable',
                 'string',
                 Rule::in(OrderFailureReason::values()),
@@ -593,8 +718,16 @@ class OrderController extends Controller
                 return [];
             }
 
-            return collect($this->transitionService->allowedNextStatuses($order))
-                ->filter(fn (string $status) => PartnerOrderStatus::isAllowed($status))
+            // A partner delivery is not governed by our transition graph: the
+            // partner's own vocabulary is authoritative and PartnerDeliveryService
+            // lets an operator jump freely inside it to mirror whatever the
+            // partner reports. Deriving the list from the native graph would
+            // hide states the partner still uses — "en attente de retour" chief
+            // among them, since FAILED left the graph with the outcome flow.
+            $current = $order->status instanceof OrderStatus ? $order->status->value : $order->status;
+
+            return collect(PartnerOrderStatus::values())
+                ->reject(fn (string $status) => $status === $current)
                 ->map(fn (string $status) => [
                     'value' => $status,
                     'label' => OrderStatus::from($status)->label(),
@@ -610,13 +743,21 @@ class OrderController extends Controller
             return [];
         }
 
+        // The two ways a delivery can end belong to the outcome flow, which
+        // asks for the reason that decides between them. Leaving them in the
+        // dropdown would offer a second, reason-less route to the same states.
+        $ownedByOutcomeFlow = DeliveryOutcomeService::isReportable($order)
+            ? [OrderStatus::DELIVERED->value, OrderStatus::READY_TO_RETURN->value]
+            : [];
+
         return collect($this->transitionService->allowedNextStatuses($order))
+            ->reject(fn (string $status) => in_array($status, $ownedByOutcomeFlow, true))
             ->filter(fn (string $status) => $user->hasPermission('orders.transition.to_'.strtolower($status)))
             ->map(fn (string $status) => [
                 'value' => $status,
                 'label' => OrderStatus::from($status)->label(),
                 'color' => OrderStatus::from($status)->color(),
-                'requires_reason' => $status === OrderStatus::FAILED->value,
+                'requires_reason' => OrderStatus::from($status)->carriesFailureReason(),
             ])
             ->values()
             ->all();
@@ -654,6 +795,8 @@ class OrderController extends Controller
             'read_all' => $user->hasPermission('orders.read.all'),
             'export' => $user->hasPermission('orders.export'),
             'print' => $user->hasPermission('orders.print'),
+            'assign_driver' => $user->hasPermission('driver_invoices.assign_driver')
+                || $user->hasPermission('partners.deliveries.manage'),
             // Drives whether the list renders links to the detail screen at all,
             // mirroring OrderPolicy::viewDetails().
             'view_details' => OrderPolicy::grantsDetailAccess($user),

@@ -10,15 +10,19 @@ import EntityLink from "@/Components/EntityLink.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import FilterPanel from "@/Components/FilterPanel.vue";
 import StatusPills from "@/Components/StatusPills.vue";
+import StatusKpiCards from "@/Components/StatusKpiCards.vue";
 import EntityCard from "@/Components/EntityCard.vue";
 import EntityDetailSheet from "@/Components/EntityDetailSheet.vue";
+import SortableTh from "@/Components/SortableTh.vue";
 import { useGuideSignals } from "@/composables/useGuideSignals";
+import { useTableSort } from "@/composables/useTableSort";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
 
 const props = defineProps({
   pickups: { type: Object, default: () => ({ data: [], meta: {}, links: {} }) },
+  stats: { type: Array, default: () => [] },
   filters: { type: Object, default: () => ({}) },
   filterOptions: { type: Object, default: () => ({}) },
   eligibleOrders: { type: Array, default: () => [] },
@@ -71,7 +75,7 @@ const sheetRows = (pickup) => [
 ];
 
 const query = () => {
-  const params = { per_page: perPage.value };
+  const params = { per_page: perPage.value, sort: sort.value, direction: direction.value };
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== "" && value !== null) params[key] = value;
   });
@@ -85,6 +89,8 @@ const reload = () => {
     replace: true,
   });
 };
+
+const { sort, direction, sortBy } = useTableSort(props.filters, reload);
 
 const applyFilters = () => reload();
 
@@ -124,6 +130,13 @@ onMounted(() => {
 <template>
   <Layout>
     <PageHeader :title="$t('pickups.title')" :pageTitle="$t('pickups.page_title')" />
+
+    <StatusKpiCards
+      :stats="stats"
+      :model-value="filters.status"
+      :all-label="$t('common.all_statuses')"
+      @select="selectStatus"
+    />
 
     <BCard no-body>
       <FilterPanel :active-count="activeFilterCount" @apply="applyFilters" @reset="resetFilters">
@@ -207,14 +220,30 @@ onMounted(() => {
           <table class="table align-middle table-nowrap mb-0">
             <thead class="table-light text-muted">
               <tr>
-                <th>{{ $t('pickups.filters.reference') }}</th>
-                <th v-if="can.read_all">{{ $t('pickups.filters.seller') }}</th>
-                <th>{{ $t('pickups.table.address') }}</th>
-                <th class="text-center">{{ $t('pickups.table.packages') }}</th>
-                <th class="text-end">{{ $t('pickups.table.total_amount') }}</th>
-                <th>{{ $t('pickups.table.driver') }}</th>
-                <th>{{ $t('common.status') }}</th>
-                <th>{{ $t('pickups.table.created') }}</th>
+                <SortableTh field="reference" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('pickups.filters.reference') }}
+                </SortableTh>
+                <SortableTh v-if="can.read_all" field="seller" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('pickups.filters.seller') }}
+                </SortableTh>
+                <SortableTh field="pickup_address" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('pickups.table.address') }}
+                </SortableTh>
+                <SortableTh field="number_of_packages" align="center" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('pickups.table.packages') }}
+                </SortableTh>
+                <SortableTh field="total_orders_amount" align="end" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('pickups.table.total_amount') }}
+                </SortableTh>
+                <SortableTh field="driver" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('pickups.table.driver') }}
+                </SortableTh>
+                <SortableTh field="status" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('common.status') }}
+                </SortableTh>
+                <SortableTh field="created_at" :sort="sort" :direction="direction" @sort="sortBy">
+                  {{ $t('pickups.table.created') }}
+                </SortableTh>
                 <th class="text-end">{{ $t('common.actions') }}</th>
               </tr>
             </thead>

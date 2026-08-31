@@ -1,6 +1,7 @@
 <?php
 
 use App\Support\TranslationBundle;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Vue reads its strings from the bundle Inertia ships, not from the PHP lang
@@ -47,3 +48,23 @@ it('resolves the team strings in both locales', function (string $locale) {
         ->and($bundle['user_statuses'])->toHaveKey('SUSPENDED')
         ->and($bundle['sidebar'])->toHaveKey('team');
 })->with(['fr', 'en']);
+
+/**
+ * Adding a group to GROUPS touches no language file. When the cache key was
+ * fingerprinted over file modification times alone, the bundle built before the
+ * group was listed stayed valid for its full day-long TTL, and the new group's
+ * strings rendered as raw keys in the browser.
+ */
+it('stops serving a bundle cached before a group was added', function () {
+    $stamps = [];
+
+    foreach (glob(lang_path('*/*.php')) ?: [] as $file) {
+        $stamps[] = $file.':'.@filemtime($file);
+    }
+
+    $fileStamp = substr(md5(implode('|', $stamps)), 0, 12);
+
+    Cache::put("translations.bundle.fr.{$fileStamp}", ['sidebar' => ['stale' => true]], 3600);
+
+    expect(TranslationBundle::forLocale('fr'))->toHaveKeys(TranslationBundle::GROUPS);
+});

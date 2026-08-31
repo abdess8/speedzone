@@ -24,6 +24,26 @@
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
 
+    {{--
+        The layout store only writes `data-bs-theme` once Vue has mounted, which
+        is several hundred milliseconds after the stylesheet has painted the
+        page in its light default. Reading the persisted preference here — the
+        same `theme-customizer` entry the store writes — puts the attribute on
+        `<html>` before the first paint, so a dark session never flashes white.
+    --}}
+    <script>
+        (function () {
+            try {
+                var saved = JSON.parse(localStorage.getItem('theme-customizer') || '{}');
+                if (saved && saved.mode) {
+                    document.documentElement.setAttribute('data-bs-theme', saved.mode);
+                }
+            } catch (e) {
+                // A malformed or unavailable store just means the light default.
+            }
+        })();
+    </script>
+
     <!-- Scripts -->
     @routes
     @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])

@@ -1,10 +1,10 @@
 export default {
     meta: {
-        title: 'SpeedZone | Livraison Express au Maroc',
+        title: 'SpeedZone | Livraison de colis au Maroc',
         description:
-            'SpeedZone livre vos colis partout au Maroc grâce à une plateforme moderne de suivi, de paiement à la livraison et de gestion logistique.',
+            'SpeedZone Express est un opérateur de livraison pour le e-commerce au Maroc. Nous ramassons vos colis, les acheminons dans tout le Royaume et les remettons au destinataire, avec paiement à la livraison, suivi en temps réel et gestion des retours. Notre métier : le dernier kilomètre, du ramassage en boutique jusqu’à la remise en main propre.',
         ogDescription:
-            'La plateforme de livraison la plus fiable au Maroc. Gérez vos expéditions, vos paiements et vos retours depuis une seule plateforme.',
+            'SpeedZone Express accompagne les e-commerçants marocains : ramassage, livraison nationale, paiement à la livraison, suivi des colis et reversement des encaissements. Un partenaire logistique pour vendre partout au Maroc.',
         slogan: 'Livraison rapide. Confiance assurée.',
     },
 

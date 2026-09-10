@@ -4,19 +4,19 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title inertia>SpeedZone Express - Logistics Management Platform</title>
+    <title inertia>SpeedZone Express – Livraison de colis au Maroc</title>
     <meta name="description"
-        content="SpeedZone Express is a modern logistics and delivery management platform built with Inertia.js, Vue.js, and Laravel.">
+        content="SpeedZone Express est un opérateur de livraison pour le e-commerce marocain. Nous ramassons vos colis en boutique ou en entrepôt, les acheminons partout au Maroc et les remettons au client final. Notre métier couvre le dernier kilomètre : ramassage, transit entre hubs, livraison à domicile, paiement à la livraison (COD), suivi du colis et reversement des encaissements. Chaque commande est tracée jusqu’à la remise en main propre, pour que vendeurs et destinataires livrent et reçoivent en toute confiance.">
     <meta name="keywords"
-        content="SpeedZone Express, logistics, delivery, transport, Inertia.js, Vue.js, Laravel">
+        content="SpeedZone Express, livraison colis Maroc, e-commerce Maroc, paiement à la livraison, COD, ramassage, logistique, suivi de colis, reversement, livraison nationale">
     <meta name="author" content="SpeedZone Express">
 
     <!-- Social Media Meta Tags -->
-    <meta property="og:title" content="SpeedZone Express - Logistics Management Platform">
+    <meta property="og:title" content="SpeedZone Express – Livraison de colis au Maroc">
     <meta property="og:description"
-        content="Manage deliveries, invoices, and operations with SpeedZone Express, a modern logistics platform.">
-    <meta property="og:image" content="URL to the template's logo or featured image">
-    <meta property="og:url" content="URL to the template's webpage">
+        content="SpeedZone Express accompagne les e-commerçants marocains du ramassage jusqu’à la livraison : colis, paiement à la livraison, suivi et reversements, partout au Royaume.">
+    <meta property="og:image" content="{{ asset('favicon-32x32.png') }}">
+    <meta property="og:url" content="{{ url('/') }}">
     <meta name="twitter:card" content="summary_large_image">
 
     <!-- App favicon -->

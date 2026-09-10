@@ -344,6 +344,7 @@ return [
         'order_value_placeholder' => 'Package value if needed',
         'delivery_price' => 'Delivery Price',
         'delivery_price_hint' => '(auto-filled from sector)',
+        'delivery_price_locked_hint' => '(sector rate, not editable)',
         'delivery_included' => 'Delivery included',
         'delivery_included_hint' => 'The price quoted to the customer already covers the delivery.',
         'delivery_included_note' => 'The customer only pays the order amount. The :amount MAD delivery fee stays on you and will be deducted on your invoice.',

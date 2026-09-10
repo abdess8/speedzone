@@ -103,3 +103,18 @@ test('the create form honours the delivery included switch', function () {
         ->and((float) $order->total_amount)->toBe(388.0)
         ->and((float) $order->delivery_price)->toBe(40.0);
 });
+
+test('a seller cannot undercut the sector delivery price when creating an order', function () {
+    $this->seed([RoleSeeder::class, PermissionSeeder::class, RolePermissionSeeder::class]);
+    [$city, $sector] = webFormDestination();
+
+    $this->actingAs(webFormSeller())
+        ->post(route('orders.store'), webFormPayload($city, $sector, ['delivery_price' => '1']))
+        ->assertSessionHasNoErrors()
+        ->assertRedirect();
+
+    $order = Order::query()->firstOrFail();
+
+    expect((float) $order->delivery_price)->toBe(40.0)
+        ->and((float) $order->total_amount)->toBe(428.0);
+});

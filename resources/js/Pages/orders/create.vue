@@ -7,10 +7,12 @@ import PageHeader from "@/Components/page-header.vue";
 import OrderForm from "./Partials/OrderForm.vue";
 import OrderPicklist from "./Partials/OrderPicklist.vue";
 import { useGuideSignals } from "@/composables/useGuideSignals";
+import { usePermissions } from "@/composables/usePermissions";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
 const guide = useGuideSignals();
+const { isSeller } = usePermissions();
 
 const props = defineProps({
   cities: { type: Array, default: () => [] },
@@ -120,6 +122,7 @@ onMounted(() => {
         :sectors="sectors"
         :payment-methods="paymentMethods"
         :stock-driven="stockDriven"
+        :lock-delivery-price="isSeller"
       />
 
       <div data-guide="order-submit" class="hstack gap-2 justify-content-center mb-4">

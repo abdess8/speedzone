@@ -19,6 +19,11 @@ const props = defineProps({
    * the seller still needs to see the figure he is about to send out.
    */
   stockDriven: { type: Boolean, default: false },
+  /**
+   * Sellers cannot undercut the sector grid. The field stays visible so they
+   * see what the customer will be charged, but the value is not editable.
+   */
+  lockDeliveryPrice: { type: Boolean, default: false },
 });
 
 import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
@@ -267,10 +272,18 @@ watch(
           <div class="mb-3">
             <label class="form-label">
               {{ $t('orders.form.delivery_price') }}
-              <small class="text-muted">{{ $t('orders.form.delivery_price_hint') }}</small>
+              <small class="text-muted">{{ lockDeliveryPrice ? $t('orders.form.delivery_price_locked_hint') : $t('orders.form.delivery_price_hint') }}</small>
             </label>
             <div class="input-group">
-              <input type="number" step="0.01" min="0" class="form-control" v-model="form.delivery_price" :class="{ 'is-invalid': form.errors.delivery_price }" />
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-control"
+                v-model="form.delivery_price"
+                :class="{ 'is-invalid': form.errors.delivery_price, 'bg-light': lockDeliveryPrice }"
+                :readonly="lockDeliveryPrice"
+              />
               <span class="input-group-text">{{ $t('common.currency_mad') }}</span>
             </div>
             <InputError :message="form.errors.delivery_price" />

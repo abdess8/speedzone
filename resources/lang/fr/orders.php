@@ -344,6 +344,7 @@ return [
         'order_value_placeholder' => 'Valeur du colis si nécessaire',
         'delivery_price' => 'Prix de livraison',
         'delivery_price_hint' => '(auto depuis le secteur)',
+        'delivery_price_locked_hint' => '(tarif du secteur, non modifiable)',
         'delivery_included' => 'Livraison incluse',
         'delivery_included_hint' => 'Le prix annoncé au client comprend déjà la livraison.',
         'delivery_included_note' => 'Le client ne paie que le montant de la commande. Les frais de livraison de :amount MAD restent à votre charge et seront déduits sur votre facture.',

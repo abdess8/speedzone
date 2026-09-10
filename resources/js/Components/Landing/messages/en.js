@@ -1,10 +1,10 @@
 export default {
     meta: {
-        title: 'SpeedZone | Express Delivery in Morocco',
+        title: 'SpeedZone | Parcel delivery in Morocco',
         description:
-            'SpeedZone delivers your parcels everywhere in Morocco through a modern platform for tracking, cash on delivery and logistics management.',
+            'SpeedZone Express is a last-mile delivery operator for Moroccan e-commerce. We collect your parcels, move them across the country and hand them to the customer, with cash on delivery, live tracking and returns. Our business is the last kilometre: from shop pickup to delivery at the door.',
         ogDescription:
-            'The most reliable delivery platform in Morocco. Manage your shipments, payments and returns from a single platform.',
+            'SpeedZone Express supports Moroccan online sellers with pickup, nationwide delivery, cash on delivery, parcel tracking and payouts. A logistics partner to sell anywhere in Morocco.',
         slogan: 'Fast delivery. Trust guaranteed.',
     },
 

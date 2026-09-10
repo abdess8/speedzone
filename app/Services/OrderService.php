@@ -43,7 +43,10 @@ class OrderService
             $items = $data['items'] ?? [];
             unset($data['items']);
 
-            $data['delivery_price'] = $this->resolveDeliveryPrice($data);
+            $data['delivery_price'] = $this->resolveDeliveryPrice(
+                $data,
+                forceSectorPrice: $seller->isSeller(),
+            );
             $fromStock = $items !== [];
 
             $order = new Order($data);
@@ -160,14 +163,20 @@ class OrderService
     /**
      * Resolve the delivery price for an order.
      *
-     * The destination sector is the source of truth for pricing. A caller may
-     * still override it explicitly (e.g. a negotiated rate).
+     * The destination sector is the source of truth for pricing. Staff may
+     * still override it (a negotiated rate). Sellers cannot: the posted
+     * figure is ignored so the form cannot undercut the grid.
      *
      * @param  array<string, mixed>  $data
      */
-    private function resolveDeliveryPrice(array $data, ?Order $order = null): float
+    private function resolveDeliveryPrice(array $data, ?Order $order = null, bool $forceSectorPrice = false): float
     {
-        if (isset($data['delivery_price']) && $data['delivery_price'] !== null && $data['delivery_price'] !== '') {
+        if (
+            ! $forceSectorPrice
+            && isset($data['delivery_price'])
+            && $data['delivery_price'] !== null
+            && $data['delivery_price'] !== ''
+        ) {
             return (float) $data['delivery_price'];
         }
 

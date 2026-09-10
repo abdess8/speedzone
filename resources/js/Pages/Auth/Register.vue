@@ -6,6 +6,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
+import AuthPageFooter from '@/Components/AuthPageFooter.vue';
 
 const props = defineProps({
     cities: { type: Array, default: () => [] },
@@ -284,12 +285,6 @@ export default {
             </BContainer>
         </div>
 
-        <footer class="footer">
-            <BContainer>
-                <div class="text-center">
-                    <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} SpeedZone Express.</p>
-                </div>
-            </BContainer>
-        </footer>
+        <AuthPageFooter />
     </div>
 </template>

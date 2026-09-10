@@ -5,6 +5,7 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import Lottie from "@/Components/widgets/lottie.vue";
 import animationData from "@/Components/widgets/rhvddzym.json";
+import AuthPageFooter from '@/Components/AuthPageFooter.vue';
 
 defineProps({
     status: String,
@@ -109,16 +110,6 @@ export default {
             </BContainer>
         </div>
 
-        <footer class="footer">
-            <BContainer>
-                <BRow>
-                    <BCol lg="12">
-                        <div class="text-center">
-                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} SpeedZone Express. Built for reliable logistics operations.</p>
-                        </div>
-                    </BCol>
-                </BRow>
-            </BContainer>
-        </footer>
+        <AuthPageFooter />
     </div>
 </template>

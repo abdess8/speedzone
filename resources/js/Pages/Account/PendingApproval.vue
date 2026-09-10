@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import ChangeAccountEmailForm from '@/Components/Auth/ChangeAccountEmailForm.vue';
+import AuthPageFooter from '@/Components/AuthPageFooter.vue';
 
 defineProps({
     user: { type: Object, required: true },
@@ -70,5 +71,7 @@ defineProps({
                 </BRow>
             </BContainer>
         </div>
+
+        <AuthPageFooter />
     </div>
 </template>

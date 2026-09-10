@@ -3,6 +3,7 @@ import { Link, Head, useForm } from '@inertiajs/vue3';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
+import AuthPageFooter from '@/Components/AuthPageFooter.vue';
 
 const props = defineProps({
     email: String,
@@ -122,16 +123,6 @@ export default {
             </BContainer>
         </div>
 
-        <footer class="footer">
-            <BContainer>
-                <BRow>
-                    <BCol lg="12">
-                        <div class="text-center">
-                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} SpeedZone Express. Crafted with <i class="mdi mdi-heart text-danger"></i> by SpeedZone Express</p>
-                        </div>
-                    </BCol>
-                </BRow>
-            </BContainer>
-        </footer>
+        <AuthPageFooter />
     </div>
 </template>

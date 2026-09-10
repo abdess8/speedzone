@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import ChangeAccountEmailForm from '@/Components/Auth/ChangeAccountEmailForm.vue';
+import AuthPageFooter from '@/Components/AuthPageFooter.vue';
 
 const props = defineProps({
     status: String,
@@ -100,16 +101,6 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
             </BContainer>
         </div>
 
-        <footer class="footer">
-            <BContainer>
-                <BRow>
-                    <BCol lg="12">
-                        <div class="text-center">
-                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} SpeedZone Express.</p>
-                        </div>
-                    </BCol>
-                </BRow>
-            </BContainer>
-        </footer>
+        <AuthPageFooter />
     </div>
 </template>

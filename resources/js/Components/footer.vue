@@ -1,3 +1,7 @@
+<script setup>
+import MadeWithLove from '@/Components/MadeWithLove.vue';
+</script>
+
 <template>
     <footer class="footer">
         <BContainer fluid>
@@ -7,8 +11,8 @@
                     <span>{{ new Date().getFullYear() }} © SpeedZone Express.</span>
                 </BCol>
                 <BCol col sm="6">
-                    <div class="text-sm-end d-none d-sm-block">
-                        Fast. Reliable. Modern logistics operations.
+                    <div class="text-sm-end">
+                        <MadeWithLove />
                     </div>
                 </BCol>
             </BRow>

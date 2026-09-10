@@ -5,6 +5,7 @@ import Checkbox from '@/Components/Checkbox.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
+import AuthPageFooter from '@/Components/AuthPageFooter.vue';
 
 defineProps({
     canResetPassword: Boolean,
@@ -136,16 +137,6 @@ const submit = () => {
             </BContainer>
         </div>
 
-        <footer class="footer">
-            <BContainer>
-                <BRow>
-                    <BCol lg="12">
-                        <div class="text-center">
-                            <p class="mb-0 text-muted">&copy; {{ new Date().getFullYear() }} SpeedZone Express. Built for reliable logistics operations.</p>
-                        </div>
-                    </BCol>
-                </BRow>
-            </BContainer>
-        </footer>
+        <AuthPageFooter />
     </div>
 </template>

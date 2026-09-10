@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { useLandingLocale } from '@/Components/Landing/i18n';
+import MadeWithLove from '@/Components/MadeWithLove.vue';
 
 const { t } = useLandingLocale();
 
@@ -114,6 +115,7 @@ const columns = [
 
             <div class="sz-footer__bottom">
                 <p>{{ t('footer.rights', { year }) }}</p>
+                <MadeWithLove class="sz-footer__made" />
                 <div class="sz-footer__legal">
                     <a href="#contact">{{ t('footer.terms') }}</a>
                     <a href="#contact">{{ t('footer.privacy') }}</a>
@@ -236,6 +238,12 @@ const columns = [
 .sz-footer__bottom p {
     margin: 0;
     font-size: 0.85rem;
+}
+.sz-footer__made {
+    color: rgba(255, 255, 255, 0.68);
+}
+.sz-footer__made:hover {
+    color: #fb7185;
 }
 .sz-footer__legal {
     display: flex;

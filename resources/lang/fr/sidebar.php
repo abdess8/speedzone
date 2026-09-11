@@ -76,7 +76,7 @@ return [
         'title' => 'Paramètres',
         'profile' => 'Profil',
         'users' => 'Utilisateurs',
-        'pending_sellers' => 'Vendeurs en attente',
+        'pending_sellers' => 'Utilisateurs en attente',
         'roles_permissions' => 'Rôles & Permissions',
         'alerts' => 'Annonces',
         'cities' => 'Villes',

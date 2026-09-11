@@ -97,6 +97,11 @@ return [
         'details_title' => 'Examiner l\'inscription',
         'search_placeholder' => 'Rechercher par nom, e-mail ou téléphone…',
         'all_statuses' => 'Tous les statuts',
+        'role_filter' => [
+            'all' => 'Tous',
+            'seller' => 'Vendeurs',
+            'driver' => 'Livreurs',
+        ],
         'empty' => 'Aucune inscription en attente.',
         'view_details' => 'Voir les détails',
         'personal_info' => 'Informations personnelles',
@@ -138,6 +143,10 @@ return [
 
     'emails' => [
         'verification_subject' => 'Vérifiez votre compte Speed Zone',
+        'verification_greeting' => 'Bonjour !',
+        'verification_intro' => 'Cliquez sur le bouton ci-dessous pour vérifier votre adresse e-mail.',
+        'verification_button' => 'Vérifier l\'adresse e-mail',
+        'verification_ignore' => 'Si vous n\'avez pas créé de compte, aucune action n\'est requise.',
         'approved_subject' => 'Votre compte Speed Zone est approuvé',
         'approved_heading' => 'Votre compte est approuvé',
         'approved_body' => 'Bonjour :name, votre compte Speed Zone a été approuvé. Vous pouvez maintenant accéder à la plateforme.',

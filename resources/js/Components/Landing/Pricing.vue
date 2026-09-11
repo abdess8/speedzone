@@ -82,6 +82,25 @@ const rows = computed(() => {
                         <input v-model="query" type="search" :placeholder="t('pricing.search')" :aria-label="t('pricing.search')" />
                     </label>
 
+                    <ul class="sz-pricing__cities">
+                        <li v-for="city in rows" :key="`card-${city.key}`" class="sz-pcity">
+                            <div class="sz-pcity__info">
+                                <p class="sz-pcity__name">{{ cityName(city) }}</p>
+                                <p class="sz-pcity__meta">
+                                    <span>{{ regionName(city) }}</span>
+                                    <span class="sz-table__delay">{{ city.delay }}</span>
+                                </p>
+                            </div>
+                            <p class="sz-pcity__price">
+                                <strong>{{ Math.round(city.price) }}</strong>
+                                <small>{{ t('coverage.currency') }}</small>
+                            </p>
+                        </li>
+                        <li v-if="!rows.length" class="sz-pcity sz-pcity--empty">
+                            {{ t('pricing.noResult') }}
+                        </li>
+                    </ul>
+
                     <div class="sz-pricing__scroll">
                         <table class="sz-table">
                             <thead>
@@ -309,6 +328,10 @@ const rows = computed(() => {
     color: var(--sz-muted);
 }
 
+.sz-pricing__cities {
+    display: none;
+}
+
 @media (max-width: 992px) {
     .sz-pricing__grid {
         grid-template-columns: 1fr;
@@ -318,11 +341,112 @@ const rows = computed(() => {
     .sz-section {
         padding: 4rem 1.1rem;
     }
-    .sz-table__region {
+    .sz-pricing__grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1.15rem;
+    }
+    .sz-pricing__table-wrap {
+        order: -1;
+        padding: 1rem;
+    }
+    .sz-pricing__range {
+        padding: 1.2rem 1.3rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.4rem 0.75rem;
+    }
+    .sz-pricing__range-value {
+        font-size: 2.2rem;
+        margin: 0;
+    }
+    .sz-pricing__range-note {
+        flex-basis: 100%;
+        font-size: 0.82rem;
+    }
+    .sz-pricing__included {
+        padding: 1.15rem 1.2rem;
+    }
+    .sz-pricing__included ul {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.1rem;
+    }
+    .sz-pricing__included li {
+        font-size: 0.8rem;
+        background: #fff;
+        border: 1px solid var(--sz-border);
+        border-radius: 999px;
+        padding: 0.35rem 0.7rem 0.35rem 0.4rem;
+        gap: 0.4rem;
+    }
+    .sz-pricing__scroll {
         display: none;
     }
-    .sz-table thead th:nth-child(2) {
-        display: none;
+    .sz-pricing__cities {
+        display: flex;
+        flex-direction: column;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        max-height: 420px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .sz-pcity {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        padding: 0.9rem 0.15rem;
+        border-bottom: 1px solid var(--sz-border);
+    }
+    .sz-pcity:last-child {
+        border-bottom: none;
+    }
+    .sz-pcity__name {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--sz-dark);
+    }
+    .sz-pcity__meta {
+        margin: 0.25rem 0 0;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        font-size: 0.78rem;
+        color: var(--sz-muted);
+    }
+    .sz-pcity__price {
+        margin: 0;
+        text-align: end;
+        white-space: nowrap;
+        line-height: 1.1;
+    }
+    .sz-pcity__price strong {
+        display: block;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--sz-dark);
+    }
+    .sz-pcity__price small {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--sz-muted);
+    }
+    .sz-pcity--empty {
+        display: block;
+        text-align: center;
+        color: var(--sz-muted);
+        padding: 1.6rem 0.5rem;
+        border-bottom: none;
+    }
+    .sz-pricing__search {
+        padding: 0.75rem 1rem;
     }
 }
 </style>

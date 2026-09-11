@@ -59,6 +59,7 @@ export default {
         subtitle:
             'Une suite complète de services logistiques conçue pour les e-commerçants et les entreprises marocaines.',
         more: 'En savoir plus',
+        swipeHint: 'Glissez pour parcourir les services',
         items: {
             pickup: {
                 title: 'Ramassage',
@@ -245,6 +246,11 @@ export default {
             contact: 'Nous contacter',
         },
         follow: 'Suivez-nous sur Instagram',
+        stayInTouch: 'Restons en contact',
+        stayInTouchText: 'Une question, une idée ou un besoin ? L’équipe SpeedZone vous écoute.',
+        whatsapp: 'WhatsApp',
+        join: 'Créer un compte',
+        scrollTop: 'Retour en haut',
         rights: '© {year} SpeedZone. Tous droits réservés.',
         terms: 'Conditions générales',
         privacy: 'Politique de confidentialité',
@@ -252,6 +258,7 @@ export default {
 
     tracking: {
         placeholder: 'Entrez votre numéro de suivi',
+        heroLabel: 'Suivre un colis',
         inputLabel: 'Numéro de suivi',
         submit: 'Suivre',
         pageTitle: 'Suivi de colis {number} | SpeedZone',

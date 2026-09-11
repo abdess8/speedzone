@@ -272,10 +272,36 @@ const features = ['orders', 'tracking', 'drivers', 'cod', 'history', 'notificati
 @media (max-width: 992px) {
     .sz-platform__grid {
         grid-template-columns: 1fr;
-        gap: 4.5rem;
+        gap: 3.2rem;
+        justify-items: center;
     }
     .sz-platform__media {
         max-width: 480px;
+        width: 100%;
+        margin-inline: auto;
+        padding-bottom: 2.2rem;
+    }
+    .sz-platform__text {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    .sz-platform__text :deep(.sz-heading) {
+        text-align: center;
+        margin-inline: auto;
+    }
+    .sz-platform__features {
+        width: 100%;
+        max-width: 22rem;
+        margin-inline: auto;
+        text-align: start;
+    }
+    .sz-platform__cta {
+        display: flex;
+        justify-content: center;
+        width: 100%;
     }
 }
 @media (max-width: 620px) {
@@ -287,7 +313,8 @@ const features = ['orders', 'tracking', 'drivers', 'cod', 'history', 'notificati
     }
     .sz-platform__phone {
         width: 140px;
-        right: 0;
+        right: 12px;
+        left: auto;
     }
 }
 @media (prefers-reduced-motion: reduce) {

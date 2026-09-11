@@ -196,6 +196,33 @@ test('pending drivers appear in the review queue', function () {
         );
 });
 
+test('the review queue can be switched between sellers and drivers', function () {
+    $seller = pendingSeller();
+    $driver = pendingDriver();
+
+    $this->actingAs(reviewer())
+        ->get(route('admin.pending-users.index', ['role' => 'driver']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/PendingUsers/Index')
+            ->has('users.data', 1)
+            ->where('users.data.0.id', $driver->id)
+            ->where('filters.role', 'driver')
+            ->where('roleCounts.all', 2)
+            ->where('roleCounts.seller', 1)
+            ->where('roleCounts.driver', 1)
+        );
+
+    $this->actingAs(reviewer())
+        ->get(route('admin.pending-users.index', ['role' => 'seller']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('users.data', 1)
+            ->where('users.data.0.id', $seller->id)
+        );
+});
+
+
 test('approving a driver activates the account without creating a store', function () {
     $driver = pendingDriver();
 

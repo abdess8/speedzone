@@ -12,6 +12,7 @@ use App\Models\City;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\SellerApprovalService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -26,32 +27,29 @@ class PendingUserController extends Controller
     {
         $this->authorizeReview();
 
-        $users = User::query()
+        $role = $this->requestedRole($request);
+
+        $users = $this->pendingUsersQuery($request)
             ->with(['city', 'role'])
-            ->whereHas('roles', fn ($q) => $q->whereIn('name', [Role::SELLER, Role::DRIVER]))
-            ->whereIn('status', [
-                UserStatus::PendingApproval->value,
-                UserStatus::PendingEmailVerification->value,
-                UserStatus::Rejected->value,
-            ])
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $search = $request->string('search');
-                $query->where(function ($q) use ($search) {
-                    $q->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%")
-                        ->orWhere('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone_number', 'like', "%{$search}%");
-                });
-            })
-            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
+            ->when($role, fn ($q) => $q->whereHas('roles', fn ($roles) => $roles->where('name', $role)))
             ->latest()
             ->paginate(10)
             ->withQueryString();
 
+        $counted = $this->pendingUsersQuery($request);
+
         return Inertia::render('Admin/PendingUsers/Index', [
             'users' => $users,
-            'filters' => $request->only(['search', 'status']),
+            'filters' => [
+                'search' => $request->string('search')->toString(),
+                'status' => $request->string('status')->toString(),
+                'role' => $role === Role::DRIVER ? 'driver' : ($role === Role::SELLER ? 'seller' : ''),
+            ],
+            'roleCounts' => [
+                'all' => (clone $counted)->count(),
+                'seller' => (clone $counted)->whereHas('roles', fn ($q) => $q->where('name', Role::SELLER))->count(),
+                'driver' => (clone $counted)->whereHas('roles', fn ($q) => $q->where('name', Role::DRIVER))->count(),
+            ],
             'statuses' => UserStatus::options(),
         ]);
     }
@@ -189,6 +187,42 @@ class PendingUserController extends Controller
     private function permissionIds(ApprovePendingUserRequest $request): array
     {
         return $request->validated('permission_ids') ?: $this->approval->defaultPermissionIds();
+    }
+
+    /**
+     * Registrations still waiting on a reviewer, optionally narrowed by the
+     * search box and the status dropdown — but never by the role switcher,
+     * so the counts on that switcher stay honest.
+     */
+    private function pendingUsersQuery(Request $request): Builder
+    {
+        return User::query()
+            ->whereHas('roles', fn ($q) => $q->whereIn('name', [Role::SELLER, Role::DRIVER]))
+            ->whereIn('status', [
+                UserStatus::PendingApproval->value,
+                UserStatus::PendingEmailVerification->value,
+                UserStatus::Rejected->value,
+            ])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->string('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone_number', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')));
+    }
+
+    private function requestedRole(Request $request): ?string
+    {
+        return match ($request->string('role')->toString()) {
+            'seller' => Role::SELLER,
+            'driver' => Role::DRIVER,
+            default => null,
+        };
     }
 
     /**

@@ -23,6 +23,9 @@ const services = [
                 :subtitle="t('services.subtitle')"
             />
 
+            <p class="sz-services__hint">{{ t('services.swipeHint') }}</p>
+
+            <div class="sz-services__scroller">
             <div class="sz-services__grid">
                 <article
                     v-for="service in services"
@@ -71,6 +74,7 @@ const services = [
                         </svg>
                     </span>
                 </article>
+            </div>
             </div>
         </div>
     </section>
@@ -175,12 +179,61 @@ const services = [
         grid-template-columns: repeat(2, 1fr);
     }
 }
+.sz-services__hint {
+    display: none;
+}
+
 @media (max-width: 620px) {
     .sz-section {
-        padding: 4rem 1.1rem;
+        padding: 4rem 0;
+    }
+    .sz-container {
+        padding-inline: 1.1rem;
+    }
+    .sz-services__hint {
+        display: block;
+        margin: -1.4rem 0 1rem;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--sz-muted);
+        text-align: center;
+    }
+    .sz-services__scroller {
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x mandatory;
+        scroll-padding-inline: 1.1rem;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x;
+        padding-inline: 1.1rem;
+        padding-bottom: 0.75rem;
+        scrollbar-width: none;
+    }
+    .sz-services__scroller::-webkit-scrollbar {
+        display: none;
     }
     .sz-services__grid {
-        grid-template-columns: 1fr;
+        display: flex;
+        gap: 0.9rem;
+        width: max-content;
+    }
+    .sz-scard {
+        flex: 0 0 min(78vw, 300px);
+        scroll-snap-align: start;
+        padding: 1.45rem 1.3rem;
+    }
+    .sz-scard:hover {
+        transform: none;
+        box-shadow: var(--sz-shadow-sm);
+        border-color: var(--sz-border);
+    }
+    .sz-scard:hover::before,
+    .sz-scard:hover .sz-scard__icon {
+        transform: none;
+    }
+    .sz-scard__link {
+        display: none;
     }
 }
 </style>

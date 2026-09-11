@@ -58,6 +58,7 @@ export default {
         title: 'كل ما تحتاجه للتوصيل براحة بال',
         subtitle: 'مجموعة متكاملة من الخدمات اللوجستيكية مصممة للتجار الإلكترونيين والشركات المغربية.',
         more: 'اعرف المزيد',
+        swipeHint: 'اسحب للاطلاع على الخدمات',
         items: {
             pickup: {
                 title: 'الاستلام من عندك',
@@ -235,6 +236,11 @@ export default {
             contact: 'اتصل بنا',
         },
         follow: 'تابعنا على إنستغرام',
+        stayInTouch: 'نبقوا على تواصل',
+        stayInTouchText: 'سؤال، فكرة أو حاجة؟ فريق SpeedZone كيسمع ليكم.',
+        whatsapp: 'واتساب',
+        join: 'إنشاء حساب',
+        scrollTop: 'العودة إلى الأعلى',
         rights: '© {year} SpeedZone. جميع الحقوق محفوظة.',
         terms: 'الشروط العامة',
         privacy: 'سياسة الخصوصية',
@@ -242,6 +248,7 @@ export default {
 
     tracking: {
         placeholder: 'أدخل رقم التتبع',
+        heroLabel: 'تتبع طرد',
         inputLabel: 'رقم التتبع',
         submit: 'تتبع',
         pageTitle: 'تتبع الطرد {number} | SpeedZone',

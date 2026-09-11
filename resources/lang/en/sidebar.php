@@ -76,7 +76,7 @@ return [
         'title' => 'Settings',
         'profile' => 'Profile',
         'users' => 'Users',
-        'pending_sellers' => 'Pending Sellers',
+        'pending_sellers' => 'Pending users',
         'roles_permissions' => 'Roles & Permissions',
         'alerts' => 'Announcements',
         'cities' => 'Cities',

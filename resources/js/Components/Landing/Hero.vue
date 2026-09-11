@@ -39,6 +39,7 @@ const { t } = useLandingLocale();
                 </div>
 
                 <div class="sz-hero__track">
+                    <p class="sz-hero__track-label">{{ t('tracking.heroLabel') }}</p>
                     <TrackingSearch />
                 </div>
 
@@ -547,13 +548,55 @@ const { t } = useLandingLocale();
     }
 }
 
-@media (max-width: 560px) {
+.sz-hero__track-label {
+    display: none;
+}
+
+@media (max-width: 768px) {
     .sz-hero {
-        padding: 7.5rem 1.1rem 3rem;
+        padding: 7.25rem 1.1rem 2.4rem;
     }
-    .sz-float--1, .sz-float--4 { display: none; }
-    .sz-mock--phone { width: 150px; left: 0; bottom: -14px; }
-    .sz-hero__visual { min-height: 380px; }
+    .sz-hero__inner {
+        gap: 0;
+    }
+    .sz-hero__right {
+        display: none;
+    }
+    .sz-hero__title {
+        font-size: clamp(1.85rem, 8vw, 2.35rem);
+        margin-top: 1rem;
+    }
+    .sz-hero__subtitle {
+        margin-top: 0.85rem;
+        font-size: 1rem;
+    }
+    .sz-hero__actions {
+        margin-top: 1.35rem;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .sz-hero__actions :deep(.sz-btn) {
+        width: 100%;
+    }
+    .sz-hero__track {
+        margin-top: 1.35rem;
+    }
+    .sz-hero__track-label {
+        display: block;
+        margin: 0 0 0.55rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--sz-muted);
+    }
+    .sz-hero__proof {
+        margin-top: 1.2rem;
+        padding: 0.85rem 1rem;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid var(--sz-border);
+        border-radius: 16px;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

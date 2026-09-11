@@ -59,6 +59,7 @@ export default {
         subtitle:
             'A complete suite of logistics services built for Moroccan online sellers and businesses.',
         more: 'Learn more',
+        swipeHint: 'Swipe to browse services',
         items: {
             pickup: {
                 title: 'Pickup',
@@ -243,6 +244,11 @@ export default {
             contact: 'Contact us',
         },
         follow: 'Follow us on Instagram',
+        stayInTouch: 'Stay in touch',
+        stayInTouchText: 'A question, an idea or a need? The SpeedZone team is listening.',
+        whatsapp: 'WhatsApp',
+        join: 'Create an account',
+        scrollTop: 'Back to top',
         rights: '© {year} SpeedZone. All rights reserved.',
         terms: 'Terms and conditions',
         privacy: 'Privacy policy',
@@ -250,6 +256,7 @@ export default {
 
     tracking: {
         placeholder: 'Enter your tracking number',
+        heroLabel: 'Track a parcel',
         inputLabel: 'Tracking number',
         submit: 'Track',
         pageTitle: 'Parcel tracking {number} | SpeedZone',

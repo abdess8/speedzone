@@ -144,21 +144,23 @@ const dimmed = (city) => active.value !== null && active.value !== city.key;
 
                     <div class="sz-coverage__block">
                         <h3>{{ t('coverage.allCities') }}</h3>
-                        <div class="sz-chips">
-                            <span
-                                v-for="city in sorted"
-                                :key="city.key"
-                                class="sz-chip"
-                                :class="{ 'is-active': active === city.key }"
-                                @mouseenter="active = city.key"
-                                @mouseleave="active = null"
-                            >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                {{ cityName(city) }}
-                                <b>{{ priceOf(city) }}</b>
-                            </span>
+                        <div class="sz-chips-scroller">
+                            <div class="sz-chips">
+                                <span
+                                    v-for="city in sorted"
+                                    :key="city.key"
+                                    class="sz-chip"
+                                    :class="{ 'is-active': active === city.key }"
+                                    @mouseenter="active = city.key"
+                                    @mouseleave="active = null"
+                                >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                        <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    {{ cityName(city) }}
+                                    <b>{{ priceOf(city) }}</b>
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -174,6 +176,7 @@ const dimmed = (city) => active.value !== null && active.value !== city.key;
 .sz-container {
     max-width: 1200px;
     margin: 0 auto;
+    min-width: 0;
 }
 .sz-coverage {
     background: var(--sz-bg);
@@ -183,6 +186,12 @@ const dimmed = (city) => active.value !== null && active.value !== city.key;
     grid-template-columns: 1.15fr 1fr;
     gap: 3rem;
     align-items: center;
+    min-width: 0;
+}
+.sz-coverage__panel,
+.sz-coverage__block {
+    min-width: 0;
+    max-width: 100%;
 }
 .sz-coverage__map {
     position: relative;
@@ -466,6 +475,35 @@ const dimmed = (city) => active.value !== null && active.value !== city.key;
     }
     .sz-coverage__stats {
         gap: 0.6rem;
+    }
+    .sz-coverage__map {
+        max-width: 100%;
+    }
+    .sz-chips-scroller {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x;
+        scrollbar-width: thin;
+        padding-bottom: 0.35rem;
+    }
+    .sz-chips {
+        display: flex;
+        flex-flow: column wrap;
+        align-content: flex-start;
+        gap: 0.55rem;
+        height: 7.35rem;
+        width: max-content;
+        max-width: none;
+    }
+    .sz-chip {
+        flex: 0 0 auto;
+        white-space: nowrap;
     }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -97,6 +97,11 @@ return [
         'details_title' => 'Review registration',
         'search_placeholder' => 'Search by name, email or phone…',
         'all_statuses' => 'All statuses',
+        'role_filter' => [
+            'all' => 'All',
+            'seller' => 'Sellers',
+            'driver' => 'Drivers',
+        ],
         'empty' => 'No pending registrations found.',
         'view_details' => 'View details',
         'personal_info' => 'Personal information',
@@ -138,6 +143,10 @@ return [
 
     'emails' => [
         'verification_subject' => 'Verify your Speed Zone account',
+        'verification_greeting' => 'Hello!',
+        'verification_intro' => 'Please click the button below to verify your email address.',
+        'verification_button' => 'Verify Email Address',
+        'verification_ignore' => 'If you did not create an account, no further action is required.',
         'approved_subject' => 'Your Speed Zone account is approved',
         'approved_heading' => 'Your account is approved',
         'approved_body' => 'Hello :name, your Speed Zone account has been approved. You can now access the platform.',

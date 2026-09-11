@@ -21,11 +21,13 @@ export default {
         users: { type: Object, required: true },
         filters: { type: Object, default: () => ({}) },
         statuses: { type: Object, default: () => ({}) },
+        roleCounts: { type: Object, default: () => ({ all: 0, seller: 0, driver: 0 }) },
     },
     data() {
         return {
             search: this.filters.search || '',
             status: this.filters.status || '',
+            role: this.filters.role || '',
             searchTimer: null,
             /** Row whose mobile detail sheet is open. */
             selectedUser: null,
@@ -36,6 +38,13 @@ export default {
         activeFilterCount() {
             return [this.search, this.status].filter(Boolean).length;
         },
+        roleTabs() {
+            return [
+                { value: '', label: this.$t('seller_registration.admin.role_filter.all'), count: this.roleCounts.all, icon: 'ri-team-line' },
+                { value: 'seller', label: this.$t('seller_registration.admin.role_filter.seller'), count: this.roleCounts.seller, icon: 'ri-store-2-line' },
+                { value: 'driver', label: this.$t('seller_registration.admin.role_filter.driver'), count: this.roleCounts.driver, icon: 'ri-truck-line' },
+            ];
+        },
     },
     watch: {
         // Both go through one timer so clearing several filters at once — which the
@@ -44,6 +53,10 @@ export default {
             this.scheduleFilters(350);
         },
         status() {
+            this.scheduleFilters(0);
+        },
+        role() {
+            this.selectedUser = null;
             this.scheduleFilters(0);
         },
     },
@@ -65,6 +78,7 @@ export default {
                 {
                     search: this.search || undefined,
                     status: this.status || undefined,
+                    role: this.role || undefined,
                 },
                 { preserveState: true, replace: true, preserveScroll: true }
             );
@@ -169,6 +183,25 @@ export default {
                     </select>
                 </BCol>
             </FilterPanel>
+
+            <div class="pending-role-bar px-3 py-2 border-bottom">
+                <div class="pending-role-switch" role="tablist" :aria-label="$t('seller_registration.admin.columns.role')">
+                    <button
+                        v-for="tab in roleTabs"
+                        :key="tab.value || 'all'"
+                        type="button"
+                        role="tab"
+                        class="pending-role-switch__btn"
+                        :class="{ 'is-active': role === tab.value }"
+                        :aria-selected="role === tab.value"
+                        @click="role = tab.value"
+                    >
+                        <i :class="tab.icon" class="align-middle"></i>
+                        <span>{{ tab.label }}</span>
+                        <span class="pending-role-switch__count">{{ tab.count }}</span>
+                    </button>
+                </div>
+            </div>
 
             <BCardBody>
                 <div class="d-lg-none">
@@ -277,3 +310,66 @@ export default {
         </EntityDetailSheet>
     </Layout>
 </template>
+
+<style scoped>
+.pending-role-bar {
+    background: var(--vz-card-bg, #fff);
+}
+
+.pending-role-switch {
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.2rem;
+    border-radius: 999px;
+    background: var(--vz-light, #f3f6f9);
+    overflow-x: auto;
+}
+
+.pending-role-switch__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 1 1 0;
+    min-width: max-content;
+    padding: 0.45rem 0.85rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--vz-body-color, #6d7080);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.pending-role-switch__btn.is-active {
+    background: var(--vz-card-bg, #fff);
+    color: var(--vz-heading-color, #495057);
+    box-shadow: 0 1px 3px rgba(56, 65, 74, 0.14);
+}
+
+.pending-role-switch__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: var(--vz-secondary-bg, #e9ebec);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.pending-role-switch__btn.is-active .pending-role-switch__count {
+    background: rgba(64, 81, 137, 0.12);
+    color: var(--vz-primary, #405189);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pending-role-switch__btn {
+        transition: none;
+    }
+}
+</style>

@@ -2,10 +2,23 @@
 
 return [
     'register' => [
-        'title' => 'Seller registration',
-        'subtitle' => 'Join Speed Zone as a delivery seller',
+        'title' => 'Create an account',
+        'subtitle' => 'Join Speed Zone Express',
         'heading' => 'Create your seller account',
         'description' => 'Register to start shipping with Speed Zone Express.',
+        'choose_type' => 'I am signing up as',
+        'types' => [
+            'seller' => 'Seller',
+            'driver' => 'Driver',
+        ],
+        'headings' => [
+            'seller' => 'Create your seller account',
+            'driver' => 'Create your driver account',
+        ],
+        'descriptions' => [
+            'seller' => 'Register to start shipping with Speed Zone Express.',
+            'driver' => 'Register to start delivering with Speed Zone Express.',
+        ],
         'first_name' => 'First name',
         'last_name' => 'Last name',
         'email' => 'Email',
@@ -80,15 +93,15 @@ return [
     ],
 
     'admin' => [
-        'page_title' => 'Pending seller registrations',
-        'details_title' => 'Review seller registration',
+        'page_title' => 'Pending registrations',
+        'details_title' => 'Review registration',
         'search_placeholder' => 'Search by name, email or phone…',
         'all_statuses' => 'All statuses',
-        'empty' => 'No pending seller registrations found.',
+        'empty' => 'No pending registrations found.',
         'view_details' => 'View details',
         'personal_info' => 'Personal information',
         'review_section' => 'Account review',
-        'review_help' => 'Approving activates the account and creates its default store. Rejecting blocks access to the platform.',
+        'review_help' => 'Approving activates the account. A seller also receives a default store. Rejecting blocks access to the platform.',
         'documents_section' => 'Supporting documents',
         'role_help' => 'Role granted to the account once it is activated.',
         'change_password' => 'Change password',
@@ -109,10 +122,11 @@ return [
         'reactivate_confirm_text' => 'The rejected account will be approved and its owner will be able to sign in again.',
         'reactivated_success' => 'Account reactivated and approved.',
         'rejection_reason' => 'Rejection reason',
-        'approved_success' => 'Seller account approved successfully.',
-        'rejected_success' => 'Seller registration rejected.',
+        'approved_success' => 'Account approved successfully.',
+        'rejected_success' => 'Registration rejected.',
         'columns' => [
             'name' => 'Name',
+            'role' => 'Role',
             'email' => 'Email',
             'phone' => 'Phone',
             'city' => 'City',
@@ -126,7 +140,7 @@ return [
         'verification_subject' => 'Verify your Speed Zone account',
         'approved_subject' => 'Your Speed Zone account is approved',
         'approved_heading' => 'Your account is approved',
-        'approved_body' => 'Hello :name, your Speed Zone seller account has been approved. You can now access the platform.',
+        'approved_body' => 'Hello :name, your Speed Zone account has been approved. You can now access the platform.',
         'approved_button' => 'Sign in to Speed Zone',
         'approved_footer' => 'If you did not request this account, please contact support.',
         'rejected_subject' => 'Your Speed Zone registration was rejected',

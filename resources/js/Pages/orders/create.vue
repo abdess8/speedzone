@@ -8,6 +8,7 @@ import OrderForm from "./Partials/OrderForm.vue";
 import OrderPicklist from "./Partials/OrderPicklist.vue";
 import { useGuideSignals } from "@/composables/useGuideSignals";
 import { usePermissions } from "@/composables/usePermissions";
+import { isNationalPhoneForm } from "@/common/phone";
 import Swal from "sweetalert2";
 
 const { t } = useI18n();
@@ -35,7 +36,7 @@ const emptyForm = () => ({
   order_amount: "",
   order_value: "",
   delivery_price: "",
-  delivery_included: false,
+  delivery_included: true,
   notes: "",
   is_fragile: false,
   can_be_opened: false,
@@ -57,7 +58,7 @@ const buildFormState = (data = null) => {
     order_amount: data.order_amount ?? "",
     order_value: data.order_value ?? "",
     delivery_price: data.delivery_price ?? "",
-    delivery_included: Boolean(data.delivery_included),
+    delivery_included: data.delivery_included ?? true,
     notes: data.notes ?? "",
     is_fragile: Boolean(data.is_fragile),
     can_be_opened: Boolean(data.can_be_opened),
@@ -71,20 +72,43 @@ const buildFormState = (data = null) => {
 
 const form = useForm(buildFormState(props.cloneData));
 
+if (!props.cloneData) {
+  form.delivery_included = true;
+}
+
 const isCashPayment = computed(() => form.payment_method === "CASH");
 
 /** True while the basket owns the amount, so the manual field steps aside. */
 const stockDriven = computed(() => (form.items ?? []).length > 0);
 
+const assertValidPhone = () => {
+  if (isNationalPhoneForm(form.customer_phone)) {
+    form.clearErrors("customer_phone");
+    return true;
+  }
+
+  form.setError("customer_phone", t("orders.form.phone_invalid"));
+  return false;
+};
+
 // Both paths pulse the same signal: the guide's closing step is about the order
 // existing, not about which button was used to get there — and "create and new"
 // stays on this page, so a route change alone would never announce it.
-const submit = () =>
+const submit = () => {
+  if (!assertValidPhone()) {
+    return;
+  }
+
   form.post(route("orders.store"), {
     onSuccess: () => guide.pulse("orders.created"),
   });
+};
 
 const submitAndNew = () => {
+  if (!assertValidPhone()) {
+    return;
+  }
+
   form.post(route("orders.store-and-new"), {
     preserveState: false,
     onSuccess: () => {
@@ -96,6 +120,10 @@ const submitAndNew = () => {
 };
 
 onMounted(() => {
+  if (!props.cloneData) {
+    form.delivery_included = true;
+  }
+
   const success = usePage().props?.flash?.success;
   if (success) {
     Swal.fire({ toast: true, position: "top-end", icon: "success", title: success, showConfirmButton: false, timer: 3500, timerProgressBar: true });
@@ -108,7 +136,7 @@ onMounted(() => {
 <template>
   <Layout>
     <PageHeader :title="$t('orders.create_title')" :pageTitle="$t('orders.page_title')" />
-    <form @submit.prevent="submit">
+    <form autocomplete="off" novalidate @submit.prevent="submit">
       <OrderPicklist
         v-if="canUseStock"
         :form="form"
@@ -123,6 +151,7 @@ onMounted(() => {
         :payment-methods="paymentMethods"
         :stock-driven="stockDriven"
         :lock-delivery-price="isSeller"
+        :preset-delivery-included="!cloneData"
       />
 
       <div data-guide="order-submit" class="hstack gap-2 justify-content-center mb-4">

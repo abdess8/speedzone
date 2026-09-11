@@ -39,6 +39,28 @@ test('seller registration screen can be rendered', function () {
     return ! Features::enabled(Features::registration());
 }, 'Registration support is not enabled.');
 
+test('registration screen defaults to a seller account type', function () {
+    $this->get('/register')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Auth/Register')
+            ->where('accountType', 'seller')
+        );
+})->skip(function () {
+    return ! Features::enabled(Features::registration());
+}, 'Registration support is not enabled.');
+
+test('registration screen can open on the driver form', function () {
+    $this->get('/register?type=driver')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Auth/Register')
+            ->where('accountType', 'driver')
+        );
+})->skip(function () {
+    return ! Features::enabled(Features::registration());
+}, 'Registration support is not enabled.');
+
 test('new sellers can register with seller profile fields', function () {
     Event::fake([Verified::class]);
 
@@ -65,6 +87,59 @@ test('new sellers can register with seller profile fields', function () {
         ->and($user->city_id)->toBe($city->id);
 
     $response->assertRedirect(route('verification.notice'));
+})->skip(function () {
+    return ! Features::enabled(Features::registration());
+}, 'Registration support is not enabled.');
+
+test('new drivers can register with the same profile fields', function () {
+    Event::fake([Verified::class]);
+
+    $city = sellerRegistrationCity();
+
+    $response = $this->post('/register', [
+        'account_type' => 'driver',
+        'first_name' => 'Karim',
+        'last_name' => 'El Fassi',
+        'email' => 'driver-register-test@example.com',
+        'phone_number' => '+212600000001',
+        'city_id' => $city->id,
+        'password' => 'Password123!',
+        'password_confirmation' => 'Password123!',
+        'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature(),
+    ]);
+
+    $this->assertAuthenticated();
+
+    $user = User::query()->where('email', 'driver-register-test@example.com')->first();
+
+    expect($user)->not->toBeNull()
+        ->and($user->status)->toBe(UserStatus::PendingEmailVerification)
+        ->and($user->isDriver())->toBeTrue()
+        ->and($user->isSeller())->toBeFalse()
+        ->and($user->city_id)->toBe($city->id);
+
+    $response->assertRedirect(route('verification.notice'));
+})->skip(function () {
+    return ! Features::enabled(Features::registration());
+}, 'Registration support is not enabled.');
+
+test('registration rejects an unknown account type', function () {
+    $city = sellerRegistrationCity();
+
+    $this->from('/register')->post('/register', [
+        'account_type' => 'admin',
+        'first_name' => 'Amine',
+        'last_name' => 'Benali',
+        'email' => 'bad-type@example.com',
+        'phone_number' => '+212600000002',
+        'city_id' => $city->id,
+        'password' => 'Password123!',
+        'password_confirmation' => 'Password123!',
+        'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature(),
+    ])->assertSessionHasErrors('account_type');
+
+    $this->assertGuest();
+    expect(User::query()->where('email', 'bad-type@example.com')->exists())->toBeFalse();
 })->skip(function () {
     return ! Features::enabled(Features::registration());
 }, 'Registration support is not enabled.');

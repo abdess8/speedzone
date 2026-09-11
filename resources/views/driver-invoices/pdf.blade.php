@@ -60,6 +60,7 @@
 @php
     $money = fn ($v) => number_format((float) $v, 2, '.', ' ');
     $status = $invoice->status instanceof \App\Enums\DriverInvoiceStatus ? $invoice->status : \App\Enums\DriverInvoiceStatus::from($invoice->status);
+    $adjustments = $adjustments ?? ['bonus' => 0.0, 'penalty' => 0.0, 'adjustment' => 0.0];
 @endphp
 
 {{-- Repeated on every sheet: from page two on, the header below is gone and
@@ -120,7 +121,9 @@
             <th>{{ __('driver_invoices.pdf.city') }}</th>
             <th>{{ __('driver_invoices.pdf.sector') }}</th>
             <th>{{ __('driver_invoices.pdf.type') }}</th>
-            <th class="num">{{ __('driver_invoices.pdf.amount') }}</th>
+            <th class="num">{{ __('driver_invoices.pdf.collected') }}</th>
+            <th class="num">{{ __('driver_invoices.pdf.commission') }}</th>
+            <th class="num">{{ __('driver_invoices.pdf.due') }}</th>
         </tr>
         </thead>
         <tbody>
@@ -139,6 +142,8 @@
                 <td class="@bidiclass($order?->city?->name)">@bidilines($order?->city?->name ?? '—', 14)</td>
                 <td class="@bidiclass($line->sector?->name)">@bidilines($line->sector?->name ?? '—', 14)</td>
                 <td><span class="badge">{{ $type?->label() ?? '—' }}</span></td>
+                <td class="num">{{ $money($line->collected_snapshot) }}</td>
+                <td class="num">{{ $money($line->commission_snapshot) }}</td>
                 <td class="num">{{ $money($line->amount_snapshot) }}</td>
             </tr>
         @endforeach
@@ -151,8 +156,34 @@
                 <td class="label">{{ __('driver_invoices.pdf.deliveries_count') }}</td>
                 <td class="value">{{ $invoice->deliveries_count }}</td>
             </tr>
+            <tr>
+                <td class="label">{{ __('driver_invoices.pdf.collected') }}</td>
+                <td class="value">{{ $money($invoice->collected_amount) }}</td>
+            </tr>
+            <tr>
+                <td class="label">{{ __('driver_invoices.pdf.commission') }}</td>
+                <td class="value">- {{ $money($invoice->commission_total) }}</td>
+            </tr>
+            @if(($adjustments['bonus'] ?? 0) != 0)
+            <tr>
+                <td class="label">{{ __('driver_invoices.summary.bonus_total') }}</td>
+                <td class="value">- {{ $money($adjustments['bonus']) }}</td>
+            </tr>
+            @endif
+            @if(($adjustments['penalty'] ?? 0) != 0)
+            <tr>
+                <td class="label">{{ __('driver_invoices.summary.penalty_total') }}</td>
+                <td class="value">+ {{ $money($adjustments['penalty']) }}</td>
+            </tr>
+            @endif
+            @if(($adjustments['adjustment'] ?? 0) != 0)
+            <tr>
+                <td class="label">{{ __('driver_invoices.summary.adjustment_total') }}</td>
+                <td class="value">{{ ((float) $adjustments['adjustment']) > 0 ? '- ' : '+ ' }}{{ $money(abs($adjustments['adjustment'])) }}</td>
+            </tr>
+            @endif
             <tr class="net">
-                <td class="label">{{ __('driver_invoices.pdf.total_earned') }}</td>
+                <td class="label">{{ __('driver_invoices.pdf.total_due') }}</td>
                 <td class="value">{{ $money($invoice->total_amount) }}</td>
             </tr>
         </table>

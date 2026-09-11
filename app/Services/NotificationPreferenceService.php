@@ -34,8 +34,9 @@ class NotificationPreferenceService
     /**
      * Whether a notification of this type should reach the user at all.
      *
-     * Entitlement first: a topic that does not concern the user's role is not
-     * something he can opt back into from the settings screen.
+     * Entitlement first: a topic that does not concern the user's role, or
+     * whose underlying object he cannot open, is not something he can opt
+     * back into from the settings screen.
      */
     public function isEnabled(User $user, NotificationType $type): bool
     {
@@ -48,7 +49,23 @@ class NotificationPreferenceService
 
     public function isEntitledTo(User $user, NotificationType $type): bool
     {
-        return $user->hasPermission(NotificationPermissions::for($type));
+        if (! $user->hasPermission(NotificationPermissions::for($type))) {
+            return false;
+        }
+
+        $resources = NotificationPermissions::resourcePermissions($type);
+
+        if ($resources === []) {
+            return true;
+        }
+
+        foreach ($resources as $permission) {
+            if ($user->hasPermission($permission)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

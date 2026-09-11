@@ -27,7 +27,7 @@ onMounted(() => {
                 }
             });
         },
-        { threshold: 0.35 }
+        { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
     );
     if (root.value) observer.observe(root.value);
 });
@@ -42,11 +42,9 @@ onBeforeUnmount(() => {
         <div class="sz-stats__bg" aria-hidden="true"></div>
         <div class="sz-container sz-stats__grid">
             <div
-                v-for="(stat, index) in stats"
+                v-for="stat in stats"
                 :key="stat.key"
                 class="sz-stat"
-                data-aos="fade-up"
-                :data-aos-delay="index * 45"
             >
                 <div class="sz-stat__value">
                     <template v-if="stat.text">{{ stat.text }}</template>

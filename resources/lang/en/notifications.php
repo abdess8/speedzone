@@ -12,6 +12,7 @@ return [
         'return_requested' => 'Return request',
         'stock_pickup_requested' => 'Stock to collect',
         'new_seller_registration' => 'New seller registration',
+        'new_driver_registration' => 'New driver registration',
     ],
 
     'messages' => [
@@ -24,6 +25,7 @@ return [
         'return_requested' => 'A new return request has been created.',
         'stock_pickup_requested' => ':shop has stock ready for collection in :city.',
         'new_seller_registration' => 'New seller registration requires approval.',
+        'new_driver_registration' => 'New driver registration requires approval.',
     ],
 
     'types' => [

@@ -14,6 +14,8 @@ class DriverPdfService
 
     private const FOLDER = 'driver-invoices';
 
+    public function __construct(private readonly DriverBillingService $billing) {}
+
     /**
      * Build the driver invoice PDF (A4) without persisting it.
      */
@@ -30,6 +32,8 @@ class DriverPdfService
             $tx = $pivot->driverTransaction;
 
             return (object) [
+                'collected_snapshot' => $pivot->collected_snapshot,
+                'commission_snapshot' => $pivot->commission_snapshot,
                 'amount_snapshot' => $pivot->amount_snapshot,
                 'transaction' => $tx,
                 'order' => $tx?->order,
@@ -37,10 +41,22 @@ class DriverPdfService
             ];
         });
 
+        $summary = $this->billing->summarize(
+            $invoice->invoiceTransactions
+                ->map(fn ($pivot) => $pivot->driverTransaction)
+                ->filter()
+                ->values()
+        );
+
         $pdf = Pdf::loadView('driver-invoices.pdf', [
             'invoice' => $invoice,
             'driver' => $invoice->driver,
             'lines' => $lines,
+            'adjustments' => [
+                'bonus' => $summary['bonus_total'],
+                'penalty' => $summary['penalty_total'],
+                'adjustment' => $summary['adjustment_total'],
+            ],
             'logo' => $this->logoDataUri(),
             'companyName' => config('orders.label.company_name', 'SpeedZone Express'),
         ])->setPaper('a4');

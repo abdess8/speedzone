@@ -32,7 +32,7 @@ return [
         'subtitle' => 'Vos factures de règlement générées',
         'invoice_number' => 'N° facture',
         'period' => 'Période',
-        'amount' => 'Montant',
+        'amount' => 'Amount due',
         'status' => 'Statut',
         'view_detail' => 'Voir le détail',
         'download_pdf' => 'Télécharger le PDF',

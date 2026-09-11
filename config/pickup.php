@@ -6,7 +6,7 @@ return [
 
     'delivery_note' => [
         'company_name' => env('PICKUP_COMPANY_NAME', env('ORDER_LABEL_COMPANY_NAME', 'SpeedZone Express')),
-        'logo_path' => env('PICKUP_LOGO_PATH', env('ORDER_LABEL_LOGO_PATH')),
+        'logo_path' => env('PICKUP_LOGO_PATH', env('ORDER_LABEL_LOGO', public_path('images/logo-dark.png'))),
         'paper' => 'a4',
     ],
 ];

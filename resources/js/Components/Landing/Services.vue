@@ -25,12 +25,10 @@ const services = [
 
             <div class="sz-services__grid">
                 <article
-                    v-for="(service, index) in services"
+                    v-for="service in services"
                     :key="service.key"
                     class="sz-scard"
                     :class="`sz-scard--${service.color}`"
-                    data-aos="fade-up"
-                    :data-aos-delay="index * 40"
                 >
                     <div class="sz-scard__icon">
                         <!-- pickup -->

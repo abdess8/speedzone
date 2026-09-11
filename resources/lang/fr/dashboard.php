@@ -6,6 +6,7 @@ return [
     'default_team' => 'Équipe opérations',
 
     'periods' => [
+        'all_time' => 'Depuis le début',
         'today' => 'Aujourd\'hui',
         'yesterday' => 'Hier',
         'last_7_days' => '7 derniers jours',

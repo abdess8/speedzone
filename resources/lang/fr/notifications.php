@@ -12,6 +12,7 @@ return [
         'return_requested' => 'Demande de retour',
         'stock_pickup_requested' => 'Stock à ramasser',
         'new_seller_registration' => 'Nouvelle inscription vendeur',
+        'new_driver_registration' => 'Nouvelle inscription livreur',
     ],
 
     'messages' => [
@@ -24,6 +25,7 @@ return [
         'return_requested' => 'Une nouvelle demande de retour a été créée.',
         'stock_pickup_requested' => ':shop a du stock prêt à être ramassé à :city.',
         'new_seller_registration' => 'Une nouvelle inscription vendeur nécessite une approbation.',
+        'new_driver_registration' => 'Une nouvelle inscription livreur nécessite une approbation.',
     ],
 
     'types' => [

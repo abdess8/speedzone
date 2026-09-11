@@ -26,7 +26,8 @@ use Illuminate\Support\Collection;
  *    same per-line snapshots and totals the application computes itself
  *    ({@see BillingService}): net = encaissé − frais de livraison − frais de retour.
  *  - Driver settlement invoices (décharges de caisse) grouping 5 to 10 delivery
- *    payments, plus the occasional bonus or penalty.
+ *    payments, plus the occasional bonus or penalty. Net due = cash collected
+ *    − driver commission − bonuses + penalties.
  *
  * Part of the settled orders and earnings is deliberately left un-invoiced so
  * every seller and every driver still has a pending balance to settle.
@@ -338,6 +339,8 @@ class BillingDatasetGenerator
             'period_start' => $periodStart->toDateString(),
             'period_end' => $periodEnd->toDateString(),
             'deliveries_count' => $summary['deliveries_count'],
+            'collected_amount' => $summary['collected_amount'],
+            'commission_total' => $summary['commission_total'],
             'total_amount' => $summary['total_amount'],
             'status' => DriverInvoiceStatus::GENERATED->value,
             'generated_at' => $generatedAt,
@@ -352,6 +355,8 @@ class BillingDatasetGenerator
         $this->driverLog($invoice, $driver, DriverFinanceLog::ACTION_INVOICE_CREATED, null, [
             'invoice_number' => $invoice->invoice_number,
             'deliveries' => $summary['deliveries_count'],
+            'collected_amount' => $summary['collected_amount'],
+            'commission_total' => $summary['commission_total'],
             'total_amount' => $summary['total_amount'],
         ], $generatedAt);
 
@@ -364,9 +369,13 @@ class BillingDatasetGenerator
         }
 
         foreach ($transactions as $transaction) {
+            $line = $this->driverBilling->computeLine($transaction);
+
             $this->ctx->saveAt($invoice->invoiceTransactions()->make([
                 'driver_transaction_id' => $transaction->id,
-                'amount_snapshot' => round((float) $transaction->amount, 2),
+                'collected_snapshot' => $line['collected_amount'],
+                'commission_snapshot' => $line['commission'],
+                'amount_snapshot' => $line['amount'],
             ]), $generatedAt);
 
             $transaction->forceFill(['driver_invoice_id' => $invoice->id])->save();

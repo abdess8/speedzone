@@ -15,8 +15,11 @@ use Illuminate\Support\Collection;
  * the math testable and reusable by both the preview and the generator.
  *
  * Money rules (confirmed with product):
- *  - Delivered order  -> seller is PAID:    final = order_amount - delivery_fee
+ *  - Delivered order  -> seller is PAID:    final = total_amount - delivery_fee
  *  - Returned order   -> seller is CHARGED: final = -return_fee
+ *  - total_amount is what the customer actually pays: order_amount alone when
+ *    delivery is included in the advertised price, or order_amount + delivery
+ *    when it is charged on top.
  *  - delivery_fee comes from the order snapshot (order.delivery_price)
  *  - return_fee  comes from the order's sector (sector.return_price), snapshotted now
  *  - net = delivered_amount - delivery_fees_total - return_fees_total
@@ -107,13 +110,13 @@ class BillingService
     public function computeLine(Order $order): array
     {
         $status = $order->status instanceof OrderStatus ? $order->status : OrderStatus::from($order->status);
-        $orderAmount = round((float) $order->order_amount, 2);
+        $billedAmount = round((float) $order->total_amount, 2);
 
         if ($status === OrderStatus::RETURNED) {
             $returnFee = round((float) ($order->sector?->return_price ?? 0), 2);
 
             return [
-                'order_amount' => $orderAmount,
+                'order_amount' => $billedAmount,
                 'delivery_fee' => 0.0,
                 'return_fee' => $returnFee,
                 'final_amount' => round(-$returnFee, 2),
@@ -126,10 +129,10 @@ class BillingService
         $deliveryFee = round((float) $order->delivery_price, 2);
 
         return [
-            'order_amount' => $orderAmount,
+            'order_amount' => $billedAmount,
             'delivery_fee' => $deliveryFee,
             'return_fee' => 0.0,
-            'final_amount' => round($orderAmount - $deliveryFee, 2),
+            'final_amount' => round($billedAmount - $deliveryFee, 2),
             'status' => $status->value,
             'completed_at' => $order->completedAt(),
         ];

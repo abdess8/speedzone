@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Enums\NotificationType;
 use App\Models\OrderReturn;
+use App\Models\User;
 
 class ReturnRequestedNotification extends AppNotification
 {
@@ -12,6 +13,11 @@ class ReturnRequestedNotification extends AppNotification
     public function notificationType(): NotificationType
     {
         return NotificationType::ReturnRequested;
+    }
+
+    protected function authorizes(User $notifiable): bool
+    {
+        return $notifiable->can('view', $this->return);
     }
 
     /**

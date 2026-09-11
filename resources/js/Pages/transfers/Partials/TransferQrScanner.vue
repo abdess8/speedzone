@@ -2,6 +2,7 @@
 import { ref, watch, nextTick, onUnmounted } from "vue";
 import { router } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
+import axios from "axios";
 import Swal from "sweetalert2";
 import BottomSheet from "@/Components/BottomSheet.vue";
 import ScannerViewport from "@/Components/ScannerViewport.vue";
@@ -42,17 +43,11 @@ const parseTrackingNumber = (input) => {
 };
 
 const validateScan = async (trackingNumber) => {
-  const response = await fetch(route("transfers.scan", props.transferId), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content ?? "",
-    },
-    body: JSON.stringify({ tracking_number: trackingNumber }),
+  const { data } = await axios.post(route("transfers.scan", props.transferId), {
+    tracking_number: trackingNumber,
   });
 
-  return response.json();
+  return data;
 };
 
 const addScan = async (raw) => {
@@ -85,9 +80,16 @@ const addScan = async (raw) => {
     scannedOrders.value.push(tracking);
     manualInput.value = "";
     flash("success", tracking);
-  } catch {
+  } catch (error) {
     flash("error", tracking);
-    Swal.fire({ icon: "error", title: t("transfers.scanner.invalid") });
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: "error",
+      title: error.response?.data?.message || t("transfers.scanner.invalid"),
+      timer: 3000,
+      showConfirmButton: false,
+    });
   }
 };
 

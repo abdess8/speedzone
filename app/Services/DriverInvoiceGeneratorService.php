@@ -55,6 +55,8 @@ class DriverInvoiceGeneratorService
                 'period_start' => $start?->toDateString(),
                 'period_end' => $end?->toDateString(),
                 'deliveries_count' => $summary['deliveries_count'],
+                'collected_amount' => $summary['collected_amount'],
+                'commission_total' => $summary['commission_total'],
                 'total_amount' => $summary['total_amount'],
                 'status' => DriverInvoiceStatus::GENERATED->value,
                 'generated_at' => now(),
@@ -64,9 +66,13 @@ class DriverInvoiceGeneratorService
             $invoice->forceFill(['invoice_number' => $this->makeNumber($invoice)])->save();
 
             foreach ($transactions as $transaction) {
+                $line = $this->billing->computeLine($transaction);
+
                 $invoice->invoiceTransactions()->create([
                     'driver_transaction_id' => $transaction->id,
-                    'amount_snapshot' => round((float) $transaction->amount, 2),
+                    'collected_snapshot' => $line['collected_amount'],
+                    'commission_snapshot' => $line['commission'],
+                    'amount_snapshot' => $line['amount'],
                 ]);
 
                 // Lock the transaction to this invoice. It can no longer be edited.
@@ -76,6 +82,8 @@ class DriverInvoiceGeneratorService
             $invoice->log(DriverFinanceLog::ACTION_INVOICE_CREATED, $createdBy, null, [
                 'invoice_number' => $invoice->invoice_number,
                 'deliveries' => $summary['deliveries_count'],
+                'collected_amount' => $summary['collected_amount'],
+                'commission_total' => $summary['commission_total'],
                 'total_amount' => $summary['total_amount'],
             ]);
 

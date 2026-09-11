@@ -50,8 +50,8 @@ onBeforeUnmount(() => {
                     src="@assets/images/logo-brand-full.png"
                     alt="SpeedZone Express"
                     class="sz-nav__logo"
-                    width="160"
-                    height="48"
+                    width="164"
+                    height="42"
                 />
             </a>
 
@@ -137,22 +137,24 @@ onBeforeUnmount(() => {
 .sz-nav__logo {
     display: block;
     width: auto;
-    height: 48px;
-    max-width: min(160px, 42vw);
+    height: 42px;
+    max-width: min(200px, 58vw);
     object-fit: contain;
 }
 
 .sz-nav__menu {
     display: flex;
     align-items: center;
-    gap: 1.9rem;
+    flex-wrap: nowrap;
+    gap: 1.15rem;
 }
 .sz-nav__link {
     position: relative;
     text-decoration: none;
     color: var(--sz-slate);
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
     transition: color 0.2s ease;
 }
 .sz-nav__link::after {
@@ -176,13 +178,16 @@ onBeforeUnmount(() => {
 .sz-nav__actions {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    gap: 0.75rem;
 }
 .sz-nav__signin {
     text-decoration: none;
     color: var(--sz-dark);
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
     transition: color 0.2s ease;
 }
 .sz-nav__signin:hover {
@@ -224,7 +229,7 @@ onBeforeUnmount(() => {
     transform: translateY(-7.5px) rotate(-45deg);
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1199px) {
     .sz-nav__actions {
         display: none;
     }

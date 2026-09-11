@@ -32,16 +32,6 @@ const columns = [
             { label: 'services.items.returns.title', href: '#services' },
         ],
     },
-    {
-        title: 'footer.columns.support',
-        links: [
-            { label: 'footer.support.help', href: '#contact' },
-            { label: 'footer.support.faq', href: '#contact' },
-            { label: 'footer.support.terms', href: '#contact' },
-            { label: 'footer.support.privacy', href: '#contact' },
-            { label: 'footer.support.contact', href: '#contact' },
-        ],
-    },
 ];
 </script>
 
@@ -55,8 +45,8 @@ const columns = [
                             src="@assets/images/logo-brand-full.png"
                             alt="SpeedZone Express"
                             class="sz-footer__logo"
-                            width="180"
-                            height="54"
+                            width="196"
+                            height="50"
                         />
                     </a>
                     <p class="sz-footer__tagline">{{ t('footer.tagline') }}</p>
@@ -137,7 +127,7 @@ const columns = [
 }
 .sz-footer__top {
     display: grid;
-    grid-template-columns: 1.6fr 1fr 1fr 1fr 1.2fr;
+    grid-template-columns: 1.8fr 1fr 1fr 1.3fr;
     gap: 2.5rem;
     padding-bottom: 3rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -151,8 +141,8 @@ const columns = [
 .sz-footer__logo {
     display: block;
     width: auto;
-    height: 54px;
-    max-width: 180px;
+    height: 50px;
+    max-width: 220px;
     object-fit: contain;
 }
 .sz-footer__tagline {

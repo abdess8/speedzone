@@ -7,6 +7,7 @@ use App\Events\NewSellerRegistered;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\RegistrationAccountType;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,11 +26,16 @@ class GoogleAuthController extends Controller
     /**
      * Send the visitor to Google's consent screen.
      */
-    public function redirect(): Response|RedirectResponse
+    public function redirect(Request $request): Response|RedirectResponse
     {
         if (! $this->isConfigured()) {
             return $this->failure('seller_registration.google.disabled');
         }
+
+        $request->session()->put(
+            RegistrationAccountType::SESSION_KEY,
+            RegistrationAccountType::from($request->query('account_type')),
+        );
 
         try {
             return Socialite::driver('google')->redirect();
@@ -44,8 +50,8 @@ class GoogleAuthController extends Controller
     }
 
     /**
-     * Sign the visitor in from Google's answer, creating the seller account on
-     * first contact.
+     * Sign the visitor in from Google's answer, creating the account on first
+     * contact with the role chosen on the registration screen.
      */
     public function callback(Request $request): Response|RedirectResponse
     {
@@ -77,7 +83,11 @@ class GoogleAuthController extends Controller
                 ?? User::query()->where('email', $email)->first();
 
             if (! $user) {
-                $user = $this->createSeller($googleUser, $email);
+                $user = $this->createAccount(
+                    $googleUser,
+                    $email,
+                    RegistrationAccountType::from($request->session()->pull(RegistrationAccountType::SESSION_KEY)),
+                );
             } else {
                 $this->linkGoogleAccount($user, $googleUser);
             }
@@ -107,14 +117,16 @@ class GoogleAuthController extends Controller
     }
 
     /**
-     * Register a seller whose first contact with the platform is Google.
+     * Register a seller or driver whose first contact with the platform is Google.
      *
      * The address is already proven by Google, so the account skips straight to
      * the admin approval queue instead of the email verification step.
      */
-    private function createSeller(SocialiteUser $googleUser, string $email): User
+    private function createAccount(SocialiteUser $googleUser, string $email, string $accountType): User
     {
-        $sellerRole = Role::query()->where('name', Role::SELLER)->firstOrFail();
+        $role = Role::query()
+            ->where('name', RegistrationAccountType::roleName($accountType))
+            ->firstOrFail();
 
         [$firstName, $lastName] = $this->splitName($googleUser->getName() ?? $googleUser->getNickname() ?? $email);
 
@@ -127,7 +139,7 @@ class GoogleAuthController extends Controller
             // Never used to sign in — the account has no password to type — but
             // the column is not nullable and must not hold a guessable value.
             'password' => Hash::make(Str::random(64)),
-            'role_id' => $sellerRole->id,
+            'role_id' => $role->id,
             'status' => UserStatus::PendingApproval,
         ]);
 
@@ -135,7 +147,7 @@ class GoogleAuthController extends Controller
         // the only reason this account skips the verification email.
         $user->markEmailAsVerified();
 
-        $user->roles()->sync([$sellerRole->id]);
+        $user->roles()->sync([$role->id]);
 
         // The account exists and is valid at this point. A notification the
         // admins do not receive is a problem for the admins, not a reason to
@@ -143,7 +155,7 @@ class GoogleAuthController extends Controller
         try {
             NewSellerRegistered::dispatch($user->fresh(['city']));
         } catch (Throwable $e) {
-            Log::error('New seller notification failed after Google sign-up.', [
+            Log::error('New registration notification failed after Google sign-up.', [
                 'user_id' => $user->id,
                 'exception' => $e,
             ]);

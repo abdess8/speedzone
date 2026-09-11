@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title inertia>SpeedZone Express – Livraison de colis au Maroc</title>
     <meta name="description"
-        content="SpeedZone Express est un opérateur de livraison pour le e-commerce marocain. Nous ramassons vos colis en boutique ou en entrepôt, les acheminons partout au Maroc et les remettons au client final. Notre métier couvre le dernier kilomètre : ramassage, transit entre hubs, livraison à domicile, paiement à la livraison (COD), suivi du colis et reversement des encaissements. Chaque commande est tracée jusqu’à la remise en main propre, pour que vendeurs et destinataires livrent et reçoivent en toute confiance.">
+        content="SpeedZone livre vos colis partout au Maroc grâce à une plateforme moderne de suivi, de paiement à la livraison et de gestion logistique.">
     <meta name="keywords"
         content="SpeedZone Express, livraison colis Maroc, e-commerce Maroc, paiement à la livraison, COD, ramassage, logistique, suivi de colis, reversement, livraison nationale">
     <meta name="author" content="SpeedZone Express">
@@ -14,15 +14,17 @@
     <!-- Social Media Meta Tags -->
     <meta property="og:title" content="SpeedZone Express – Livraison de colis au Maroc">
     <meta property="og:description"
-        content="SpeedZone Express accompagne les e-commerçants marocains du ramassage jusqu’à la livraison : colis, paiement à la livraison, suivi et reversements, partout au Royaume.">
-    <meta property="og:image" content="{{ asset('favicon-32x32.png') }}">
+        content="SpeedZone livre vos colis partout au Maroc grâce à une plateforme moderne de suivi, de paiement à la livraison et de gestion logistique.">
+    <meta property="og:image" content="{{ asset('og-image.png') }}">
     <meta property="og:url" content="{{ url('/') }}">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ asset('og-image.png') }}">
 
     <!-- App favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
 
     {{--
         The layout store only writes `data-bs-theme` once Vue has mounted, which

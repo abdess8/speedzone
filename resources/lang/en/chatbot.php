@@ -77,7 +77,7 @@ return [
         ],
 
         'totals' => [
-            'order_amount' => 'Order amount',
+            'order_amount' => 'Total amount',
             'delivery_fee' => 'Delivery fee',
             'return_fee' => 'Return fee',
             'net' => 'Net to seller',

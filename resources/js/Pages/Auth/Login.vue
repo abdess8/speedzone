@@ -31,7 +31,13 @@ const submit = () => {
 </script>
 
 <template>
-    <Head :title="$t('seller_registration.login.title')" />
+    <Head>
+        <title>{{ $t('seller_registration.login.title') }}</title>
+        <meta
+            name="description"
+            content="SpeedZone livre vos colis partout au Maroc grâce à une plateforme moderne de suivi, de paiement à la livraison et de gestion logistique."
+        />
+    </Head>
 
     <div class="auth-page-wrapper pt-5">
         <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
@@ -51,7 +57,7 @@ const submit = () => {
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
                                 <Link href="/" class="d-inline-block auth-logo">
-                                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="52">
+                                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="88">
                                 </Link>
                             </div>
                             <p class="mt-3 fs-15 fw-medium">{{ $t('seller_registration.login.subtitle') }}</p>

@@ -52,6 +52,7 @@ class UpdateOrderRequest extends FormRequest
     {
         return [
             'sector_id.exists' => 'The selected sector does not belong to the chosen city.',
+            'customer_phone.regex' => __('orders.form.phone_invalid'),
         ];
     }
 
@@ -73,7 +74,7 @@ class UpdateOrderRequest extends FormRequest
         return [
             'customer_first_name' => ['sometimes', 'required', 'string', 'max:255'],
             'customer_last_name' => ['sometimes', 'required', 'string', 'max:255'],
-            'customer_phone' => ['sometimes', 'required', 'string', 'max:50'],
+            'customer_phone' => ['sometimes', 'required', 'string', 'regex:/^0[0-9]{9}$/'],
             'customer_address' => ['sometimes', 'required', 'string', 'max:1000'],
             'city_id' => ['sometimes', 'required', 'integer', Rule::exists('cities', 'id')->whereNull('deleted_at')],
             'sector_id' => [

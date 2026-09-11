@@ -43,7 +43,7 @@ const dimmed = (city) => active.value !== null && active.value !== city.key;
             />
 
             <div class="sz-coverage__grid">
-                <div class="sz-coverage__map" data-aos="fade-right">
+                <div class="sz-coverage__map">
                     <span class="sz-coverage__badge">
                         <span class="sz-coverage__badge-dot"></span>
                         {{ t('coverage.national') }}
@@ -126,7 +126,7 @@ const dimmed = (city) => active.value !== null && active.value !== city.key;
                     <p class="sz-coverage__hint">{{ t('coverage.mapHint') }}</p>
                 </div>
 
-                <div class="sz-coverage__panel" data-aos="fade-left">
+                <div class="sz-coverage__panel">
                     <div class="sz-coverage__stats">
                         <div class="sz-cstat">
                             <strong>{{ totals.cities }}</strong>

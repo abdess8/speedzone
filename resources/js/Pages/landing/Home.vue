@@ -1,7 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import AOS from 'aos';
 
 import Navbar from '@/Components/Landing/Navbar.vue';
 import Hero from '@/Components/Landing/Hero.vue';
@@ -78,11 +77,6 @@ const writeStructuredData = () => {
 };
 
 onMounted(() => {
-    // The layout is injected on Inertia navigation, so refresh the observers.
-    if (AOS && typeof AOS.refreshHard === 'function') {
-        AOS.refreshHard();
-    }
-
     document.documentElement.setAttribute('lang', locale.value);
     writeStructuredData();
 });

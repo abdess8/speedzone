@@ -19,7 +19,22 @@ class InvoicePolicy
             return true;
         }
 
-        return $invoice->seller_id === $user->id && $user->hasPermission('invoices.read.own');
+        if (! $user->hasPermission('invoices.read.own')) {
+            return false;
+        }
+
+        if ((int) $invoice->seller_id !== $user->accountOwnerId()) {
+            return false;
+        }
+
+        // Account owners see every invoice of the shop. A team member only
+        // sees the shops he was granted — otherwise the billing of a store
+        // he cannot open would leak through the bell.
+        if ($invoice->store_id === null || ! $user->isTeamMember()) {
+            return true;
+        }
+
+        return $user->canAccessStore((int) $invoice->store_id);
     }
 
     /**

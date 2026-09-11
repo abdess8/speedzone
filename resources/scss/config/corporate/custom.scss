@@ -834,8 +834,11 @@ h5.text-primary {
 }
 
 .auth-logo img {
-  max-height: 52px;
+  height: 88px;
+  max-height: 88px;
+  max-width: min(240px, 82vw);
   width: auto;
+  object-fit: contain;
 }
 
 .auth-one-bg {
@@ -848,7 +851,15 @@ h5.text-primary {
 // Position-aware logo sizing
 .brand-logo-full {
   width: auto;
-  height: 120px;
+  height: 36px;
+  max-width: 186px;
+  object-fit: contain;
+}
+
+.brand-logo-stacked {
+  width: auto;
+  height: 54px;
+  max-width: 168px;
   object-fit: contain;
 }
 
@@ -860,7 +871,8 @@ h5.text-primary {
 
 .footer-brand-logo {
   width: auto;
-  height: 40px;
+  height: 36px;
+  max-width: 168px;
   object-fit: contain;
 }
 

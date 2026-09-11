@@ -104,6 +104,26 @@ test('the create form honours the delivery included switch', function () {
         ->and((float) $order->delivery_price)->toBe(40.0);
 });
 
+test('the create form rejects phones that do not match 0XXXXXXXXX', function (string $phone) {
+    $this->seed([RoleSeeder::class, PermissionSeeder::class, RolePermissionSeeder::class]);
+    [$city, $sector] = webFormDestination();
+
+    $this->actingAs(webFormSeller())
+        ->from(route('orders.create'))
+        ->post(route('orders.store'), webFormPayload($city, $sector, ['customer_phone' => $phone]))
+        ->assertSessionHasErrors('customer_phone')
+        ->assertRedirect(route('orders.create'));
+
+    expect(Order::query()->exists())->toBeFalse();
+})->with([
+    'missing trunk zero' => '6123456789',
+    'too short' => '061234567',
+    'too long' => '06123456789',
+    'letters' => '06ABCDEFGH',
+    'international' => '+212612345678',
+    'spaces' => '06 12 34 56 78',
+]);
+
 test('a seller cannot undercut the sector delivery price when creating an order', function () {
     $this->seed([RoleSeeder::class, PermissionSeeder::class, RolePermissionSeeder::class]);
     [$city, $sector] = webFormDestination();

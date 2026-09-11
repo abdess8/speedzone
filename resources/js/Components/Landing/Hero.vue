@@ -15,7 +15,7 @@ const { t } = useLandingLocale();
         </div>
 
         <div class="sz-hero__inner">
-            <div class="sz-hero__left" data-aos="fade-up">
+            <div class="sz-hero__left">
                 <span class="sz-hero__badge">
                     <span class="sz-hero__badge-dot"></span>
                     {{ t('hero.badge') }}
@@ -55,7 +55,7 @@ const { t } = useLandingLocale();
                 </div>
             </div>
 
-            <div class="sz-hero__right" data-aos="fade-left" data-aos-delay="80">
+            <div class="sz-hero__right">
                 <div class="sz-hero__visual">
                     <!-- Dashboard card -->
                     <div class="sz-mock sz-mock--dash">
@@ -127,19 +127,19 @@ const { t } = useLandingLocale();
                     </div>
 
                     <!-- Floating cards -->
-                    <div class="sz-float sz-float--1" data-aos="zoom-in" data-aos-delay="220">
+                    <div class="sz-float sz-float--1">
                         <span class="sz-float__ic sz-float__ic--green">✓</span>
                         <div><p>{{ t('hero.mock.parcelDelivered') }}</p><small>{{ t('hero.mock.minutesAgo') }}</small></div>
                     </div>
-                    <div class="sz-float sz-float--2" data-aos="zoom-in" data-aos-delay="300">
+                    <div class="sz-float sz-float--2">
                         <span class="sz-float__ic sz-float__ic--blue">🚚</span>
                         <div><p>{{ t('hero.mock.driverOnTheWay') }}</p><small>{{ t('hero.mock.downtown') }}</small></div>
                     </div>
-                    <div class="sz-float sz-float--3" data-aos="zoom-in" data-aos-delay="380">
+                    <div class="sz-float sz-float--3">
                         <span class="sz-float__ic sz-float__ic--amber">💵</span>
                         <div><p>{{ t('hero.mock.codPayment') }}</p><small>350,00 DH</small></div>
                     </div>
-                    <div class="sz-float sz-float--4" data-aos="zoom-in" data-aos-delay="460">
+                    <div class="sz-float sz-float--4">
                         <span class="sz-float__ic sz-float__ic--violet">📦</span>
                         <div><p>{{ t('hero.mock.pickupConfirmed') }}</p><small>Salé</small></div>
                     </div>

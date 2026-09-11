@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Enums\DriverTransactionType;
+use App\Enums\PaymentMethod;
 use App\Models\DriverTransaction;
+use App\Models\Order;
 use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,10 +17,13 @@ use Illuminate\Support\Collection;
  * and how much each contributes to a driver invoice. No persistence happens
  * here so the math is reusable by both the preview and the generator.
  *
- * Rules (confirmed with product):
- *  - Each delivered order earns the driver the sector driver price, snapshotted
- *    at delivery time (driver_transactions.amount / driver_price_snapshot).
- *  - Bonuses / adjustments add to the balance, penalties subtract from it.
+ * A driver invoice is a cash discharge, not a payout of commissions:
+ *  - Cash orders: the driver collected `order.total_amount` from the customer.
+ *  - Card orders: the customer already paid, so nothing was collected.
+ *  - The driver keeps the sector driver price snapshotted at delivery
+ *    (`driver_price_snapshot`).
+ *  - He remits collected − commission. Bonuses / adjustments reduce what he
+ *    owes; penalties increase it.
  *  - A transaction is only billable once it is CONFIRMED and not yet invoiced.
  */
 class DriverBillingService
@@ -47,6 +52,47 @@ class DriverBillingService
     }
 
     /**
+     * Compute the discharge line for a single transaction.
+     *
+     * `amount` is what the driver must remit for this row (negative means
+     * SpeedZone owes the driver, typically a card delivery or a bonus).
+     *
+     * @return array{
+     *     collected_amount: float,
+     *     commission: float,
+     *     amount: float,
+     *     transaction_type: string
+     * }
+     */
+    public function computeLine(DriverTransaction $transaction): array
+    {
+        $type = $transaction->transaction_type instanceof DriverTransactionType
+            ? $transaction->transaction_type
+            : DriverTransactionType::from($transaction->transaction_type);
+        $signed = round((float) $transaction->amount, 2);
+
+        if ($type !== DriverTransactionType::DELIVERY_PAYMENT) {
+            return [
+                'collected_amount' => 0.0,
+                'commission' => 0.0,
+                'amount' => round(-$signed, 2),
+                'transaction_type' => $type->value,
+            ];
+        }
+
+        $order = $transaction->relationLoaded('order') ? $transaction->order : $transaction->order;
+        $collected = $this->collectedAmount($order);
+        $commission = round((float) ($transaction->driver_price_snapshot ?: $transaction->amount), 2);
+
+        return [
+            'collected_amount' => $collected,
+            'commission' => $commission,
+            'amount' => round($collected - $commission, 2),
+            'transaction_type' => $type->value,
+        ];
+    }
+
+    /**
      * Aggregate snapshot totals for a collection of transactions.
      *
      * @param  Collection<int, DriverTransaction>  $transactions
@@ -55,42 +101,49 @@ class DriverBillingService
     public function summarize(Collection $transactions): array
     {
         $deliveriesCount = 0;
-        $deliveryTotal = 0.0;
+        $collectedAmount = 0.0;
+        $commissionTotal = 0.0;
         $bonusTotal = 0.0;
         $penaltyTotal = 0.0;
         $adjustmentTotal = 0.0;
+        $dueAmount = 0.0;
 
         foreach ($transactions as $transaction) {
             $type = $transaction->transaction_type instanceof DriverTransactionType
                 ? $transaction->transaction_type
                 : DriverTransactionType::from($transaction->transaction_type);
-            $amount = round((float) $transaction->amount, 2);
+            $line = $this->computeLine($transaction);
+            $dueAmount += $line['amount'];
 
             match ($type) {
-                DriverTransactionType::DELIVERY_PAYMENT => [$deliveriesCount++, $deliveryTotal += $amount],
-                DriverTransactionType::BONUS => $bonusTotal += $amount,
-                DriverTransactionType::PENALTY => $penaltyTotal += abs($amount),
-                DriverTransactionType::ADJUSTMENT => $adjustmentTotal += $amount,
+                DriverTransactionType::DELIVERY_PAYMENT => [
+                    $deliveriesCount++,
+                    $collectedAmount += $line['collected_amount'],
+                    $commissionTotal += $line['commission'],
+                ],
+                DriverTransactionType::BONUS => $bonusTotal += abs((float) $transaction->amount),
+                DriverTransactionType::PENALTY => $penaltyTotal += abs((float) $transaction->amount),
+                DriverTransactionType::ADJUSTMENT => $adjustmentTotal += (float) $transaction->amount,
             };
         }
-
-        $total = round($deliveryTotal + $bonusTotal + $adjustmentTotal - $penaltyTotal, 2);
 
         return [
             'deliveries_count' => $deliveriesCount,
             'transactions_count' => $transactions->count(),
-            'delivery_total' => round($deliveryTotal, 2),
+            'collected_amount' => round($collectedAmount, 2),
+            'commission_total' => round($commissionTotal, 2),
+            'delivery_total' => round($commissionTotal, 2),
             'bonus_total' => round($bonusTotal, 2),
             'penalty_total' => round($penaltyTotal, 2),
             'adjustment_total' => round($adjustmentTotal, 2),
-            'total_amount' => $total,
+            'total_amount' => round($dueAmount, 2),
         ];
     }
 
     /**
      * Produce a non-persisted preview (summary + per-transaction lines) used
      * before confirming a manual generation, or to show a driver their pending
-     * earnings.
+     * discharge.
      *
      * @return array{summary: array<string, float|int>, lines: array<int, array<string, mixed>>}
      */
@@ -118,6 +171,7 @@ class DriverBillingService
             ? $transaction->transaction_type
             : DriverTransactionType::from($transaction->transaction_type);
         $order = $transaction->relationLoaded('order') ? $transaction->order : $transaction->order;
+        $computed = $this->computeLine($transaction);
 
         return [
             'id' => $transaction->id,
@@ -128,7 +182,9 @@ class DriverBillingService
             'sector' => $transaction->sector?->name ?? $order?->sector?->name,
             'transaction_type' => $type->value,
             'transaction_type_label' => $type->label(),
-            'amount' => round((float) $transaction->amount, 2),
+            'collected_amount' => $computed['collected_amount'],
+            'commission' => $computed['commission'],
+            'amount' => $computed['amount'],
             'note' => $transaction->note,
             'created_at' => $transaction->created_at?->toIso8601String(),
         ];
@@ -136,6 +192,8 @@ class DriverBillingService
 
     /**
      * Earnings statistics for the driver dashboard (today / this week / month).
+     *
+     * These remain the driver's commission, not the cash he remits.
      *
      * @return array<string, array<string, float|int>>
      */
@@ -148,6 +206,27 @@ class DriverBillingService
             'week' => $this->statsForRange($driver, $now->copy()->startOfWeek(), $now->copy()->endOfWeek()),
             'month' => $this->statsForRange($driver, $now->copy()->startOfMonth(), $now->copy()->endOfMonth()),
         ];
+    }
+
+    /**
+     * Cash the driver actually took from the customer. Card payments were
+     * already settled with the seller, so they contribute nothing here.
+     */
+    private function collectedAmount(?Order $order): float
+    {
+        if (! $order) {
+            return 0.0;
+        }
+
+        $payment = $order->payment_method instanceof PaymentMethod
+            ? $order->payment_method
+            : PaymentMethod::resolve((string) $order->payment_method);
+
+        if (! $payment->requiresCashCollection()) {
+            return 0.0;
+        }
+
+        return round((float) $order->total_amount, 2);
     }
 
     /**

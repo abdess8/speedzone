@@ -13,10 +13,14 @@ class DriverInvoiceTransaction extends Model
     protected $fillable = [
         'driver_invoice_id',
         'driver_transaction_id',
+        'collected_snapshot',
+        'commission_snapshot',
         'amount_snapshot',
     ];
 
     protected $casts = [
+        'collected_snapshot' => 'decimal:2',
+        'commission_snapshot' => 'decimal:2',
         'amount_snapshot' => 'decimal:2',
     ];
 

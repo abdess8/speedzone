@@ -27,7 +27,7 @@ const testimonials = [
                 :subtitle="t('testimonials.subtitle')"
             />
 
-            <div data-aos="fade-up">
+            <div>
                 <Swiper
                     :modules="modules"
                     :slides-per-view="1"

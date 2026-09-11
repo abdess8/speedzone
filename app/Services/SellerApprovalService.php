@@ -35,12 +35,13 @@ class SellerApprovalService
                 'rejection_reason' => null,
             ])->save();
 
-            $user->permissions()->sync($permissionIds);
-
-            // Every active vendor needs at least one shop: without it there is
-            // no store to attach his orders to and the isolation scope has
-            // nothing to enforce.
-            $this->stores->createDefaultFor($user);
+            // Drivers inherit their grants from the Driver role. A vendor
+            // still needs the extra seller defaults plus a shop to attach
+            // orders to — without it the isolation scope has nothing to enforce.
+            if ($user->fresh(['roles'])->isSeller()) {
+                $user->permissions()->sync($permissionIds);
+                $this->stores->createDefaultFor($user);
+            }
 
             SellerApproved::dispatch($user->fresh(['city', 'permissions']));
 

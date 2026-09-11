@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Enums\NotificationType;
 use App\Models\Invoice;
+use App\Models\User;
 
 class InvoiceGeneratedNotification extends AppNotification
 {
@@ -12,6 +13,11 @@ class InvoiceGeneratedNotification extends AppNotification
     public function notificationType(): NotificationType
     {
         return NotificationType::InvoiceGenerated;
+    }
+
+    protected function authorizes(User $notifiable): bool
+    {
+        return $notifiable->can('view', $this->invoice);
     }
 
     /**

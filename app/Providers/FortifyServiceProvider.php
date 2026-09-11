@@ -10,6 +10,7 @@ use App\Http\Responses\LoginResponse;
 use App\Http\Responses\RegisterResponse;
 use App\Models\City;
 use App\Models\User;
+use App\Support\RegistrationAccountType;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -43,9 +44,10 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
-        Fortify::registerView(function () {
+        Fortify::registerView(function (Request $request) {
             return Inertia::render('Auth/Register', [
                 'cities' => City::query()->active()->orderBy('name')->get(['id', 'name', 'code']),
+                'accountType' => RegistrationAccountType::from($request->query('type')),
             ]);
         });
 

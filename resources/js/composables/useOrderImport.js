@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { normalizeKey, parseAmount, parseBoolean } from '@/common/importParsers';
+import { findBestNamedMatch, normalizeKey, parseAmount, parseBoolean } from '@/common/importParsers';
 
 export { parseAmount, parseBoolean };
 
@@ -204,9 +204,11 @@ export function parsePaymentMethod(raw) {
 /**
  * Score how well a file header matches an order field.
  *
- * Exact matches outrank prefixes, which outrank substrings, and a longer alias
- * wins over a shorter one — without that last tie-break "Prénom" is claimed by
- * the `nom` alias of the last-name field.
+ * Headers are compared after stripping case, accents and punctuation, so
+ * "VILLE", "Ville" and "ville" are the same column. Exact matches outrank
+ * prefixes, which outrank substrings, and a longer alias wins over a shorter
+ * one — without that last tie-break "Prénom" is claimed by the `nom` alias of
+ * the last-name field.
  */
 function matchScore(header, candidates) {
   const target = normalizeKey(header);
@@ -270,22 +272,6 @@ export function useOrderImport(props) {
 
   const cityById = computed(() => new Map(cities.value.map((city) => [city.id, city])));
 
-  const cityByName = computed(() => {
-    const index = new Map();
-
-    for (const city of cities.value) {
-      for (const alias of [city.name, city.code]) {
-        const key = normalizeKey(alias);
-
-        if (key !== '' && !index.has(key)) {
-          index.set(key, city);
-        }
-      }
-    }
-
-    return index;
-  });
-
   const sectorById = computed(() => new Map(sectors.value.map((sector) => [sector.id, sector])));
 
   const sectorsByCity = computed(() => {
@@ -297,20 +283,6 @@ export function useOrderImport(props) {
       }
 
       index.get(sector.city_id).push(sector);
-    }
-
-    return index;
-  });
-
-  const sectorByCityAndName = computed(() => {
-    const index = new Map();
-
-    for (const sector of sectors.value) {
-      const key = `${sector.city_id}:${normalizeKey(sector.name)}`;
-
-      if (!index.has(key)) {
-        index.set(key, sector);
-      }
     }
 
     return index;
@@ -333,7 +305,11 @@ export function useOrderImport(props) {
 
     headers.value.forEach((header, index) => {
       for (const field of IMPORT_FIELDS) {
-        const score = matchScore(header, [t(`orders.import.fields.${field.key}`), ...field.aliases]);
+        const score = matchScore(header, [
+          field.key,
+          t(`orders.import.fields.${field.key}`),
+          ...field.aliases,
+        ]);
 
         if (score > 0) {
           pairs.push({ index, key: field.key, score });
@@ -404,11 +380,14 @@ export function useOrderImport(props) {
       const national = normalizePhone(raw.customer_phone);
       row.customer_phone = national ? formatPhone(national) : raw.customer_phone;
 
-      const city = cityByName.value.get(normalizeKey(raw.city_id)) ?? null;
+      const city = findBestNamedMatch(cities.value, raw.city_id, (candidate) => [
+        candidate.name,
+        candidate.code,
+      ]);
       row.city_id = city?.id ?? null;
 
       const sector = city
-        ? sectorByCityAndName.value.get(`${city.id}:${normalizeKey(raw.sector_id)}`) ?? null
+        ? findBestNamedMatch(sectorOptionsFor(city.id), raw.sector_id, (candidate) => [candidate.name])
         : null;
       row.sector_id = sector?.id ?? null;
 

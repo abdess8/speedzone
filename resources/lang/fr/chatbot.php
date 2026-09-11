@@ -77,7 +77,7 @@ return [
         ],
 
         'totals' => [
-            'order_amount' => 'Montant de la commande',
+            'order_amount' => 'Montant total',
             'delivery_fee' => 'Frais de livraison',
             'return_fee' => 'Frais de retour',
             'net' => 'Net vendeur',

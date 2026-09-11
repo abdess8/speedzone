@@ -12,7 +12,7 @@ const { t } = useLandingLocale();
 <template>
     <section class="sz-cta-wrap">
         <div class="sz-container">
-            <div class="sz-cta" data-aos="zoom-in">
+            <div class="sz-cta">
                 <div class="sz-cta__glow" aria-hidden="true"></div>
                 <div class="sz-cta__content">
                     <span class="sz-cta__badge">

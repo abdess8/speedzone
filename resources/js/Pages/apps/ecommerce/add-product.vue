@@ -4,7 +4,18 @@ import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
 
 import { Ckeditor as CKEditor } from "@ckeditor/ckeditor5-vue";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import {
+  BlockQuote,
+  Bold,
+  ClassicEditor,
+  Essentials,
+  Heading,
+  Italic,
+  Link,
+  List,
+  Paragraph,
+} from "ckeditor5";
+import "ckeditor5/ckeditor5.css";
 import DropZone from "@/Components/widgets/dropZone.vue";
 import useVuelidate from "@vuelidate/core";
 import flatPickr from "vue-flatpickr-component";
@@ -50,6 +61,24 @@ export default {
       value2: ["Hidden"],
       value3: ["Fashion"],
       editor: ClassicEditor,
+      editorConfig: {
+        plugins: [Essentials, Paragraph, Heading, Bold, Italic, List, Link, BlockQuote],
+        toolbar: [
+          "heading",
+          "|",
+          "bold",
+          "italic",
+          "|",
+          "bulletedList",
+          "numberedList",
+          "|",
+          "link",
+          "blockQuote",
+          "|",
+          "undo",
+          "redo",
+        ],
+      },
       editorData: "<p>Tommy Hilfiger men striped pink sweatshirt. Crafted with cotton. Material composition is 100% organic cotton. This is one of the world’s leading designer lifestyle brands and is internationally recognized for celebrating the essence of classic American cool style, featuring preppy with a twist designs.</p><ul><li>Full Sleeve</li><li>Cotton</li><li>All Sizes available</li><li>4 Different Color</li></ul>",
       content: "<h1>Some initial content</h1>",
     };
@@ -58,7 +87,7 @@ export default {
     DropZone,
     Layout,
     PageHeader,
-    ckeditor: CKEditor.component,
+    ckeditor: CKEditor,
     Multiselect,
     flatPickr
   },
@@ -85,7 +114,7 @@ export default {
               </div>
               <div>
                 <label>Product Description</label>
-                <ckeditor v-model="editorData" :editor="editor"></ckeditor>
+                <ckeditor v-model="editorData" :editor="editor" :config="editorConfig"></ckeditor>
               </div>
             </BCardBody>
           </BCard>

@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Enums\NotificationType;
 use App\Models\SupportMessage;
 use App\Models\SupportTicket;
+use App\Models\User;
 
 class TicketMessageNotification extends AppNotification
 {
@@ -16,6 +17,11 @@ class TicketMessageNotification extends AppNotification
     public function notificationType(): NotificationType
     {
         return NotificationType::TicketMessage;
+    }
+
+    protected function authorizes(User $notifiable): bool
+    {
+        return $notifiable->can('view', $this->ticket);
     }
 
     /**

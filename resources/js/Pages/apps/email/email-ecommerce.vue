@@ -375,7 +375,7 @@ export default {
                                             </div>
                                             <div
                                                 style="padding: 20px;box-sizing: border-box; text-align: center; border-bottom: 1px solid #e9ebec;">
-                                                <img src="@assets/images/logo-dark.png" alt="" height="23">
+                                                <img src="@assets/images/logo-brand-full.png" alt="SpeedZone Express" height="28">
                                             </div>
                                             <div style="padding: 20px;box-sizing: border-box; text-align: center;">
                                                 <h5

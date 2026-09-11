@@ -21,6 +21,7 @@ final class KpiTimeframe
     public static function values(): array
     {
         return [
+            'all_time',
             'today',
             'yesterday',
             'this_week',
@@ -36,6 +37,7 @@ final class KpiTimeframe
     public static function resolve(string $timeframe, ?string $from = null, ?string $to = null): DashboardDateRange
     {
         return match ($timeframe) {
+            'all_time' => DashboardDateRange::allTime(),
             'today' => new DashboardDateRange('today', Carbon::today()->startOfDay(), Carbon::today()->endOfDay()),
             'yesterday' => new DashboardDateRange('yesterday', Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()),
             'this_week' => new DashboardDateRange('custom', Carbon::now()->startOfWeek(), Carbon::now()->endOfDay()),

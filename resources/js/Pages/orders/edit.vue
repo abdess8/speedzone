@@ -4,6 +4,7 @@ import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import OrderForm from "./Partials/OrderForm.vue";
+import { isNationalPhoneForm } from "@/common/phone";
 
 const { t } = useI18n();
 
@@ -32,13 +33,22 @@ const form = useForm({
   option_exchange: props.order.option_exchange,
 });
 
-const submit = () => form.put(route("orders.update", props.order.id));
+const submit = () => {
+  if (isNationalPhoneForm(form.customer_phone)) {
+    form.clearErrors("customer_phone");
+  } else {
+    form.setError("customer_phone", t("orders.form.phone_invalid"));
+    return;
+  }
+
+  form.put(route("orders.update", props.order.id));
+};
 </script>
 
 <template>
   <Layout>
     <PageHeader :title="t('orders.edit_title', { tracking: order.tracking_number })" :pageTitle="$t('orders.page_title')" />
-    <form @submit.prevent="submit">
+    <form novalidate @submit.prevent="submit">
       <OrderForm :form="form" :cities="cities" :sectors="sectors" :payment-methods="paymentMethods" />
 
       <div class="hstack gap-2 justify-content-end mb-4">

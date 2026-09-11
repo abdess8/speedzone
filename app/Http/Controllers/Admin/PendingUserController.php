@@ -28,7 +28,7 @@ class PendingUserController extends Controller
 
         $users = User::query()
             ->with(['city', 'role'])
-            ->whereHas('roles', fn ($q) => $q->where('name', Role::SELLER))
+            ->whereHas('roles', fn ($q) => $q->whereIn('name', [Role::SELLER, Role::DRIVER]))
             ->whereIn('status', [
                 UserStatus::PendingApproval->value,
                 UserStatus::PendingEmailVerification->value,

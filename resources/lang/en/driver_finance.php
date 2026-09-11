@@ -32,7 +32,7 @@ return [
         'subtitle' => 'Your generated settlement invoices',
         'invoice_number' => 'Invoice #',
         'period' => 'Period',
-        'amount' => 'Amount',
+        'amount' => 'Amount due',
         'status' => 'Status',
         'view_detail' => 'View detail',
         'download_pdf' => 'Download PDF',

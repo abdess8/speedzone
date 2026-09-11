@@ -2,6 +2,8 @@
     $cashCollection = $order->payment_method->requiresCashCollection();
     $destination = $order->city?->name;
     $zone = $order->sector?->name ?: $destination;
+    $cityLine = $destination.($order->sector ? ' · '.$order->sector->name : '');
+    $ticketShop = trim((string) ($order->store?->name ?: $order->seller?->full_name));
 @endphp
 
 <div class="label">
@@ -36,20 +38,20 @@
                         <tr>
                             <td>
                                 <div class="recipient-title">{{ __('orders.label_pdf.recipient_details') }}</div>
-                                <div class="recipient-name @bidiclass($order->customer_full_name)">@bidi(Str::limit($order->customer_full_name, 22))</div>
-                                <div class="recipient-line">{{ Str::limit($order->customer_phone, 24) }}</div>
-                                <div class="recipient-line @bidiclass($order->customer_address)">@bidilines(Str::limit($order->customer_address, 48), 38)</div>
+                                <div class="recipient-name @bidiclass($order->customer_full_name)">@bidilines($order->customer_full_name, 28)</div>
+                                <div class="recipient-line">{{ $order->customer_phone }}</div>
+                                <div class="recipient-line @bidiclass($order->customer_address)">@bidilines($order->customer_address, 38)</div>
                             </td>
                             @if ($destination)
                                 <td class="pin-cell">
                                     <img src="{{ $icons['pin'] }}" alt="">
-                                    <div class="pin-label">@bidilines(Str::limit($destination, 14), 8)</div>
+                                    <div class="pin-label @bidiclass($destination)">@bidilines($destination, 12)</div>
                                 </td>
                             @endif
                         </tr>
                     </table>
-                    <div class="recipient-city @bidiclass($destination)">
-                        @bidi(Str::limit($destination.($order->sector ? ' · '.$order->sector->name : ''), 24))
+                    <div class="recipient-city @bidiclass($cityLine)">
+                        @bidilines($cityLine, 28)
                     </div>
                 </div>
             </td>
@@ -103,7 +105,7 @@
         <tr>
             <td class="foot-icon-cell"><img src="{{ $icons['speed_muted'] }}" class="foot-icon" alt=""></td>
             <td>
-                {{ __('orders.label_pdf.seller') }}: @bidi($order->seller?->full_name) &middot; {{ $order->trackingUrl() }}
+                {{ __('orders.label_pdf.seller') }}: @bidi($ticketShop) &middot; {{ $order->trackingUrl() }}
             </td>
         </tr>
     </table>

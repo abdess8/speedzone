@@ -76,7 +76,7 @@ const colorHex = (color) => {
         <main class="sz-tracking">
             <div class="sz-tracking__bg" aria-hidden="true"></div>
             <div class="sz-tracking__container">
-                <header class="sz-tracking__head" data-aos="fade-up">
+                <header class="sz-tracking__head">
                     <span class="sz-tracking__eyebrow">{{ t('tracking.eyebrow') }}</span>
                     <h1 class="sz-tracking__title">{{ t('tracking.title') }}</h1>
                     <div class="sz-tracking__search">
@@ -85,7 +85,7 @@ const colorHex = (color) => {
                 </header>
 
                 <!-- Found -->
-                <div v-if="found && order" class="sz-tresult" data-aos="fade-up">
+                <div v-if="found && order" class="sz-tresult">
                     <div class="sz-tresult__top">
                         <div>
                             <p class="sz-tresult__k">{{ t('tracking.number') }}</p>
@@ -129,7 +129,7 @@ const colorHex = (color) => {
                 </div>
 
                 <!-- Not found -->
-                <div v-else class="sz-tnotfound" data-aos="fade-up">
+                <div v-else class="sz-tnotfound">
                     <div class="sz-tnotfound__icon">
                         <svg width="42" height="42" viewBox="0 0 24 24" fill="none">
                             <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />

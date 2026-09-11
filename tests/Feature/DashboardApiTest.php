@@ -1,5 +1,9 @@
 <?php
 
+use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
+use App\Models\City;
+use App\Models\Order;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
@@ -69,4 +73,50 @@ test('dashboard api validates custom period requires dates', function () {
 
     $this->actingAs($admin)->getJson('/api/dashboard?period=custom')
         ->assertStatus(422);
+});
+
+test('dashboard api defaults to all time and includes orders older than 30 days', function () {
+    $admin = dashboardUser(Role::ADMIN);
+    $seller = dashboardUser(Role::SELLER);
+    $city = City::query()->create([
+        'name' => 'Dashboard City',
+        'code' => 'DSH',
+        'region' => 'Test',
+        'is_active' => true,
+    ]);
+
+    $payload = [
+        'seller_id' => $seller->id,
+        'customer_first_name' => 'Ali',
+        'customer_last_name' => 'Test',
+        'customer_phone' => '0600000001',
+        'customer_address' => '1 Test Street',
+        'city_id' => $city->id,
+        'payment_method' => PaymentMethod::CASH->value,
+        'order_amount' => 100,
+        'delivery_price' => 25,
+        'status' => OrderStatus::CREATED->value,
+    ];
+
+    $old = Order::query()->create(array_merge($payload, [
+        'tracking_number' => 'DSH-OLD-000001',
+    ]));
+    $old->forceFill([
+        'created_at' => now()->subDays(90),
+        'updated_at' => now()->subDays(90),
+    ])->saveQuietly();
+
+    Order::query()->create(array_merge($payload, [
+        'tracking_number' => 'DSH-NEW-000001',
+        'customer_phone' => '0600000002',
+    ]));
+
+    $this->actingAs($admin)->getJson('/api/dashboard')
+        ->assertOk()
+        ->assertJsonPath('data.meta.filter.period', 'all_time')
+        ->assertJsonPath('data.summary.orders_in_period', 2);
+
+    $this->actingAs($admin)->getJson('/api/dashboard?period=last_30_days')
+        ->assertOk()
+        ->assertJsonPath('data.summary.orders_in_period', 1);
 });

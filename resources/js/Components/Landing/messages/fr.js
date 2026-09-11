@@ -2,9 +2,9 @@ export default {
     meta: {
         title: 'SpeedZone | Livraison de colis au Maroc',
         description:
-            'SpeedZone Express est un opérateur de livraison pour le e-commerce au Maroc. Nous ramassons vos colis, les acheminons dans tout le Royaume et les remettons au destinataire, avec paiement à la livraison, suivi en temps réel et gestion des retours. Notre métier : le dernier kilomètre, du ramassage en boutique jusqu’à la remise en main propre.',
+            'SpeedZone livre vos colis partout au Maroc grâce à une plateforme moderne de suivi, de paiement à la livraison et de gestion logistique.',
         ogDescription:
-            'SpeedZone Express accompagne les e-commerçants marocains : ramassage, livraison nationale, paiement à la livraison, suivi des colis et reversement des encaissements. Un partenaire logistique pour vendre partout au Maroc.',
+            'SpeedZone livre vos colis partout au Maroc grâce à une plateforme moderne de suivi, de paiement à la livraison et de gestion logistique.',
         slogan: 'Livraison rapide. Confiance assurée.',
     },
 
@@ -37,7 +37,7 @@ export default {
         ctaSecondary: 'Voir nos tarifs',
         rating: '4.9/5',
         ratingLabel: 'Note 4.9 sur 5',
-        proof: '+500 entreprises nous font confiance',
+        proof: '+500 clients nous font confiance',
         mock: {
             delivered: 'Colis livrés aujourd’hui',
             statusDelivered: 'Livré',
@@ -190,7 +190,7 @@ export default {
     testimonials: {
         eyebrow: 'Ils nous font confiance',
         title: 'Ce que nos clients disent de SpeedZone',
-        subtitle: 'Des centaines d’entreprises marocaines nous confient leurs livraisons chaque jour.',
+        subtitle: 'Des centaines de clients marocains nous confient leurs livraisons chaque jour.',
         items: {
             first: {
                 name: 'Yassine El Amrani',
@@ -222,7 +222,7 @@ export default {
     cta: {
         badge: 'Prêt à accélérer ?',
         title: 'Prêt à améliorer vos livraisons ?',
-        text: 'Rejoignez les centaines d’entreprises qui font déjà confiance à SpeedZone pour livrer plus vite et plus sereinement.',
+        text: 'Rejoignez les centaines de clients qui font déjà confiance à SpeedZone pour livrer plus vite et plus sereinement.',
         primary: 'Créer un compte gratuitement',
         dashboard: 'Ouvrir le tableau de bord',
         secondary: 'Nous contacter',

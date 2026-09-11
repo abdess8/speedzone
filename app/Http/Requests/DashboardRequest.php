@@ -37,6 +37,7 @@ class DashboardRequest extends FormRequest
                 'sometimes',
                 'string',
                 Rule::in([
+                    'all_time',
                     'today',
                     'yesterday',
                     'last_7_days',

@@ -2,10 +2,23 @@
 
 return [
     'register' => [
-        'title' => 'Inscription vendeur',
-        'subtitle' => 'Rejoignez Speed Zone en tant que vendeur',
+        'title' => 'Créer un compte',
+        'subtitle' => 'Rejoignez Speed Zone Express',
         'heading' => 'Créez votre compte vendeur',
         'description' => 'Inscrivez-vous pour expédier avec Speed Zone Express.',
+        'choose_type' => 'Je m\'inscris en tant que',
+        'types' => [
+            'seller' => 'Vendeur',
+            'driver' => 'Livreur',
+        ],
+        'headings' => [
+            'seller' => 'Créez votre compte vendeur',
+            'driver' => 'Créez votre compte livreur',
+        ],
+        'descriptions' => [
+            'seller' => 'Inscrivez-vous pour expédier avec Speed Zone Express.',
+            'driver' => 'Inscrivez-vous pour livrer avec Speed Zone Express.',
+        ],
         'first_name' => 'Prénom',
         'last_name' => 'Nom',
         'email' => 'E-mail',
@@ -80,15 +93,15 @@ return [
     ],
 
     'admin' => [
-        'page_title' => 'Inscriptions vendeurs en attente',
-        'details_title' => 'Examiner l\'inscription vendeur',
+        'page_title' => 'Inscriptions en attente',
+        'details_title' => 'Examiner l\'inscription',
         'search_placeholder' => 'Rechercher par nom, e-mail ou téléphone…',
         'all_statuses' => 'Tous les statuts',
-        'empty' => 'Aucune inscription vendeur en attente.',
+        'empty' => 'Aucune inscription en attente.',
         'view_details' => 'Voir les détails',
         'personal_info' => 'Informations personnelles',
         'review_section' => 'Examen du compte',
-        'review_help' => 'Approuver active le compte et crée sa boutique par défaut. Rejeter bloque l\'accès à la plateforme.',
+        'review_help' => 'Approuver active le compte. Un vendeur reçoit également sa boutique par défaut. Rejeter bloque l\'accès à la plateforme.',
         'documents_section' => 'Pièces justificatives',
         'role_help' => 'Rôle attribué au compte une fois activé.',
         'change_password' => 'Changer le mot de passe',
@@ -109,10 +122,11 @@ return [
         'reactivate_confirm_text' => 'Le compte rejeté sera approuvé et son titulaire pourra de nouveau se connecter.',
         'reactivated_success' => 'Compte réactivé et approuvé.',
         'rejection_reason' => 'Motif du rejet',
-        'approved_success' => 'Compte vendeur approuvé avec succès.',
-        'rejected_success' => 'Inscription vendeur rejetée.',
+        'approved_success' => 'Compte approuvé avec succès.',
+        'rejected_success' => 'Inscription rejetée.',
         'columns' => [
             'name' => 'Nom',
+            'role' => 'Rôle',
             'email' => 'E-mail',
             'phone' => 'Téléphone',
             'city' => 'Ville',
@@ -126,7 +140,7 @@ return [
         'verification_subject' => 'Vérifiez votre compte Speed Zone',
         'approved_subject' => 'Votre compte Speed Zone est approuvé',
         'approved_heading' => 'Votre compte est approuvé',
-        'approved_body' => 'Bonjour :name, votre compte vendeur Speed Zone a été approuvé. Vous pouvez maintenant accéder à la plateforme.',
+        'approved_body' => 'Bonjour :name, votre compte Speed Zone a été approuvé. Vous pouvez maintenant accéder à la plateforme.',
         'approved_button' => 'Se connecter à Speed Zone',
         'approved_footer' => 'Si vous n\'avez pas demandé ce compte, veuillez contacter le support.',
         'rejected_subject' => 'Votre inscription Speed Zone a été rejetée',

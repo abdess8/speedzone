@@ -19,7 +19,6 @@
     "dependencies": {
         "@amcharts/amcharts5": "^5.9.4",
         "@amcharts/amcharts5-geodata": "^5.1.5",
-        "@ckeditor/ckeditor5-build-classic": "^43.3.1",
         "@ckeditor/ckeditor5-vue": "^7.3.0",
         "@fullcalendar/bootstrap": "^6.1.11",
         "@fullcalendar/core": "^6.1.11",

@@ -17,9 +17,10 @@ final class DashboardDateRange
 
     public static function fromRequest(Request $request): self
     {
-        $period = (string) $request->input('period', 'last_30_days');
+        $period = (string) $request->input('period', 'all_time');
 
         return match ($period) {
+            'all_time' => self::allTime(),
             'today' => new self($period, Carbon::today()->startOfDay(), Carbon::today()->endOfDay()),
             'yesterday' => new self($period, Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()),
             'last_7_days' => new self($period, Carbon::today()->subDays(6)->startOfDay(), Carbon::today()->endOfDay()),
@@ -33,6 +34,18 @@ final class DashboardDateRange
             'custom' => self::fromCustom($request),
             default => throw new InvalidArgumentException("Unknown dashboard period: {$period}"),
         };
+    }
+
+    /**
+     * Every order from the first recorded day through today.
+     */
+    public static function allTime(): self
+    {
+        return new self(
+            'all_time',
+            Carbon::create(1970, 1, 1)->startOfDay(),
+            Carbon::today()->endOfDay(),
+        );
     }
 
     private static function fromCustom(Request $request): self

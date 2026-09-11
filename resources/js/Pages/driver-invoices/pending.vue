@@ -65,6 +65,8 @@ const lineSubtitle = (line) => line.customer_full_name ?? line.note ?? "—";
 
 const cardRows = (line) => [
   { label: t("driver_invoices.columns.sector"), value: line.sector },
+  { label: t("driver_invoices.columns.collected"), value: money(line.collected_amount) },
+  { label: t("driver_invoices.columns.commission"), value: money(line.commission) },
   { label: t("driver_invoices.columns.amount"), value: money(line.amount), emphasis: true },
 ];
 
@@ -194,16 +196,16 @@ onMounted(() => {
                 <h5 class="mb-0">{{ summary.deliveries_count }}</h5>
               </BCol>
               <BCol md="3" cols="6">
-                <p class="text-muted mb-1">{{ $t('driver_invoices.summary.bonus_total') }}</p>
-                <h5 class="mb-0 text-primary">{{ money(summary.bonus_total) }}</h5>
+                <p class="text-muted mb-1">{{ $t('driver_invoices.summary.collected') }}</p>
+                <h5 class="mb-0">{{ money(summary.collected_amount) }}</h5>
               </BCol>
               <BCol md="3" cols="6">
-                <p class="text-muted mb-1">{{ $t('driver_invoices.summary.penalty_total') }}</p>
-                <h5 class="mb-0 text-danger">- {{ money(summary.penalty_total) }}</h5>
+                <p class="text-muted mb-1">{{ $t('driver_invoices.summary.commission') }}</p>
+                <h5 class="mb-0 text-danger">- {{ money(summary.commission_total) }}</h5>
               </BCol>
               <BCol md="3" cols="6">
                 <p class="text-muted mb-1">{{ $t('driver_invoices.summary.total') }}</p>
-                <h4 class="mb-0 text-success">{{ money(summary.total_amount) }}</h4>
+                <h4 class="mb-0 text-primary">{{ money(summary.total_amount) }}</h4>
               </BCol>
             </BRow>
 
@@ -237,6 +239,8 @@ onMounted(() => {
                     <th>{{ $t('driver_invoices.columns.customer') }}</th>
                     <th>{{ $t('driver_invoices.columns.sector') }}</th>
                     <th>{{ $t('driver_invoices.columns.type') }}</th>
+                    <th class="text-end">{{ $t('driver_invoices.columns.collected') }}</th>
+                    <th class="text-end">{{ $t('driver_invoices.columns.commission') }}</th>
                     <th class="text-end">{{ $t('driver_invoices.columns.amount') }}</th>
                     <th v-if="canAdjust" class="text-end">{{ $t('common.actions') }}</th>
                   </tr>
@@ -250,6 +254,8 @@ onMounted(() => {
                     </td>
                     <td>{{ line.sector ?? "—" }}</td>
                     <td><span class="badge bg-info-subtle text-info">{{ line.transaction_type_label }}</span></td>
+                    <td class="text-end">{{ money(line.collected_amount) }}</td>
+                    <td class="text-end">{{ money(line.commission) }}</td>
                     <td class="text-end fw-semibold" :class="line.amount < 0 ? 'text-danger' : ''">{{ money(line.amount) }}</td>
                     <td v-if="canAdjust" class="text-end">
                       <BButton
@@ -264,7 +270,7 @@ onMounted(() => {
                     </td>
                   </tr>
                   <tr v-if="lines.length === 0">
-                    <td :colspan="canAdjust ? 6 : 5" class="text-center text-muted py-4">{{ $t('driver_invoices.pending.empty') }}</td>
+                    <td :colspan="canAdjust ? 8 : 7" class="text-center text-muted py-4">{{ $t('driver_invoices.pending.empty') }}</td>
                   </tr>
                 </tbody>
               </table>

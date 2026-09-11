@@ -11,7 +11,7 @@ const features = ['orders', 'tracking', 'drivers', 'cod', 'history', 'notificati
 <template>
     <section id="plateforme" class="sz-section sz-platform">
         <div class="sz-container sz-platform__grid">
-            <div class="sz-platform__media" data-aos="fade-right">
+            <div class="sz-platform__media">
                 <div class="sz-laptop">
                     <div class="sz-laptop__screen">
                         <div class="sz-laptop__topbar">
@@ -69,7 +69,7 @@ const features = ['orders', 'tracking', 'drivers', 'cod', 'history', 'notificati
                     :subtitle="t('platform.subtitle')"
                 />
                 <ul class="sz-platform__features">
-                    <li v-for="(feature, i) in features" :key="feature" data-aos="fade-up" :data-aos-delay="i * 30">
+                    <li v-for="feature in features" :key="feature">
                         <span class="sz-check">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                                 <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
@@ -78,7 +78,7 @@ const features = ['orders', 'tracking', 'drivers', 'cod', 'history', 'notificati
                         {{ t(`platform.features.${feature}`) }}
                     </li>
                 </ul>
-                <div class="sz-platform__cta" data-aos="fade-up">
+                <div class="sz-platform__cta">
                     <LandingButton href="/register" variant="primary" size="lg">
                         {{ t('platform.cta') }}
                     </LandingButton>

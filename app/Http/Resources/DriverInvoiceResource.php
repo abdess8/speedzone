@@ -53,6 +53,8 @@ class DriverInvoiceResource extends JsonResource
             'period_end' => $this->period_end?->toDateString(),
 
             'deliveries_count' => (int) $this->deliveries_count,
+            'collected_amount' => (float) $this->collected_amount,
+            'commission_total' => (float) $this->commission_total,
             'total_amount' => (float) $this->total_amount,
 
             'generated_at' => $this->generated_at?->toIso8601String(),
@@ -88,6 +90,8 @@ class DriverInvoiceResource extends JsonResource
                     'sector' => $tx?->sector?->name ?? $order?->sector?->name,
                     'transaction_type' => $type?->value,
                     'transaction_type_label' => $type?->label(),
+                    'collected_amount' => (float) $pivot->collected_snapshot,
+                    'commission' => (float) $pivot->commission_snapshot,
                     'amount' => (float) $pivot->amount_snapshot,
                     'note' => $tx?->note,
                     'created_at' => $tx?->created_at?->toIso8601String(),

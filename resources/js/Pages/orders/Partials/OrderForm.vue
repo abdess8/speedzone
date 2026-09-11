@@ -1,10 +1,12 @@
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import axios from "axios";
 import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
 import InputError from "@/Components/InputError.vue";
+import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
+import { isNationalPhoneForm, sanitizeNationalPhoneInput } from "@/common/phone";
 
 const { t } = useI18n();
 
@@ -24,9 +26,27 @@ const props = defineProps({
    * see what the customer will be charged, but the value is not editable.
    */
   lockDeliveryPrice: { type: Boolean, default: false },
+  /**
+   * When true, the switch starts on regardless of the Inertia form value.
+   * Used on create so “Livraison incluse” is checked by default.
+   */
+  presetDeliveryIncluded: { type: Boolean, default: false },
 });
 
-import { formatAmount, formatMoney as money, formatMoneyOrEmpty } from "@/common/formatMoney";
+const deliveryIncluded = ref(
+  props.presetDeliveryIncluded ? true : Boolean(props.form.delivery_included)
+);
+
+watch(deliveryIncluded, (value) => {
+  props.form.delivery_included = value;
+}, { immediate: true });
+
+onMounted(() => {
+  if (props.presetDeliveryIncluded) {
+    deliveryIncluded.value = true;
+    props.form.delivery_included = true;
+  }
+});
 
 const isCashPayment = computed(() => props.form.payment_method === "CASH");
 
@@ -108,6 +128,22 @@ watch(
     }
   }
 );
+
+const onPhoneInput = (event) => {
+  props.form.customer_phone = sanitizeNationalPhoneInput(event.target.value);
+
+  if (isNationalPhoneForm(props.form.customer_phone)) {
+    props.form.clearErrors("customer_phone");
+  }
+};
+
+const onPhoneBlur = () => {
+  const phone = String(props.form.customer_phone ?? "").trim();
+
+  if (phone !== "" && !isNationalPhoneForm(phone)) {
+    props.form.setError("customer_phone", t("orders.form.phone_invalid"));
+  }
+};
 </script>
 
 <template>
@@ -131,7 +167,20 @@ watch(
             </BCol>
             <BCol md="6">
               <label class="form-label">{{ $t('orders.form.phone') }} <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" v-model="form.customer_phone" :class="{ 'is-invalid': form.errors.customer_phone }" />
+              <input
+                type="tel"
+                class="form-control"
+                :value="form.customer_phone"
+                :class="{ 'is-invalid': form.errors.customer_phone }"
+                inputmode="numeric"
+                autocomplete="tel"
+                maxlength="10"
+                pattern="0[0-9]{9}"
+                :placeholder="$t('orders.form.phone_placeholder')"
+                @input="onPhoneInput"
+                @blur="onPhoneBlur"
+              />
+              <div class="form-text">{{ $t('orders.form.phone_hint') }}</div>
               <InputError :message="form.errors.customer_phone" />
             </BCol>
             <BCol md="6">
@@ -289,17 +338,14 @@ watch(
             <InputError :message="form.errors.delivery_price" />
           </div>
 
-          <div class="form-check form-switch mb-3">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              role="switch"
+          <div class="mb-3" dir="ltr">
+            <BFormCheckbox
               id="deliveryIncluded"
-              v-model="form.delivery_included"
-            />
-            <label class="form-check-label fw-medium" for="deliveryIncluded">
-              {{ $t('orders.form.delivery_included') }}
-            </label>
+              v-model="deliveryIncluded"
+              switch
+            >
+              <span class="fw-medium">{{ $t('orders.form.delivery_included') }}</span>
+            </BFormCheckbox>
             <div class="form-text">{{ $t('orders.form.delivery_included_hint') }}</div>
           </div>
 
@@ -308,7 +354,7 @@ watch(
               <span class="fs-15 fw-medium">{{ $t('orders.form.total_amount') }}</span>
               <span class="fs-18 fw-bold text-primary">{{ money(totalAmount) }}</span>
             </div>
-            <div v-if="form.delivery_included" class="form-text mt-2 mb-0">
+            <div v-if="deliveryIncluded" class="form-text mt-2 mb-0">
               <i class="ri-information-line align-bottom me-1"></i>
               {{ $t('orders.form.delivery_included_note', { amount: money(form.delivery_price || 0) }) }}
             </div>

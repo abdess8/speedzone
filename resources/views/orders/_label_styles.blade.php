@@ -80,21 +80,22 @@
         color: #34557A;
         padding-bottom: 2px;
     }
-    .recipient-name { font-size: 13px; font-weight: bold; }
-    .recipient-line { font-size: 9.5px; color: #2A4360; }
-    .pin-cell { width: 42px; text-align: center; }
+    .recipient-name { font-size: 11px; font-weight: bold; }
+    .recipient-line { font-size: 8.5px; color: #2A4360; }
+    .pin-cell { width: 48px; text-align: center; }
     .pin-cell img { width: 14px; }
     .pin-label {
-        font-size: 6.5px;
+        font-size: 6px;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.2px;
         color: #5A6B80;
+        word-wrap: break-word;
     }
     .recipient-city {
-        font-size: 15px;
+        font-size: 9px;
         font-weight: bold;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.2px;
         padding-top: 3px;
     }
 
@@ -160,8 +161,9 @@
         border-collapse: collapse;
         margin-top: 7px;
         border-top: 1px solid #D5DDE6;
-        font-size: 7.5px;
+        font-size: 7px;
         color: #5A6B80;
+        word-wrap: break-word;
     }
     .foot td { vertical-align: middle; padding: 4px 0 0; }
     .foot-icon { width: 14px; }

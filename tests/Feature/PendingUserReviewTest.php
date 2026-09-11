@@ -69,6 +69,21 @@ function pendingSeller(): User
     return $user->fresh(['roles']);
 }
 
+function pendingDriver(): User
+{
+    $driverRole = Role::query()->where('name', Role::DRIVER)->firstOrFail();
+
+    $user = User::factory()->create([
+        'status' => UserStatus::PendingApproval,
+        'city_id' => reviewCity()->id,
+        'role_id' => $driverRole->id,
+        'email_verified_at' => now(),
+    ]);
+    $user->roles()->sync([$driverRole->id]);
+
+    return $user->fresh(['roles']);
+}
+
 function reviewPayload(User $user, array $overrides = []): array
 {
     return array_merge([
@@ -166,4 +181,44 @@ test('an account that is not under review is out of reach', function () {
     $this->actingAs(reviewer())
         ->get(route('admin.pending-users.show', $active))
         ->assertNotFound();
+});
+
+test('pending drivers appear in the review queue', function () {
+    $driver = pendingDriver();
+
+    $this->actingAs(reviewer())
+        ->get(route('admin.pending-users.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/PendingUsers/Index')
+            ->has('users.data', 1)
+            ->where('users.data.0.id', $driver->id)
+        );
+});
+
+test('approving a driver activates the account without creating a store', function () {
+    $driver = pendingDriver();
+
+    $this->actingAs(reviewer())
+        ->post(route('admin.users.approve', $driver))
+        ->assertRedirect(route('admin.pending-users.index'));
+
+    $driver->refresh();
+
+    expect($driver->status)->toBe(UserStatus::Active)
+        ->and($driver->isDriver())->toBeTrue()
+        ->and($driver->ownedStores()->count())->toBe(0);
+});
+
+test('approving a seller still creates a default store', function () {
+    $seller = pendingSeller();
+
+    $this->actingAs(reviewer())
+        ->post(route('admin.users.approve', $seller))
+        ->assertRedirect(route('admin.pending-users.index'));
+
+    $seller->refresh();
+
+    expect($seller->status)->toBe(UserStatus::Active)
+        ->and($seller->ownedStores()->count())->toBe(1);
 });

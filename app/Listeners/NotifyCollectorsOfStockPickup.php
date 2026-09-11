@@ -2,13 +2,11 @@
 
 namespace App\Listeners;
 
-use App\Enums\UserStatus;
+use App\Enums\NotificationType;
 use App\Events\StockPickupRequested;
-use App\Models\User;
 use App\Notifications\StockPickupRequestedNotification;
 use App\Services\NotificationDispatcher;
-use App\Support\StockPermissions;
-use Illuminate\Database\Eloquent\Builder;
+use App\Support\NotificationRecipients;
 
 /**
  * Tell the field that a shop is waiting.
@@ -30,12 +28,7 @@ class NotifyCollectorsOfStockPickup
             return;
         }
 
-        $collectors = User::query()
-            ->where('status', UserStatus::Active->value)
-            ->whereHas(
-                'roles.permissions',
-                fn (Builder $query) => $query->where('name', StockPermissions::COLLECT_INBOUND)
-            )
+        $collectors = NotificationRecipients::query(NotificationType::StockPickupRequested)
             ->coveringCity($cityId)
             ->get();
 

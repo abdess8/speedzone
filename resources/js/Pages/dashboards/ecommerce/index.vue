@@ -36,7 +36,7 @@ const dashboard = ref(null);
  */
 const widgets = computed(() => dashboard.value?.widgets ?? {});
 
-const period = ref('last_30_days');
+const period = ref('all_time');
 const customRange = ref('');
 
 const parseCustomRange = (value) => {

@@ -2,14 +2,15 @@
 
 namespace App\Listeners;
 
+use App\Enums\NotificationType;
 use App\Events\TicketClosed;
 use App\Events\TicketCreated;
 use App\Events\TicketMessageCreated;
-use App\Models\User;
 use App\Notifications\TicketClosedNotification;
 use App\Notifications\TicketCreatedNotification;
 use App\Notifications\TicketMessageNotification;
 use App\Services\NotificationDispatcher;
+use App\Support\NotificationRecipients;
 use App\Support\SupportPermissions;
 
 class SendTicketNotification
@@ -18,9 +19,10 @@ class SendTicketNotification
 
     public function handleCreated(TicketCreated $event): void
     {
-        $staff = User::query()
-            ->whereHas('roles.permissions', fn ($q) => $q->whereIn('name', SupportPermissions::staffAccess()))
-            ->get();
+        $staff = NotificationRecipients::query(
+            NotificationType::TicketCreated,
+            SupportPermissions::staffAccess(),
+        )->get();
 
         if ($staff->isEmpty()) {
             return;
@@ -34,7 +36,7 @@ class SendTicketNotification
 
     public function handleMessage(TicketMessageCreated $event): void
     {
-        $ticket = $event->ticket->loadMissing(['creator', 'assignee']);
+        $ticket = $event->ticket->loadMissing(['creator.roles.permissions', 'creator.permissions', 'assignee.roles.permissions', 'assignee.permissions']);
         $sender = $event->sender;
         $recipients = collect();
 
@@ -58,7 +60,7 @@ class SendTicketNotification
 
     public function handleClosed(TicketClosed $event): void
     {
-        $ticket = $event->ticket->loadMissing('creator');
+        $ticket = $event->ticket->loadMissing(['creator.roles.permissions', 'creator.permissions']);
 
         if (! $ticket->creator) {
             return;

@@ -1,9 +1,10 @@
 /**
- * Phone number helpers for the field-agent contact shortcuts.
+ * Phone number helpers.
  *
- * Customer numbers are captured as the seller typed them — "06 12 34 56 78",
- * "+212612345678", "0612-345-678" — which `tel:` tolerates but `wa.me` does not:
- * WhatsApp only accepts bare international digits.
+ * The order form stores national numbers as `0XXXXXXXXX`. Contact shortcuts
+ * still have to tolerate older records typed as "06 12 34 56 78",
+ * "+212612345678" or "0612-345-678": `tel:` accepts those, but `wa.me` does
+ * not — WhatsApp only accepts bare international digits.
  */
 
 /** Morocco. Numbers are stored without a country code far more often than with one. */
@@ -83,4 +84,25 @@ export function telUrl(phone) {
   const digits = digitsOf(phone);
 
   return digits === '' ? null : `tel:${String(phone).replace(/[^\d+]/g, '')}`;
+}
+
+/** Order-form national number: 10 digits, trunk zero first. 0XXXXXXXXX */
+export const NATIONAL_PHONE_FORM = /^0\d{9}$/;
+
+/**
+ * Keep only the digits a seller can type into the order-form phone field.
+ *
+ * @param {string|null|undefined} raw
+ * @returns {string}
+ */
+export function sanitizeNationalPhoneInput(raw) {
+  return String(raw ?? '').replace(/\D/g, '').slice(0, 10);
+}
+
+/**
+ * @param {string|null|undefined} phone
+ * @returns {boolean}
+ */
+export function isNationalPhoneForm(phone) {
+  return NATIONAL_PHONE_FORM.test(String(phone ?? '').trim());
 }

@@ -122,17 +122,21 @@ onMounted(() => {
           </BCardHeader>
           <BCardBody>
             <BRow class="g-3">
-              <BCol md="4" cols="6">
+              <BCol md="3" cols="6">
                 <p class="text-muted mb-1">{{ $t('driver_invoices.summary.deliveries') }}</p>
                 <h5 class="mb-0">{{ inv.deliveries_count }}</h5>
               </BCol>
-              <BCol md="4" cols="6">
-                <p class="text-muted mb-1">{{ $t('driver_invoices.summary.transactions') }}</p>
-                <h5 class="mb-0">{{ lines.length }}</h5>
+              <BCol md="3" cols="6">
+                <p class="text-muted mb-1">{{ $t('driver_invoices.summary.collected') }}</p>
+                <h5 class="mb-0">{{ money(inv.collected_amount) }}</h5>
               </BCol>
-              <BCol md="4" cols="12">
+              <BCol md="3" cols="6">
+                <p class="text-muted mb-1">{{ $t('driver_invoices.summary.commission') }}</p>
+                <h5 class="mb-0 text-danger">- {{ money(inv.commission_total) }}</h5>
+              </BCol>
+              <BCol md="3" cols="6">
                 <p class="text-muted mb-1">{{ $t('driver_invoices.summary.total') }}</p>
-                <h3 class="mb-0 text-success">{{ money(inv.total_amount) }}</h3>
+                <h3 class="mb-0 text-primary">{{ money(inv.total_amount) }}</h3>
               </BCol>
             </BRow>
           </BCardBody>
@@ -153,6 +157,8 @@ onMounted(() => {
                     <th>{{ $t('driver_invoices.columns.city') }}</th>
                     <th>{{ $t('driver_invoices.columns.sector') }}</th>
                     <th>{{ $t('driver_invoices.columns.type') }}</th>
+                    <th class="text-end">{{ $t('driver_invoices.columns.collected') }}</th>
+                    <th class="text-end">{{ $t('driver_invoices.columns.commission') }}</th>
                     <th class="text-end">{{ $t('driver_invoices.columns.amount') }}</th>
                   </tr>
                 </thead>
@@ -168,10 +174,12 @@ onMounted(() => {
                     <td>{{ line.city ?? "—" }}</td>
                     <td>{{ line.sector ?? "—" }}</td>
                     <td><span class="badge bg-info-subtle text-info">{{ line.transaction_type_label }}</span></td>
+                    <td class="text-end">{{ money(line.collected_amount) }}</td>
+                    <td class="text-end">{{ money(line.commission) }}</td>
                     <td class="text-end fw-semibold" :class="line.amount < 0 ? 'text-danger' : ''">{{ money(line.amount) }}</td>
                   </tr>
                   <tr v-if="lines.length === 0">
-                    <td colspan="6" class="text-center text-muted py-4">{{ $t('driver_invoices.detail.no_transactions') }}</td>
+                    <td colspan="8" class="text-center text-muted py-4">{{ $t('driver_invoices.detail.no_transactions') }}</td>
                   </tr>
                 </tbody>
               </table>

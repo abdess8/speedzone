@@ -16,15 +16,14 @@ const steps = ['order', 'pickup', 'transit', 'delivery', 'payment'];
                 :subtitle="t('process.subtitle')"
             />
 
-            <div class="sz-process__track">
-                <div class="sz-process__line" aria-hidden="true"></div>
-                <div
-                    v-for="(step, index) in steps"
-                    :key="step"
-                    class="sz-step"
-                    data-aos="fade-up"
-                    :data-aos-delay="index * 60"
-                >
+            <div class="sz-process__scroller">
+                <div class="sz-process__track">
+                    <div class="sz-process__line" aria-hidden="true"></div>
+                    <div
+                        v-for="(step, index) in steps"
+                        :key="step"
+                        class="sz-step"
+                    >
                     <div class="sz-step__badge">
                         <span class="sz-step__num">{{ index + 1 }}</span>
                         <span class="sz-step__icon">
@@ -52,6 +51,7 @@ const steps = ['order', 'pickup', 'transit', 'delivery', 'payment'];
                     </div>
                     <h3 class="sz-step__title">{{ t(`process.steps.${step}.title`) }}</h3>
                     <p class="sz-step__desc">{{ t(`process.steps.${step}.description`) }}</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -138,21 +138,53 @@ const steps = ['order', 'pickup', 'transit', 'delivery', 'payment'];
     color: var(--sz-slate);
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1024px) {
+    .sz-process__scroller {
+        margin-inline: -1.5rem;
+        padding-inline: 1.5rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+    .sz-process__scroller::-webkit-scrollbar {
+        height: 4px;
+    }
+    .sz-process__scroller::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
     .sz-process__track {
-        grid-template-columns: 1fr 1fr;
-        gap: 2.5rem 1.5rem;
+        display: flex;
+        gap: 1.1rem;
+        width: max-content;
+        padding-block: 0.35rem 0.85rem;
+        padding-inline-end: 1.5rem;
     }
     .sz-process__line {
         display: none;
+    }
+    .sz-step {
+        flex: 0 0 220px;
+        scroll-snap-align: start;
     }
 }
 @media (max-width: 620px) {
     .sz-section {
         padding: 4rem 1.1rem;
     }
+    .sz-process__scroller {
+        margin-inline: -1.1rem;
+        padding-inline: 1.1rem;
+    }
     .sz-process__track {
-        grid-template-columns: 1fr;
+        padding-inline-end: 1.1rem;
+    }
+    .sz-step {
+        flex: 0 0 min(72vw, 260px);
     }
 }
 </style>

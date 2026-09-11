@@ -61,14 +61,14 @@ class OrderInvoicePdfService
             ];
         }
 
-        $orderAmount = round((float) $order->order_amount, 2);
+        $billedAmount = round((float) $order->total_amount, 2);
         $deliveryFee = round((float) $order->delivery_price, 2);
 
         return [
-            'order_amount' => $orderAmount,
+            'order_amount' => $billedAmount,
             'delivery_fee' => $deliveryFee,
             'return_fee' => 0.0,
-            'final_amount' => round($orderAmount - $deliveryFee, 2),
+            'final_amount' => round($billedAmount - $deliveryFee, 2),
         ];
     }
 

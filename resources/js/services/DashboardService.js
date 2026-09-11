@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const PERIOD_VALUES = [
+  'all_time',
   'today',
   'yesterday',
   'last_7_days',

@@ -53,7 +53,7 @@ test('an admin records a bonus that lands on the driver pending balance', functi
     $summary = app(DriverBillingService::class)->preview($this->driver)['summary'];
 
     expect($summary['bonus_total'])->toBe(150.5)
-        ->and($summary['total_amount'])->toBe(150.5);
+        ->and($summary['total_amount'])->toBe(-150.5);
 });
 
 // The sign belongs to the type, not to the operator: an admin types 40 and the
@@ -70,7 +70,7 @@ test('a penalty is stored negative and subtracted from the total', function () {
     $summary = app(DriverBillingService::class)->preview($this->driver)['summary'];
 
     expect($summary['penalty_total'])->toBe(40.0)
-        ->and($summary['total_amount'])->toBe(-40.0);
+        ->and($summary['total_amount'])->toBe(40.0);
 });
 
 test('a delivery payment cannot be forged through the manual endpoint', function () {
@@ -145,7 +145,7 @@ test('a manual entry captured by mistake can be removed while unbilled', functio
         ->and(DriverFinanceLog::query()->whereNotNull('old_value')->count())->toBe(1);
 });
 
-// Once an invoice carries the amount, the driver has been told what he is owed.
+// Once an invoice carries the amount, the driver has been told what he must remit.
 test('a transaction already attached to an invoice is frozen', function () {
     $invoice = DriverInvoice::query()->create([
         'invoice_number' => 'DRV-2026-000001',

@@ -8,11 +8,15 @@ import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
 import AuthPageFooter from '@/Components/AuthPageFooter.vue';
 
+const ACCOUNT_TYPES = ['seller', 'driver'];
+
 const props = defineProps({
     cities: { type: Array, default: () => [] },
+    accountType: { type: String, default: 'seller' },
 });
 
 const form = useForm({
+    account_type: ACCOUNT_TYPES.includes(props.accountType) ? props.accountType : 'seller',
     first_name: '',
     last_name: '',
     email: '',
@@ -21,6 +25,18 @@ const form = useForm({
     password: '',
     password_confirmation: '',
 });
+
+const selectAccountType = (type) => {
+    if (!ACCOUNT_TYPES.includes(type) || form.account_type === type) {
+        return;
+    }
+
+    form.account_type = type;
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('type', type);
+    window.history.replaceState({}, '', url);
+};
 
 const cityOptions = computed(() =>
     (props.cities ?? []).map((city) => ({ value: city.id, label: city.name }))
@@ -60,7 +76,7 @@ export default {
 </script>
 
 <template>
-    <Head :title="$t('seller_registration.register.title')" />
+    <Head :title="$t(`seller_registration.register.headings.${form.account_type}`)" />
 
     <div class="auth-page-wrapper pt-5">
         <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
@@ -78,7 +94,7 @@ export default {
                     <BCol lg="12">
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <Link href="/" class="d-inline-block auth-logo">
-                                <img src="@assets/images/logo-light.png" alt="Speed Zone Express" height="52">
+                                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="88">
                             </Link>
                             <p class="mt-3 fs-15 fw-medium">{{ $t('seller_registration.register.subtitle') }}</p>
                         </div>
@@ -90,8 +106,33 @@ export default {
                         <BCard no-body class="mt-4">
                             <BCardBody class="p-4">
                                 <div class="text-center mt-2 mb-4">
-                                    <h5 class="text-primary">{{ $t('seller_registration.register.heading') }}</h5>
-                                    <p class="text-muted">{{ $t('seller_registration.register.description') }}</p>
+                                    <p class="text-muted fs-13 mb-2">{{ $t('seller_registration.register.choose_type') }}</p>
+                                    <div class="register-type-switch d-grid gap-2 mb-4" style="grid-template-columns: 1fr 1fr;">
+                                        <button
+                                            type="button"
+                                            class="register-type-btn btn border py-3 rounded-3"
+                                            :class="form.account_type === 'seller' ? 'btn-primary' : 'btn-light'"
+                                            :aria-pressed="form.account_type === 'seller'"
+                                            @click="selectAccountType('seller')"
+                                        >
+                                            <i class="ri-store-2-line fs-22 d-block mb-1"></i>
+                                            <span class="fw-semibold">{{ $t('seller_registration.register.types.seller') }}</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="register-type-btn btn border py-3 rounded-3"
+                                            :class="form.account_type === 'driver' ? 'btn-primary' : 'btn-light'"
+                                            :aria-pressed="form.account_type === 'driver'"
+                                            @click="selectAccountType('driver')"
+                                        >
+                                            <i class="ri-truck-line fs-22 d-block mb-1"></i>
+                                            <span class="fw-semibold">{{ $t('seller_registration.register.types.driver') }}</span>
+                                        </button>
+                                    </div>
+                                    <InputError :message="form.errors.account_type" class="mt-2" />
+
+                                    <h5 class="text-primary">{{ $t(`seller_registration.register.headings.${form.account_type}`) }}</h5>
+                                    <p class="text-muted mb-0">{{ $t(`seller_registration.register.descriptions.${form.account_type}`) }}</p>
                                 </div>
 
                                 <form @submit.prevent="submit" class="needs-validation" novalidate>
@@ -257,7 +298,7 @@ export default {
 
                                         <!-- Full page load, not an Inertia visit: the OAuth handshake
                                              leaves the SPA for Google's consent screen. -->
-                                        <a :href="route('auth.google.redirect')" class="btn btn-light border w-100 d-flex align-items-center justify-content-center gap-2 py-2">
+                                        <a :href="route('auth.google.redirect', { account_type: form.account_type })" class="btn btn-light border w-100 d-flex align-items-center justify-content-center gap-2 py-2">
                                             <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
                                                 <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
                                                 <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />

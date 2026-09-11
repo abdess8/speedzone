@@ -14,6 +14,11 @@ class NewSellerRegistrationNotification extends AppNotification
         return NotificationType::SellerRegistered;
     }
 
+    protected function authorizes(User $notifiable): bool
+    {
+        return $notifiable->can('viewAny', User::class);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -22,8 +27,12 @@ class NewSellerRegistrationNotification extends AppNotification
         $this->seller->loadMissing('city');
 
         return $this->buildPayload([
-            'title' => trans('notifications.titles.new_seller_registration'),
-            'message' => trans('notifications.messages.new_seller_registration'),
+            'title' => trans($this->seller->isDriver()
+                ? 'notifications.titles.new_driver_registration'
+                : 'notifications.titles.new_seller_registration'),
+            'message' => trans($this->seller->isDriver()
+                ? 'notifications.messages.new_driver_registration'
+                : 'notifications.messages.new_seller_registration'),
             'seller_name' => $this->seller->full_name,
             'email' => $this->seller->email,
             'phone' => $this->seller->phone_number,

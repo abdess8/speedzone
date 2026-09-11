@@ -5,6 +5,7 @@ import PageHeader from '@/Components/page-header.vue';
 import FilterPanel from '@/Components/FilterPanel.vue';
 import EntityCard from '@/Components/EntityCard.vue';
 import EntityDetailSheet from '@/Components/EntityDetailSheet.vue';
+import { roleLabel as sharedRoleLabel } from '@/utils/roleLabel';
 import Swal from 'sweetalert2';
 
 /** Contextual colour per registration status, used by the badge and the mobile card. */
@@ -82,9 +83,13 @@ export default {
         userName(user) {
             return user.full_name || user.name || '';
         },
+        roleName(user) {
+            return sharedRoleLabel(user.role, this.$t);
+        },
         /** Detail lines shared by the mobile card and its sheet. */
         cardRows(user) {
             return [
+                { label: this.$t('seller_registration.admin.columns.role'), value: this.roleName(user) },
                 { label: this.$t('seller_registration.admin.columns.phone'), value: user.phone_number },
                 { label: this.$t('seller_registration.admin.columns.city'), value: this.cityName(user) },
                 {
@@ -187,6 +192,7 @@ export default {
                         <thead class="table-light">
                             <tr>
                                 <th>{{ $t('seller_registration.admin.columns.name') }}</th>
+                                <th>{{ $t('seller_registration.admin.columns.role') }}</th>
                                 <th>{{ $t('seller_registration.admin.columns.email') }}</th>
                                 <th>{{ $t('seller_registration.admin.columns.phone') }}</th>
                                 <th>{{ $t('seller_registration.admin.columns.city') }}</th>
@@ -198,6 +204,7 @@ export default {
                         <tbody>
                             <tr v-for="user in users.data" :key="user.id">
                                 <td>{{ user.full_name || user.name }}</td>
+                                <td>{{ roleName(user) }}</td>
                                 <td>{{ user.email }}</td>
                                 <td>{{ user.phone_number || $t('common.empty_value_short') }}</td>
                                 <td>{{ cityName(user) }}</td>
@@ -217,7 +224,7 @@ export default {
                                 </td>
                             </tr>
                             <tr v-if="!users.data.length">
-                                <td colspan="7" class="text-center text-muted py-4">
+                                <td colspan="8" class="text-center text-muted py-4">
                                     {{ $t('seller_registration.admin.empty') }}
                                 </td>
                             </tr>

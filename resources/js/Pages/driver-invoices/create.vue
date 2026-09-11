@@ -134,16 +134,16 @@ const submit = () => {
                     <h5 class="mb-0">{{ preview.summary.deliveries_count }}</h5>
                   </BCol>
                   <BCol md="3" cols="6">
-                    <p class="text-muted mb-1">{{ $t('driver_invoices.summary.bonus_total') }}</p>
-                    <h5 class="mb-0 text-primary">{{ money(preview.summary.bonus_total) }}</h5>
+                    <p class="text-muted mb-1">{{ $t('driver_invoices.summary.collected') }}</p>
+                    <h5 class="mb-0">{{ money(preview.summary.collected_amount) }}</h5>
                   </BCol>
                   <BCol md="3" cols="6">
-                    <p class="text-muted mb-1">{{ $t('driver_invoices.summary.penalty_total') }}</p>
-                    <h5 class="mb-0 text-danger">- {{ money(preview.summary.penalty_total) }}</h5>
+                    <p class="text-muted mb-1">{{ $t('driver_invoices.summary.commission') }}</p>
+                    <h5 class="mb-0 text-danger">- {{ money(preview.summary.commission_total) }}</h5>
                   </BCol>
                   <BCol md="3" cols="6">
                     <p class="text-muted mb-1">{{ $t('driver_invoices.summary.total') }}</p>
-                    <h4 class="mb-0 text-success">{{ money(preview.summary.total_amount) }}</h4>
+                    <h4 class="mb-0 text-primary">{{ money(preview.summary.total_amount) }}</h4>
                   </BCol>
                 </BRow>
 
@@ -155,6 +155,8 @@ const submit = () => {
                         <th>{{ $t('driver_invoices.columns.customer') }}</th>
                         <th>{{ $t('driver_invoices.columns.sector') }}</th>
                         <th>{{ $t('driver_invoices.columns.type') }}</th>
+                        <th class="text-end">{{ $t('driver_invoices.columns.collected') }}</th>
+                        <th class="text-end">{{ $t('driver_invoices.columns.commission') }}</th>
                         <th class="text-end">{{ $t('driver_invoices.columns.amount') }}</th>
                       </tr>
                     </thead>
@@ -164,6 +166,8 @@ const submit = () => {
                         <td>{{ line.customer_full_name ?? "—" }}</td>
                         <td>{{ line.sector ?? "—" }}</td>
                         <td><span class="badge bg-info-subtle text-info">{{ line.transaction_type_label }}</span></td>
+                        <td class="text-end">{{ money(line.collected_amount) }}</td>
+                        <td class="text-end">{{ money(line.commission) }}</td>
                         <td class="text-end fw-semibold" :class="line.amount < 0 ? 'text-danger' : ''">{{ money(line.amount) }}</td>
                       </tr>
                     </tbody>

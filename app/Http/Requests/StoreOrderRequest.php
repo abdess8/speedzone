@@ -46,6 +46,7 @@ class StoreOrderRequest extends FormRequest
         return [
             'sector_id.exists' => 'The selected sector does not belong to the chosen city or is inactive.',
             'items.*.product_id.exists' => __('stock.errors.unknown_product'),
+            'customer_phone.regex' => __('orders.form.phone_invalid'),
         ];
     }
 
@@ -57,7 +58,7 @@ class StoreOrderRequest extends FormRequest
         return [
             'customer_first_name' => ['required', 'string', 'max:255'],
             'customer_last_name' => ['required', 'string', 'max:255'],
-            'customer_phone' => ['required', 'string', 'max:50'],
+            'customer_phone' => ['required', 'string', 'regex:/^0[0-9]{9}$/'],
             'customer_address' => ['required', 'string', 'max:1000'],
             'city_id' => ['required', 'integer', Rule::exists('cities', 'id')->where('is_active', true)->whereNull('deleted_at')],
             'sector_id' => [

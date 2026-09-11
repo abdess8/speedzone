@@ -4,6 +4,8 @@ namespace App\Notifications;
 
 use App\Enums\NotificationType;
 use App\Models\StockReception;
+use App\Models\User;
+use App\Support\StockPermissions;
 
 class StockPickupRequestedNotification extends AppNotification
 {
@@ -12,6 +14,12 @@ class StockPickupRequestedNotification extends AppNotification
     public function notificationType(): NotificationType
     {
         return NotificationType::StockPickupRequested;
+    }
+
+    protected function authorizes(User $notifiable): bool
+    {
+        return $notifiable->can('view', $this->reception)
+            && $notifiable->hasPermission(StockPermissions::COLLECT_INBOUND);
     }
 
     /**

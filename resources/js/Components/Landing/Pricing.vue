@@ -43,7 +43,7 @@ const rows = computed(() => {
             />
 
             <div class="sz-pricing__grid">
-                <aside class="sz-pricing__side" data-aos="fade-right">
+                <aside class="sz-pricing__side">
                     <div class="sz-pricing__range">
                         <span class="sz-pricing__range-label">{{ t('coverage.from') }}</span>
                         <p class="sz-pricing__range-value">
@@ -73,7 +73,7 @@ const rows = computed(() => {
                     </div>
                 </aside>
 
-                <div class="sz-pricing__table-wrap" data-aos="fade-left">
+                <div class="sz-pricing__table-wrap">
                     <label class="sz-pricing__search">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />

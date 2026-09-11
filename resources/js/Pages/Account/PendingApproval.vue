@@ -28,7 +28,7 @@ defineProps({
                     <BCol md="8" lg="6" xl="5">
                         <div class="text-center mt-sm-5 mb-4">
                             <Link href="/" class="d-inline-block auth-logo">
-                                <img src="@assets/images/logo-light.png" alt="Speed Zone Express" height="52">
+                                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="88">
                             </Link>
                         </div>
 

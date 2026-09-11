@@ -56,6 +56,24 @@ test('a first sign-in with google creates a seller waiting for approval', functi
         ->and($user->last_name)->toBe('Benali');
 });
 
+test('a first sign-in with google as a driver creates a driver waiting for approval', function () {
+    fakeGoogleUser('new-google-driver@example.com');
+
+    $response = $this->withSession(['register_account_type' => 'driver'])
+        ->get('/auth/google/callback');
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('account.pending-approval'));
+
+    $user = User::query()->where('email', 'new-google-driver@example.com')->firstOrFail();
+
+    expect($user->google_id)->toBe('google-123')
+        ->and($user->status)->toBe(UserStatus::PendingApproval)
+        ->and($user->hasVerifiedEmail())->toBeTrue()
+        ->and($user->isDriver())->toBeTrue()
+        ->and($user->isSeller())->toBeFalse();
+});
+
 test('google signs an existing account in and links it', function () {
     $sellerRole = Role::query()->where('name', Role::SELLER)->firstOrFail();
 

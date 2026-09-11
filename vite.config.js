@@ -31,6 +31,12 @@ function manualChunks(id) {
     }
     if (id.includes('@amcharts')) return 'vendor-amcharts';
     if (id.includes('@fullcalendar')) return 'vendor-fullcalendar';
+    // CKEditor 5 registers plugins on a process-wide context. Two copies of the
+    // same plugin (a second package, or a second chunk) throw
+    // `ckeditor-duplicated-modules` and the page that needs the editor never
+    // mounts. Keep every ckeditor package in this one chunk, and never add a
+    // `@ckeditor/ckeditor5-build-*` predefined build next to the `ckeditor5`
+    // package — the predefined build is a second, already-bundled copy.
     if (id.includes('ckeditor')) return 'vendor-ckeditor';
     if (id.includes('leaflet')) return 'vendor-leaflet';
     if (id.includes('sweetalert2')) return 'vendor-sweetalert';

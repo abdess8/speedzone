@@ -33,15 +33,15 @@ export default {
           <img src="@assets/images/logo-sm.png" alt="SpeedZone Express" class="brand-logo-icon" />
         </span>
         <span class="logo-lg">
-          <img src="@assets/images/logo-dark.png" alt="SpeedZone Express" class="brand-logo-full" />
+          <img src="@assets/images/logo-brand-full.png" alt="SpeedZone Express" class="brand-logo-full" />
         </span>
       </Link>
       <Link href="/" class="logo logo-light">
         <span class="logo-sm">
-          <img src="@assets/images/logo-sm.png" alt="SpeedZone Express" class="brand-logo-icon" />
+          <img src="@assets/images/logo-sm-light.png" alt="SpeedZone Express" class="brand-logo-icon" />
         </span>
         <span class="logo-lg">
-          <img src="@assets/images/logo-light.png" alt="SpeedZone Express" class="brand-logo-full" />
+          <img src="@assets/images/logo-light.png" alt="SpeedZone Express" class="brand-logo-stacked" />
         </span>
       </Link>
       <BButton

@@ -42,7 +42,7 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
                                 <Link href="/" class="d-inline-block auth-logo">
-                                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="52">
+                                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="88">
                                 </Link>
                             </div>
                             <p class="mt-3 fs-15 fw-medium">{{ $t('seller_registration.login.subtitle') }}</p>

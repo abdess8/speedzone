@@ -35,17 +35,40 @@ abstract class AppNotification extends Notification implements ShouldQueue
     }
 
     /**
-     * Entitlement, then preference.
+     * Whether this announcement should reach this user.
      *
-     * The recipient lists are built by the listeners, but they are chosen for
-     * who can *act* on an event; who should be *told* about it is a separate
-     * question, and one the sender must not be trusted to answer alone. The
-     * last word therefore belongs to the recipient's own role.
+     * Listeners pick a candidate list; this is the last word, so a vendor
+     * who cannot open the users screen is never told a shop signed up even
+     * if he was accidentally included upstream.
+     */
+    public function reaches(User $notifiable): bool
+    {
+        return $this->shouldSendTo($notifiable);
+    }
+
+    /**
+     * Active account, can see the row, entitled to the topic, preference on.
      */
     protected function shouldSendTo(User $notifiable): bool
     {
+        if (! $notifiable->isAccountActive()) {
+            return false;
+        }
+
+        if (! $this->authorizes($notifiable)) {
+            return false;
+        }
+
         return app(NotificationPreferenceService::class)
             ->isEnabled($notifiable, $this->notificationType());
+    }
+
+    /**
+     * Whether the recipient may see the object this notification is about.
+     */
+    protected function authorizes(User $notifiable): bool
+    {
+        return true;
     }
 
     /**

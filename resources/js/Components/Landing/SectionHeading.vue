@@ -9,7 +9,7 @@ defineProps({
 </script>
 
 <template>
-    <div class="sz-heading" :class="[`sz-heading--${align}`, { 'sz-heading--light': light }]" data-aos="fade-up">
+    <div class="sz-heading" :class="[`sz-heading--${align}`, { 'sz-heading--light': light }]">
         <span v-if="eyebrow" class="sz-heading__eyebrow">{{ eyebrow }}</span>
         <h2 class="sz-heading__title">{{ title }}</h2>
         <p v-if="subtitle" class="sz-heading__subtitle">{{ subtitle }}</p>

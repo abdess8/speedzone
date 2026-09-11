@@ -106,8 +106,29 @@ test('the seller is still billed the delivery fee when he included it in his pri
 
     // Absorbing the shipping is a commercial choice between the seller and his
     // customer; it does not change what he owes us for carrying the parcel.
-    expect($line['delivery_fee'])->toBe(25.0)
+    // total_amount equals order_amount, so net = 100 - 25.
+    expect($line['order_amount'])->toBe(100.0)
+        ->and($line['delivery_fee'])->toBe(25.0)
         ->and($line['final_amount'])->toBe(75.0);
+});
+
+test('a delivered order billed with shipping on top pays the seller the goods', function () {
+    $order = Order::query()->create([
+        ...includedOrderPayload($this->city, $this->sector),
+        'tracking_number' => 'INC-2026-000004',
+        'seller_id' => $this->seller->id,
+        'status' => OrderStatus::DELIVERED->value,
+        'delivered_at' => now(),
+    ]);
+
+    $line = app(BillingService::class)->computeLine($order->fresh(['sector']));
+
+    // The invoice starts from the total collected (goods + delivery), then
+    // keeps the delivery fee. The seller is paid the goods, not goods minus fee.
+    expect((float) $order->fresh()->total_amount)->toBe(125.0)
+        ->and($line['order_amount'])->toBe(125.0)
+        ->and($line['delivery_fee'])->toBe(25.0)
+        ->and($line['final_amount'])->toBe(100.0);
 });
 
 test('the ticket never puts the delivery fee in front of the driver', function () {
@@ -119,7 +140,7 @@ test('the ticket never puts the delivery fee in front of the driver', function (
     ]);
 
     $html = view('orders._label_body', [
-        'order' => $order->fresh(['city', 'sector', 'seller']),
+        'order' => $order->fresh(['city', 'sector', 'seller', 'store']),
         'icons' => app(LabelIconService::class)->labelIcons(),
         'barcode' => '',
         'qrCode' => '',

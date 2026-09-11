@@ -92,7 +92,7 @@ it('silences every topic when the master switch is off', function () {
     expect($this->service->isEnabled($seller, NotificationType::InvoiceGenerated))->toBeFalse();
 });
 
-it('lets an operator hand a single topic to one person', function () {
+it('lets an operator hear about sign-ups only once they can also manage users', function () {
     $dispatcher = topicUser(Role::DISPATCHER);
 
     expect($this->service->isEnabled($dispatcher, NotificationType::SellerRegistered))->toBeFalse();
@@ -105,5 +105,33 @@ it('lets an operator hand a single topic to one person', function () {
     );
 
     expect($this->service->isEnabled($dispatcher->fresh(['roles.permissions', 'permissions']), NotificationType::SellerRegistered))
+        ->toBeFalse();
+
+    $dispatcher->permissions()->syncWithoutDetaching(
+        Permission::query()
+            ->where('name', 'users.read')
+            ->pluck('id')
+            ->all()
+    );
+
+    $dispatcher->forgetAccessMemo();
+
+    expect($this->service->isEnabled($dispatcher->fresh(['roles.permissions', 'permissions']), NotificationType::SellerRegistered))
         ->toBeTrue();
+});
+
+it('does not treat a topic grant as a substitute for user management', function () {
+    $seller = topicUser(Role::SELLER);
+
+    $seller->permissions()->syncWithoutDetaching(
+        Permission::query()
+            ->where('name', NotificationPermissions::for(NotificationType::SellerRegistered))
+            ->pluck('id')
+            ->all()
+    );
+
+    $seller->forgetAccessMemo();
+
+    expect($this->service->isEnabled($seller->fresh(['roles.permissions', 'permissions']), NotificationType::SellerRegistered))
+        ->toBeFalse();
 });

@@ -5,38 +5,39 @@
  * the list is static: shipping it through the Inertia props of every response
  * would cost bytes on each navigation to say the same four things.
  *
- * `status` is what the catalogue screen reads. It stays `soon` until the
- * matching connector actually exists — offering a "Connect" button that leads
- * nowhere is worse than saying the work is not done.
+ * `available` is what the shortcut reads. It stays false until the matching
+ * connector actually exists — offering a "Connect" button that leads nowhere
+ * is worse than saying the work is not done. Connection status for a given
+ * shop lives on the catalogue screen, which loads it from the server.
  */
 export const ECOMMERCE_PLATFORMS = [
-  {
-    key: 'shopify',
-    name: 'Shopify',
-    icon: 'ri-shopping-bag-3-fill',
-    color: '#95bf47',
-    status: 'soon',
-  },
   {
     key: 'youcan',
     name: 'YouCan',
     icon: 'ri-store-2-fill',
     color: '#6a4cff',
-    status: 'soon',
+    available: true,
+  },
+  {
+    key: 'shopify',
+    name: 'Shopify',
+    icon: 'ri-shopping-bag-3-fill',
+    color: '#95bf47',
+    available: false,
   },
   {
     key: 'woocommerce',
     name: 'WooCommerce',
     icon: 'ri-shopping-cart-2-fill',
     color: '#7f54b3',
-    status: 'soon',
+    available: false,
   },
   {
     key: 'prestashop',
     name: 'PrestaShop',
     icon: 'ri-store-3-fill',
     color: '#df0067',
-    status: 'soon',
+    available: false,
   },
 ];
 

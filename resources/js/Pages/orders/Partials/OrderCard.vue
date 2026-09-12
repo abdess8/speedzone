@@ -61,6 +61,14 @@ const createdAt = computed(() =>
 
         <div class="min-w-0 flex-grow-1">
           <div class="fw-semibold fs-14">{{ order.tracking_number }}</div>
+          <div v-if="order.ecommerce_order_ref" class="text-muted fs-11 mt-1">
+            {{ $t('orders.ecommerce_order_ref') }}: {{ order.ecommerce_order_ref }}
+          </div>
+          <div v-if="order.creation_source && order.creation_source !== 'manual'" class="mt-1">
+            <span class="badge" :class="`bg-${order.creation_source_color}-subtle text-${order.creation_source_color}`">
+              {{ order.creation_source_label }}
+            </span>
+          </div>
           <div class="text-muted fs-12 mt-1 text-truncate">
             {{ customer.full_name }}
             <template v-if="order.city"> · {{ order.city.name }}</template>

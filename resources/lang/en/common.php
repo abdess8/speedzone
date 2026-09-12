@@ -32,6 +32,8 @@ return [
     'close' => 'Close',
     'save' => 'Save',
     'save_changes' => 'Save Changes',
+    'copy' => 'Copy',
+    'copied' => 'Copied',
     'confirm_remove' => 'Yes, remove it!',
     'create' => 'Create',
     'update' => 'Update',

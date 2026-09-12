@@ -680,7 +680,7 @@ export function useOrderImport(props) {
       const amount = parseAmount(row.order_amount);
       const isCash = row.payment_method === 'CASH';
 
-      return {
+      const item = {
         customer_first_name: row.customer_first_name,
         customer_last_name: row.customer_last_name,
         customer_phone: row.customer_phone,
@@ -696,7 +696,41 @@ export function useOrderImport(props) {
         option_exchange: row.option_exchange === true,
         delivery_included: row.delivery_included === true,
       };
+
+      if (row.id != null) {
+        item.id = Number(row.id);
+      }
+
+      return item;
     });
+  }
+
+  function hydrateRows(records) {
+    nextRowId = 1;
+    const seeded = {};
+
+    rows.value = (records ?? []).map((record) => {
+      const id = record._id ?? record.id ?? nextRowId++;
+      const fieldErrors = record._errors && typeof record._errors === 'object' ? record._errors : null;
+
+      if (fieldErrors && Object.keys(fieldErrors).length > 0) {
+        seeded[id] = fieldErrors;
+      }
+
+      return {
+        ...record,
+        _id: id,
+        _line: record._line ?? record.ref ?? nextRowId,
+        _raw: record._raw ?? {},
+        is_fragile: record.is_fragile === true,
+        can_be_opened: record.can_be_opened === true,
+        option_exchange: record.option_exchange === true,
+        delivery_included: record.delivery_included === true,
+      };
+    });
+    errors.value = seeded;
+    checked.value = Object.keys(seeded).length > 0;
+    dirty.value = false;
   }
 
   /* ------------------------------------------------------------ navigation */
@@ -750,6 +784,7 @@ export function useOrderImport(props) {
     removeRow,
     removeInvalidRows,
     payload,
+    hydrateRows,
     reset,
   };
 }

@@ -126,6 +126,7 @@ class OrderSearchProvider extends AbstractSearchProvider
 
         return $query->where(function (Builder $sub) use ($like): void {
             $sub->where('tracking_number', 'like', $like)
+                ->orWhere('ecommerce_order_ref', 'like', $like)
                 ->orWhere('customer_phone', 'like', $like)
                 ->orWhereRaw(
                     "CONCAT_WS(' ', customer_first_name, customer_last_name) like ?",

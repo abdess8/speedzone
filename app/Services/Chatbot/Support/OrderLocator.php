@@ -59,8 +59,11 @@ class OrderLocator
         }
 
         return $query
-            ->where('tracking_number', $reference)
-            ->orWhere('external_tracking_code', $reference)
+            ->where(function ($q) use ($reference) {
+                $q->where('tracking_number', $reference)
+                    ->orWhere('external_tracking_code', $reference)
+                    ->orWhereRaw('UPPER(ecommerce_order_ref) = ?', [$reference]);
+            })
             ->first();
     }
 
@@ -83,6 +86,7 @@ class OrderLocator
             'id' => $order->id,
             'url' => self::urlFor($order, $viewer),
             'tracking_number' => $order->tracking_number,
+            'ecommerce_order_ref' => $order->ecommerce_order_ref,
             'status' => $status->value,
             'status_label' => $status->label(),
             'status_color' => $status->color(),

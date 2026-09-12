@@ -32,6 +32,8 @@ return [
     'close' => 'Fermer',
     'save' => 'Enregistrer',
     'save_changes' => 'Enregistrer les modifications',
+    'copy' => 'Copier',
+    'copied' => 'Copié',
     'confirm_remove' => 'Oui, supprimer',
     'create' => 'Créer',
     'update' => 'Mettre à jour',

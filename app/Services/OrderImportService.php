@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\OrderCreationSource;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -30,6 +31,7 @@ class OrderImportService
             $orders = collect();
 
             foreach ($rows as $row) {
+                $row['creation_source'] = OrderCreationSource::Import->value;
                 $orders->push($this->orderService->create($row, $seller));
             }
 

@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Enums\DriverInvoiceStatus;
 use App\Enums\InvoiceStatus;
+use App\Enums\OrderCreationSource;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PickupRequestStatus;
@@ -11,6 +12,7 @@ use App\Enums\ReturnStatus;
 use App\Enums\TransferStatus;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Support\EcommerceIntegrationPermissions;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,6 +30,10 @@ class OrderResource extends JsonResource
         $payment = $this->payment_method instanceof PaymentMethod
             ? $this->payment_method
             : PaymentMethod::resolve((string) $this->payment_method);
+        $source = $this->creation_source instanceof OrderCreationSource
+            ? $this->creation_source
+            : OrderCreationSource::tryFrom((string) $this->creation_source)
+                ?? OrderCreationSource::Manual;
 
         return [
             'id' => $this->id,
@@ -38,6 +44,38 @@ class OrderResource extends JsonResource
             'status' => $status->value,
             'status_label' => $status->label(),
             'status_color' => $status->color(),
+            'creation_source' => $source->value,
+            'creation_source_label' => $source->label(),
+            'creation_source_color' => $source->color(),
+            'ecommerce_sync_id' => $this->ecommerce_sync_id,
+            'external_order_id' => $this->external_order_id,
+            'ecommerce_order_ref' => $this->ecommerce_order_ref,
+            'ecommerce_integration' => $this->whenLoaded('ecommerceIntegration', function () use ($request) {
+                $integration = $this->ecommerceIntegration;
+
+                if ($integration === null) {
+                    return null;
+                }
+
+                $platform = $integration->platform;
+                $user = $request->user();
+                $canOpen = $user !== null && (
+                    $user->hasPermission(EcommerceIntegrationPermissions::READ)
+                    || EcommerceIntegrationPermissions::canConnect($user, $platform)
+                );
+
+                return [
+                    'id' => $integration->id,
+                    'platform' => $platform->value,
+                    'platform_name' => $platform->name(),
+                    'platform_icon' => $platform->icon(),
+                    'platform_color' => $platform->color(),
+                    'shop_name' => $integration->shop_name,
+                    'shop_slug' => $integration->shop_slug,
+                    'store_id' => $integration->store_id,
+                    'url' => $canOpen ? $platform->manageUrl($integration->store_id) : null,
+                ];
+            }),
 
             // How many times a driver has come back empty-handed. Shown next to
             // the status so an operator can spot a parcel going nowhere.

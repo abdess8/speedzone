@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\OrderCreationSource;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Models\City;
@@ -94,6 +95,7 @@ test('a batch of rows creates one order per row', function () {
     $order = Order::query()->firstOrFail();
     expect($order->seller_id)->toBe($seller->id)
         ->and($order->status)->toBe(OrderStatus::CREATED)
+        ->and($order->creation_source)->toBe(OrderCreationSource::Import)
         ->and($order->tracking_number)->not->toBeEmpty()
         // Pricing is owned by the sector, never by the uploaded file.
         ->and((float) $order->delivery_price)->toBe(30.0)

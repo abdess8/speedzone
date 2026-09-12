@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\EcommercePlatform;
 use App\Http\Controllers\AccountEmailController;
 use App\Http\Controllers\ActiveStoreController;
 use App\Http\Controllers\Admin\PendingUserController;
@@ -51,6 +52,7 @@ use App\Http\Controllers\TeamRoleController;
 use App\Http\Controllers\TransferController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VelzonRoutesController;
+use App\Support\EcommerceIntegrationPermissions;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -581,8 +583,32 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     // Storefront connectors (Shopify, YouCan, WooCommerce, PrestaShop).
     Route::get('integrations', [EcommerceIntegrationController::class, 'index'])
-        ->middleware('permission:integrations.read|integrations.manage')
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::moduleAccess()))
         ->name('integrations.index');
+    Route::get('integrations/youcan/callback', [EcommerceIntegrationController::class, 'callbackYouCan'])
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::YouCan)))
+        ->name('integrations.youcan.callback');
+    Route::get('integrations/youcan', [EcommerceIntegrationController::class, 'youcan'])
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::moduleAccess()))
+        ->name('integrations.youcan');
+    Route::post('integrations/youcan', [EcommerceIntegrationController::class, 'storeYouCan'])
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::YouCan)))
+        ->name('integrations.youcan.store');
+    Route::put('integrations/{integration}/settings', [EcommerceIntegrationController::class, 'updateYouCanSettings'])
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::YouCan)))
+        ->name('integrations.settings.update');
+    Route::post('integrations/{integration}/sync', [EcommerceIntegrationController::class, 'syncYouCan'])
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::YouCan)))
+        ->name('integrations.sync');
+    Route::get('integrations/youcan/syncs/{sync}', [EcommerceIntegrationController::class, 'reviewYouCan'])
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::YouCan)))
+        ->name('integrations.youcan.review');
+    Route::post('integrations/youcan/syncs/{sync}', [EcommerceIntegrationController::class, 'commitYouCanReview'])
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::YouCan)))
+        ->name('integrations.youcan.review.store');
+    Route::delete('integrations/{integration}', [EcommerceIntegrationController::class, 'destroy'])
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connectAny()))
+        ->name('integrations.destroy');
 
     // Help Center. No permission guard: both pages document rules the reader is
     // already subject to, and hiding the contract from the people it binds

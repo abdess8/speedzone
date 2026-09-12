@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\OrderCreationSource;
 use App\Models\City;
 use App\Models\Order;
 use App\Models\Role;
@@ -85,7 +86,22 @@ test('the create form saves an order with every optional field left blank', func
 
     expect((float) $order->discount_amount)->toBe(0.0)
         ->and($order->notes)->toBeNull()
-        ->and((float) $order->total_amount)->toBe(428.0);
+        ->and((float) $order->total_amount)->toBe(428.0)
+        ->and($order->creation_source)->toBe(OrderCreationSource::Manual);
+});
+
+test('the create form ignores a client-supplied creation_source', function () {
+    $this->seed([RoleSeeder::class, PermissionSeeder::class, RolePermissionSeeder::class]);
+    [$city, $sector] = webFormDestination();
+
+    $this->actingAs(webFormSeller())
+        ->post(route('orders.store'), webFormPayload($city, $sector, [
+            'creation_source' => 'integration',
+        ]))
+        ->assertSessionHasNoErrors()
+        ->assertRedirect();
+
+    expect(Order::query()->firstOrFail()->creation_source)->toBe(OrderCreationSource::Manual);
 });
 
 test('the create form honours the delivery included switch', function () {

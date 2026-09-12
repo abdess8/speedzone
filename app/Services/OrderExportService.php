@@ -48,6 +48,7 @@ class OrderExportService
     {
         return [
             ['key' => 'tracking_number', 'label' => __('orders.export.tracking_number'), 'width' => 20],
+            ['key' => 'ecommerce_order_ref', 'label' => __('orders.export.ecommerce_order_ref'), 'width' => 18],
             ['key' => 'created_at', 'label' => __('orders.export.created_at'), 'width' => 18, 'type' => 'date'],
             ['key' => 'status', 'label' => __('orders.export.status'), 'width' => 22],
             ['key' => 'failure_reason', 'label' => __('orders.export.failure_reason'), 'width' => 22],
@@ -133,6 +134,7 @@ class OrderExportService
 
         return [
             'tracking_number' => $order->tracking_number,
+            'ecommerce_order_ref' => $order->ecommerce_order_ref,
             'created_at' => $order->created_at,
             'status' => $status->label(),
             // The status of a parcel that missed an attempt stays "out for

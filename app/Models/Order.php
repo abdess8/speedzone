@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\PaymentMethodCast;
+use App\Enums\OrderCreationSource;
 use App\Enums\OrderFailureReason;
 use App\Enums\OrderStatus;
 use App\Enums\PartnerOrderStatus;
@@ -35,7 +36,12 @@ class Order extends Model
         'partner_sync_error',
         'seller_id',
         'store_id',
+        'creation_source',
         'partner_id',
+        'ecommerce_integration_id',
+        'external_order_id',
+        'ecommerce_order_ref',
+        'ecommerce_sync_id',
         'driver_id',
         'assigned_at',
         'delivered_at',
@@ -71,6 +77,7 @@ class Order extends Model
 
     protected $casts = [
         'payment_method' => PaymentMethodCast::class,
+        'creation_source' => OrderCreationSource::class,
         'status' => OrderStatus::class,
         'failure_reason' => OrderFailureReason::class,
         'failed_at' => 'datetime',
@@ -99,6 +106,12 @@ class Order extends Model
         static::saving(function (self $order): void {
             if (empty($order->status)) {
                 $order->status = OrderStatus::CREATED->value;
+            }
+
+            if (empty($order->creation_source)) {
+                $order->creation_source = $order->partner_id
+                    ? OrderCreationSource::Partner
+                    : OrderCreationSource::Manual;
             }
 
             // "No discount" is zero, not unknown, and the column says so. An
@@ -136,6 +149,16 @@ class Order extends Model
     public function partner(): BelongsTo
     {
         return $this->belongsTo(Partner::class);
+    }
+
+    public function ecommerceIntegration(): BelongsTo
+    {
+        return $this->belongsTo(EcommerceIntegration::class);
+    }
+
+    public function ecommerceSync(): BelongsTo
+    {
+        return $this->belongsTo(EcommerceIntegrationSync::class, 'ecommerce_sync_id');
     }
 
     /**

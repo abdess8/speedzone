@@ -372,6 +372,38 @@ onMounted(() => {
               <BCol md="4"><div class="text-muted fs-13">{{ $t('common.status') }}</div><span class="badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">{{ order.status_label }}</span></BCol>
               <BCol md="4"><div class="text-muted fs-13">{{ $t('orders.table.created') }}</div><div class="fw-semibold">{{ formatDate(order.created_at) }}</div></BCol>
               <BCol md="4">
+                <div class="text-muted fs-13">{{ $t('orders.show.creation_source') }}</div>
+                <span class="badge" :class="`bg-${order.creation_source_color}-subtle text-${order.creation_source_color}`">
+                  {{ order.creation_source_label }}
+                </span>
+              </BCol>
+              <BCol v-if="order.ecommerce_integration" md="4">
+                <div class="text-muted fs-13">{{ $t('orders.show.ecommerce_platform') }}</div>
+                <Link
+                  v-if="order.ecommerce_integration.url"
+                  :href="order.ecommerce_integration.url"
+                  class="fw-semibold d-inline-flex align-items-center gap-1"
+                >
+                  <i
+                    :class="order.ecommerce_integration.platform_icon"
+                    :style="{ color: order.ecommerce_integration.platform_color }"
+                  ></i>
+                  {{ order.ecommerce_integration.shop_name || order.ecommerce_integration.platform_name }}
+                  <i class="ri-external-link-line fs-12"></i>
+                </Link>
+                <div v-else class="fw-semibold d-inline-flex align-items-center gap-1">
+                  <i
+                    :class="order.ecommerce_integration.platform_icon"
+                    :style="{ color: order.ecommerce_integration.platform_color }"
+                  ></i>
+                  {{ order.ecommerce_integration.shop_name || order.ecommerce_integration.platform_name }}
+                </div>
+              </BCol>
+              <BCol v-if="order.ecommerce_order_ref" md="4">
+                <div class="text-muted fs-13">{{ $t('orders.show.ecommerce_order_ref') }}</div>
+                <div class="fw-semibold">{{ order.ecommerce_order_ref }}</div>
+              </BCol>
+              <BCol md="4">
                 <div class="text-muted fs-13">{{ $t('orders.filters.seller') }}</div>
                 <UserAvatar v-if="order.seller" :user="order.seller" :size="36" clickable show-name show-role />
                 <div v-else class="fw-semibold">{{ empty() }}</div>

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\OrderCreationSource;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
@@ -148,6 +149,7 @@ class OrderQueryService
         $query->when($request->input('search'), function (Builder $q, $value) {
             $q->where(function (Builder $sub) use ($value) {
                 $sub->where('tracking_number', 'like', "%{$value}%")
+                    ->orWhere('ecommerce_order_ref', 'like', "%{$value}%")
                     ->orWhere('customer_phone', 'like', "%{$value}%")
                     ->orWhere('customer_first_name', 'like', "%{$value}%")
                     ->orWhere('customer_last_name', 'like', "%{$value}%")
@@ -157,7 +159,12 @@ class OrderQueryService
 
         // Tracking number / order number (same field).
         $tracking = $request->input('tracking_number') ?? $request->input('order_number');
-        $query->when($tracking, fn (Builder $q, $value) => $q->where('tracking_number', 'like', "%{$value}%"));
+        $query->when($tracking, function (Builder $q, $value) {
+            $q->where(function (Builder $sub) use ($value) {
+                $sub->where('tracking_number', 'like', "%{$value}%")
+                    ->orWhere('ecommerce_order_ref', 'like', "%{$value}%");
+            });
+        });
 
         $query->when($request->input('customer_name'), function (Builder $q, $value) {
             $q->where(function (Builder $sub) use ($value) {
@@ -246,6 +253,24 @@ class OrderQueryService
         if ($request->filled('can_be_opened')) {
             $query->where('can_be_opened', $request->boolean('can_be_opened'));
         }
+
+        $query->when($request->filled('creation_source'), function (Builder $q) use ($request) {
+            $source = OrderCreationSource::tryFrom((string) $request->input('creation_source'));
+
+            if ($source !== null) {
+                $q->where('creation_source', $source->value);
+            }
+        });
+
+        $query->when(
+            $request->filled('ecommerce_sync_id'),
+            fn (Builder $q) => $q->where('ecommerce_sync_id', $request->integer('ecommerce_sync_id'))
+        );
+
+        $query->when(
+            $request->filled('ecommerce_integration_id'),
+            fn (Builder $q) => $q->where('ecommerce_integration_id', $request->integer('ecommerce_integration_id'))
+        );
     }
 
     private function startOfDay(string $value): CarbonInterface

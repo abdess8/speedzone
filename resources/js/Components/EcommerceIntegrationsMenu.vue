@@ -13,7 +13,16 @@ import { usePermissions } from '@/composables/usePermissions';
  */
 const { canAny } = usePermissions();
 
-const visible = computed(() => canAny(['integrations.read', 'integrations.manage']));
+const visible = computed(() =>
+  canAny([
+    'integrations.read',
+    'integrations.manage',
+    'integrations.manage.youcan',
+    'integrations.manage.shopify',
+    'integrations.manage.woocommerce',
+    'integrations.manage.prestashop',
+  ]),
+);
 </script>
 
 <template>
@@ -44,7 +53,7 @@ const visible = computed(() => canAny(['integrations.read', 'integrations.manage
         <i :class="platform.icon"></i>
       </span>
       <span class="flex-grow-1 align-middle">{{ platform.name }}</span>
-      <span v-if="platform.status === 'soon'" class="badge bg-warning-subtle text-warning">
+      <span v-if="!platform.available" class="badge bg-warning-subtle text-warning">
         {{ $t('integrations.status.soon') }}
       </span>
     </Link>

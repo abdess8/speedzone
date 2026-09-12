@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\OrderCreationSource;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Models\Order;
@@ -43,6 +44,10 @@ class OrderService
             $items = $data['items'] ?? [];
             unset($data['items']);
 
+            $source = OrderCreationSource::tryFrom((string) ($data['creation_source'] ?? ''))
+                ?? OrderCreationSource::Manual;
+            unset($data['creation_source']);
+
             $data['delivery_price'] = $this->resolveDeliveryPrice(
                 $data,
                 forceSectorPrice: $seller->isSeller(),
@@ -51,6 +56,7 @@ class OrderService
 
             $order = new Order($data);
             $order->seller_id = $seller->accountOwnerId();
+            $order->creation_source = $source;
             $order->tracking_number = $this->trackingNumbers->generate();
             $order->status = $fromStock
                 ? OrderStatus::AWAITING_PREPARATION->value

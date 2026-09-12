@@ -49,6 +49,7 @@ class ChatbotSearchService
             ->with(['city', 'driver:id,name', 'seller:id,name'])
             ->where(function (Builder $q) use ($like, $term) {
                 $q->where('tracking_number', 'like', $like)
+                    ->orWhere('ecommerce_order_ref', 'like', $like)
                     ->orWhere('external_tracking_code', 'like', $like)
                     ->orWhere('customer_phone', 'like', $like)
                     ->orWhere('customer_first_name', 'like', $like)

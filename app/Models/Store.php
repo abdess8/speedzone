@@ -88,6 +88,11 @@ class Store extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    public function ecommerceIntegrations(): HasMany
+    {
+        return $this->hasMany(EcommerceIntegration::class);
+    }
+
     public function pickupRequests(): HasMany
     {
         return $this->hasMany(PickupRequest::class);

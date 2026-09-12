@@ -222,7 +222,11 @@ return [
 
         // Boutiques e-commerce
         'integrations.read' => 'Voir les boutiques e-commerce reliées',
-        'integrations.manage' => 'Connecter et configurer une boutique e-commerce',
+        'integrations.manage' => 'Connecter et configurer n\'importe quelle boutique e-commerce',
+        'integrations.manage.youcan' => 'Connecter une boutique YouCan',
+        'integrations.manage.shopify' => 'Connecter une boutique Shopify',
+        'integrations.manage.woocommerce' => 'Connecter une boutique WooCommerce',
+        'integrations.manage.prestashop' => 'Connecter une boutique PrestaShop',
 
         // Utilisateurs
         'users.read' => 'Consulter les utilisateurs',
@@ -390,7 +394,11 @@ return [
 
         // Boutiques e-commerce
         'integrations.read' => 'Consulter les boutiques e-commerce reliées au compte et leur état de synchronisation.',
-        'integrations.manage' => 'Relier, reconfigurer ou débrancher une boutique Shopify, YouCan, WooCommerce ou PrestaShop. Donne accès aux clés d\'API de la boutique.',
+        'integrations.manage' => 'Relier, reconfigurer ou débrancher n\'importe quelle boutique (Shopify, YouCan, WooCommerce ou PrestaShop). Donne accès aux clés d\'API de toutes les plateformes.',
+        'integrations.manage.youcan' => 'Relier, reconfigurer ou débrancher uniquement une boutique YouCan. Donne accès à l\'e-mail et au mot de passe vendeur de cette boutique.',
+        'integrations.manage.shopify' => 'Relier, reconfigurer ou débrancher uniquement une boutique Shopify. Donne accès aux identifiants API de cette boutique.',
+        'integrations.manage.woocommerce' => 'Relier, reconfigurer ou débrancher uniquement une boutique WooCommerce. Donne accès aux identifiants REST de cette boutique.',
+        'integrations.manage.prestashop' => 'Relier, reconfigurer ou débrancher uniquement une boutique PrestaShop. Donne accès à la clé webservice de cette boutique.',
 
         // Utilisateurs
         'users.read' => 'Accéder à la liste et aux fiches des comptes de la plateforme, y compris les inscriptions en attente.',

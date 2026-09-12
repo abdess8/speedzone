@@ -23,6 +23,10 @@ class Kernel extends ConsoleKernel
         $schedule->command('driver-billing:run-daily')
             ->dailyAt('02:30')
             ->withoutOverlapping();
+
+        $schedule->command('ecommerce:sync-due')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10);
     }
 
     /**

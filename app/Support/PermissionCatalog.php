@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\EcommercePlatform;
 use App\Enums\NotificationType;
 
 class PermissionCatalog
@@ -85,10 +86,22 @@ class PermissionCatalog
      */
     public static function ecommerceIntegrationPermissions(): array
     {
-        return [
+        $permissions = [
             self::make(EcommerceIntegrationPermissions::READ, 'integrations', 'read', null, 'resource'),
             self::make(EcommerceIntegrationPermissions::MANAGE, 'integrations', 'manage', null, 'resource'),
         ];
+
+        foreach (EcommercePlatform::cases() as $platform) {
+            $permissions[] = self::make(
+                EcommerceIntegrationPermissions::manage($platform),
+                'integrations',
+                'manage',
+                $platform->value,
+                'resource'
+            );
+        }
+
+        return $permissions;
     }
 
     /**

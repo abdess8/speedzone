@@ -2,6 +2,7 @@
 
 namespace App\Services\Partners;
 
+use App\Enums\OrderCreationSource;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Models\City;
@@ -200,6 +201,7 @@ class PartnerDeliveryIngestionService
                         'external_tracking_code' => $normalized['external_tracking_code'],
                         'tracking_number' => $this->trackingNumbers->generate(),
                         'seller_id' => $sellerId,
+                        'creation_source' => OrderCreationSource::Partner,
                     ]);
                 }
             }

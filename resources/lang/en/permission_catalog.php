@@ -221,7 +221,11 @@ return [
 
         // E-commerce shops
         'integrations.read' => 'See the connected e-commerce shops',
-        'integrations.manage' => 'Connect and configure an e-commerce shop',
+        'integrations.manage' => 'Connect and configure any e-commerce shop',
+        'integrations.manage.youcan' => 'Connect a YouCan shop',
+        'integrations.manage.shopify' => 'Connect a Shopify shop',
+        'integrations.manage.woocommerce' => 'Connect a WooCommerce shop',
+        'integrations.manage.prestashop' => 'Connect a PrestaShop shop',
 
         // Users
         'users.read' => 'See the users',
@@ -389,7 +393,11 @@ return [
 
         // E-commerce shops
         'integrations.read' => 'See the e-commerce shops linked to the account and their sync health.',
-        'integrations.manage' => 'Link, reconfigure or disconnect a Shopify, YouCan, WooCommerce or PrestaShop store. Grants access to the shop API keys.',
+        'integrations.manage' => 'Link, reconfigure or disconnect any storefront (Shopify, YouCan, WooCommerce or PrestaShop). Grants access to the shop API keys of every platform.',
+        'integrations.manage.youcan' => 'Link, reconfigure or disconnect a YouCan shop only. Grants access to that shop\'s seller email and password.',
+        'integrations.manage.shopify' => 'Link, reconfigure or disconnect a Shopify shop only. Grants access to that shop\'s API credentials.',
+        'integrations.manage.woocommerce' => 'Link, reconfigure or disconnect a WooCommerce shop only. Grants access to that shop\'s REST API credentials.',
+        'integrations.manage.prestashop' => 'Link, reconfigure or disconnect a PrestaShop shop only. Grants access to that shop\'s webservice key.',
 
         // Users
         'users.read' => 'Reach the list and the records of platform accounts, including sign-ups awaiting approval.',

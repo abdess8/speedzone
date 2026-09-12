@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\DeliveryOutcome;
+use App\Enums\OrderCreationSource;
 use App\Enums\OrderFailureReason;
 use App\Enums\OrderStatus;
 use App\Enums\PartnerOrderStatus;
@@ -84,6 +85,7 @@ class OrderController extends Controller
                 'seller', 'city_id', 'sector_id', 'status', 'status_group', 'payment_method',
                 'created_from', 'created_to', 'delivery_from', 'delivery_to',
                 'is_fragile', 'can_be_opened', 'sort', 'direction', 'per_page',
+                'creation_source', 'ecommerce_sync_id', 'ecommerce_integration_id',
             ]),
             // Closures so Inertia can skip them entirely on partial reloads:
             // paging, sorting and filtering only ask for "orders".
@@ -266,6 +268,7 @@ class OrderController extends Controller
             'seller.roles',
             'seller.city',
             'stockHubCity',
+            'ecommerceIntegration',
             'pickupRequest.createdBy.roles',
             'pickupRequest.assignedDriver.roles',
             'transfers' => fn ($q) => $q->where('transfers.status', '!=', TransferStatus::CANCELLED->value),
@@ -656,6 +659,7 @@ class OrderController extends Controller
         return [
             'statuses' => OrderStatus::options(),
             'paymentMethods' => PaymentMethod::options(),
+            'creationSources' => OrderCreationSource::options(),
             'cities' => $this->cityOptions(),
             'pageSizes' => [10, 25, 50, 100],
             // Labels for the sidebar shortcuts, so the list can name the view

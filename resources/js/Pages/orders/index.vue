@@ -41,6 +41,7 @@ const filters = reactive({
   city_id: props.filters.city_id ?? "",
   status: props.filters.status ?? "",
   payment_method: props.filters.payment_method ?? "",
+  creation_source: props.filters.creation_source ?? "",
   created_from: props.filters.created_from ?? "",
   created_to: props.filters.created_to ?? "",
   delivery_from: props.filters.delivery_from ?? "",
@@ -59,11 +60,19 @@ const filters = reactive({
  * drop the scope; it is re-synced whenever the server sends a new one.
  */
 const statusGroup = ref(props.filters.status_group ?? "");
+const ecommerceSyncId = ref(props.filters.ecommerce_sync_id ?? "");
 
 watch(
   () => props.filters.status_group,
   (value) => {
     statusGroup.value = value ?? "";
+  }
+);
+
+watch(
+  () => props.filters.ecommerce_sync_id,
+  (value) => {
+    ecommerceSyncId.value = value ?? "";
   }
 );
 
@@ -91,6 +100,10 @@ const query = () => {
 
   if (statusGroup.value) {
     params.status_group = statusGroup.value;
+  }
+
+  if (ecommerceSyncId.value) {
+    params.ecommerce_sync_id = ecommerceSyncId.value;
   }
 
   Object.entries(filters).forEach(([key, value]) => {
@@ -141,6 +154,7 @@ const resetFilters = () => {
   Object.keys(filters).forEach((key) => (filters[key] = ""));
   sort.value = "created_at";
   direction.value = "desc";
+  ecommerceSyncId.value = "";
   reload();
 };
 
@@ -444,6 +458,12 @@ onMounted(() => {
               <i class="ri-close-line align-bottom"></i>
             </Link>
           </span>
+          <span v-if="ecommerceSyncId" class="badge bg-info-subtle text-info mt-1">
+            {{ $t('orders.filters.ecommerce_sync', { id: ecommerceSyncId }) }}
+            <button type="button" class="btn btn-link p-0 text-info ms-1" @click="ecommerceSyncId = ''; reload()">
+              <i class="ri-close-line align-bottom"></i>
+            </button>
+          </span>
         </template>
 
         <template #actions>
@@ -537,6 +557,15 @@ onMounted(() => {
           <select v-model="filters.payment_method" class="form-select">
             <option value="">{{ $t('orders.filters.all_methods') }}</option>
             <option v-for="p in filterOptions.paymentMethods" :key="p.value" :value="p.value">{{ p.label }}</option>
+          </select>
+        </BCol>
+        <BCol md="6" lg="3">
+          <label class="form-label">{{ $t('orders.filters.creation_source') }}</label>
+          <select v-model="filters.creation_source" class="form-select">
+            <option value="">{{ $t('orders.filters.all_sources') }}</option>
+            <option v-for="source in filterOptions.creationSources" :key="source.value" :value="source.value">
+              {{ source.label }}
+            </option>
           </select>
         </BCol>
         <BCol md="6" lg="3">
@@ -692,6 +721,14 @@ onMounted(() => {
                 <td>
                   <Link v-if="can.view_details" :href="route('orders.show', order.id)" class="fw-semibold">{{ order.tracking_number }}</Link>
                   <span v-else class="fw-semibold">{{ order.tracking_number }}</span>
+                  <div v-if="order.ecommerce_order_ref" class="text-muted fs-11 mt-1">
+                    {{ $t('orders.ecommerce_order_ref') }}: {{ order.ecommerce_order_ref }}
+                  </div>
+                  <div v-if="order.creation_source && order.creation_source !== 'manual'" class="mt-1">
+                    <span class="badge" :class="`bg-${order.creation_source_color}-subtle text-${order.creation_source_color}`">
+                      {{ order.creation_source_label }}
+                    </span>
+                  </div>
                   <div v-if="order.is_fragile || order.can_be_opened" class="mt-1">
                     <span v-if="order.is_fragile" class="badge bg-danger-subtle text-danger me-1">{{ $t('orders.badges.fragile') }}</span>
                     <span v-if="order.can_be_opened" class="badge bg-info-subtle text-info">{{ $t('orders.badges.openable') }}</span>

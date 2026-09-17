@@ -135,7 +135,10 @@ const toggle = (list, id) => {
             </div>
             <p v-else class="text-danger fs-13 mb-1">{{ $t('team.errors.no_role') }}</p>
 
-            <Link :href="route('team.roles.create')" class="btn btn-link btn-sm ps-0">
+            <Link
+              :href="route('team.roles.create', form.seller_id ? { seller_id: form.seller_id } : {})"
+              class="btn btn-link btn-sm ps-0"
+            >
               <i class="ri-add-line align-bottom me-1"></i> {{ $t('team.roles.add') }}
             </Link>
 

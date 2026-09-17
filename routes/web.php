@@ -36,6 +36,7 @@ use App\Http\Controllers\PickupRequestController;
 use App\Http\Controllers\ProductBlockController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImportController;
+use App\Http\Controllers\PublicStorageController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SectorController;
@@ -79,6 +80,13 @@ Route::get('/tracking/{trackingNumber}', [LandingController::class, 'track'])
     ->name('tracking.public');
 
 Route::get('/verify-email', fn () => redirect()->route('verification.notice'))->name('verify-email');
+
+// Uploaded files on the public disk. The web server normally answers these
+// through the `public/storage` symlink; this route is the fallback when that
+// link is missing after a deploy.
+Route::get('/storage/{path}', [PublicStorageController::class, 'show'])
+    ->where('path', '.*')
+    ->name('storage.public');
 
 // Social sign-in. Guest-only: an authenticated visitor has nothing to gain from
 // walking through Google's consent screen again.
@@ -146,6 +154,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::put('notification-preferences', [NotificationPreferenceController::class, 'update'])->name('notification-preferences.update');
 
     // User management
+    Route::post('users/{user}/verification', [UserController::class, 'sendVerification'])
+        ->middleware('permission:users.update')
+        ->name('users.verification.send');
+    Route::post('users/{user}/password-reset', [UserController::class, 'sendPasswordReset'])
+        ->middleware('permission:users.update')
+        ->name('users.password.reset.send');
+
     Route::resource('users', UserController::class)
         ->middleware('permission:users.read');
 
@@ -594,11 +609,17 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('integrations/youcan', [EcommerceIntegrationController::class, 'storeYouCan'])
         ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::YouCan)))
         ->name('integrations.youcan.store');
+    Route::get('integrations/shopify', [EcommerceIntegrationController::class, 'shopify'])
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::moduleAccess()))
+        ->name('integrations.shopify');
+    Route::post('integrations/shopify', [EcommerceIntegrationController::class, 'storeShopify'])
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::Shopify)))
+        ->name('integrations.shopify.store');
     Route::put('integrations/{integration}/settings', [EcommerceIntegrationController::class, 'updateYouCanSettings'])
-        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::YouCan)))
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connectAny()))
         ->name('integrations.settings.update');
     Route::post('integrations/{integration}/sync', [EcommerceIntegrationController::class, 'syncYouCan'])
-        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::YouCan)))
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connectAny()))
         ->name('integrations.sync');
     Route::get('integrations/youcan/syncs/{sync}', [EcommerceIntegrationController::class, 'reviewYouCan'])
         ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::YouCan)))
@@ -606,6 +627,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('integrations/youcan/syncs/{sync}', [EcommerceIntegrationController::class, 'commitYouCanReview'])
         ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::YouCan)))
         ->name('integrations.youcan.review.store');
+    Route::get('integrations/shopify/syncs/{sync}', [EcommerceIntegrationController::class, 'reviewYouCan'])
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::Shopify)))
+        ->name('integrations.shopify.review');
+    Route::post('integrations/shopify/syncs/{sync}', [EcommerceIntegrationController::class, 'commitYouCanReview'])
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::Shopify)))
+        ->name('integrations.shopify.review.store');
     Route::delete('integrations/{integration}', [EcommerceIntegrationController::class, 'destroy'])
         ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connectAny()))
         ->name('integrations.destroy');
@@ -867,4 +894,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         // Route::get("/maps/google", "maps_google");
         // Route::get("/maps/leaflet", "maps_leaflet");
     });
+});
+
+// Unknown URLs go through the web middleware (session, locale, Inertia share)
+// so a signed-in visitor still gets the application chrome on a 404, rather
+// than Laravel's standalone HTML page.
+Route::fallback(function () {
+    abort(404);
 });

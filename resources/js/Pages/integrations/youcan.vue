@@ -10,11 +10,13 @@ import EntityDetailSheet from '@/Components/EntityDetailSheet.vue';
 
 const props = defineProps({
   stores: { type: Array, default: () => [] },
+  sellers: { type: Array, default: () => [] },
   integration: { type: Object, default: null },
   syncs: { type: Array, default: () => [] },
   options: { type: Object, default: () => ({ intervals: [], import_statuses: [] }) },
   can: { type: Object, default: () => ({}) },
   defaults: { type: Object, default: () => ({}) },
+  admin: { type: Boolean, default: false },
 });
 
 const { t } = useI18n();
@@ -22,6 +24,10 @@ const { t } = useI18n();
 const connected = computed(() => props.integration?.status === 'connected');
 const canManage = computed(() => props.can?.manage === true);
 const tab = ref(connected.value ? 'overview' : 'connection');
+const selectedSellerId = ref(props.defaults?.seller_id ?? '');
+const selectedSeller = computed(
+  () => props.sellers.find((seller) => Number(seller.id) === Number(selectedSellerId.value)) ?? null
+);
 
 watch(
   () => props.integration?.status,
@@ -219,9 +225,21 @@ watch(
       return;
     }
 
+    if (Number(storeId) === Number(props.defaults?.store_id)) {
+      return;
+    }
+
     router.get(route('integrations.youcan'), { store_id: storeId });
   },
 );
+
+watch(selectedSellerId, (sellerId) => {
+  if (!props.admin || Number(sellerId) === Number(props.defaults?.seller_id)) {
+    return;
+  }
+
+  router.get(route('integrations.youcan'), sellerId ? { seller_id: sellerId } : {});
+});
 </script>
 
 <template>
@@ -238,7 +256,14 @@ watch(
             <div>
               <h5 class="card-title mb-1">YouCan</h5>
               <p class="text-muted mb-0 fs-13">
-                {{ connected ? (integration.shop_name || integration.shop_slug) : $t('integrations.youcan.lead') }}
+                <span v-if="admin && (selectedSeller || integration?.seller)">
+                  {{ $t('integrations.admin.for_user', { name: (selectedSeller || integration?.seller)?.name }) }}
+                  <span v-if="connected"> · </span>
+                </span>
+                <span v-if="connected">{{ integration.shop_name || integration.shop_slug }}</span>
+                <span v-else-if="!(admin && (selectedSeller || integration?.seller))">
+                  {{ $t('integrations.youcan.lead') }}
+                </span>
               </p>
             </div>
             <BButton
@@ -500,7 +525,28 @@ watch(
             </form>
 
             <form v-if="!connected || tab === 'connection'" @submit.prevent="submit">
+              <BAlert v-if="admin && stores.length === 0" :model-value="true" variant="info" class="mb-3">
+                {{ $t('integrations.admin.pick_user') }}
+              </BAlert>
               <BRow class="g-3">
+                <BCol v-if="admin" md="6">
+                  <label class="form-label" for="seller_id">
+                    {{ $t('integrations.admin.user_field') }}
+                    <span class="text-danger">*</span>
+                  </label>
+                  <select
+                    id="seller_id"
+                    v-model="selectedSellerId"
+                    class="form-select"
+                  >
+                    <option value="">{{ $t('integrations.admin.user_placeholder') }}</option>
+                    <option v-for="seller in sellers" :key="seller.id" :value="seller.id">
+                      {{ seller.name }} — {{ seller.email }}
+                    </option>
+                  </select>
+                  <div class="form-text">{{ $t('integrations.admin.user_help') }}</div>
+                </BCol>
+
                 <BCol md="6">
                   <label class="form-label">
                     {{ $t('integrations.youcan.fields.store') }}
@@ -510,6 +556,7 @@ watch(
                     v-model="form.store_id"
                     class="form-select"
                     :class="{ 'is-invalid': form.errors.store_id }"
+                    :disabled="admin && stores.length === 0"
                   >
                     <option v-for="store in stores" :key="store.id" :value="store.id">
                       {{ store.name }}
@@ -519,6 +566,7 @@ watch(
                   <InputError :message="form.errors.store_id" />
                 </BCol>
 
+                <template v-if="!admin || stores.length > 0">
                 <BCol md="6">
                   <label class="form-label">{{ $t('integrations.youcan.fields.shop_slug') }}</label>
                   <input
@@ -579,6 +627,7 @@ watch(
                   <div class="form-text">{{ $t('integrations.youcan.fields.two_factor_code_help') }}</div>
                   <InputError :message="form.errors.two_factor_code" />
                 </BCol>
+                </template>
               </BRow>
 
               <div class="d-flex justify-content-end gap-2 mt-4">

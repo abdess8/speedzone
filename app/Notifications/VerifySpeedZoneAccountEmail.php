@@ -12,9 +12,14 @@ class VerifySpeedZoneAccountEmail extends VerifyEmail
         $locale = $this->localeFor($notifiable);
         $this->locale($locale);
 
+        $name = trim((string) ($notifiable->first_name ?: $notifiable->name));
+        $greeting = $name !== ''
+            ? __('seller_registration.emails.verification_greeting', ['name' => $name], $locale)
+            : __('mail.hello', [], $locale);
+
         return (new MailMessage)
             ->subject(__('seller_registration.emails.verification_subject', [], $locale))
-            ->greeting(__('seller_registration.emails.verification_greeting', [], $locale))
+            ->greeting($greeting)
             ->line(__('seller_registration.emails.verification_intro', [], $locale))
             ->action(
                 __('seller_registration.emails.verification_button', [], $locale),

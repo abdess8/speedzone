@@ -39,8 +39,16 @@ const statusVariant = (platform) => {
 };
 
 const hrefFor = (platform) => {
-  if (platform.key === 'youcan' && platform.available && platform.can_manage) {
+  if (!platform.available || !platform.can_manage) {
+    return null;
+  }
+
+  if (platform.key === 'youcan') {
     return route('integrations.youcan');
+  }
+
+  if (platform.key === 'shopify') {
+    return route('integrations.shopify');
   }
 
   return null;

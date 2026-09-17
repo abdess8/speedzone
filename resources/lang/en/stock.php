@@ -104,7 +104,7 @@ return [
             'margin_rate' => 'Margin rate',
             'fragility' => 'Fragility',
             'fragile' => 'Fragile',
-            'fragile_hint' => 'Handled with care at the depot.',
+            'fragile_hint' => "Handled with care\nat the depot.",
             'unbreakable' => 'Unbreakable',
             'unbreakable_hint' => 'No special handling required.',
             'weight' => 'Weight (g)',

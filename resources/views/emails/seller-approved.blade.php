@@ -9,5 +9,5 @@
 
 {{ __('seller_registration.emails.approved_footer') }}
 
-{{ config('app.name') }}
+{{ __('mail.team') }}
 </x-mail::message>

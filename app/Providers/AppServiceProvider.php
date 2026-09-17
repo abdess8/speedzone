@@ -8,6 +8,7 @@ use App\Services\Chatbot\ChatDriverException;
 use App\Services\Chatbot\Contracts\ChatDriver;
 use App\Services\Chatbot\Drivers\GeminiDriver;
 use App\Services\Chatbot\Drivers\OpenAiDriver;
+use App\Support\EcommerceSyncHeartbeat;
 use App\Support\StoreContext;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
@@ -61,7 +62,56 @@ class AppServiceProvider extends ServiceProvider
 
         Order::observe(OrderObserver::class);
 
+        $this->ensurePublicStorageLink();
         $this->registerPdfTextDirectives();
+        $this->registerEcommerceSyncHeartbeat();
+    }
+
+    /**
+     * Auto-sync is scheduled every five minutes, but `artisan serve` never
+     * runs the scheduler. After the response is sent, pick up any connector
+     * whose next_sync_at has passed so the toggle works in local dev too.
+     */
+    private function registerEcommerceSyncHeartbeat(): void
+    {
+        if ($this->app->runningInConsole()) {
+            return;
+        }
+
+        $this->app->terminating(static fn () => EcommerceSyncHeartbeat::tick());
+    }
+
+    /**
+     * Recreate `public/storage` when a deploy skipped `storage:link`.
+     *
+     * Uploaded files live under `storage/app/public`; the web server only
+     * serves them through that symlink. Hosts that wipe `public/` on each
+     * release (or never run the artisan command) then 404 every photo and
+     * document. The `/storage/{path}` HTTP route still answers if the link
+     * cannot be created.
+     */
+    private function ensurePublicStorageLink(): void
+    {
+        if ($this->app->environment('testing')) {
+            return;
+        }
+
+        $link = public_path('storage');
+        $target = storage_path('app/public');
+
+        if (is_link($link) || file_exists($link)) {
+            return;
+        }
+
+        if (! is_dir($target) && ! mkdir($target, 0755, true) && ! is_dir($target)) {
+            return;
+        }
+
+        try {
+            symlink($target, $link);
+        } catch (\Throwable) {
+            // The /storage/{path} route still serves the files.
+        }
     }
 
     /**

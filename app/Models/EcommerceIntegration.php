@@ -6,6 +6,7 @@ use App\Enums\EcommerceIntegrationStatus;
 use App\Enums\EcommercePlatform;
 use App\Enums\EcommerceSyncRowStatus;
 use App\Enums\EcommerceSyncStatus;
+use App\Services\Ecommerce\Shopify\ShopifyFieldCatalog;
 use App\Services\Ecommerce\YouCan\YouCanFieldCatalog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -106,6 +107,12 @@ class EcommerceIntegration extends Model
      */
     public function resolvedFieldMapping(): array
     {
+        if ($this->platform === EcommercePlatform::Shopify) {
+            $defaults = ShopifyFieldCatalog::autoMap($this->source_fields ?: ShopifyFieldCatalog::builtinSources());
+
+            return ShopifyFieldCatalog::mergeMapping($this->field_mapping, $defaults);
+        }
+
         $defaults = YouCanFieldCatalog::autoMap($this->source_fields ?: YouCanFieldCatalog::builtinSources());
 
         return YouCanFieldCatalog::mergeMapping($this->field_mapping, $defaults);

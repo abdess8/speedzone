@@ -23,7 +23,7 @@ export const ECOMMERCE_PLATFORMS = [
     name: 'Shopify',
     icon: 'ri-shopping-bag-3-fill',
     color: '#95bf47',
-    available: false,
+    available: true,
   },
   {
     key: 'woocommerce',

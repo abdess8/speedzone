@@ -24,7 +24,10 @@ class RoleController extends Controller
     public function store(StoreRoleRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $role = Role::create(['name' => $data['name']]);
+        $role = Role::create([
+            'name' => $data['name'],
+            'login_redirect' => $data['login_redirect'] ?? null,
+        ]);
         $role->permissions()->sync($data['permission_ids'] ?? []);
 
         return response()->json(
@@ -41,7 +44,10 @@ class RoleController extends Controller
     public function update(UpdateRoleRequest $request, Role $role): JsonResponse
     {
         $data = $request->validated();
-        $role->update(['name' => $data['name']]);
+        $role->update([
+            'name' => $data['name'],
+            'login_redirect' => $data['login_redirect'] ?? null,
+        ]);
         $role->permissions()->sync($data['permission_ids'] ?? []);
 
         return response()->json($role->load('permissions:id,name'));

@@ -14,10 +14,12 @@ use App\Models\User;
 use App\Policies\UserPolicy;
 use App\Services\DriverZoneService;
 use App\Support\SortableQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -85,7 +87,7 @@ class UserController extends Controller
     /**
      * The free-text clause, shared by the owner row and its team members.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<User>  $query
+     * @param  Builder<User>  $query
      */
     private static function matchesSearch($query, string $search): void
     {
@@ -208,7 +210,7 @@ class UserController extends Controller
     /**
      * Display the specified user.
      */
-    public function show(User $user): Response
+    public function show(Request $request, User $user): Response
     {
         $this->authorize('view', $user);
 
@@ -255,7 +257,38 @@ class UserController extends Controller
             'user' => $user,
             'stores' => $stores,
             'teamMembers' => $teamMembers,
+            'can' => [
+                'update' => $request->user()->can('update', $user),
+            ],
         ]);
+    }
+
+    /**
+     * Send (or resend) the email-verification link to this account.
+     */
+    public function sendVerification(User $user): RedirectResponse
+    {
+        $this->authorize('update', $user);
+
+        $user->sendEmailVerificationNotification();
+
+        return back()->with('success', __('users.show.verification_sent'));
+    }
+
+    /**
+     * Email a password-reset link so the user can choose a new password.
+     */
+    public function sendPasswordReset(User $user): RedirectResponse
+    {
+        $this->authorize('update', $user);
+
+        $status = Password::sendResetLink(['email' => $user->email]);
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            return back()->with('error', __($status));
+        }
+
+        return back()->with('success', __('users.show.password_reset_sent'));
     }
 
     /**

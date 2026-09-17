@@ -104,7 +104,7 @@ return [
             'margin_rate' => 'Taux de marge',
             'fragility' => 'Fragilité',
             'fragile' => 'Fragile',
-            'fragile_hint' => 'Manipulation avec précaution au dépôt.',
+            'fragile_hint' => "Manipulation avec précaution\nau dépôt.",
             'unbreakable' => 'Incassable',
             'unbreakable_hint' => 'Aucune précaution particulière.',
             'weight' => 'Poids (g)',

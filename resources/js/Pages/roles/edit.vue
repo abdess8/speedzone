@@ -7,10 +7,12 @@ import RoleForm from "./Partials/RoleForm.vue";
 const props = defineProps({
   role: { type: Object, required: true },
   permissionGroups: { type: Array, default: () => [] },
+  loginRedirects: { type: Array, default: () => [] },
 });
 
 const form = useForm({
   name: props.role.name,
+  login_redirect: props.role.login_redirect ?? "",
   permission_ids: [...props.role.permission_ids],
 });
 
@@ -23,7 +25,7 @@ const submit = () => {
   <Layout>
     <PageHeader :title="$t('roles.edit_title')" :pageTitle="$t('roles.page_title')" />
     <form @submit.prevent="submit">
-      <RoleForm :form="form" :permission-groups="permissionGroups" />
+      <RoleForm :form="form" :permission-groups="permissionGroups" :login-redirects="loginRedirects" />
 
       <div class="hstack gap-2 justify-content-end mb-4">
         <Link :href="route('roles.index')" class="btn btn-light">{{ $t('common.cancel') }}</Link>

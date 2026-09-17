@@ -1,15 +1,21 @@
 <script setup>
-import { Link, useForm } from '@inertiajs/vue3';
+import { watch } from 'vue';
+import { Link, router, useForm } from '@inertiajs/vue3';
 import Layout from '@/Layouts/main.vue';
 import PageHeader from '@/Components/page-header.vue';
+import AdminSellerCard from '@/Components/AdminSellerCard.vue';
 import MemberForm from './Partials/MemberForm.vue';
 
 const props = defineProps({
   stores: { type: Array, default: () => [] },
   roles: { type: Array, default: () => [] },
+  admin: { type: Boolean, default: false },
+  sellers: { type: Array, default: () => [] },
+  seller: { type: Object, default: null },
 });
 
 const form = useForm({
+  seller_id: props.seller?.id ?? '',
   first_name: '',
   last_name: '',
   email: '',
@@ -22,6 +28,17 @@ const form = useForm({
   role_ids: [],
 });
 
+watch(
+  () => form.seller_id,
+  (sellerId) => {
+    if (!props.admin || Number(sellerId || 0) === Number(props.seller?.id || 0)) {
+      return;
+    }
+
+    router.get(route('team.create'), sellerId ? { seller_id: sellerId } : {});
+  },
+);
+
 const submit = () => {
   form.post(route('team.store'));
 };
@@ -32,6 +49,16 @@ const submit = () => {
     <PageHeader :title="$t('team.create_title')" :pageTitle="$t('team.title')" />
 
     <form @submit.prevent="submit">
+      <AdminSellerCard
+        v-if="admin"
+        v-model="form.seller_id"
+        :sellers="sellers"
+        :error="form.errors.seller_id"
+        :label="$t('team.admin.seller_field')"
+        :placeholder="$t('team.admin.seller_placeholder')"
+        :help="$t('team.admin.seller_help')"
+      />
+
       <MemberForm :form="form" :stores="stores" :roles="roles" />
 
       <BRow>
@@ -42,7 +69,7 @@ const submit = () => {
               data-guide="team-submit"
               type="submit"
               variant="success"
-              :disabled="form.processing"
+              :disabled="form.processing || (admin && !form.seller_id)"
             >
               <i class="ri-save-line align-bottom me-1"></i> {{ $t('common.create') }}
             </BButton>

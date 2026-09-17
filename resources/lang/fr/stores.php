@@ -71,4 +71,27 @@ return [
         'not_accessible' => 'Vous n\'avez pas accès à cette boutique.',
         'depot_not_empty' => 'Impossible de changer de dépôt : :units unité(s) sont encore en stock dans le dépôt actuel. Écoulez ou corrigez ce stock avant de déménager.',
     ],
+
+    'admin' => [
+        'title' => 'Boutiques des vendeurs',
+        'subtitle' => 'Toutes les boutiques de la plateforme, avec le compte vendeur auquel elles appartiennent.',
+        'empty' => 'Aucune boutique n’a encore été créée.',
+        'search_placeholder' => 'Rechercher un vendeur, une boutique ou une catégorie',
+        'seller_field' => 'Vendeur',
+        'seller_help' => 'Le compte vendeur auquel rattacher cette boutique.',
+        'seller_placeholder' => 'Choisir un vendeur',
+        'for_seller' => 'Boutique de :name',
+        'stats' => [
+            'total' => 'Boutiques',
+            'sellers' => 'Vendeurs',
+            'inactive' => 'Inactives',
+        ],
+        'table' => [
+            'seller' => 'Vendeur',
+            'orders' => 'Commandes',
+        ],
+        'errors' => [
+            'seller_required' => 'Choisissez le vendeur auquel appartient cette boutique.',
+        ],
+    ],
 ];

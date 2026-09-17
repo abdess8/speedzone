@@ -37,11 +37,13 @@
         (function () {
             try {
                 var saved = JSON.parse(localStorage.getItem('theme-customizer') || '{}');
-                if (saved && saved.mode) {
-                    document.documentElement.setAttribute('data-bs-theme', saved.mode);
-                }
+                var layout = saved && typeof saved === 'object' ? saved : {};
+                document.documentElement.setAttribute('data-bs-theme', layout.mode || 'light');
+                document.documentElement.setAttribute('data-layout', layout.layoutType || 'horizontal');
+                document.documentElement.setAttribute('data-topbar', layout.topbar || 'light');
+                document.documentElement.setAttribute('data-sidebar', layout.sidebarColor || 'dark');
             } catch (e) {
-                // A malformed or unavailable store just means the light default.
+                document.documentElement.setAttribute('data-layout', 'horizontal');
             }
         })();
     </script>

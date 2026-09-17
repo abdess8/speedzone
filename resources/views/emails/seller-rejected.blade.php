@@ -11,5 +11,5 @@
 
 {{ __('seller_registration.emails.rejected_footer') }}
 
-{{ config('app.name') }}
+{{ __('mail.team') }}
 </x-mail::message>

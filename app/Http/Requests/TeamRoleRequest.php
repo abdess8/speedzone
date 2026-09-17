@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ResolvesVendorOwner;
 use App\Models\Role;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -15,6 +16,8 @@ use Illuminate\Validation\Rule;
  */
 class TeamRoleRequest extends FormRequest
 {
+    use ResolvesVendorOwner;
+
     public function authorize(): bool
     {
         return true;
@@ -27,9 +30,9 @@ class TeamRoleRequest extends FormRequest
     {
         /** @var Role|null $role */
         $role = $this->route('role');
-        $ownerId = $this->user()->accountOwnerId();
+        $ownerId = $this->vendorOwnerId();
 
-        return [
+        return array_merge($this->sellerIdRules(), [
             'label' => [
                 'required', 'string', 'max:255',
                 Rule::unique('roles', 'label')
@@ -38,7 +41,7 @@ class TeamRoleRequest extends FormRequest
             ],
             'permissions' => ['required', 'array', 'min:1'],
             'permissions.*' => ['string', Rule::exists('permissions', 'name')],
-        ];
+        ]);
     }
 
     /**

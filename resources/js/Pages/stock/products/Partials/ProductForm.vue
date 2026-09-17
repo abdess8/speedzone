@@ -201,8 +201,8 @@ watch(
             <BCol md="6">
               <label class="form-label d-block">{{ $t('stock.products.form.fragility') }}</label>
               <BRow class="g-2">
-                <BCol cols="6">
-                  <div class="form-check card-radio h-100">
+                <BCol cols="12" sm="6">
+                  <div class="form-check card-radio card-radio-stack h-100">
                     <input
                       id="product-unbreakable"
                       class="form-check-input"
@@ -217,8 +217,8 @@ watch(
                     </label>
                   </div>
                 </BCol>
-                <BCol cols="6">
-                  <div class="form-check card-radio h-100">
+                <BCol cols="12" sm="6">
+                  <div class="form-check card-radio card-radio-stack h-100">
                     <input
                       id="product-fragile"
                       class="form-check-input"
@@ -229,7 +229,7 @@ watch(
                     <label class="form-check-label w-100 text-center py-2" for="product-fragile">
                       <span class="fs-20 d-block mb-1"><i class="ri-alarm-warning-line text-warning"></i></span>
                       <span class="fs-13 fw-medium d-block">{{ $t('stock.products.form.fragile') }}</span>
-                      <small class="text-muted d-block">{{ $t('stock.products.form.fragile_hint') }}</small>
+                      <small class="text-muted d-block product-fragile-hint">{{ $t('stock.products.form.fragile_hint') }}</small>
                     </label>
                   </div>
                 </BCol>
@@ -407,3 +407,9 @@ watch(
     </BCol>
   </BRow>
 </template>
+
+<style scoped>
+.product-fragile-hint {
+  white-space: pre-line;
+}
+</style>

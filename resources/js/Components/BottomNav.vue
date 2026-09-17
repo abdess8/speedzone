@@ -60,9 +60,61 @@ watch(
   }
 );
 
+/**
+ * Hide the bar while a text field is focused. On a phone the keyboard plus
+ * this bar cover the input the user is trying to type into.
+ */
+const NON_TEXT_INPUT_TYPES = new Set([
+  'button',
+  'submit',
+  'reset',
+  'checkbox',
+  'radio',
+  'file',
+  'hidden',
+  'range',
+  'color',
+  'image',
+]);
+
+function isEditable(target) {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return true;
+  }
+
+  const tag = target.tagName;
+  if (tag === 'TEXTAREA' || tag === 'SELECT') {
+    return true;
+  }
+
+  if (tag !== 'INPUT') {
+    return false;
+  }
+
+  const type = (target.getAttribute('type') || 'text').toLowerCase();
+
+  return !NON_TEXT_INPUT_TYPES.has(type);
+}
+
+function syncKeyboardOpen() {
+  const open = isEditable(document.activeElement);
+  document.body.classList.toggle('keyboard-open', open);
+}
+
+function onFocusChange() {
+  requestAnimationFrame(syncKeyboardOpen);
+}
+
 onMounted(() => {
   syncPath();
   document.body.classList.toggle('has-bottom-nav', tabs.value.length > 1);
+
+  document.addEventListener('focusin', onFocusChange);
+  document.addEventListener('focusout', onFocusChange);
 
   stopNavigateListener = router.on('navigate', () => {
     syncPath();
@@ -72,7 +124,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   stopNavigateListener?.();
+  document.removeEventListener('focusin', onFocusChange);
+  document.removeEventListener('focusout', onFocusChange);
   document.body.classList.remove('has-bottom-nav');
+  document.body.classList.remove('keyboard-open');
 });
 
 /**

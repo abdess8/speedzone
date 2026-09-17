@@ -50,7 +50,11 @@ return [
     'center' => [
         'mark_all_read' => 'Tout marquer comme lu',
         'no_notifications' => 'Aucune notification',
+        'no_notifications_hint' => 'Les nouvelles alertes apparaîtront ici.',
         'view_all' => 'Voir toutes les notifications',
+        'open' => 'Notifications',
+        'close' => 'Fermer les notifications',
+        'empty_title' => 'Rien pour le moment',
     ],
 
     'icons' => [

@@ -1,7 +1,7 @@
 export const STORAGE_KEY = 'theme-customizer';
 
 export const defaultState = {
-  layoutType: 'vertical',
+  layoutType: 'horizontal',
   layoutWidth: 'fluid',
   sidebarSize: 'lg',
   topbar: 'light',

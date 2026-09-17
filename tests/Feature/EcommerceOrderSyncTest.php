@@ -20,6 +20,7 @@ use App\Services\Ecommerce\EcommerceOrderSyncService;
 use App\Services\TeamRoleService;
 use App\Services\TeamService;
 use App\Support\EcommerceIntegrationPermissions;
+use App\Support\EcommerceSyncHeartbeat;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -552,7 +553,8 @@ it('saves auto-sync settings and stamps the next run', function () {
     expect($integration->auto_sync_enabled)->toBeTrue()
         ->and($integration->sync_interval_minutes)->toBe(30)
         ->and($integration->import_status)->toBe('paid')
-        ->and($integration->next_sync_at)->not->toBeNull();
+        ->and($integration->next_sync_at)->not->toBeNull()
+        ->and($integration->next_sync_at->lessThanOrEqualTo(now()))->toBeTrue();
 });
 
 it('filters the order list down to one YouCan sync', function () {
@@ -593,6 +595,25 @@ it('runs due auto-syncs from the scheduler command', function () {
         ->assertSuccessful();
 
     expect(Order::query()->value('external_order_id'))->toBe('scheduled-1')
+        ->and(EcommerceIntegrationSync::query()->first()->trigger)->toBe(EcommerceSyncTrigger::Schedule);
+});
+
+it('picks up due auto-syncs from the web heartbeat', function () {
+    syncCity();
+    $seller = syncSeller();
+    $store = syncStore($seller);
+    $integration = connectedYouCan($seller, $store);
+    $integration->update([
+        'auto_sync_enabled' => true,
+        'sync_interval_minutes' => 15,
+        'next_sync_at' => now()->subMinute(),
+    ]);
+
+    fakeYouCanOrders([youCanOrder(['id' => 'heartbeat-1'])]);
+
+    EcommerceSyncHeartbeat::tick();
+
+    expect(Order::query()->value('external_order_id'))->toBe('heartbeat-1')
         ->and(EcommerceIntegrationSync::query()->first()->trigger)->toBe(EcommerceSyncTrigger::Schedule);
 });
 

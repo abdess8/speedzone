@@ -2,14 +2,19 @@
 import { Link, useForm } from '@inertiajs/vue3';
 import Layout from '@/Layouts/main.vue';
 import PageHeader from '@/Components/page-header.vue';
+import AdminSellerCard from '@/Components/AdminSellerCard.vue';
 import StoreForm from './Partials/StoreForm.vue';
 
-defineProps({
+const props = defineProps({
   cities: { type: Array, default: () => [] },
   hubCities: { type: Array, default: () => [] },
+  admin: { type: Boolean, default: false },
+  sellers: { type: Array, default: () => [] },
+  seller: { type: Object, default: null },
 });
 
 const form = useForm({
+  seller_id: props.seller?.id ?? '',
   name: '',
   category: '',
   website: '',
@@ -36,6 +41,16 @@ const submit = () => {
     <PageHeader :title="$t('stores.create_title')" :pageTitle="$t('stores.title')" />
 
     <form @submit.prevent="submit">
+      <AdminSellerCard
+        v-if="admin"
+        v-model="form.seller_id"
+        :sellers="sellers"
+        :error="form.errors.seller_id"
+        :label="$t('stores.admin.seller_field')"
+        :placeholder="$t('stores.admin.seller_placeholder')"
+        :help="$t('stores.admin.seller_help')"
+      />
+
       <StoreForm :form="form" :cities="cities" :hub-cities="hubCities" />
 
       <BRow>
@@ -46,7 +61,7 @@ const submit = () => {
               data-guide="store-submit"
               type="submit"
               variant="success"
-              :disabled="form.processing"
+              :disabled="form.processing || (admin && !form.seller_id)"
             >
               <i class="ri-save-line align-bottom me-1"></i> {{ $t('stores.create_button') }}
             </BButton>

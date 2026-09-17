@@ -30,6 +30,8 @@ return [
 
     'email' => env('COMPANY_EMAIL', 'speedzoneepxress@gmail.com'),
 
+    'logo' => env('COMPANY_LOGO', 'images/logo-dark.png'),
+
     'social' => [
         'instagram' => env('COMPANY_INSTAGRAM', 'https://www.instagram.com/speedzoneexpress'),
     ],

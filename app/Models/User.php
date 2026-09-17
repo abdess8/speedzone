@@ -6,6 +6,7 @@ use App\Enums\BillingFrequency;
 use App\Enums\ReturnStatus;
 use App\Enums\SellerPaymentMethod;
 use App\Enums\UserStatus;
+use App\Notifications\ResetSpeedZonePasswordEmail;
 use App\Notifications\VerifySpeedZoneAccountEmail;
 use App\Support\ProfileCompletion;
 use App\Support\RoleLabel;
@@ -690,6 +691,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new VerifySpeedZoneAccountEmail);
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetSpeedZonePasswordEmail($token));
     }
 
     /**

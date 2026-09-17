@@ -2,7 +2,12 @@
 
 namespace App\Exceptions;
 
+use App\Support\LoginRedirect;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -19,6 +24,13 @@ class Handler extends ExceptionHandler
     ];
 
     /**
+     * HTTP statuses rendered as an Inertia screen inside the application chrome.
+     *
+     * @var array<int, int>
+     */
+    private const INERTIA_ERROR_STATUSES = [403, 404, 419, 429, 500, 503];
+
+    /**
      * Register the exception handling callbacks for the application.
      */
     public function register(): void
@@ -26,5 +38,46 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+
+        $this->renderable(function (Throwable $e, Request $request) {
+            return $this->renderInertiaHttpError($request, $e);
+        });
+    }
+
+    /**
+     * Replace Laravel's standalone error HTML with an Inertia page.
+     *
+     * An Inertia visit that receives a non-Inertia HTML 403 is painted as a
+     * modal overlay on top of the previous screen, which hides the navbar and
+     * the sidebar. Rendering a real page keeps those reachable, including on
+     * a phone where navigation lives in the bottom tab bar.
+     */
+    private function renderInertiaHttpError(Request $request, Throwable $e): ?Response
+    {
+        if ($request->is('api/*') || ($request->expectsJson() && ! $request->inertia())) {
+            return null;
+        }
+
+        $status = $e instanceof HttpExceptionInterface
+            ? $e->getStatusCode()
+            : Response::HTTP_INTERNAL_SERVER_ERROR;
+
+        if (! in_array($status, self::INERTIA_ERROR_STATUSES, true)) {
+            return null;
+        }
+
+        // Developers still get Ignition on a 500; the overlay is useful there.
+        if ($status === Response::HTTP_INTERNAL_SERVER_ERROR && config('app.debug')) {
+            return null;
+        }
+
+        $user = $request->user();
+
+        return Inertia::render('errors/Error', [
+            'status' => $status,
+            'homeUrl' => $user ? LoginRedirect::forUser($user) : url('/'),
+        ])
+            ->toResponse($request)
+            ->setStatusCode($status);
     }
 }

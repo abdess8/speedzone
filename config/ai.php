@@ -70,7 +70,8 @@ return [
 
     'chatbot' => [
         // Master switch: the widget hides itself when the feature is disabled.
-        'enabled' => (bool) env('CHATBOT_ENABLED', true),
+        // Off by default until the assistant is ready to ship again.
+        'enabled' => (bool) env('CHATBOT_ENABLED', false),
 
         // Seconds to wait for a single completion call.
         'timeout' => (int) env('AI_TIMEOUT', 45),

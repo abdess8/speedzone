@@ -61,6 +61,7 @@ class Role extends Model
         'name',
         'label',
         'owner_id',
+        'login_redirect',
     ];
 
     /**

@@ -7,6 +7,8 @@ use App\Http\Resources\StoreResource;
 use App\Models\City;
 use App\Models\Store;
 use App\Services\StoreService;
+use App\Support\AdminSellerDirectory;
+use App\Support\SortableQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,6 +23,10 @@ class StoreController extends Controller
         $this->authorize('viewAny', Store::class);
 
         $user = $request->user();
+
+        if ($user->isSuperAdmin()) {
+            return $this->adminIndex($request);
+        }
 
         $stores = Store::query()
             ->ownedBy($user->accountOwnerId())
@@ -45,9 +51,15 @@ class StoreController extends Controller
     {
         $this->authorize('create', Store::class);
 
+        $admin = $request->user()->isSuperAdmin();
+        $seller = $admin ? AdminSellerDirectory::find($request->integer('seller_id')) : null;
+
         return Inertia::render('stores/create', [
             'cities' => $this->cityOptions(),
             'hubCities' => City::hubOptions(),
+            'admin' => $admin,
+            'sellers' => $admin ? AdminSellerDirectory::options() : [],
+            'seller' => $seller ? AdminSellerDirectory::present($seller) : null,
         ]);
     }
 
@@ -56,8 +68,8 @@ class StoreController extends Controller
         $this->authorize('create', Store::class);
 
         $store = $this->stores->create(
-            $request->user(),
-            $request->safe()->except('logo'),
+            AdminSellerDirectory::actingOwner($request),
+            $request->safe()->except(['logo', 'seller_id']),
             $request->file('logo'),
         );
 
@@ -70,12 +82,14 @@ class StoreController extends Controller
     {
         $this->authorize('update', $store);
 
-        $store->load('city', 'stockHubCity');
+        $store->load('city', 'stockHubCity', 'owner:id,first_name,last_name,email');
 
         return Inertia::render('stores/edit', [
             'store' => StoreResource::make($store)->resolve($request),
             'cities' => $this->cityOptions(),
             'hubCities' => City::hubOptions(),
+            'admin' => $request->user()->isSuperAdmin(),
+            'seller' => $store->owner ? AdminSellerDirectory::present($store->owner) : null,
             'can' => [
                 'delete' => $request->user()->can('delete', $store) && $this->stores->canDelete($store),
             ],
@@ -86,7 +100,7 @@ class StoreController extends Controller
     {
         $this->authorize('update', $store);
 
-        $this->stores->update($store, $request->safe()->except('logo'), $request->file('logo'));
+        $this->stores->update($store, $request->safe()->except(['logo', 'seller_id']), $request->file('logo'));
 
         return redirect()
             ->route('stores.index')
@@ -107,6 +121,62 @@ class StoreController extends Controller
         return redirect()
             ->route('stores.index')
             ->with('success', __('stores.flash.deleted', ['name' => $name]));
+    }
+
+    private function adminIndex(Request $request): Response
+    {
+        $search = (string) $request->string('search');
+        $sortable = [
+            'name' => 'name',
+            'seller' => 'owner_id',
+            'status' => 'is_active',
+            'created_at' => 'created_at',
+        ];
+
+        $query = Store::query()
+            ->with(['city:id,name', 'owner:id,first_name,last_name,email'])
+            ->withCount(['orders' => fn ($q) => $q->withoutGlobalScope('store')])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('category', 'like', '%'.$search.'%')
+                        ->orWhereHas('owner', function ($seller) use ($search) {
+                            $seller->where('first_name', 'like', '%'.$search.'%')
+                                ->orWhere('last_name', 'like', '%'.$search.'%')
+                                ->orWhere('email', 'like', '%'.$search.'%');
+                        });
+                });
+            })
+            ->when(
+                $request->integer('seller_id') > 0,
+                fn ($query) => $query->where('owner_id', $request->integer('seller_id'))
+            )
+            ->when($request->string('status')->toString() === 'active', fn ($query) => $query->where('is_active', true))
+            ->when($request->string('status')->toString() === 'inactive', fn ($query) => $query->where('is_active', false));
+
+        SortableQuery::apply($query, $request, $sortable, 'created_at');
+
+        $stores = $query
+            ->paginate(15)
+            ->withQueryString()
+            ->through(fn (Store $store) => StoreResource::make($store)->resolve($request));
+
+        return Inertia::render('stores/admin', [
+            'stores' => $stores,
+            'stats' => [
+                'total' => Store::query()->count(),
+                'sellers' => Store::query()->distinct()->count('owner_id'),
+                'inactive' => Store::query()->where('is_active', false)->count(),
+            ],
+            'sellers' => AdminSellerDirectory::options(),
+            'filters' => array_merge(
+                $request->only(['search', 'seller_id', 'status']),
+                SortableQuery::state($request, $sortable, 'created_at')
+            ),
+            'can' => [
+                'create' => true,
+            ],
+        ]);
     }
 
     /**

@@ -19,6 +19,11 @@ class StoreResource extends JsonResource
         return [
             'id' => $this->id,
             'owner_id' => $this->owner_id,
+            'owner' => $this->whenLoaded('owner', fn () => [
+                'id' => $this->owner->id,
+                'name' => $this->owner->full_name,
+                'email' => $this->owner->email,
+            ]),
             'name' => $this->name,
             'category' => $this->category,
             'website' => $this->website,

@@ -77,3 +77,150 @@
 .error-img {
     animation: errorAnimation 20s infinite;
 }
+
+.http-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 16rem);
+    padding: 1.25rem 0.5rem 2rem;
+}
+
+.http-error-card {
+    width: min(34rem, 100%);
+    padding: 2rem 1.25rem;
+    text-align: center;
+    background: var(--#{$prefix}secondary-bg);
+    border: 1px solid var(--#{$prefix}border-color);
+    border-radius: $border-radius-lg;
+    box-shadow: var(--#{$prefix}box-shadow);
+}
+
+.http-error-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    margin: 0 auto 1.25rem;
+    border-radius: 50%;
+    font-size: 1.85rem;
+
+    &--primary {
+        color: $primary;
+        background: rgba($primary, 0.12);
+    }
+
+    &--warning {
+        color: $warning;
+        background: rgba($warning, 0.16);
+    }
+
+    &--danger {
+        color: $danger;
+        background: rgba($danger, 0.12);
+    }
+
+    &--info {
+        color: $info;
+        background: rgba($info, 0.12);
+    }
+
+    &--secondary {
+        color: $secondary;
+        background: rgba($secondary, 0.12);
+    }
+}
+
+.http-error-code {
+    margin: 0 0 0.35rem;
+    color: var(--#{$prefix}secondary-color);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+.http-error-title {
+    margin: 0 0 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.http-error-copy {
+    margin: 0 auto 1.5rem;
+    max-width: 28rem;
+    color: var(--#{$prefix}secondary-color);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+}
+
+.http-error-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.http-error-guest {
+    min-height: 100vh;
+    background: var(--#{$prefix}body-bg);
+}
+
+.http-error-guest-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    height: $header-height;
+    padding: 0 1rem;
+    background: var(--#{$prefix}header-bg);
+    border-bottom: 1px solid var(--#{$prefix}header-border);
+}
+
+.http-error-guest-brand {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+
+    img {
+        height: 36px;
+        width: auto;
+        max-width: min(180px, 55vw);
+        object-fit: contain;
+    }
+}
+
+.http-error-guest .http-error {
+    min-height: calc(100vh - #{$header-height});
+}
+
+@include media-breakpoint-up(md) {
+    .http-error-card {
+        padding: 2.75rem 2.5rem;
+    }
+
+    .http-error-title {
+        font-size: 1.75rem;
+    }
+}
+
+@include media-breakpoint-down(md) {
+    .http-error {
+        min-height: calc(100vh - 12.5rem - env(safe-area-inset-bottom, 0px));
+        padding: 1rem 0 1.5rem;
+    }
+
+    .http-error-actions {
+        flex-direction: column;
+        align-items: stretch;
+
+        .btn {
+            width: 100%;
+        }
+    }
+
+    .http-error-guest-bar {
+        padding: 0 0.75rem;
+    }
+}

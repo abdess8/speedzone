@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ResolvesVendorOwner;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -15,6 +16,8 @@ use Illuminate\Validation\Rules\Password;
  */
 class TeamMemberRequest extends FormRequest
 {
+    use ResolvesVendorOwner;
+
     public function authorize(): bool
     {
         return true;
@@ -26,10 +29,10 @@ class TeamMemberRequest extends FormRequest
     public function rules(): array
     {
         $member = $this->route('member');
-        $ownerId = $this->user()->accountOwnerId();
+        $ownerId = $this->vendorOwnerId();
         $isCreate = $member === null;
 
-        return [
+        return array_merge($this->sellerIdRules(), [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => [
@@ -57,7 +60,7 @@ class TeamMemberRequest extends FormRequest
                 Rule::exists('roles', 'id')
                     ->where(fn ($query) => $query->where('owner_id', $ownerId)),
             ],
-        ];
+        ]);
     }
 
     /**

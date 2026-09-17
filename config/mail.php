@@ -106,7 +106,7 @@ return [
     // have a From header" in the middle of a registration.
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS') ?: (env('MAIL_USERNAME') ?: 'no-reply@speedzoneexpress.ma'),
-        'name' => env('MAIL_FROM_NAME') ?: env('APP_NAME', 'Speed Zone'),
+        'name' => env('MAIL_FROM_NAME') ?: env('COMPANY_NAME', 'SpeedZone Express'),
     ],
 
     /*

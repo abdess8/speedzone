@@ -6,6 +6,7 @@ import InfoHint from "@/Components/InfoHint.vue";
 const props = defineProps({
   form: { type: Object, required: true },
   permissionGroups: { type: Array, default: () => [] },
+  loginRedirects: { type: Array, default: () => [] },
 });
 
 const totalPermissions = computed(() =>
@@ -88,6 +89,28 @@ const badgeClass = (permission) => {
                 :class="{ 'is-invalid': form.errors.name }"
               />
               <InputError :message="form.errors.name" />
+            </BCol>
+            <BCol md="6">
+              <label class="form-label" for="login_redirect">
+                {{ $t('roles.redirect.label') }}
+              </label>
+              <select
+                id="login_redirect"
+                class="form-select"
+                v-model="form.login_redirect"
+                :class="{ 'is-invalid': form.errors.login_redirect }"
+              >
+                <option value="">{{ $t('roles.redirect.placeholder') }}</option>
+                <option
+                  v-for="page in loginRedirects"
+                  :key="page.value"
+                  :value="page.value"
+                >
+                  {{ page.label }}
+                </option>
+              </select>
+              <div class="form-text">{{ $t('roles.redirect.help') }}</div>
+              <InputError :message="form.errors.login_redirect" />
             </BCol>
           </BRow>
         </BCardBody>

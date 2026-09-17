@@ -3,11 +3,14 @@ import { ref } from 'vue';
 import { Link, router, useForm } from '@inertiajs/vue3';
 import Layout from '@/Layouts/main.vue';
 import PageHeader from '@/Components/page-header.vue';
+import AdminSellerCard from '@/Components/AdminSellerCard.vue';
 import RoleForm from './Partials/RoleForm.vue';
 
 const props = defineProps({
   role: { type: Object, required: true },
   permissionGroups: { type: Array, default: () => [] },
+  admin: { type: Boolean, default: false },
+  seller: { type: Object, default: null },
 });
 
 const confirmingDelete = ref(false);
@@ -32,6 +35,13 @@ const destroy = () => {
     <PageHeader :title="$t('team.roles.edit_title')" :pageTitle="$t('team.roles.title')" />
 
     <form @submit.prevent="submit">
+      <AdminSellerCard
+        v-if="admin && seller"
+        :seller="seller"
+        readonly
+        :label="$t('team.roles.admin.seller_field')"
+      />
+
       <RoleForm :form="form" :permission-groups="permissionGroups" />
 
       <BRow>

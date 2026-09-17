@@ -21,6 +21,27 @@ File: Custom Css File
   zoom: $ui-scale;
 }
 
+// iOS Safari zooms the page in when a focused field computes under 16px.
+// Combined with `$ui-scale` (0.9), every input on a phone was ~14px, which
+// shoved the layout sideways the moment a form was focused. Drop the density
+// scale below `md` and keep fields at 16px so the viewport stays still.
+@include media-breakpoint-down(lg) {
+  :root {
+    zoom: 1;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  .form-control,
+  .form-select,
+  textarea.form-control {
+    font-size: 16px !important;
+  }
+}
+
 // Print output was laid out against an unscaled page and must stay that way.
 @media print {
   :root {
@@ -1192,6 +1213,17 @@ $topnav-height: 45px;
       padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
     }
   }
+
+  // The bar would sit on top of the focused field once the keyboard is up.
+  body.keyboard-open.has-bottom-nav {
+    .bottom-nav {
+      display: none !important;
+    }
+
+    .page-content {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+  }
 }
 
 // Global search
@@ -1727,6 +1759,43 @@ $topnav-height: 45px;
 .search-view-row-subtitle {
   color: var(--#{$prefix}secondary-color);
   font-size: 0.75rem;
+}
+
+.search-view-title-wrap {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-view-title {
+  margin: 0;
+  overflow: hidden;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-view-row-meta {
+  display: block;
+  margin-top: 0.125rem;
+  color: var(--#{$prefix}secondary-color);
+  font-size: 0.75rem;
+}
+
+.search-view-unread {
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-top: 0.35rem;
+  border-radius: 50%;
+  background-color: var(--#{$prefix}primary);
+}
+
+.search-view-row.is-unread .search-view-row-title {
+  font-weight: 600;
 }
 
 .search-view-row-chevron {

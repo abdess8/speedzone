@@ -162,7 +162,7 @@ function fakeYouCanSession(array $options = []): void
     });
 }
 
-it('lets a seller open the catalogue with YouCan available and the others still coming', function () {
+it('lets a seller open the catalogue with YouCan and Shopify available and the others still coming', function () {
     $seller = integrationSeller();
     integrationStore($seller);
 
@@ -176,7 +176,10 @@ it('lets a seller open the catalogue with YouCan available and the others still 
             ->where('platforms.0.available', true)
             ->where('platforms.0.can_manage', true)
             ->where('platforms.0.connection', null)
-            ->where('platforms.1.available', false)
+            ->where('platforms.1.key', 'shopify')
+            ->where('platforms.1.available', true)
+            ->where('platforms.1.can_manage', true)
+            ->where('platforms.2.available', false)
         );
 });
 
@@ -543,4 +546,116 @@ it('gives the seller every storefront grant so he can delegate them one by one',
     foreach (EcommerceIntegrationPermissions::sellerDefaults() as $permission) {
         expect($seller->hasPermission($permission))->toBeTrue();
     }
+});
+
+it('shows the admin a list of users who configured an integration', function () {
+    $admin = StockFixtures::user(Role::ADMIN);
+    $seller = integrationSeller();
+    $store = integrationStore($seller);
+
+    EcommerceIntegration::query()->create([
+        'seller_id' => $seller->id,
+        'store_id' => $store->id,
+        'platform' => EcommercePlatform::YouCan,
+        'status' => EcommerceIntegrationStatus::Connected,
+        'shop_slug' => 'atlas',
+        'shop_name' => 'Atlas Concept',
+        'email' => 'seller@youcan.test',
+        'client_secret' => 'youcan-password',
+        'access_token' => 'yc_bearer_token',
+        'connected_at' => now(),
+        'connected_by' => $seller->id,
+        'last_synced_at' => now()->subHour(),
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('integrations.index'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('integrations/admin')
+            ->has('integrations.data', 1)
+            ->where('integrations.data.0.seller.id', $seller->id)
+            ->where('integrations.data.0.store.id', $store->id)
+            ->where('integrations.data.0.platform', 'youcan')
+            ->where('integrations.data.0.status', 'connected')
+            ->missing('integrations.data.0.client_secret')
+            ->missing('integrations.data.0.access_token')
+        );
+});
+
+it('lets an admin open the history of another user\'s integration', function () {
+    $admin = StockFixtures::user(Role::ADMIN);
+    $seller = integrationSeller();
+    $store = integrationStore($seller);
+
+    $integration = EcommerceIntegration::query()->create([
+        'seller_id' => $seller->id,
+        'store_id' => $store->id,
+        'platform' => EcommercePlatform::YouCan,
+        'status' => EcommerceIntegrationStatus::Connected,
+        'shop_slug' => 'atlas',
+        'email' => 'seller@youcan.test',
+        'client_secret' => 'youcan-password',
+        'access_token' => 'yc_bearer_token',
+        'connected_at' => now(),
+        'connected_by' => $seller->id,
+    ]);
+
+    $integration->syncs()->create([
+        'status' => 'succeeded',
+        'trigger' => 'manual',
+        'fetched_count' => 4,
+        'created_count' => 3,
+        'skipped_count' => 1,
+        'error_count' => 0,
+        'started_at' => now()->subMinutes(5),
+        'finished_at' => now()->subMinutes(4),
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('integrations.youcan', ['store_id' => $store->id]))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('integrations/youcan')
+            ->where('admin', true)
+            ->where('integration.store_id', $store->id)
+            ->where('integration.seller.id', $seller->id)
+            ->has('syncs', 1)
+            ->where('syncs.0.created_count', 3)
+            ->where('syncs.0.trigger', 'manual')
+        );
+});
+
+it('lets an admin connect YouCan on a seller\'s shop', function () {
+    fakeYouCanSession();
+
+    $admin = StockFixtures::user(Role::ADMIN);
+    $seller = integrationSeller();
+    $store = integrationStore($seller);
+
+    $this->actingAs($admin)
+        ->from(route('integrations.youcan', ['seller_id' => $seller->id]))
+        ->post(route('integrations.youcan.store'), youCanPayload($store))
+        ->assertRedirect(route('integrations.youcan', ['store_id' => $store->id]))
+        ->assertSessionHas('success');
+
+    $integration = EcommerceIntegration::query()->first();
+
+    expect($integration)->not->toBeNull()
+        ->and($integration->seller_id)->toBe($seller->id)
+        ->and($integration->store_id)->toBe($store->id)
+        ->and($integration->connected_by)->toBe($admin->id)
+        ->and($integration->status)->toBe(EcommerceIntegrationStatus::Connected);
+});
+
+it('still shows sellers the catalogue rather than the admin list', function () {
+    $seller = integrationSeller();
+    integrationStore($seller);
+
+    $this->actingAs($seller)
+        ->get(route('integrations.index'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('integrations/index')
+        );
 });

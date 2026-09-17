@@ -11,6 +11,7 @@ use App\Events\StockPickupRequested;
 use App\Events\TicketClosed;
 use App\Events\TicketCreated;
 use App\Events\TicketMessageCreated;
+use App\Listeners\EmbedSpeedZoneMailLogo;
 use App\Listeners\NotifyAdminOfNewSellerRegistration;
 use App\Listeners\NotifyCollectorsOfStockPickup;
 use App\Listeners\SendInvoiceNotification;
@@ -23,7 +24,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Event;
+use Illuminate\Mail\Events\MessageSending;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -65,6 +66,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         StockPickupRequested::class => [
             NotifyCollectorsOfStockPickup::class,
+        ],
+        MessageSending::class => [
+            EmbedSpeedZoneMailLogo::class,
         ],
     ];
 

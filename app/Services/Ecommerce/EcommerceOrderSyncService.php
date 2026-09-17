@@ -12,6 +12,9 @@ use App\Models\EcommerceIntegration;
 use App\Models\EcommerceIntegrationSync;
 use App\Models\EcommerceIntegrationSyncRow;
 use App\Models\User;
+use App\Services\Ecommerce\Shopify\ShopifyFieldCatalog;
+use App\Services\Ecommerce\Shopify\ShopifyOrderMapper;
+use App\Services\Ecommerce\Shopify\ShopifyOrderSyncDriver;
 use App\Services\Ecommerce\YouCan\YouCanFieldCatalog;
 use App\Services\Ecommerce\YouCan\YouCanOrderMapper;
 use App\Services\Ecommerce\YouCan\YouCanOrderSyncDriver;
@@ -26,7 +29,9 @@ class EcommerceOrderSyncService
 {
     public function __construct(
         private readonly YouCanOrderSyncDriver $youCan,
-        private readonly YouCanOrderMapper $mapper,
+        private readonly ShopifyOrderSyncDriver $shopify,
+        private readonly YouCanOrderMapper $youCanMapper,
+        private readonly ShopifyOrderMapper $shopifyMapper,
         private readonly OrderService $orders,
     ) {}
 
@@ -54,7 +59,7 @@ class EcommerceOrderSyncService
             throw new RuntimeException(__('integrations.sync.errors.not_connected'));
         }
 
-        if ($integration->platform !== EcommercePlatform::YouCan) {
+        if (! in_array($integration->platform, [EcommercePlatform::YouCan, EcommercePlatform::Shopify], true)) {
             throw new RuntimeException(__('integrations.sync.errors.unsupported_platform'));
         }
 
@@ -64,15 +69,16 @@ class EcommerceOrderSyncService
             throw new RuntimeException(__('integrations.sync.errors.missing_seller'));
         }
 
+        [$driver, $mapper, $catalog] = $this->stack($integration);
         $since = $this->syncSince($integration, $sync);
-        $payloads = iterator_to_array($this->youCan->fetchOrders($integration, $since), false);
-        $sources = YouCanFieldCatalog::discover($payloads);
+        $payloads = iterator_to_array($driver->fetchOrders($integration, $since), false);
+        $sources = $catalog::discover($payloads);
 
         if ($payloads !== []) {
             $integration->source_fields = $sources;
-            $integration->field_mapping = YouCanFieldCatalog::mergeMapping(
+            $integration->field_mapping = $catalog::mergeMapping(
                 $integration->field_mapping,
-                YouCanFieldCatalog::autoMap($sources),
+                $catalog::autoMap($sources),
             );
             $integration->save();
         }
@@ -86,17 +92,17 @@ class EcommerceOrderSyncService
         $pending = 0;
         $seenExternalIds = [];
         $seenRefs = [];
-        $handled = $this->mapper->handledCatalogKeys($integration);
+        $handled = $mapper->handledCatalogKeys($integration);
 
         foreach ($payloads as $payload) {
             $fetched++;
-            $externalId = $this->mapper->externalId($payload);
-            $shopRef = $this->mapper->orderRef($payload);
+            $externalId = $mapper->externalId($payload);
+            $shopRef = $mapper->orderRef($payload);
             $ref = $shopRef ?? (string) ($externalId ?? '');
 
-            if (! $this->youCan->matchesImportStatus($payload, $integration)) {
+            if (! $driver->matchesImportStatus($payload, $integration)) {
                 $skippedCount++;
-                $this->rememberSkip($skipped, $externalId, $ref, 'status_mismatch', $this->mapper->orderStatusSlug($payload));
+                $this->rememberSkip($skipped, $externalId, $ref, 'status_mismatch', $mapper->orderStatusSlug($payload));
 
                 continue;
             }
@@ -104,7 +110,7 @@ class EcommerceOrderSyncService
             $duplicateInBatch = ($externalId !== null && isset($seenExternalIds[$externalId]))
                 || ($shopRef !== null && isset($seenRefs[$shopRef]));
 
-            if ($duplicateInBatch || $this->mapper->isHandled($handled, $externalId, $shopRef)) {
+            if ($duplicateInBatch || $mapper->isHandled($handled, $externalId, $shopRef)) {
                 $skippedCount++;
                 $this->rememberSkip($skipped, $externalId, $ref, 'already_imported', $shopRef ?? $externalId);
 
@@ -121,8 +127,8 @@ class EcommerceOrderSyncService
                 $handled['refs'][$shopRef] = true;
             }
 
-            $raw = $this->mapper->extractRaw($payload, $integration->resolvedFieldMapping());
-            $values = $this->mapper->resolveValues($raw);
+            $raw = $mapper->extractRaw($payload, $integration->resolvedFieldMapping());
+            $values = $mapper->resolveValues($raw);
 
             if ($stageOnly) {
                 $this->stageRow(
@@ -139,7 +145,7 @@ class EcommerceOrderSyncService
                 continue;
             }
 
-            $mapped = $this->mapper->toOrderPayload($payload, $integration, $sync);
+            $mapped = $mapper->toOrderPayload($payload, $integration, $sync);
 
             if (! ($mapped['ok'] ?? false)) {
                 $skippedCount++;
@@ -263,7 +269,7 @@ class EcommerceOrderSyncService
                     ? mb_substr((string) $row->ref, 0, 100)
                     : null;
 
-                if ($this->mapper->alreadyImported($integration, $externalId, $shopRef)) {
+                if ($this->mapperFor($integration)->alreadyImported($integration, $externalId, $shopRef)) {
                     $row->status = EcommerceSyncRowStatus::Skipped;
                     $row->save();
 
@@ -382,9 +388,30 @@ class EcommerceOrderSyncService
             return Carbon::parse($integration->last_synced_at)->subMinutes(5);
         }
 
-        $lookbackDays = (int) config('youcan.first_sync_lookback_days', 0);
+        $lookbackDays = $integration->platform === EcommercePlatform::Shopify
+            ? (int) config('shopify.first_sync_lookback_days', 0)
+            : (int) config('youcan.first_sync_lookback_days', 0);
 
         return $lookbackDays > 0 ? now()->subDays($lookbackDays) : null;
+    }
+
+    /**
+     * @return array{0: YouCanOrderSyncDriver|ShopifyOrderSyncDriver, 1: YouCanOrderMapper|ShopifyOrderMapper, 2: class-string}
+     */
+    private function stack(EcommerceIntegration $integration): array
+    {
+        if ($integration->platform === EcommercePlatform::Shopify) {
+            return [$this->shopify, $this->shopifyMapper, ShopifyFieldCatalog::class];
+        }
+
+        return [$this->youCan, $this->youCanMapper, YouCanFieldCatalog::class];
+    }
+
+    private function mapperFor(EcommerceIntegration $integration): YouCanOrderMapper|ShopifyOrderMapper
+    {
+        return $integration->platform === EcommercePlatform::Shopify
+            ? $this->shopifyMapper
+            : $this->youCanMapper;
     }
 
     /**

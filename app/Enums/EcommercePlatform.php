@@ -38,7 +38,7 @@ enum EcommercePlatform: string
      */
     public function isAvailable(): bool
     {
-        return $this === self::YouCan;
+        return $this === self::YouCan || $this === self::Shopify;
     }
 
     public function icon(): string
@@ -78,6 +78,9 @@ enum EcommercePlatform: string
     {
         return match ($this) {
             self::YouCan => route('integrations.youcan', array_filter([
+                'store_id' => $storeId,
+            ])),
+            self::Shopify => route('integrations.shopify', array_filter([
                 'store_id' => $storeId,
             ])),
             default => route('integrations.index', ['platform' => $this->value]),

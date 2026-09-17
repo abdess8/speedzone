@@ -50,7 +50,11 @@ return [
     'center' => [
         'mark_all_read' => 'Mark all as read',
         'no_notifications' => 'No notifications yet',
+        'no_notifications_hint' => 'New alerts will show up here.',
         'view_all' => 'View all notifications',
+        'open' => 'Notifications',
+        'close' => 'Close notifications',
+        'empty_title' => 'Nothing here yet',
     ],
 
     'icons' => [

@@ -2,12 +2,15 @@
 import { Link, router, useForm } from '@inertiajs/vue3';
 import Layout from '@/Layouts/main.vue';
 import PageHeader from '@/Components/page-header.vue';
+import AdminSellerCard from '@/Components/AdminSellerCard.vue';
 import MemberForm from './Partials/MemberForm.vue';
 
 const props = defineProps({
   member: { type: Object, required: true },
   stores: { type: Array, default: () => [] },
   roles: { type: Array, default: () => [] },
+  admin: { type: Boolean, default: false },
+  seller: { type: Object, default: null },
   can: { type: Object, default: () => ({}) },
 });
 
@@ -40,6 +43,13 @@ const reactivate = () => {
     <PageHeader :title="$t('team.edit_title')" :pageTitle="$t('team.title')" />
 
     <form @submit.prevent="submit">
+      <AdminSellerCard
+        v-if="admin && seller"
+        :seller="seller"
+        readonly
+        :label="$t('team.admin.seller_field')"
+      />
+
       <MemberForm :form="form" :stores="stores" :roles="roles" is-edit />
 
       <BRow>

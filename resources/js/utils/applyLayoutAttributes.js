@@ -1,7 +1,7 @@
 export function applyLayoutAttributes(layout) {
   const el = document.documentElement;
 
-  el.setAttribute('data-layout', layout.layoutType ?? 'vertical');
+  el.setAttribute('data-layout', layout.layoutType ?? 'horizontal');
   el.setAttribute('data-layout-width', layout.layoutWidth ?? 'fluid');
   el.setAttribute('data-layout-position', layout.position ?? 'fixed');
   el.setAttribute('data-topbar', layout.topbar ?? 'light');

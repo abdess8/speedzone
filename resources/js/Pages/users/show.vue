@@ -1,20 +1,83 @@
 <script setup>
-import { computed, ref } from "vue";
-import { Link } from "@inertiajs/vue3";
+import { computed, ref, watch } from "vue";
+import { Link, router, usePage } from "@inertiajs/vue3";
 import { useI18n } from "vue-i18n";
 import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import DocumentPreview from "@/Components/DocumentPreview.vue";
 import FlipCardPreview from "@/Components/FlipCardPreview.vue";
 import { roleLabel as sharedRoleLabel } from "@/utils/roleLabel";
+import Swal from "sweetalert2";
 
 const { t, locale } = useI18n();
+const page = usePage();
 
 const props = defineProps({
   user: { type: Object, required: true },
   stores: { type: Array, default: () => [] },
   teamMembers: { type: Array, default: () => [] },
+  can: { type: Object, default: () => ({}) },
 });
+
+const sendingVerification = ref(false);
+const sendingPasswordReset = ref(false);
+
+const emailVerified = computed(() => Boolean(props.user.email_verified_at));
+
+watch(
+  () => [page.props.flash?.success, page.props.flash?.error],
+  ([success, error]) => {
+    const message = success || error;
+    if (!message) return;
+
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon: success ? "success" : "error",
+      title: message,
+      showConfirmButton: false,
+      timer: 3000,
+    });
+  }
+);
+
+const confirmSend = async (title) => {
+  const result = await Swal.fire({
+    title,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: t("common.yes"),
+    cancelButtonText: t("common.cancel"),
+  });
+
+  return result.isConfirmed;
+};
+
+const sendVerification = async () => {
+  const ok = await confirmSend(t("users.show.send_verification_confirm", { email: props.user.email }));
+  if (!ok) return;
+
+  sendingVerification.value = true;
+  router.post(route("users.verification.send", props.user.id), {}, {
+    preserveScroll: true,
+    onFinish: () => {
+      sendingVerification.value = false;
+    },
+  });
+};
+
+const sendPasswordReset = async () => {
+  const ok = await confirmSend(t("users.show.send_password_reset_confirm", { email: props.user.email }));
+  if (!ok) return;
+
+  sendingPasswordReset.value = true;
+  router.post(route("users.password.reset.send", props.user.id), {}, {
+    preserveScroll: true,
+    onFinish: () => {
+      sendingPasswordReset.value = false;
+    },
+  });
+};
 
 // A stored photo path is no proof the file is still on disk, so fall back to the
 // initials rather than showing the browser's broken-image glyph.
@@ -133,11 +196,35 @@ const labelFrom = (group, value) => {
           </BCardBody>
           <BCardBody class="border-top">
             <div class="d-flex gap-2">
-              <Link :href="route('users.edit', user.id)" class="btn btn-warning w-100">
+              <Link v-if="can.update" :href="route('users.edit', user.id)" class="btn btn-warning w-100">
                 <i class="ri-pencil-fill align-bottom me-1"></i> {{ $t('common.edit') }}
               </Link>
               <Link :href="route('users.index')" class="btn btn-light w-100">{{ $t('common.back') }}</Link>
             </div>
+          </BCardBody>
+        </BCard>
+
+        <BCard v-if="can.update" no-body class="mt-3">
+          <BCardHeader>
+            <h5 class="card-title mb-0">{{ $t('users.show.account_actions') }}</h5>
+          </BCardHeader>
+          <BCardBody class="d-grid gap-2">
+            <BButton
+              variant="soft-primary"
+              :disabled="sendingVerification"
+              @click="sendVerification"
+            >
+              <i class="ri-mail-send-line align-bottom me-1"></i>
+              {{ $t('users.show.send_verification') }}
+            </BButton>
+            <BButton
+              variant="soft-warning"
+              :disabled="sendingPasswordReset"
+              @click="sendPasswordReset"
+            >
+              <i class="ri-lock-password-line align-bottom me-1"></i>
+              {{ $t('users.show.send_password_reset') }}
+            </BButton>
           </BCardBody>
         </BCard>
       </BCol>
@@ -162,6 +249,17 @@ const labelFrom = (group, value) => {
                   <tr>
                     <th class="ps-0" scope="row">{{ $t('users.show.email') }}</th>
                     <td class="text-muted">{{ user.email }}</td>
+                  </tr>
+                  <tr>
+                    <th class="ps-0" scope="row">{{ $t('users.show.email_status') }}</th>
+                    <td>
+                      <span
+                        class="badge"
+                        :class="emailVerified ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'"
+                      >
+                        {{ emailVerified ? $t('users.show.email_verified') : $t('users.show.email_unverified') }}
+                      </span>
+                    </td>
                   </tr>
                   <tr>
                     <th class="ps-0" scope="row">{{ $t('users.show.phone') }}</th>

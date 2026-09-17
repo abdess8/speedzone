@@ -10,6 +10,24 @@ return [
     'add' => 'Add a team member',
     'manage_roles' => 'Manage roles',
 
+    'admin' => [
+        'title' => 'Seller teams',
+        'subtitle' => 'Every vendor teammate, with the account and shops they can access.',
+        'empty' => 'No team member has been invited yet.',
+        'search_placeholder' => 'Search by member, seller or email',
+        'seller_field' => 'Seller',
+        'seller_help' => 'The vendor account this teammate will belong to. Stores and roles update once a seller is chosen.',
+        'seller_placeholder' => 'Choose a seller',
+        'stats' => [
+            'total' => 'Members',
+            'active' => 'Active',
+            'suspended' => 'Suspended',
+        ],
+        'table' => [
+            'seller' => 'Seller',
+        ],
+    ],
+
     'fields' => [
         'first_name' => 'First name',
         'last_name' => 'Last name',
@@ -110,6 +128,25 @@ return [
             'in_use' => 'This role is still assigned to team members.',
             'system_role' => 'This role belongs to the platform and cannot be edited.',
             'permission_required' => 'Select at least one permission.',
+        ],
+
+        'admin' => [
+            'title' => 'Seller team roles',
+            'subtitle' => 'Custom roles defined by vendors for their teammates.',
+            'empty' => 'No custom team role has been created yet.',
+            'search_placeholder' => 'Search by role or seller',
+            'seller_field' => 'Seller',
+            'seller_help' => 'The vendor account this role will belong to.',
+            'seller_placeholder' => 'Choose a seller',
+            'stats' => [
+                'total' => 'Roles',
+                'sellers' => 'Sellers',
+                'assigned' => 'Assigned',
+            ],
+            'table' => [
+                'seller' => 'Seller',
+                'members' => 'Members',
+            ],
         ],
     ],
 

@@ -10,6 +10,24 @@ return [
     'add' => 'Ajouter un collaborateur',
     'manage_roles' => 'Gérer les rôles',
 
+    'admin' => [
+        'title' => 'Équipes des vendeurs',
+        'subtitle' => 'Tous les collaborateurs, avec le compte vendeur et les boutiques auxquels ils ont accès.',
+        'empty' => 'Aucun collaborateur n’a encore été invité.',
+        'search_placeholder' => 'Rechercher un collaborateur, un vendeur ou un e-mail',
+        'seller_field' => 'Vendeur',
+        'seller_help' => 'Le compte vendeur auquel rattacher ce collaborateur. Les boutiques et rôles se mettent à jour après le choix du vendeur.',
+        'seller_placeholder' => 'Choisir un vendeur',
+        'stats' => [
+            'total' => 'Collaborateurs',
+            'active' => 'Actifs',
+            'suspended' => 'Suspendus',
+        ],
+        'table' => [
+            'seller' => 'Vendeur',
+        ],
+    ],
+
     'fields' => [
         'first_name' => 'Prénom',
         'last_name' => 'Nom',
@@ -110,6 +128,25 @@ return [
             'in_use' => 'Ce rôle est encore attribué à des collaborateurs.',
             'system_role' => 'Ce rôle appartient à la plateforme et ne peut pas être modifié.',
             'permission_required' => 'Sélectionnez au moins une permission.',
+        ],
+
+        'admin' => [
+            'title' => 'Rôles d’équipe des vendeurs',
+            'subtitle' => 'Rôles personnalisés définis par les vendeurs pour leurs collaborateurs.',
+            'empty' => 'Aucun rôle d’équipe personnalisé n’a encore été créé.',
+            'search_placeholder' => 'Rechercher un rôle ou un vendeur',
+            'seller_field' => 'Vendeur',
+            'seller_help' => 'Le compte vendeur auquel rattacher ce rôle.',
+            'seller_placeholder' => 'Choisir un vendeur',
+            'stats' => [
+                'total' => 'Rôles',
+                'sellers' => 'Vendeurs',
+                'assigned' => 'Attribués',
+            ],
+            'table' => [
+                'seller' => 'Vendeur',
+                'members' => 'Collaborateurs',
+            ],
         ],
     ],
 

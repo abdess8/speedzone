@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\EcommercePlatform;
+use App\Enums\ShopifyImportStatus;
 use App\Enums\YouCanImportStatus;
 use App\Models\EcommerceIntegration;
 use Illuminate\Foundation\Http\FormRequest;
@@ -25,9 +27,23 @@ class UpdateYouCanSettingsRequest extends FormRequest
         return [
             'auto_sync_enabled' => ['required', 'boolean'],
             'sync_interval_minutes' => ['required', 'integer', Rule::in(EcommerceIntegration::SYNC_INTERVALS)],
-            'import_status' => ['required', 'string', Rule::in(YouCanImportStatus::values())],
+            'import_status' => ['required', 'string', Rule::in($this->allowedImportStatuses())],
             'field_mapping' => ['nullable', 'array'],
             'field_mapping.*' => ['nullable', 'string', 'max:191'],
         ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function allowedImportStatuses(): array
+    {
+        $integration = $this->route('integration');
+
+        if ($integration instanceof EcommerceIntegration && $integration->platform === EcommercePlatform::Shopify) {
+            return ShopifyImportStatus::values();
+        }
+
+        return YouCanImportStatus::values();
     }
 }

@@ -287,6 +287,12 @@ $value in $theme-colors {
         }
     }
 
+    &.card-radio-stack .form-check-label {
+        overflow: visible;
+        text-overflow: unset;
+        white-space: normal;
+    }
+
     .form-check-input {
         display: none;
 

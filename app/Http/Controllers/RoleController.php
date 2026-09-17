@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateRoleRequest;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Policies\RolePolicy;
+use App\Support\LoginRedirect;
 use App\Support\PermissionLabels;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,6 +43,7 @@ class RoleController extends Controller
 
         return Inertia::render('roles/create', [
             'permissionGroups' => $this->groupedPermissions(),
+            'loginRedirects' => LoginRedirect::options(),
         ]);
     }
 
@@ -54,7 +56,7 @@ class RoleController extends Controller
 
         $data = $request->validated();
 
-        $role = Role::create(['name' => $data['name']]);
+        $role = Role::create($this->roleAttributes($data));
         $role->permissions()->sync($data['permission_ids'] ?? []);
 
         return redirect()->route('roles.index')
@@ -74,9 +76,11 @@ class RoleController extends Controller
             'role' => [
                 'id' => $role->id,
                 'name' => $role->name,
+                'login_redirect' => $role->login_redirect,
                 'permission_ids' => $role->permissions->pluck('id'),
             ],
             'permissionGroups' => $this->groupedPermissions(),
+            'loginRedirects' => LoginRedirect::options(),
         ]);
     }
 
@@ -89,7 +93,7 @@ class RoleController extends Controller
 
         $data = $request->validated();
 
-        $role->update(['name' => $data['name']]);
+        $role->update($this->roleAttributes($data));
         $role->permissions()->sync($data['permission_ids'] ?? []);
 
         return redirect()->route('roles.index')
@@ -111,6 +115,18 @@ class RoleController extends Controller
 
         return redirect()->route('roles.index')
             ->with('success', 'Role deleted successfully.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function roleAttributes(array $data): array
+    {
+        return [
+            'name' => $data['name'],
+            'login_redirect' => $data['login_redirect'] ?? null,
+        ];
     }
 
     /**

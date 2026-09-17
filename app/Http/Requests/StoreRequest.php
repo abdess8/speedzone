@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ResolvesVendorOwner;
 use App\Models\Product;
 use App\Models\Store;
 use Closure;
@@ -16,6 +17,8 @@ use Illuminate\Validation\Rule;
  */
 class StoreRequest extends FormRequest
 {
+    use ResolvesVendorOwner;
+
     public function authorize(): bool
     {
         return true;
@@ -36,9 +39,9 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         $store = $this->route('store');
-        $ownerId = $this->user()->accountOwnerId();
+        $ownerId = $this->vendorOwnerId();
 
-        return [
+        return array_merge($this->sellerIdRules(), [
             'name' => [
                 'required', 'string', 'max:255',
                 Rule::unique('stores', 'name')
@@ -71,7 +74,7 @@ class StoreRequest extends FormRequest
             'pickup_address_2' => ['nullable', 'string', 'max:255'],
             'is_active' => ['boolean'],
             'is_default' => ['boolean'],
-        ];
+        ]);
     }
 
     /**

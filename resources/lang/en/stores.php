@@ -71,4 +71,27 @@ return [
         'not_accessible' => 'You do not have access to this store.',
         'depot_not_empty' => 'The depot cannot be changed: :units unit(s) are still held in the current one. Sell out or count down that stock before moving.',
     ],
+
+    'admin' => [
+        'title' => 'Seller stores',
+        'subtitle' => 'Every vendor shop on the platform, with the account it belongs to.',
+        'empty' => 'No store has been created yet.',
+        'search_placeholder' => 'Search by seller, shop or category',
+        'seller_field' => 'Seller',
+        'seller_help' => 'The vendor account this store will belong to.',
+        'seller_placeholder' => 'Choose a seller',
+        'for_seller' => 'Store of :name',
+        'stats' => [
+            'total' => 'Stores',
+            'sellers' => 'Sellers',
+            'inactive' => 'Inactive',
+        ],
+        'table' => [
+            'seller' => 'Seller',
+            'orders' => 'Orders',
+        ],
+        'errors' => [
+            'seller_required' => 'Choose the seller this store belongs to.',
+        ],
+    ],
 ];

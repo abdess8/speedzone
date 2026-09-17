@@ -6,10 +6,8 @@ import { useStore } from 'vuex';
  * Switches the application chrome between a left sidebar and a horizontal top
  * navigation bar.
  *
- * Both modes render the exact same menu tree from `menuItems.js`; only the
- * stylesheet changes, keyed off `data-layout` on the document element. The
- * choice is a personal preference rather than an account setting, so it lives
- * in the `theme-customizer` localStorage entry alongside the colour mode.
+ * The top bar is the application default; the sidebar remains a personal
+ * preference stored in `theme-customizer` alongside the colour mode.
  */
 const store = useStore();
 
@@ -35,7 +33,7 @@ function select(mode) {
 
 <template>
   <BDropdown
-    class="ms-1 header-item d-none d-sm-flex"
+    class="ms-1 header-item"
     variant="ghost-secondary"
     toggle-class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle arrow-none"
     menu-class="dropdown-menu-end"

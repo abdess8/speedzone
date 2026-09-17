@@ -4,12 +4,15 @@ import { useI18n } from 'vue-i18n';
 import Swal from 'sweetalert2';
 import Layout from '@/Layouts/main.vue';
 import PageHeader from '@/Components/page-header.vue';
+import AdminSellerCard from '@/Components/AdminSellerCard.vue';
 import StoreForm from './Partials/StoreForm.vue';
 
 const props = defineProps({
   store: { type: Object, required: true },
   cities: { type: Array, default: () => [] },
   hubCities: { type: Array, default: () => [] },
+  admin: { type: Boolean, default: false },
+  seller: { type: Object, default: null },
   can: { type: Object, default: () => ({}) },
 });
 
@@ -61,6 +64,13 @@ const confirmDelete = () => {
     <PageHeader :title="store.name" :pageTitle="$t('stores.title')" />
 
     <form @submit.prevent="submit">
+      <AdminSellerCard
+        v-if="admin && seller"
+        :seller="seller"
+        readonly
+        :label="$t('stores.admin.seller_field')"
+      />
+
       <StoreForm
         :form="form"
         :cities="cities"

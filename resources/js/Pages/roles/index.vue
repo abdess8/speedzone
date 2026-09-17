@@ -34,7 +34,16 @@ export default {
       return [
         { label: this.$t("roles.table.permissions"), value: role.permissions_count },
         { label: this.$t("roles.table.users"), value: role.users_count },
+        { label: this.$t("roles.table.redirect"), value: this.redirectLabel(role) },
       ];
+    },
+    redirectLabel(role) {
+      if (!role.login_redirect) {
+        return this.$t("roles.redirect.default");
+      }
+
+      const key = `roles.redirect.pages.${role.login_redirect}`;
+      return this.$te(key) ? this.$t(key) : role.login_redirect;
     },
     confirmDelete(role) {
       Swal.fire({
@@ -120,6 +129,7 @@ export default {
                     <th scope="col">{{ $t('roles.table.role') }}</th>
                     <th scope="col">{{ $t('roles.table.permissions') }}</th>
                     <th scope="col">{{ $t('roles.table.users') }}</th>
+                    <th scope="col">{{ $t('roles.table.redirect') }}</th>
                     <th scope="col">{{ $t('common.action') }}</th>
                   </tr>
                 </thead>
@@ -139,6 +149,9 @@ export default {
                       </span>
                     </td>
                     <td>
+                      <span class="text-muted">{{ redirectLabel(role) }}</span>
+                    </td>
+                    <td>
                       <ul class="list-inline hstack gap-2 mb-0">
                         <li class="list-inline-item" :title="$t('common.edit')">
                           <Link :href="route('roles.edit', role.id)" class="text-warning d-inline-block">
@@ -154,7 +167,7 @@ export default {
                     </td>
                   </tr>
                   <tr v-if="roles.length === 0">
-                    <td colspan="4" class="text-center text-muted py-4">{{ $t('roles.empty') }}</td>
+                    <td colspan="5" class="text-center text-muted py-4">{{ $t('roles.empty') }}</td>
                   </tr>
                 </tbody>
               </table>

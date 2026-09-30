@@ -5,6 +5,8 @@ use App\Enums\EcommercePlatform;
 use App\Enums\EcommerceSyncStatus;
 use App\Enums\EcommerceSyncTrigger;
 use App\Enums\OrderCreationSource;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\ShopifyImportStatus;
 use App\Models\City;
 use App\Models\EcommerceIntegration;
@@ -94,6 +96,20 @@ function fakeShopifyOrders(array $orders, array $options = []): void
             return Http::response(['errors' => '[API] Invalid API key or access token'], 401);
         }
 
+        $path = strtok($url, '?') ?: $url;
+
+        if (preg_match('#/orders/(\d+)\.json$#', $path, $matches)) {
+            $id = $matches[1];
+
+            foreach ($orders as $order) {
+                if ((string) ($order['id'] ?? '') === $id) {
+                    return Http::response(['order' => $order], 200);
+                }
+            }
+
+            return Http::response(['errors' => 'Not Found'], 404);
+        }
+
         if (str_contains($url, '/orders.json')) {
             $headers = [];
 
@@ -165,7 +181,7 @@ function commitShopifyReview($test, User $seller): EcommerceIntegrationSync
     return $sync->refresh();
 }
 
-it('stages an unfulfilled Shopify order for review then imports it as a parcel', function () {
+it('creates SpeedZone parcels from Shopify on sync now', function () {
     shopifySyncCity();
     $seller = shopifySyncSeller();
     $store = shopifySyncStore($seller);
@@ -175,13 +191,11 @@ it('stages an unfulfilled Shopify order for review then imports it as a parcel',
 
     $this->actingAs($seller)
         ->post(route('integrations.sync', $integration))
-        ->assertRedirect(route('integrations.shopify.review', EcommerceIntegrationSync::query()->first()))
+        ->assertRedirect(route('integrations.shopify', ['store_id' => $store->id]))
         ->assertSessionHas('success');
 
-    expect(Order::query()->count())->toBe(0);
-
-    $sync = commitShopifyReview($this, $seller);
     $order = Order::query()->first();
+    $sync = EcommerceIntegrationSync::query()->latest('id')->first();
 
     expect($order)->not->toBeNull()
         ->and($order->creation_source)->toBe(OrderCreationSource::Integration)
@@ -191,17 +205,118 @@ it('stages an unfulfilled Shopify order for review then imports it as a parcel',
         ->and($order->customer_first_name)->toBe('Sara')
         ->and($order->customer_phone)->toBe('0612345678')
         ->and((float) $order->order_amount)->toBe(199.0)
-        ->and($order->store_id)->toBe($store->id);
-
-    expect($sync)->not->toBeNull()
+        ->and($order->store_id)->toBe($store->id)
         ->and($sync->status)->toBe(EcommerceSyncStatus::Succeeded)
         ->and($sync->trigger)->toBe(EcommerceSyncTrigger::Manual)
         ->and($sync->created_count)->toBe(1)
         ->and($order->ecommerce_sync_id)->toBe($sync->id);
+});
 
-    Http::assertSent(fn (Request $request) => str_contains($request->url(), 'atlas.myshopify.com/admin/api/2026-07/orders.json')
-        && $request->header('X-Shopify-Access-Token') === ['shpat_test_token']
-        && str_contains($request->url(), 'status=any'));
+it('pushes mapped SpeedZone statuses to Shopify on sync now', function () {
+    $city = shopifySyncCity();
+    $seller = shopifySyncSeller();
+    $store = shopifySyncStore($seller);
+    $integration = connectedShopify($seller, $store);
+    $integration->forceFill([
+        'status_mapping' => [
+            'OUT_FOR_DELIVERY' => 'out_for_delivery',
+        ],
+    ])->save();
+
+    shopifyImportedOrder($seller, $store, $integration, $city, [
+        'status' => OrderStatus::OUT_FOR_DELIVERY->value,
+        'external_order_id' => '2002',
+    ]);
+
+    Http::fake(function (Request $request) {
+        $url = $request->url();
+        $method = $request->method();
+
+        if (str_contains($url, '/admin/api/') && str_ends_with(strtok($url, '?') ?: $url, '/orders.json')) {
+            return Http::response(['orders' => []]);
+        }
+
+        if (str_contains($url, '/fulfillment_orders.json')) {
+            return Http::response([
+                'fulfillment_orders' => [
+                    ['id' => 555001, 'status' => 'open'],
+                ],
+            ]);
+        }
+
+        if ($method === 'POST' && preg_match('#/fulfillments\\.json#', $url) && ! str_contains($url, '/events')) {
+            return Http::response(['fulfillment' => ['id' => 777]]);
+        }
+
+        if (str_contains($url, '/events.json')) {
+            return Http::response(['fulfillment_event' => ['id' => 1, 'status' => 'out_for_delivery']]);
+        }
+
+        if (str_contains($url, '/fulfillments.json')) {
+            return Http::response(['fulfillments' => []]);
+        }
+
+        return Http::response(['errors' => 'unexpected '.$url], 500);
+    });
+
+    $this->actingAs($seller)
+        ->post(route('integrations.sync', $integration))
+        ->assertRedirect(route('integrations.shopify', ['store_id' => $store->id]));
+
+    $sync = EcommerceIntegrationSync::query()->latest('id')->first();
+
+    expect($sync->created_count)->toBe(0)
+        ->and($sync->updated_count)->toBe(1);
+
+    Http::assertSent(fn (Request $request) => str_contains($request->url(), '/orders/2002/fulfillment_orders.json')
+        || str_contains($request->url(), '/fulfillments.json')
+        || str_contains($request->url(), '/events.json'));
+});
+
+it('refreshes an expired Shopify client-credentials token before syncing orders', function () {
+    shopifySyncCity();
+    $seller = shopifySyncSeller();
+    $store = shopifySyncStore($seller);
+    $integration = connectedShopify($seller, $store);
+    $integration->forceFill([
+        'client_id' => 'shopify-client-id',
+        'client_secret' => 'shopify-client-secret',
+        'access_token' => 'shpat_expired',
+        'token_expires_at' => now()->subMinute(),
+    ])->save();
+
+    Http::fake(function (Request $request) {
+        $url = $request->url();
+
+        if (str_contains($url, '/admin/oauth/access_token')) {
+            return Http::response([
+                'access_token' => 'shpat_test_token',
+                'scope' => 'read_orders',
+                'expires_in' => 86399,
+            ]);
+        }
+
+        if (($request->header('X-Shopify-Access-Token')[0] ?? null) !== 'shpat_test_token') {
+            return Http::response(['errors' => '[API] Invalid API key or access token'], 401);
+        }
+
+        if (str_contains($url, '/orders.json')) {
+            return Http::response(['orders' => [shopifyOrder()]]);
+        }
+
+        return Http::response(['errors' => 'unexpected '.$url], 500);
+    });
+
+    $this->actingAs($seller)
+        ->post(route('integrations.sync', $integration))
+        ->assertRedirect();
+
+    expect($integration->refresh()->access_token)->toBe('shpat_test_token')
+        ->and($integration->token_expires_at?->isFuture())->toBeTrue();
+
+    Http::assertSent(fn (Request $request) => str_contains($request->url(), '/admin/oauth/access_token'));
+    Http::assertSent(fn (Request $request) => str_contains($request->url(), '/orders.json')
+        && $request->header('X-Shopify-Access-Token') === ['shpat_test_token']);
 });
 
 it('skips Shopify orders that do not match the unfulfilled import filter', function () {
@@ -227,4 +342,168 @@ it('skips Shopify orders that do not match the unfulfilled import filter', funct
         ->and($sync->fetched_count)->toBe(1)
         ->and($sync->skipped_count)->toBe(1)
         ->and($sync->created_count)->toBe(0);
+});
+
+/**
+ * @param  array<string, mixed>  $overrides
+ */
+function shopifyImportedOrder(
+    User $seller,
+    Store $store,
+    EcommerceIntegration $integration,
+    City $city,
+    array $overrides = [],
+): Order {
+    return Order::query()->create(array_merge([
+        'tracking_number' => 'SZ-SHOP-'.uniqid(),
+        'seller_id' => $seller->id,
+        'store_id' => $store->id,
+        'customer_first_name' => 'Sara',
+        'customer_last_name' => 'Benali',
+        'customer_phone' => '0612345678',
+        'customer_address' => '12 rue Maarif',
+        'city_id' => $city->id,
+        'payment_method' => PaymentMethod::CASH->value,
+        'order_amount' => 199,
+        'delivery_price' => 35,
+        'status' => OrderStatus::OUT_FOR_DELIVERY->value,
+        'creation_source' => OrderCreationSource::Integration->value,
+        'ecommerce_integration_id' => $integration->id,
+        'external_order_id' => '1001',
+        'ecommerce_order_ref' => '#1001',
+    ], $overrides));
+}
+
+it('fulfills the Shopify order when the parcel reaches a mapped SpeedZone status', function () {
+    $city = shopifySyncCity();
+    $seller = shopifySyncSeller();
+    $store = shopifySyncStore($seller);
+    $integration = connectedShopify($seller, $store);
+    $integration->forceFill([
+        'status_mapping' => [
+            'DELIVERED' => 'fulfilled',
+        ],
+    ])->save();
+
+    $order = shopifyImportedOrder($seller, $store, $integration, $city);
+
+    Http::fake(function (Request $request) {
+        $url = $request->url();
+
+        if (str_contains($url, '/fulfillment_orders.json')) {
+            return Http::response([
+                'fulfillment_orders' => [
+                    ['id' => 555001, 'status' => 'open'],
+                ],
+            ]);
+        }
+
+        if ($request->method() === 'POST' && str_contains($url, '/fulfillments.json')) {
+            expect($request->data()['fulfillment']['line_items_by_fulfillment_order'][0]['fulfillment_order_id'] ?? null)
+                ->toBe(555001);
+
+            return Http::response(['fulfillment' => ['id' => 777]]);
+        }
+
+        return Http::response(['errors' => 'unexpected '.$url], 500);
+    });
+
+    $order->update(['status' => OrderStatus::DELIVERED->value]);
+
+    Http::assertSent(fn (Request $request) => str_contains($request->url(), '/orders/1001/fulfillment_orders.json'));
+    Http::assertSent(fn (Request $request) => $request->method() === 'POST'
+        && str_contains($request->url(), '/fulfillments.json'));
+});
+
+it('cancels the Shopify order when the mapped SpeedZone status is CANCELED', function () {
+    $city = shopifySyncCity();
+    $seller = shopifySyncSeller();
+    $store = shopifySyncStore($seller);
+    $integration = connectedShopify($seller, $store);
+    $integration->forceFill([
+        'status_mapping' => [
+            'CANCELED' => 'cancelled',
+        ],
+    ])->save();
+
+    $order = shopifyImportedOrder($seller, $store, $integration, $city);
+
+    Http::fake(function (Request $request) {
+        if ($request->method() === 'POST' && str_contains($request->url(), '/orders/1001/cancel.json')) {
+            return Http::response(['order' => ['id' => 1001, 'cancelled_at' => now()->toIso8601String()]]);
+        }
+
+        return Http::response(['errors' => 'unexpected '.$request->url()], 500);
+    });
+
+    $order->update(['status' => OrderStatus::CANCELED->value]);
+
+    Http::assertSent(fn (Request $request) => $request->method() === 'POST'
+        && str_contains($request->url(), '/orders/1001/cancel.json'));
+});
+
+it('does not call Shopify when the SpeedZone status is not mapped', function () {
+    $city = shopifySyncCity();
+    $seller = shopifySyncSeller();
+    $store = shopifySyncStore($seller);
+    $integration = connectedShopify($seller, $store);
+    $integration->forceFill([
+        'status_mapping' => [
+            'DELIVERED' => 'fulfilled',
+        ],
+    ])->save();
+
+    $order = shopifyImportedOrder($seller, $store, $integration, $city, [
+        'status' => OrderStatus::IN_DELIVERY_CITY->value,
+    ]);
+
+    Http::fake();
+
+    $order->update(['status' => OrderStatus::OUT_FOR_DELIVERY->value]);
+
+    Http::assertNothingSent();
+});
+
+it('retries failed Shopify orders from the history tab', function () {
+    shopifySyncCity();
+    $seller = shopifySyncSeller();
+    $store = shopifySyncStore($seller);
+    $integration = connectedShopify($seller, $store);
+    $failed = shopifyOrder([
+        'id' => 4001,
+        'name' => '#4001',
+        'shipping_address' => [
+            'first_name' => 'Sara',
+            'last_name' => 'Benali',
+            'phone' => '0612345678',
+            'city' => 'Atlantis',
+            'address1' => '12 rue Maarif',
+        ],
+        'note_attributes' => [
+            ['name' => 'Ville', 'value' => 'Atlantis'],
+        ],
+    ]);
+
+    fakeShopifyOrders([$failed]);
+
+    $this->actingAs($seller)->post(route('integrations.sync', $integration));
+
+    $source = EcommerceIntegrationSync::query()->latest('id')->first();
+
+    expect(Order::query()->count())->toBe(0)
+        ->and($source->error_count)->toBe(1);
+
+    shopifySyncCity('Atlantis');
+
+    $this->actingAs($seller)
+        ->post(route('integrations.sync.retry', [$integration, $source]))
+        ->assertRedirect(route('integrations.shopify', ['store_id' => $store->id, 'tab' => 'history']))
+        ->assertSessionHas('success');
+
+    $retry = EcommerceIntegrationSync::query()->latest('id')->first();
+
+    expect(Order::query()->value('external_order_id'))->toBe('4001')
+        ->and($retry->trigger)->toBe(EcommerceSyncTrigger::Retry)
+        ->and($retry->created_count)->toBe(1)
+        ->and($source->fresh()->error_count)->toBe(0);
 });

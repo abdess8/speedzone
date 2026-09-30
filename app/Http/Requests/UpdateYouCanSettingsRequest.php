@@ -3,7 +3,10 @@
 namespace App\Http\Requests;
 
 use App\Enums\EcommercePlatform;
+use App\Enums\OrderStatus;
+use App\Enums\ShopifyExportStatus;
 use App\Enums\ShopifyImportStatus;
+use App\Enums\YouCanExportStatus;
 use App\Enums\YouCanImportStatus;
 use App\Models\EcommerceIntegration;
 use Illuminate\Foundation\Http\FormRequest;
@@ -30,7 +33,57 @@ class UpdateYouCanSettingsRequest extends FormRequest
             'import_status' => ['required', 'string', Rule::in($this->allowedImportStatuses())],
             'field_mapping' => ['nullable', 'array'],
             'field_mapping.*' => ['nullable', 'string', 'max:191'],
+            'status_mapping' => ['nullable', 'array'],
+            'status_mapping.*' => ['nullable', 'string', Rule::in(['', ...$this->allowedExportStatuses()])],
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            $mapping = $this->input('status_mapping');
+
+            if (! is_array($mapping)) {
+                return;
+            }
+
+            $allowed = OrderStatus::values();
+
+            foreach (array_keys($mapping) as $status) {
+                if (! in_array($status, $allowed, true)) {
+                    $validator->errors()->add(
+                        'status_mapping',
+                        __('integrations.'.$this->platformKey().'.validation.status_mapping')
+                    );
+
+                    return;
+                }
+            }
+        });
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function allowedExportStatuses(): array
+    {
+        $integration = $this->route('integration');
+
+        if ($integration instanceof EcommerceIntegration && $integration->platform === EcommercePlatform::YouCan) {
+            return YouCanExportStatus::values();
+        }
+
+        return ShopifyExportStatus::values();
+    }
+
+    private function platformKey(): string
+    {
+        $integration = $this->route('integration');
+
+        return $integration instanceof EcommerceIntegration
+            && $integration->platform === EcommercePlatform::YouCan
+            ? 'youcan'
+            : 'shopify';
     }
 
     /**

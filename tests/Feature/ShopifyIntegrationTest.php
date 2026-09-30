@@ -135,6 +135,9 @@ it('never sends the Shopify access token to the browser', function () {
             ->component('integrations/shopify')
             ->where('integration.shop_slug', 'atlas.myshopify.com')
             ->where('integration.has_access_token', true)
+            ->where('integration.has_client_secret', false)
+            ->has('options.export_statuses')
+            ->has('options.order_statuses')
             ->missing('integration.access_token')
             ->missing('integration.client_secret')
         );
@@ -178,4 +181,166 @@ it('rejects an invalid Shopify Admin API token', function () {
         ->assertSessionHasErrors('access_token');
 
     expect(EcommerceIntegration::query()->value('status'))->toBe(EcommerceIntegrationStatus::Error);
+});
+
+it('connects Shopify with Dev Dashboard client credentials', function () {
+    Http::fake(function (Request $request) {
+        $url = $request->url();
+
+        if (str_contains($url, '/admin/oauth/access_token')) {
+            expect($request->data())->toMatchArray([
+                'grant_type' => 'client_credentials',
+                'client_id' => 'shopify-client-id',
+                'client_secret' => 'shopify-client-secret',
+            ]);
+
+            return Http::response([
+                'access_token' => 'shpat_exchanged_token',
+                'scope' => 'read_orders',
+                'expires_in' => 86399,
+            ]);
+        }
+
+        if (($request->header('X-Shopify-Access-Token')[0] ?? null) !== 'shpat_exchanged_token') {
+            return Http::response(['errors' => '[API] Invalid API key or access token'], 401);
+        }
+
+        if (str_contains($url, '/shop.json')) {
+            return Http::response([
+                'shop' => [
+                    'id' => 998877,
+                    'name' => 'Atlas Shopify',
+                    'myshopify_domain' => 'atlas.myshopify.com',
+                    'email' => 'owner@atlas.test',
+                ],
+            ]);
+        }
+
+        return Http::response(['errors' => 'unexpected '.$url], 500);
+    });
+
+    $seller = shopifySeller();
+    $store = shopifyStore($seller);
+
+    $this->actingAs($seller)
+        ->from(route('integrations.shopify'))
+        ->post(route('integrations.shopify.store'), shopifyPayload($store, [
+            'access_token' => '',
+            'client_id' => 'shopify-client-id',
+            'client_secret' => 'shopify-client-secret',
+        ]))
+        ->assertRedirect(route('integrations.shopify', ['store_id' => $store->id]))
+        ->assertSessionHas('success');
+
+    $integration = EcommerceIntegration::query()->first();
+
+    expect($integration)->not->toBeNull()
+        ->and($integration->client_id)->toBe('shopify-client-id')
+        ->and($integration->client_secret)->toBe('shopify-client-secret')
+        ->and($integration->access_token)->toBe('shpat_exchanged_token')
+        ->and($integration->token_expires_at)->not->toBeNull()
+        ->and($integration->status)->toBe(EcommerceIntegrationStatus::Connected);
+
+    Http::assertSent(fn (Request $request) => str_contains($request->url(), '/admin/oauth/access_token'));
+});
+
+it('requires Shopify client credentials when no Admin token is pasted', function () {
+    $seller = shopifySeller();
+    $store = shopifyStore($seller);
+
+    $this->actingAs($seller)
+        ->from(route('integrations.shopify'))
+        ->post(route('integrations.shopify.store'), shopifyPayload($store, [
+            'access_token' => '',
+        ]))
+        ->assertRedirect(route('integrations.shopify'))
+        ->assertSessionHasErrors('client_id');
+});
+
+it('explains when Shopify rejects client credentials for the shop', function () {
+    Http::fake([
+        'https://atlas.myshopify.com/admin/oauth/access_token' => Http::response([
+            'error' => 'shop_not_permitted',
+            'error_description' => 'Client credentials cannot be performed on this shop.',
+        ], 400),
+    ]);
+
+    $seller = shopifySeller();
+    $store = shopifyStore($seller);
+
+    $this->actingAs($seller)
+        ->from(route('integrations.shopify'))
+        ->post(route('integrations.shopify.store'), shopifyPayload($store, [
+            'access_token' => '',
+            'client_id' => 'shopify-client-id',
+            'client_secret' => 'shopify-client-secret',
+        ]))
+        ->assertRedirect(route('integrations.shopify'))
+        ->assertSessionHasErrors('client_secret');
+
+    expect(session('errors')->first('client_secret'))
+        ->toBe(__('integrations.shopify.errors.shop_not_permitted'));
+});
+
+it('explains when the Shopify app is not installed on the shop', function () {
+    Http::fake([
+        'https://atlas.myshopify.com/admin/oauth/access_token' => Http::response([
+            'error' => 'app_not_installed',
+            'error_description' => 'The application is not installed on this shop.',
+        ], 400),
+    ]);
+
+    $seller = shopifySeller();
+    $store = shopifyStore($seller);
+
+    $this->actingAs($seller)
+        ->from(route('integrations.shopify'))
+        ->post(route('integrations.shopify.store'), shopifyPayload($store, [
+            'access_token' => '',
+            'client_id' => 'shopify-client-id',
+            'client_secret' => 'shopify-client-secret',
+        ]))
+        ->assertRedirect(route('integrations.shopify'))
+        ->assertSessionHasErrors('client_secret');
+
+    expect(session('errors')->first('client_secret'))
+        ->toBe(__('integrations.shopify.errors.app_not_installed'));
+});
+
+it('persists the Shopify SpeedZone-to-Shopify status mapping', function () {
+    $seller = shopifySeller();
+    $store = shopifyStore($seller);
+
+    $integration = EcommerceIntegration::query()->create([
+        'seller_id' => $seller->id,
+        'store_id' => $store->id,
+        'platform' => EcommercePlatform::Shopify,
+        'status' => EcommerceIntegrationStatus::Connected,
+        'shop_slug' => 'atlas.myshopify.com',
+        'shop_name' => 'Atlas Shopify',
+        'access_token' => 'shpat_secret',
+        'connected_at' => now(),
+        'connected_by' => $seller->id,
+        'import_status' => ShopifyImportStatus::Unfulfilled->value,
+    ]);
+
+    $this->actingAs($seller)
+        ->put(route('integrations.settings.update', $integration), [
+            'auto_sync_enabled' => false,
+            'sync_interval_minutes' => 15,
+            'import_status' => ShopifyImportStatus::Unfulfilled->value,
+            'status_mapping' => [
+                'DELIVERED' => 'fulfilled',
+                'CANCELED' => 'cancelled',
+                'OUT_FOR_DELIVERY' => 'out_for_delivery',
+                'CREATED' => '',
+            ],
+        ])
+        ->assertRedirect(route('integrations.shopify', ['store_id' => $store->id]));
+
+    expect($integration->fresh()->status_mapping)->toMatchArray([
+        'DELIVERED' => 'fulfilled',
+        'CANCELED' => 'cancelled',
+        'OUT_FOR_DELIVERY' => 'out_for_delivery',
+    ]);
 });

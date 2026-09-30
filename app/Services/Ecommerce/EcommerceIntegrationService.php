@@ -5,7 +5,10 @@ namespace App\Services\Ecommerce;
 use App\Enums\EcommerceIntegrationStatus;
 use App\Enums\EcommercePlatform;
 use App\Enums\EcommerceSyncRowStatus;
+use App\Enums\OrderStatus;
+use App\Enums\ShopifyExportStatus;
 use App\Enums\ShopifyImportStatus;
+use App\Enums\YouCanExportStatus;
 use App\Enums\YouCanImportStatus;
 use App\Models\EcommerceIntegration;
 use App\Models\EcommerceIntegrationSync;
@@ -93,7 +96,9 @@ class EcommerceIntegrationService
             'shop_slug' => $integration->shop_slug,
             'shop_name' => $integration->shop_name,
             'email' => $integration->email,
+            'client_id' => $integration->client_id,
             'has_password' => $integration->hasPassword(),
+            'has_client_secret' => $integration->hasClientSecret(),
             'has_access_token' => $integration->hasAccessToken(),
             'connected_at' => $integration->connected_at?->toIso8601String(),
             'last_error' => $integration->last_error,
@@ -101,6 +106,7 @@ class EcommerceIntegrationService
             'sync_interval_minutes' => (int) $integration->sync_interval_minutes,
             'import_status' => $integration->import_status ?: $this->defaultImportStatus($integration),
             'field_mapping' => $integration->resolvedFieldMapping(),
+            'status_mapping' => $integration->status_mapping ?: (object) [],
             'source_fields' => $integration->source_fields ?: $this->builtinSources($integration),
             'last_synced_at' => $integration->last_synced_at?->toIso8601String(),
             'next_sync_at' => $integration->next_sync_at?->toIso8601String(),
@@ -128,6 +134,10 @@ class EcommerceIntegrationService
             ])
             ->count();
 
+        $failedCount = (int) ($sync->failed_count ?? $sync->rows()
+            ->where('status', EcommerceSyncRowStatus::Failed->value)
+            ->count());
+
         return [
             'id' => $sync->id,
             'status' => $status->value,
@@ -141,6 +151,8 @@ class EcommerceIntegrationService
             'skipped_count' => (int) $sync->skipped_count,
             'error_count' => (int) $sync->error_count,
             'reviewable_count' => (int) $reviewable,
+            'failed_count' => $failedCount,
+            'can_retry' => $failedCount > 0 || $sync->retryableSkipReasons()->isNotEmpty(),
             'started_at' => $sync->started_at?->toIso8601String(),
             'finished_at' => $sync->finished_at?->toIso8601String(),
             'duration_seconds' => $sync->durationSeconds(),
@@ -215,6 +227,13 @@ class EcommerceIntegrationService
             );
         }
 
+        if (array_key_exists('status_mapping', $data) && is_array($data['status_mapping'])) {
+            $integration->status_mapping = $this->normalizeStatusMapping(
+                $data['status_mapping'],
+                $integration->platform,
+            );
+        }
+
         if ($justEnabled) {
             $integration->next_sync_at = now();
         } else {
@@ -282,25 +301,27 @@ class EcommerceIntegrationService
     }
 
     /**
-     * Verify a custom-app Admin API token against GET /admin/api/{version}/shop.json.
+     * Verify Shopify credentials against GET /admin/api/{version}/shop.json.
+     * Dev Dashboard apps send a client ID and secret; SpeedZone exchanges
+     * them for a 24-hour Admin token. Legacy custom apps still paste a token.
      *
      * @param  array<string, mixed>  $data
      */
     public function connectShopify(array $data, User $actor, Store $store): EcommerceIntegration
     {
         $integration = $this->upsertShopify($data, $actor, $store);
-        $token = filled($data['access_token'] ?? null)
-            ? (string) $data['access_token']
-            : (string) $integration->access_token;
-        $domain = (string) $integration->shop_slug;
-
-        if ($token === '' || $domain === '') {
-            throw ValidationException::withMessages([
-                'access_token' => __('integrations.shopify.validation.access_token'),
-            ]);
-        }
+        $errorField = $integration->hasShopifyClientCredentials() ? 'client_secret' : 'access_token';
 
         try {
+            $token = $this->shopifyAccessToken($integration, forceRefresh: $integration->hasShopifyClientCredentials());
+            $domain = (string) $integration->shop_slug;
+
+            if ($token === '' || $domain === '') {
+                throw ValidationException::withMessages([
+                    $errorField => __('integrations.shopify.validation.credentials'),
+                ]);
+            }
+
             $shop = $this->shopify->shop($domain, $token);
 
             $integration->fill([
@@ -312,7 +333,6 @@ class EcommerceIntegrationService
                 'email' => $shop['email'] ?? $integration->email,
                 'connected_by' => $actor->id,
                 'connected_at' => now(),
-                'token_expires_at' => null,
                 'last_error' => null,
             ])->save();
         } catch (ValidationException $e) {
@@ -326,17 +346,58 @@ class EcommerceIntegrationService
             $this->markError($integration, $e->getMessage());
 
             throw ValidationException::withMessages([
-                'access_token' => $e->getMessage(),
+                $errorField => $e->getMessage(),
             ]);
         }
 
         return $integration->refresh();
     }
 
+    /**
+     * Return a usable Admin API token, refreshing Dev Dashboard credentials
+     * when the cached token is missing or about to expire.
+     */
+    public function shopifyAccessToken(EcommerceIntegration $integration, bool $forceRefresh = false): string
+    {
+        $domain = (string) $integration->shop_slug;
+
+        if ($domain === '') {
+            throw new \RuntimeException(__('integrations.shopify.errors.credentials'));
+        }
+
+        if (! $forceRefresh && ! $integration->shopifyTokenNeedsRefresh() && filled($integration->access_token)) {
+            return (string) $integration->access_token;
+        }
+
+        if ($integration->hasShopifyClientCredentials()) {
+            $issued = $this->shopify->exchangeClientCredentials(
+                $domain,
+                (string) $integration->client_id,
+                (string) $integration->client_secret,
+            );
+
+            $integration->fill([
+                'access_token' => $issued['access_token'],
+                'token_expires_at' => now()->addSeconds(max(1, $issued['expires_in'] - 60)),
+            ])->save();
+
+            return $issued['access_token'];
+        }
+
+        $token = (string) $integration->access_token;
+
+        if ($token === '') {
+            throw new \RuntimeException(__('integrations.shopify.errors.credentials'));
+        }
+
+        return $token;
+    }
+
     public function disconnect(EcommerceIntegration $integration): void
     {
         $integration->fill([
             'status' => EcommerceIntegrationStatus::Disconnected,
+            'client_id' => null,
             'client_secret' => null,
             'access_token' => null,
             'refresh_token' => null,
@@ -395,8 +456,17 @@ class EcommerceIntegrationService
         $integration->connected_by = $actor->id;
         $integration->last_error = null;
 
+        if (filled($data['client_id'] ?? null)) {
+            $integration->client_id = $data['client_id'];
+        }
+
+        if (filled($data['client_secret'] ?? null)) {
+            $integration->client_secret = $data['client_secret'];
+        }
+
         if (filled($data['access_token'] ?? null)) {
             $integration->access_token = $data['access_token'];
+            $integration->token_expires_at = null;
         }
 
         if (! $integration->exists) {
@@ -428,6 +498,37 @@ class EcommerceIntegrationService
             $mapping,
             YouCanFieldCatalog::autoMap($integration->source_fields ?: YouCanFieldCatalog::builtinSources()),
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $mapping
+     * @return array<string, string>
+     */
+    private function normalizeStatusMapping(array $mapping, EcommercePlatform $platform): array
+    {
+        $normalized = [];
+
+        foreach ($mapping as $speedzone => $target) {
+            if (! is_string($speedzone) || OrderStatus::tryFrom($speedzone) === null) {
+                continue;
+            }
+
+            if (! is_string($target) || $target === '') {
+                continue;
+            }
+
+            $allowed = $platform === EcommercePlatform::YouCan
+                ? YouCanExportStatus::tryFrom($target)
+                : ShopifyExportStatus::tryFrom($target);
+
+            if ($allowed === null) {
+                continue;
+            }
+
+            $normalized[$speedzone] = $allowed->value;
+        }
+
+        return $normalized;
     }
 
     /**

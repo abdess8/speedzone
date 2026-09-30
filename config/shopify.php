@@ -7,9 +7,9 @@ return [
     | Shopify storefront connector
     |--------------------------------------------------------------------------
     |
-    | Sellers connect a custom app from Shopify admin and paste the Admin API
-    | access token. SpeedZone talks to the REST Admin API
-    | (https://shopify.dev/docs/api/admin-rest) with that token.
+    | Sellers paste a Dev Dashboard Client ID + secret (or a legacy Admin
+    | API token). SpeedZone talks to the REST Admin API
+    | (https://shopify.dev/docs/api/admin-rest) with a short-lived token.
     |
     */
 

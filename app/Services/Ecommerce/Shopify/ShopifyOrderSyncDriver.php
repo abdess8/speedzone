@@ -4,6 +4,7 @@ namespace App\Services\Ecommerce\Shopify;
 
 use App\Enums\ShopifyImportStatus;
 use App\Models\EcommerceIntegration;
+use App\Services\Ecommerce\EcommerceIntegrationService;
 use Illuminate\Support\Carbon;
 
 class ShopifyOrderSyncDriver
@@ -11,6 +12,7 @@ class ShopifyOrderSyncDriver
     public function __construct(
         private readonly ShopifyClient $client,
         private readonly ShopifyOrderMapper $mapper,
+        private readonly EcommerceIntegrationService $integrations,
     ) {}
 
     /**
@@ -18,7 +20,7 @@ class ShopifyOrderSyncDriver
      */
     public function fetchOrders(EcommerceIntegration $integration, ?Carbon $since): iterable
     {
-        $token = (string) $integration->access_token;
+        $token = $this->integrations->shopifyAccessToken($integration);
         $domain = (string) $integration->shop_slug;
 
         if ($token === '' || $domain === '') {
@@ -91,5 +93,20 @@ class ShopifyOrderSyncDriver
             ?? ShopifyImportStatus::Unfulfilled;
 
         return $this->mapper->matchesImportStatus($payload, $wanted);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchOrder(EcommerceIntegration $integration, string $id): array
+    {
+        $token = $this->integrations->shopifyAccessToken($integration);
+        $domain = (string) $integration->shop_slug;
+
+        if ($token === '' || $domain === '' || $id === '') {
+            return [];
+        }
+
+        return $this->client->order($domain, $token, $id);
     }
 }

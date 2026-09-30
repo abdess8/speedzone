@@ -43,12 +43,12 @@ class ConnectShopifyRequest extends FormRequest
      */
     public function rules(): array
     {
-        $updating = $this->existing()?->hasAccessToken() === true;
-
         return [
             'store_id' => ['required', 'integer', 'exists:stores,id'],
             'shop_slug' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.myshopify\.com$/'],
-            'access_token' => [$updating ? 'nullable' : 'required', 'string', 'max:2000'],
+            'client_id' => ['nullable', 'string', 'max:255'],
+            'client_secret' => ['nullable', 'string', 'max:255'],
+            'access_token' => ['nullable', 'string', 'max:2000'],
         ];
     }
 
@@ -61,6 +61,8 @@ class ConnectShopifyRequest extends FormRequest
             'shop_slug.regex' => __('integrations.shopify.validation.shop_slug'),
             'shop_slug.required' => __('integrations.shopify.validation.shop_slug'),
             'access_token.required' => __('integrations.shopify.validation.access_token'),
+            'client_id.required' => __('integrations.shopify.validation.client_id'),
+            'client_secret.required' => __('integrations.shopify.validation.client_secret'),
         ];
     }
 
@@ -93,10 +95,21 @@ class ConnectShopifyRequest extends FormRequest
     {
         $validator->after(function (Validator $validator): void {
             $existing = $this->existing();
+            $hasClientId = filled($this->input('client_id')) || filled($existing?->client_id);
+            $hasClientSecret = filled($this->input('client_secret')) || ($existing?->hasClientSecret() ?? false);
+            $hasToken = filled($this->input('access_token')) || ($existing?->hasAccessToken() ?? false);
 
-            if ($existing !== null && blank($this->input('access_token')) && ! $existing->hasAccessToken()) {
-                $validator->errors()->add('access_token', __('integrations.shopify.validation.access_token'));
+            if (($hasClientId && $hasClientSecret) || $hasToken) {
+                return;
             }
+
+            if ($hasClientId && ! $hasClientSecret) {
+                $validator->errors()->add('client_secret', __('integrations.shopify.validation.client_secret'));
+
+                return;
+            }
+
+            $validator->errors()->add('client_id', __('integrations.shopify.validation.credentials'));
         });
     }
 }

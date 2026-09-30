@@ -6,6 +6,7 @@ enum EcommerceSyncTrigger: string
 {
     case Manual = 'manual';
     case Schedule = 'schedule';
+    case Retry = 'retry';
 
     /**
      * @return array<int, string>

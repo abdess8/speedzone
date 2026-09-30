@@ -7,13 +7,17 @@ use App\Enums\EcommercePlatform;
 use App\Enums\EcommerceSyncRowStatus;
 use App\Enums\EcommerceSyncStatus;
 use App\Enums\EcommerceSyncTrigger;
+use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
+use App\Enums\ShopifyExportStatus;
 use App\Enums\ShopifyImportStatus;
+use App\Enums\YouCanExportStatus;
 use App\Enums\YouCanImportStatus;
 use App\Http\Requests\ConnectShopifyRequest;
 use App\Http\Requests\ConnectYouCanRequest;
 use App\Http\Requests\ImportYouCanReviewRequest;
 use App\Http\Requests\UpdateYouCanSettingsRequest;
+use App\Jobs\RetryEcommerceFailedOrdersJob;
 use App\Jobs\SyncEcommerceOrdersJob;
 use App\Models\City;
 use App\Models\EcommerceIntegration;
@@ -39,7 +43,7 @@ use Inertia\Response;
  *
  * Each platform is opted into independently: the catalogue is the chooser,
  * YouCan and Shopify are the live connectors. YouCan uses seller-area SSO;
- * Shopify uses a custom-app Admin API token against the REST Admin API.
+ * Shopify uses Dev Dashboard client credentials (or a legacy Admin API token).
  */
 class EcommerceIntegrationController extends Controller
 {
@@ -88,6 +92,8 @@ class EcommerceIntegrationController extends Controller
     {
         return $this->connectorPage($request, EcommercePlatform::YouCan, 'integrations/youcan', [
             'import_statuses' => YouCanImportStatus::options(),
+            'export_statuses' => YouCanExportStatus::options(),
+            'order_statuses' => OrderStatus::options(),
         ]);
     }
 
@@ -95,6 +101,8 @@ class EcommerceIntegrationController extends Controller
     {
         return $this->connectorPage($request, EcommercePlatform::Shopify, 'integrations/shopify', [
             'import_statuses' => ShopifyImportStatus::options(),
+            'export_statuses' => ShopifyExportStatus::options(),
+            'order_statuses' => OrderStatus::options(),
         ]);
     }
 
@@ -173,7 +181,7 @@ class EcommerceIntegrationController extends Controller
 
             $message = $sync->status->value === 'failed'
                 ? ($sync->error_message ?: __('integrations.sync.failed'))
-                : __('integrations.sync.completed', ['count' => $sync->created_count]);
+                : $this->syncCompletedMessage($integration, $sync);
 
             return redirect()
                 ->to($integration->platform->manageUrl($integration->store_id))
@@ -184,6 +192,54 @@ class EcommerceIntegrationController extends Controller
 
         return redirect()
             ->to($integration->platform->manageUrl($integration->store_id))
+            ->with('success', __('integrations.sync.queued'));
+    }
+
+    public function retryFailed(
+        EcommerceIntegration $integration,
+        EcommerceIntegrationSync $sync,
+    ): RedirectResponse {
+        $this->authorize('update', $integration);
+
+        if ((int) $sync->ecommerce_integration_id !== (int) $integration->id) {
+            abort(404);
+        }
+
+        if (! $integration->isConnected()) {
+            throw ValidationException::withMessages([
+                'sync' => __('integrations.sync.errors.not_connected'),
+            ]);
+        }
+
+        if ($integration->hasRunningSync()) {
+            return redirect()
+                ->to($this->historyUrl($integration))
+                ->with('error', __('integrations.sync.already_running'));
+        }
+
+        $inline = config('queue.default') === 'sync';
+
+        if ($inline) {
+            $result = $this->orderSyncs->retryFailed($sync);
+            $ok = $result->created_count > 0;
+            $message = $ok
+                ? __('integrations.sync.retried', [
+                    'count' => $result->fetched_count,
+                    'created' => $result->created_count,
+                ])
+                : ($result->error_message ?: __('integrations.sync.retried_none', [
+                    'count' => $result->fetched_count,
+                ]));
+
+            return redirect()
+                ->to($this->historyUrl($integration))
+                ->with($ok ? 'success' : 'error', $message);
+        }
+
+        dispatch(new RetryEcommerceFailedOrdersJob($integration->id, $sync->id));
+
+        return redirect()
+            ->to($this->historyUrl($integration))
             ->with('success', __('integrations.sync.queued'));
     }
 
@@ -321,6 +377,10 @@ class EcommerceIntegrationController extends Controller
                         EcommerceSyncRowStatus::Pending->value,
                         EcommerceSyncRowStatus::Failed->value,
                     ]),
+                    'rows as failed_count' => fn ($query) => $query->where(
+                        'status',
+                        EcommerceSyncRowStatus::Failed->value
+                    ),
                 ])
                 ->latest('id')
                 ->limit(50)
@@ -380,6 +440,38 @@ class EcommerceIntegrationController extends Controller
         return $integration->platform === EcommercePlatform::Shopify
             ? 'integrations.shopify.review'
             : 'integrations.youcan.review';
+    }
+
+    private function historyUrl(EcommerceIntegration $integration): string
+    {
+        return route(
+            $integration->platform === EcommercePlatform::Shopify
+                ? 'integrations.shopify'
+                : 'integrations.youcan',
+            array_filter([
+                'store_id' => $integration->store_id,
+                'tab' => 'history',
+            ]),
+        );
+    }
+
+    private function syncCompletedMessage(EcommerceIntegration $integration, EcommerceIntegrationSync $sync): string
+    {
+        if ($integration->platform === EcommercePlatform::Shopify) {
+            return __('integrations.shopify.sync.completed', [
+                'count' => $sync->created_count,
+                'pushed' => $sync->updated_count,
+            ]);
+        }
+
+        if ($integration->platform === EcommercePlatform::YouCan) {
+            return __('integrations.youcan.sync.completed', [
+                'count' => $sync->created_count,
+                'pushed' => $sync->updated_count,
+            ]);
+        }
+
+        return __('integrations.sync.completed', ['count' => $sync->created_count]);
     }
 
     private function canReadIntegrations(User $user): bool

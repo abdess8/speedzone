@@ -6,6 +6,8 @@ use App\Enums\EcommerceSyncRowStatus;
 use App\Enums\EcommerceSyncStatus;
 use App\Enums\EcommerceSyncTrigger;
 use App\Enums\OrderCreationSource;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\YouCanImportStatus;
 use App\Models\City;
 use App\Models\EcommerceIntegration;
@@ -130,6 +132,22 @@ function fakeYouCanOrders(array $orders, array $options = []): void
 
         if (preg_match('#/admin/([^/]+)/switch-store#', $url)) {
             return Http::response('switched', 200);
+        }
+
+        if ($request->method() === 'PUT' && preg_match('#/admin/web/api/orders/[^/]+/status#', $url)) {
+            return Http::response(['status' => 200, 'detail' => 'Status is successfully updated'], 200);
+        }
+
+        if (preg_match('#/admin/orders/([^/?]+)#', $url, $matches) && ! str_contains($url, 'web/api')) {
+            $id = $matches[1];
+
+            foreach ($orders as $order) {
+                if ((string) ($order['id'] ?? '') === $id) {
+                    return Http::response($order, 200);
+                }
+            }
+
+            return Http::response(['detail' => 'order not found'], 404);
         }
 
         if (str_contains($url, '/admin/web/api/orders')) {
@@ -790,4 +808,210 @@ it('lets a reader open a connected YouCan page without managing it', function ()
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->where('can.manage', false)
         );
+});
+
+/**
+ * @param  array<string, mixed>  $overrides
+ */
+function youCanImportedOrder(
+    User $seller,
+    Store $store,
+    EcommerceIntegration $integration,
+    City $city,
+    array $overrides = [],
+): Order {
+    return Order::query()->create(array_merge([
+        'tracking_number' => 'SZ-YC-'.uniqid(),
+        'seller_id' => $seller->id,
+        'store_id' => $store->id,
+        'customer_first_name' => 'Sara',
+        'customer_last_name' => 'Benali',
+        'customer_phone' => '0612345678',
+        'customer_address' => '12 rue Maarif',
+        'city_id' => $city->id,
+        'payment_method' => PaymentMethod::CASH->value,
+        'order_amount' => 199,
+        'delivery_price' => 35,
+        'status' => OrderStatus::OUT_FOR_DELIVERY->value,
+        'creation_source' => OrderCreationSource::Integration->value,
+        'ecommerce_integration_id' => $integration->id,
+        'external_order_id' => 'order-uuid-1',
+        'ecommerce_order_ref' => 'YC-1001',
+    ], $overrides));
+}
+
+it('persists the SpeedZone-to-YouCan status mapping', function () {
+    $seller = syncSeller();
+    $store = syncStore($seller);
+    $integration = connectedYouCan($seller, $store);
+
+    $this->actingAs($seller)
+        ->put(route('integrations.settings.update', $integration), [
+            'auto_sync_enabled' => false,
+            'sync_interval_minutes' => 15,
+            'import_status' => YouCanImportStatus::Open->value,
+            'status_mapping' => [
+                'DELIVERED' => 'fulfilled',
+                'CANCELED' => 'canceled-by-seller',
+                'OUT_FOR_DELIVERY' => 'shipped',
+                'CREATED' => '',
+            ],
+        ])
+        ->assertRedirect(route('integrations.youcan', ['store_id' => $store->id]));
+
+    expect($integration->fresh()->status_mapping)->toMatchArray([
+        'DELIVERED' => 'fulfilled',
+        'CANCELED' => 'canceled-by-seller',
+        'OUT_FOR_DELIVERY' => 'shipped',
+    ]);
+});
+
+it('pushes mapped SpeedZone statuses to YouCan on sync now', function () {
+    $city = syncCity();
+    $seller = syncSeller();
+    $store = syncStore($seller);
+    $integration = connectedYouCan($seller, $store);
+    $integration->forceFill([
+        'status_mapping' => [
+            'OUT_FOR_DELIVERY' => 'shipped',
+        ],
+    ])->save();
+
+    youCanImportedOrder($seller, $store, $integration, $city, [
+        'status' => OrderStatus::OUT_FOR_DELIVERY->value,
+        'external_order_id' => 'order-uuid-2002',
+    ]);
+
+    fakeYouCanOrders([]);
+
+    $this->actingAs($seller)
+        ->post(route('integrations.sync', $integration))
+        ->assertRedirect(route('integrations.youcan', ['store_id' => $store->id]));
+
+    $sync = EcommerceIntegrationSync::query()->latest('id')->first();
+
+    expect($sync->created_count)->toBe(0)
+        ->and($sync->updated_count)->toBe(1);
+
+    Http::assertSent(fn (Request $request) => $request->method() === 'PUT'
+        && str_contains($request->url(), '/admin/web/api/orders/order-uuid-2002/status/shipping')
+        && ($request->data()['status'] ?? null) === 'shipped');
+});
+
+it('updates the YouCan order when the parcel reaches a mapped SpeedZone status', function () {
+    $city = syncCity();
+    $seller = syncSeller();
+    $store = syncStore($seller);
+    $integration = connectedYouCan($seller, $store);
+    $integration->forceFill([
+        'status_mapping' => [
+            'DELIVERED' => 'fulfilled',
+        ],
+    ])->save();
+
+    $order = youCanImportedOrder($seller, $store, $integration, $city);
+
+    fakeYouCanOrders([]);
+
+    $order->update(['status' => OrderStatus::DELIVERED->value]);
+
+    Http::assertSent(fn (Request $request) => $request->method() === 'PUT'
+        && str_contains($request->url(), '/admin/web/api/orders/order-uuid-1/status/shipping')
+        && ($request->data()['status'] ?? null) === 'fulfilled');
+});
+
+it('retries failed YouCan orders from the history tab', function () {
+    syncCity();
+    $seller = syncSeller();
+    $store = syncStore($seller);
+    $integration = connectedYouCan($seller, $store);
+    $failed = youCanOrder([
+        'id' => 'retry-failed-1',
+        'ref' => 'YC-RETRY',
+        'extra_fields' => [
+            ['name' => 'Nom Complet', 'value' => 'Sara Benali'],
+            ['name' => 'Téléphone', 'value' => '0612345678'],
+            ['name' => 'Ville', 'value' => 'Atlantis'],
+            ['name' => 'Adresse', 'value' => '12 rue Maarif'],
+        ],
+    ]);
+
+    fakeYouCanOrders([$failed]);
+
+    $source = app(EcommerceOrderSyncService::class)->run($integration, EcommerceSyncTrigger::Schedule);
+
+    expect(Order::query()->count())->toBe(0)
+        ->and($source->error_count)->toBe(1)
+        ->and($source->rows()->where('status', EcommerceSyncRowStatus::Failed)->count())->toBe(1);
+
+    syncCity('Atlantis');
+
+    $this->actingAs($seller)
+        ->post(route('integrations.sync.retry', [$integration, $source]))
+        ->assertRedirect(route('integrations.youcan', ['store_id' => $store->id, 'tab' => 'history']))
+        ->assertSessionHas('success');
+
+    $retry = EcommerceIntegrationSync::query()->latest('id')->first();
+
+    expect(Order::query()->value('external_order_id'))->toBe('retry-failed-1')
+        ->and($retry->trigger)->toBe(EcommerceSyncTrigger::Retry)
+        ->and($retry->created_count)->toBe(1)
+        ->and($retry->error_count)->toBe(0)
+        ->and($source->fresh()->error_count)->toBe(0)
+        ->and($source->fresh()->status)->toBe(EcommerceSyncStatus::Succeeded)
+        ->and($source->rows()->where('status', EcommerceSyncRowStatus::Imported)->count())->toBe(1);
+});
+
+it('retries YouCan failures recorded only as skipped reasons', function () {
+    syncCity();
+    $seller = syncSeller();
+    $store = syncStore($seller);
+    $integration = connectedYouCan($seller, $store);
+    $failed = youCanOrder([
+        'id' => 'retry-skip-reason-1',
+        'ref' => 'YC-SKIP',
+        'extra_fields' => [
+            ['name' => 'Nom Complet', 'value' => 'Sara Benali'],
+            ['name' => 'Téléphone', 'value' => '0612345678'],
+            ['name' => 'Ville', 'value' => 'Atlantis'],
+            ['name' => 'Adresse', 'value' => '12 rue Maarif'],
+        ],
+    ]);
+
+    fakeYouCanOrders([$failed]);
+
+    $source = EcommerceIntegrationSync::query()->create([
+        'ecommerce_integration_id' => $integration->id,
+        'status' => EcommerceSyncStatus::Partial,
+        'trigger' => EcommerceSyncTrigger::Manual,
+        'started_at' => now()->subMinute(),
+        'finished_at' => now(),
+        'fetched_count' => 1,
+        'created_count' => 0,
+        'skipped_count' => 1,
+        'error_count' => 1,
+        'skipped_reasons' => [[
+            'external_order_id' => 'retry-skip-reason-1',
+            'ref' => 'YC-SKIP',
+            'reason' => 'unknown_city',
+            'detail' => 'Atlantis',
+        ]],
+    ]);
+
+    syncCity('Atlantis');
+
+    $this->actingAs($seller)
+        ->get(route('integrations.youcan', ['store_id' => $store->id, 'tab' => 'history']))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('syncs.0.can_retry', true));
+
+    $this->actingAs($seller)
+        ->post(route('integrations.sync.retry', [$integration, $source]))
+        ->assertRedirect(route('integrations.youcan', ['store_id' => $store->id, 'tab' => 'history']))
+        ->assertSessionHas('success');
+
+    expect(Order::query()->value('external_order_id'))->toBe('retry-skip-reason-1')
+        ->and($source->fresh()->error_count)->toBe(0)
+        ->and($source->fresh()->status)->toBe(EcommerceSyncStatus::Succeeded);
 });

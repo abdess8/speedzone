@@ -621,6 +621,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('integrations/{integration}/sync', [EcommerceIntegrationController::class, 'syncYouCan'])
         ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connectAny()))
         ->name('integrations.sync');
+    Route::post('integrations/{integration}/syncs/{sync}/retry', [EcommerceIntegrationController::class, 'retryFailed'])
+        ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connectAny()))
+        ->name('integrations.sync.retry');
     Route::get('integrations/youcan/syncs/{sync}', [EcommerceIntegrationController::class, 'reviewYouCan'])
         ->middleware(EcommerceIntegrationPermissions::middleware(EcommerceIntegrationPermissions::connect(EcommercePlatform::YouCan)))
         ->name('integrations.youcan.review');

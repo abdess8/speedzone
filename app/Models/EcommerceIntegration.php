@@ -45,6 +45,7 @@ class EcommerceIntegration extends Model
         'sync_interval_minutes',
         'import_status',
         'field_mapping',
+        'status_mapping',
         'source_fields',
         'last_synced_at',
         'next_sync_at',
@@ -61,6 +62,7 @@ class EcommerceIntegration extends Model
         'auto_sync_enabled' => 'boolean',
         'sync_interval_minutes' => 'integer',
         'field_mapping' => 'array',
+        'status_mapping' => 'array',
         'source_fields' => 'array',
         'last_synced_at' => 'datetime',
         'next_sync_at' => 'datetime',
@@ -134,7 +136,25 @@ class EcommerceIntegration extends Model
     public function isConnected(): bool
     {
         return $this->status === EcommerceIntegrationStatus::Connected
-            && filled($this->access_token);
+            && (filled($this->access_token) || $this->hasShopifyClientCredentials());
+    }
+
+    public function hasShopifyClientCredentials(): bool
+    {
+        return filled($this->client_id) && filled($this->client_secret);
+    }
+
+    public function shopifyTokenNeedsRefresh(): bool
+    {
+        if (blank($this->access_token)) {
+            return $this->hasShopifyClientCredentials();
+        }
+
+        if ($this->token_expires_at === null) {
+            return false;
+        }
+
+        return $this->token_expires_at->lte(now()->addMinute());
     }
 
     public function hasPassword(): bool

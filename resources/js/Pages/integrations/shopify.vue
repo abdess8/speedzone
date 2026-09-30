@@ -23,7 +23,16 @@ const { t } = useI18n();
 
 const connected = computed(() => props.integration?.status === 'connected');
 const canManage = computed(() => props.can?.manage === true);
-const tab = ref(connected.value ? 'overview' : 'connection');
+const tab = ref((() => {
+  const params = new URLSearchParams((usePage().url || '').split('?')[1] || '');
+  const requested = params.get('tab');
+
+  if (connected.value && ['overview', 'history', 'settings', 'connection'].includes(requested)) {
+    return requested;
+  }
+
+  return connected.value ? 'overview' : 'connection';
+})());
 const selectedSellerId = ref(props.defaults?.seller_id ?? '');
 const selectedSeller = computed(
   () => props.sellers.find((seller) => Number(seller.id) === Number(selectedSellerId.value)) ?? null
@@ -45,6 +54,8 @@ watch(
 const form = useForm({
   store_id: props.integration?.store_id ?? props.defaults?.store_id ?? props.stores[0]?.id ?? '',
   shop_slug: props.integration?.shop_slug ?? '',
+  client_id: props.integration?.client_id ?? '',
+  client_secret: '',
   access_token: '',
 });
 
@@ -69,11 +80,22 @@ const mappingFrom = (integration) =>
     mappingTargets.map((field) => [field, integration?.field_mapping?.[field] || ''])
   );
 
+const statusMappingFrom = (integration) => {
+  const saved = integration?.status_mapping && !Array.isArray(integration.status_mapping)
+    ? integration.status_mapping
+    : {};
+
+  return Object.fromEntries(
+    (props.options.order_statuses ?? []).map((status) => [status.value, saved[status.value] || ''])
+  );
+};
+
 const settingsForm = useForm({
   auto_sync_enabled: props.integration?.auto_sync_enabled ?? false,
   sync_interval_minutes: props.integration?.sync_interval_minutes ?? 15,
   import_status: props.integration?.import_status ?? 'unfulfilled',
   field_mapping: mappingFrom(props.integration),
+  status_mapping: statusMappingFrom(props.integration),
 });
 
 watch(
@@ -87,10 +109,15 @@ watch(
     settingsForm.sync_interval_minutes = integration.sync_interval_minutes ?? 15;
     settingsForm.import_status = integration.import_status ?? 'unfulfilled';
     settingsForm.field_mapping = mappingFrom(integration);
+    settingsForm.status_mapping = statusMappingFrom(integration);
   },
 );
 
 const hasExistingToken = computed(() => props.integration?.has_access_token === true);
+const hasExistingClientSecret = computed(() => props.integration?.has_client_secret === true);
+const hasExistingCredentials = computed(
+  () => hasExistingToken.value || hasExistingClientSecret.value
+);
 const isSyncing = computed(() => props.integration?.is_syncing === true || syncing.value);
 const syncing = ref(false);
 const selectedSync = ref(null);
@@ -103,6 +130,21 @@ const fulfillmentStatuses = computed(() =>
 );
 const paymentStatuses = computed(() =>
   (props.options.import_statuses ?? []).filter((status) => status.group === 'payment'),
+);
+const speedzoneStatuses = computed(() => props.options.order_statuses ?? []);
+const exportStatuses = computed(() => props.options.export_statuses ?? []);
+const exportGroups = computed(() => [
+  'fulfillment',
+  'tracking',
+  'order',
+]);
+const statusMappingOpen = ref(false);
+const fieldMappingOpen = ref(false);
+const mappedStatusCount = computed(
+  () => Object.values(settingsForm.status_mapping || {}).filter((value) => value).length
+);
+const mappedFieldCount = computed(
+  () => Object.values(settingsForm.field_mapping || {}).filter((value) => value).length
 );
 
 const latest = computed(() => props.integration?.latest_sync ?? null);
@@ -154,6 +196,20 @@ const syncNow = () => {
   });
 };
 
+const retryFailed = (sync) => {
+  if (!props.integration || isSyncing.value || !sync?.id) {
+    return;
+  }
+
+  syncing.value = true;
+  router.post(route('integrations.sync.retry', [props.integration.id, sync.id]), {}, {
+    preserveScroll: true,
+    onFinish: () => {
+      syncing.value = false;
+    },
+  });
+};
+
 const formatDate = (value) => {
   if (!value) {
     return null;
@@ -190,6 +246,7 @@ const syncRows = computed(() => {
     { label: t('integrations.sync.columns.trigger'), value: sync.trigger_label },
     { label: t('integrations.sync.detail.fetched'), value: sync.fetched_count },
     { label: t('integrations.sync.detail.created'), value: sync.created_count, emphasis: true },
+    { label: t('integrations.sync.detail.updated'), value: sync.updated_count },
     { label: t('integrations.sync.detail.skipped'), value: sync.skipped_count },
     { label: t('integrations.sync.detail.errors'), value: sync.error_count },
     { label: t('integrations.sync.detail.duration'), value: formatDuration(sync.duration_seconds) },
@@ -271,6 +328,7 @@ watch(selectedSellerId, (sellerId) => {
               v-if="connected && canManage"
               variant="primary"
               :disabled="isSyncing"
+              :title="$t('integrations.shopify.sync_now_help')"
               @click="syncNow"
             >
               <span v-if="isSyncing" class="spinner-border spinner-border-sm me-1" role="status"></span>
@@ -390,6 +448,7 @@ watch(selectedSellerId, (sellerId) => {
                       <th>{{ $t('integrations.sync.columns.trigger') }}</th>
                       <th>{{ $t('integrations.sync.columns.status') }}</th>
                       <th class="text-end">{{ $t('integrations.sync.columns.created') }}</th>
+                      <th class="text-end">{{ $t('integrations.sync.columns.updated') }}</th>
                       <th class="text-end">{{ $t('integrations.sync.columns.skipped') }}</th>
                       <th class="text-end">{{ $t('integrations.sync.columns.errors') }}</th>
                       <th class="text-end">{{ $t('integrations.sync.columns.duration') }}</th>
@@ -420,18 +479,31 @@ watch(selectedSellerId, (sellerId) => {
                         </Link>
                         <span v-else>{{ sync.created_count }}</span>
                       </td>
+                      <td class="text-end">{{ sync.updated_count }}</td>
                       <td class="text-end">{{ sync.skipped_count }}</td>
                       <td class="text-end">{{ sync.error_count }}</td>
                       <td class="text-end">{{ formatDuration(sync.duration_seconds) }}</td>
                       <td class="text-end">
-                        <Link
-                          v-if="canManage && sync.reviewable_count > 0"
-                          :href="route('integrations.shopify.review', sync.id)"
-                          class="btn btn-sm btn-ghost-primary"
-                          @click.stop
-                        >
-                          {{ $t('integrations.sync.review.open') }}
-                        </Link>
+                        <div class="d-flex justify-content-end gap-1" @click.stop>
+                          <button
+                            v-if="canManage && sync.can_retry"
+                            type="button"
+                            class="btn btn-sm btn-ghost-warning"
+                            :disabled="isSyncing"
+                            :title="$t('integrations.sync.retry_help')"
+                            @click="retryFailed(sync)"
+                          >
+                            <i class="ri-restart-line align-bottom me-1"></i>
+                            {{ $t('integrations.sync.retry_failed') }}
+                          </button>
+                          <Link
+                            v-if="canManage && sync.reviewable_count > 0"
+                            :href="route('integrations.shopify.review', sync.id)"
+                            class="btn btn-sm btn-ghost-primary"
+                          >
+                            {{ $t('integrations.sync.review.open') }}
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
@@ -485,41 +557,125 @@ watch(selectedSellerId, (sellerId) => {
                   <div class="form-text">{{ $t('integrations.shopify.import_status_help') }}</div>
                 </BCol>
                 <BCol md="12">
-                  <h6 class="mb-2">{{ $t('integrations.sync.mapping.title') }}</h6>
-                  <p class="text-muted fs-13">{{ $t('integrations.shopify.mapping_help') }}</p>
-                  <div class="table-responsive border rounded">
-                    <table class="table align-middle table-nowrap mb-0">
-                      <thead class="table-light text-muted">
-                        <tr>
-                          <th style="width: 40%">{{ $t('orders.import.mapping.system_field') }}</th>
-                          <th>{{ $t('integrations.sync.mapping.source_field') }}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="field in mappingTargets" :key="field">
-                          <td>
-                            <span class="fw-medium">{{ $t(`orders.import.fields.${field}`) }}</span>
-                            <span v-if="mappingRequired.has(field)" class="text-danger ms-1">*</span>
-                          </td>
-                          <td>
-                            <select
-                              v-model="settingsForm.field_mapping[field]"
-                              class="form-select form-select-sm"
-                            >
-                              <option value="">{{ $t('orders.import.mapping.not_mapped') }}</option>
-                              <option
-                                v-for="source in integration.source_fields"
-                                :key="source.key"
-                                :value="source.key"
-                                :disabled="usedSources.has(source.key) && settingsForm.field_mapping[field] !== source.key"
-                              >
-                                {{ source.label }}
-                              </option>
-                            </select>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                  <div class="border rounded">
+                    <button
+                      type="button"
+                      class="btn btn-light w-100 d-flex align-items-center justify-content-between text-start px-3 py-2"
+                      :aria-expanded="statusMappingOpen"
+                      @click="statusMappingOpen = !statusMappingOpen"
+                    >
+                      <span>
+                        <span class="fw-semibold">{{ $t('integrations.shopify.status_mapping.title') }}</span>
+                        <span class="badge bg-primary-subtle text-primary ms-2">
+                          {{ $t('integrations.shopify.status_mapping.mapped_count', { count: mappedStatusCount }) }}
+                        </span>
+                      </span>
+                      <i
+                        class="fs-18 text-muted pointer-events-none"
+                        :class="statusMappingOpen ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"
+                      ></i>
+                    </button>
+                    <div v-show="statusMappingOpen" class="p-3 border-top">
+                      <p class="text-muted fs-13">{{ $t('integrations.shopify.status_mapping.help') }}</p>
+                      <div class="table-responsive border rounded">
+                        <table class="table align-middle table-nowrap mb-0">
+                          <thead class="table-light text-muted">
+                            <tr>
+                              <th style="width: 40%">{{ $t('integrations.shopify.status_mapping.speedzone') }}</th>
+                              <th>{{ $t('integrations.shopify.status_mapping.shopify') }}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="status in speedzoneStatuses" :key="status.value">
+                              <td>
+                                <span class="fw-medium">{{ status.label }}</span>
+                                <div class="text-muted fs-12">{{ status.value }}</div>
+                              </td>
+                              <td>
+                                <select
+                                  v-model="settingsForm.status_mapping[status.value]"
+                                  class="form-select form-select-sm"
+                                >
+                                  <option value="">{{ $t('integrations.shopify.status_mapping.none') }}</option>
+                                  <optgroup
+                                    v-for="group in exportGroups"
+                                    :key="group"
+                                    :label="$t(`integrations.shopify.export_groups.${group}`)"
+                                  >
+                                    <option
+                                      v-for="target in exportStatuses.filter((item) => item.group === group)"
+                                      :key="target.value"
+                                      :value="target.value"
+                                    >
+                                      {{ target.label }}
+                                    </option>
+                                  </optgroup>
+                                </select>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <InputError :message="settingsForm.errors.status_mapping" />
+                    </div>
+                  </div>
+                </BCol>
+                <BCol md="12">
+                  <div class="border rounded">
+                    <button
+                      type="button"
+                      class="btn btn-light w-100 d-flex align-items-center justify-content-between text-start px-3 py-2"
+                      :aria-expanded="fieldMappingOpen"
+                      @click="fieldMappingOpen = !fieldMappingOpen"
+                    >
+                      <span>
+                        <span class="fw-semibold">{{ $t('integrations.sync.mapping.title') }}</span>
+                        <span class="badge bg-primary-subtle text-primary ms-2">
+                          {{ $t('integrations.shopify.status_mapping.mapped_count', { count: mappedFieldCount }) }}
+                        </span>
+                      </span>
+                      <i
+                        class="fs-18 text-muted pointer-events-none"
+                        :class="fieldMappingOpen ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"
+                      ></i>
+                    </button>
+                    <div v-show="fieldMappingOpen" class="p-3 border-top">
+                      <p class="text-muted fs-13">{{ $t('integrations.shopify.mapping_help') }}</p>
+                      <div class="table-responsive border rounded">
+                        <table class="table align-middle table-nowrap mb-0">
+                          <thead class="table-light text-muted">
+                            <tr>
+                              <th style="width: 40%">{{ $t('orders.import.mapping.system_field') }}</th>
+                              <th>{{ $t('integrations.sync.mapping.source_field') }}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="field in mappingTargets" :key="field">
+                              <td>
+                                <span class="fw-medium">{{ $t(`orders.import.fields.${field}`) }}</span>
+                                <span v-if="mappingRequired.has(field)" class="text-danger ms-1">*</span>
+                              </td>
+                              <td>
+                                <select
+                                  v-model="settingsForm.field_mapping[field]"
+                                  class="form-select form-select-sm"
+                                >
+                                  <option value="">{{ $t('orders.import.mapping.not_mapped') }}</option>
+                                  <option
+                                    v-for="source in integration.source_fields"
+                                    :key="source.key"
+                                    :value="source.key"
+                                    :disabled="usedSources.has(source.key) && settingsForm.field_mapping[field] !== source.key"
+                                  >
+                                    {{ source.label }}
+                                  </option>
+                                </select>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   </div>
                 </BCol>
               </BRow>
@@ -573,7 +729,7 @@ watch(selectedSellerId, (sellerId) => {
                 </BCol>
 
                 <template v-if="!admin || stores.length > 0">
-                <BCol md="6">
+                <BCol md="12">
                   <label class="form-label">
                     {{ $t('integrations.shopify.fields.shop_slug') }}
                     <span class="text-danger">*</span>
@@ -592,8 +748,42 @@ watch(selectedSellerId, (sellerId) => {
 
                 <BCol md="6">
                   <label class="form-label">
+                    {{ $t('integrations.shopify.fields.client_id') }}
+                    <span v-if="!hasExistingCredentials" class="text-danger">*</span>
+                  </label>
+                  <input
+                    v-model="form.client_id"
+                    type="text"
+                    class="form-control"
+                    :class="{ 'is-invalid': form.errors.client_id }"
+                    :placeholder="$t('integrations.shopify.fields.client_id_placeholder')"
+                    autocomplete="off"
+                  />
+                  <div class="form-text">{{ $t('integrations.shopify.fields.client_id_help') }}</div>
+                  <InputError :message="form.errors.client_id" />
+                </BCol>
+
+                <BCol md="6">
+                  <label class="form-label">
+                    {{ $t('integrations.shopify.fields.client_secret') }}
+                    <span v-if="!hasExistingClientSecret && !hasExistingToken" class="text-danger">*</span>
+                  </label>
+                  <input
+                    v-model="form.client_secret"
+                    type="password"
+                    class="form-control"
+                    :class="{ 'is-invalid': form.errors.client_secret }"
+                    autocomplete="off"
+                  />
+                  <div v-if="hasExistingClientSecret" class="form-text">
+                    {{ $t('integrations.shopify.fields.client_secret_keep') }}
+                  </div>
+                  <InputError :message="form.errors.client_secret" />
+                </BCol>
+
+                <BCol md="12">
+                  <label class="form-label">
                     {{ $t('integrations.shopify.fields.access_token') }}
-                    <span v-if="!hasExistingToken" class="text-danger">*</span>
                   </label>
                   <input
                     v-model="form.access_token"
@@ -602,8 +792,12 @@ watch(selectedSellerId, (sellerId) => {
                     :class="{ 'is-invalid': form.errors.access_token }"
                     autocomplete="off"
                   />
-                  <div v-if="hasExistingToken" class="form-text">
-                    {{ $t('integrations.shopify.fields.access_token_keep') }}
+                  <div class="form-text">
+                    {{
+                      hasExistingToken
+                        ? $t('integrations.shopify.fields.access_token_keep')
+                        : $t('integrations.shopify.fields.access_token_help')
+                    }}
                   </div>
                   <InputError :message="form.errors.access_token" />
                 </BCol>
@@ -663,8 +857,23 @@ watch(selectedSellerId, (sellerId) => {
           </li>
         </ul>
       </div>
-      <template v-if="canManage && selectedSync && selectedSync.reviewable_count > 0" #actions>
-        <Link :href="route('integrations.shopify.review', selectedSync.id)" class="btn btn-primary">
+      <template v-if="canManage && selectedSync && (selectedSync.can_retry || selectedSync.reviewable_count > 0)" #actions>
+        <button
+          v-if="selectedSync.can_retry"
+          type="button"
+          class="btn btn-warning"
+          :disabled="isSyncing"
+          :title="$t('integrations.sync.retry_help')"
+          @click="retryFailed(selectedSync)"
+        >
+          <i class="ri-restart-line align-bottom me-1"></i>
+          {{ $t('integrations.sync.retry_failed') }}
+        </button>
+        <Link
+          v-if="selectedSync.reviewable_count > 0"
+          :href="route('integrations.shopify.review', selectedSync.id)"
+          class="btn btn-primary"
+        >
           {{ $t('integrations.sync.review.open') }}
         </Link>
       </template>

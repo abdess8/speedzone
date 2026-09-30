@@ -2,6 +2,7 @@
 
 namespace App\Services\Ecommerce\YouCan;
 
+use App\Enums\YouCanExportStatus;
 use GuzzleHttp\Cookie\CookieJar;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
@@ -230,6 +231,40 @@ class YouCanClient
         $order = is_array($payload['data'] ?? null) ? $payload['data'] : $payload;
 
         return is_array($order) && isset($order['id']) ? $order : [];
+    }
+
+    /**
+     * Mirror of Store Admin PUT /orders/{id}/status[/{shipping|payment}].
+     *
+     * The connector authenticates through seller-area SSO rather than an API
+     * token, so the same cookie session is used against /admin/web/api.
+     */
+    public function updateOrderStatus(string $orderId, YouCanExportStatus $status): void
+    {
+        $orderId = trim($orderId);
+
+        if ($orderId === '') {
+            return;
+        }
+
+        $path = match ($status->group()) {
+            'shipping' => '/admin/web/api/orders/'.$orderId.'/status/shipping',
+            'payment' => '/admin/web/api/orders/'.$orderId.'/status/payment',
+            default => '/admin/web/api/orders/'.$orderId.'/status',
+        };
+
+        $response = $this->sellerAreaJson()
+            ->asJson()
+            ->timeout(45)
+            ->put($this->sellerAreaUrl($path), [
+                'status' => $status->value,
+            ]);
+
+        if ($response->successful() || in_array($response->status(), [409, 422], true)) {
+            return;
+        }
+
+        throw new RuntimeException($this->unauthorizedOr($response));
     }
 
     private function startSsoSession(): string

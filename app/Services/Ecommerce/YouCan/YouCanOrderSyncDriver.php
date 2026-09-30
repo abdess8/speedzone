@@ -18,15 +18,7 @@ class YouCanOrderSyncDriver
      */
     public function fetchOrders(EcommerceIntegration $integration, ?Carbon $since): iterable
     {
-        $password = (string) $integration->client_secret;
-        $storeId = (string) $integration->external_store_id;
-        $email = (string) $integration->email;
-
-        if ($password === '' || $storeId === '' || $email === '') {
-            throw new \RuntimeException(__('integrations.youcan.errors.credentials'));
-        }
-
-        $this->client->authenticateForStore($email, $password, $storeId);
+        $this->authenticate($integration);
 
         $page = 1;
         $maxPages = max(1, (int) config('youcan.orders_max_pages', 10));
@@ -76,6 +68,33 @@ class YouCanOrderSyncDriver
             ?? YouCanImportStatus::Open;
 
         return $this->mapper->matchesImportStatus($payload, $wanted);
+    }
+
+    public function authenticate(EcommerceIntegration $integration): void
+    {
+        $password = (string) $integration->client_secret;
+        $storeId = (string) $integration->external_store_id;
+        $email = (string) $integration->email;
+
+        if ($password === '' || $storeId === '' || $email === '') {
+            throw new \RuntimeException(__('integrations.youcan.errors.credentials'));
+        }
+
+        $this->client->authenticateForStore($email, $password, $storeId);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fetchOrder(EcommerceIntegration $integration, string $id): array
+    {
+        if ($id === '') {
+            return [];
+        }
+
+        $detail = $this->client->order($id);
+
+        return $detail !== [] ? $this->hydrate($detail) : [];
     }
 
     /**

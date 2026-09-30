@@ -53,6 +53,7 @@ const cardRows = (sector) => [
   { label: t("sectors.table.return_price"), value: money(sector.return_price) },
   { label: t("sectors.table.delivery_delay"), value: sector.delivery_delay || t("common.empty_value") },
   { label: t("sectors.table.orders"), value: sector.orders_count ?? 0 },
+  ...(sector.is_primary ? [{ label: t("sectors.form.is_primary"), value: t("common.yes") }] : []),
 ];
 
 const sheetRows = (sector) => [
@@ -181,7 +182,10 @@ onMounted(() => {
             </thead>
             <tbody>
               <tr v-for="sector in rows" :key="sector.id">
-                <td><Link :href="route('sectors.show', sector.id)" class="fw-semibold">{{ sector.name }}</Link></td>
+                <td>
+                  <Link :href="route('sectors.show', sector.id)" class="fw-semibold">{{ sector.name }}</Link>
+                  <span v-if="sector.is_primary" class="badge bg-primary-subtle text-primary ms-1">{{ $t('sectors.form.is_primary') }}</span>
+                </td>
                 <td>{{ sector.city?.name ?? $t('common.empty_value') }}</td>
                 <td class="text-end fw-medium">{{ money(sector.delivery_price) }}</td>
                 <td class="text-end fw-medium">{{ money(sector.return_price) }}</td>

@@ -132,6 +132,45 @@ class Order extends Model
         });
     }
 
+    /**
+     * Badge shown on the order list: platform name + icon when the parcel
+     * came from a storefront, otherwise the generic creation source.
+     *
+     * @return array{creation_source: string, creation_source_label: string, creation_source_color: string, creation_source_icon: ?string, creation_source_icon_color: ?string}
+     */
+    public function sourcePresentation(): array
+    {
+        $source = $this->creation_source instanceof OrderCreationSource
+            ? $this->creation_source
+            : OrderCreationSource::tryFrom((string) $this->creation_source)
+                ?? OrderCreationSource::Manual;
+
+        $label = $source->label();
+        $icon = null;
+        $iconColor = null;
+
+        if ($source === OrderCreationSource::Integration) {
+            $integration = $this->relationLoaded('ecommerceIntegration')
+                ? $this->ecommerceIntegration
+                : $this->ecommerceIntegration()->first();
+
+            if ($integration !== null) {
+                $platform = $integration->platform;
+                $label = $platform->name();
+                $icon = $platform->icon();
+                $iconColor = $platform->color();
+            }
+        }
+
+        return [
+            'creation_source' => $source->value,
+            'creation_source_label' => $label,
+            'creation_source_color' => $source->color(),
+            'creation_source_icon' => $icon,
+            'creation_source_icon_color' => $iconColor,
+        ];
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Relationships

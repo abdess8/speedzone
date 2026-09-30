@@ -36,14 +36,12 @@ export default {
 </script>
 
 <template>
-    <Head title="Reset Password" />
+    <Head :title="$t('seller_registration.password.reset_title')" />
 
     <div class="auth-page-wrapper pt-5">
         <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
             <div class="bg-overlay"></div>
-
             <div class="shape">
-
                 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1440 120">
                     <path d="M 0,36 C 144,53.6 432,123.2 720,124 C 1008,124.8 1296,56.8 1440,40L1440 140L0 140z"></path>
                 </svg>
@@ -56,11 +54,11 @@ export default {
                     <BCol lg="12">
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
-                                <Link to="/" class="d-inline-block auth-logo">
+                                <Link href="/" class="d-inline-block auth-logo">
                                 <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="88">
                                 </Link>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p>
+                            <p class="mt-3 fs-15 fw-medium">{{ $t('seller_registration.password.reset_subtitle') }}</p>
                         </div>
                     </BCol>
                 </BRow>
@@ -68,25 +66,23 @@ export default {
                 <BRow class="justify-content-center">
                     <BCol md="8" lg="6" xl="5">
                         <BCard no-body class="mt-4">
-
                             <BCardBody class="p-4">
                                 <div class="text-center mt-2">
-                                    <h5 class="text-primary">Create new password</h5>
-                                    <p class="text-muted">Your new password must be different from previous used
-                                        password.</p>
+                                    <h5 class="text-primary">{{ $t('seller_registration.password.reset_heading') }}</h5>
+                                    <p class="text-muted">{{ $t('seller_registration.password.reset_description') }}</p>
                                 </div>
 
                                 <div class="p-2">
                                     <form @submit.prevent="submit">
                                         <div class="mb-3">
-                                            <InputLabel for="email" value="Email" />
+                                            <InputLabel for="email" :value="$t('seller_registration.password.email')" />
                                             <TextInput id="email" v-model="form.email" type="email" required autofocus autocomplete="email" :class="{ 'is-invalid' : form.errors.email}" />
                                             <InputError :message="form.errors.email" />
                                         </div>
                                         <div class="mb-3">
-                                            <InputLabel for="password-input" value="Password" />
+                                            <InputLabel for="password-input" :value="$t('seller_registration.password.password')" />
                                             <div class="position-relative auth-pass-inputgroup">
-                                                <input :type="togglePassword ? 'text' : 'password'" class="form-control pe-5 password-input" placeholder="Enter password" id="password-input" v-model="form.password" required :class="{ 'is-invalid' : form.errors.password}">
+                                                <input :type="togglePassword ? 'text' : 'password'" class="form-control pe-5 password-input" :placeholder="$t('seller_registration.password.password_placeholder')" id="password-input" v-model="form.password" required :class="{ 'is-invalid' : form.errors.password}">
                                                 <BButton variant="link" class="position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon" @click="togglePassword = !togglePassword"><i class="ri-eye-fill align-middle"></i>
                                                 </BButton>
                                                 <InputError :message="form.errors.password" />
@@ -94,9 +90,9 @@ export default {
                                         </div>
 
                                         <div class="mb-3">
-                                            <InputLabel for="password_confirmation" value="Confirm Password" />
+                                            <InputLabel for="password_confirmation" :value="$t('seller_registration.password.password_confirmation')" />
                                             <div class="position-relative auth-pass-inputgroup mb-3">
-                                                <input :type="togglePassword_conf ? 'text' : 'password'" class="form-control pe-5 password-input" placeholder="Confirm password" id="confirm-password-input" v-model="form.password_confirmation" required :class="{ 'is-invalid' : form.errors.password_confirmation}">
+                                                <input :type="togglePassword_conf ? 'text' : 'password'" class="form-control pe-5 password-input" :placeholder="$t('seller_registration.password.password_confirmation_placeholder')" id="confirm-password-input" v-model="form.password_confirmation" required :class="{ 'is-invalid' : form.errors.password_confirmation}">
                                                 <BButton variant="link" class="position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="confirm-password-input" @click="togglePassword_conf = !togglePassword_conf"><i class="ri-eye-fill align-middle"></i>
                                                 </BButton>
                                                 <InputError :message="form.errors.password_confirmation" />
@@ -104,18 +100,16 @@ export default {
                                         </div>
 
                                         <div class="mt-4">
-                                            <BButton variant="secondary" class="w-100" :class="{ 'opacity-25': form.processing }" :disabled="form.processing" type="submit">Reset Password</BButton>
+                                            <BButton variant="secondary" class="w-100" :class="{ 'opacity-25': form.processing }" :disabled="form.processing" type="submit">{{ $t('seller_registration.password.reset_submit') }}</BButton>
                                         </div>
-
                                     </form>
                                 </div>
                             </BCardBody>
                         </BCard>
 
                         <div class="mt-4 text-center">
-                            <p class="mb-0">Wait, I remember my password...
-                                <Link :href="route('login')" class="fw-semibold text-primary text-decoration-underline"> Click
-                                here </Link>
+                            <p class="mb-0">{{ $t('seller_registration.password.remember_password') }}
+                                <Link :href="route('login')" class="fw-semibold text-primary text-decoration-underline"> {{ $t('seller_registration.password.back_to_login') }}</Link>
                             </p>
                         </div>
                     </BCol>

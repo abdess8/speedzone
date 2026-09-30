@@ -9,6 +9,7 @@ import StatusTimeline from "@/Components/StatusTimeline.vue";
 import OrderModificationHistory from "./Partials/OrderModificationHistory.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
 import FailureReasonBadge from "@/Components/FailureReasonBadge.vue";
+import OrderSourceBadge from "@/Components/OrderSourceBadge.vue";
 import UserAvatar from "@/Components/UserAvatar.vue";
 import RelatedOperationsLookups from "@/Components/RelatedOperationsLookups.vue";
 import SupportTicketsPanel from "@/Components/SupportTicketsPanel.vue";
@@ -373,9 +374,7 @@ onMounted(() => {
               <BCol md="4"><div class="text-muted fs-13">{{ $t('orders.table.created') }}</div><div class="fw-semibold">{{ formatDate(order.created_at) }}</div></BCol>
               <BCol md="4">
                 <div class="text-muted fs-13">{{ $t('orders.show.creation_source') }}</div>
-                <span class="badge" :class="`bg-${order.creation_source_color}-subtle text-${order.creation_source_color}`">
-                  {{ order.creation_source_label }}
-                </span>
+                <OrderSourceBadge :order="order" />
               </BCol>
               <BCol v-if="order.ecommerce_integration" md="4">
                 <div class="text-muted fs-13">{{ $t('orders.show.ecommerce_platform') }}</div>

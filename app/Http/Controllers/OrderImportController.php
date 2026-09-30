@@ -67,12 +67,13 @@ class OrderImportController extends Controller
             ->active()
             ->whereHas('city', fn ($query) => $query->active())
             ->orderBy('name')
-            ->get(['id', 'city_id', 'name', 'delivery_price'])
+            ->get(['id', 'city_id', 'name', 'delivery_price', 'is_primary'])
             ->map(fn (Sector $sector) => [
                 'id' => $sector->id,
                 'city_id' => $sector->city_id,
                 'name' => $sector->name,
                 'delivery_price' => (float) $sector->delivery_price,
+                'is_primary' => (bool) $sector->is_primary,
             ])
             ->all();
     }

@@ -18,6 +18,10 @@ class StoreSectorRequest extends FormRequest
             $this->merge(['is_active' => $this->boolean('is_active')]);
         }
 
+        if ($this->has('is_primary')) {
+            $this->merge(['is_primary' => $this->boolean('is_primary')]);
+        }
+
         // The payout is invisible to whoever cannot read it, so a submitted
         // value can only come from a hand-crafted request.
         if (! $this->user()?->hasPermission('sectors.read_driver_price')) {
@@ -45,6 +49,7 @@ class StoreSectorRequest extends FormRequest
             'delivery_driver_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'delivery_delay' => ['nullable', 'string', 'max:40'],
             'is_active' => ['boolean'],
+            'is_primary' => ['boolean'],
         ];
     }
 

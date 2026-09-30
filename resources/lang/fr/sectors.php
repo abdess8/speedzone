@@ -35,6 +35,8 @@ return [
         'delivery_delay' => 'Délai de livraison',
         'delivery_delay_placeholder' => 'ex. 24H ou 48H-72H',
         'delivery_delay_hint' => 'Délai de livraison annoncé au vendeur pour ce secteur.',
+        'is_primary' => 'Secteur principale',
+        'is_primary_hint' => 'Utilisé automatiquement à l’import et aux intégrations lorsqu’une commande n’a pas de secteur, si la ville est reconnue.',
     ],
     'delete_confirm_title' => 'Supprimer ce secteur ?',
     'delete_confirm_text' => ':name sera supprimé.',

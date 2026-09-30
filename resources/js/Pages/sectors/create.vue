@@ -18,6 +18,7 @@ const form = useForm({
   delivery_driver_price: "",
   delivery_delay: "",
   is_active: true,
+  is_primary: false,
 });
 
 const submit = () => {

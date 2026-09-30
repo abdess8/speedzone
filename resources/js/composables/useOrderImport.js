@@ -389,7 +389,9 @@ export function useOrderImport(props) {
       const sector = city
         ? findBestNamedMatch(sectorOptionsFor(city.id), raw.sector_id, (candidate) => [candidate.name])
         : null;
-      row.sector_id = sector?.id ?? null;
+      row.sector_id = sector?.id ?? (isBlank(raw.sector_id)
+        ? (sectorOptionsFor(city?.id).find((candidate) => candidate.is_primary)?.id ?? null)
+        : null);
 
       row.payment_method = parsePaymentMethod(raw.payment_method);
 

@@ -36,7 +36,7 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Two Factor Authentication" />
+    <Head :title="$t('seller_registration.password.two_factor_title')" />
 
     <div class="auth-page-wrapper pt-5">
         <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
@@ -60,7 +60,7 @@ const submit = () => {
                                 <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="88">
                                 </Link>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">Premium Admin & Dashboard Template</p>
+                            <p class="mt-3 fs-15 fw-medium">{{ $t('seller_registration.login.subtitle') }}</p>
                         </div>
                     </BCol>
                 </BRow>
@@ -80,21 +80,20 @@ const submit = () => {
 
                                 <div class="p-2 mt-4">
                                     <div class="text-muted text-center mb-4 mx-lg-3">
-                                        <h4 class="">Two Factor Authentication</h4>
+                                        <h4>{{ $t('seller_registration.password.two_factor_heading') }}</h4>
                                         <div class="text-sm text-muted">
                                             <template v-if="! recovery">
-                                                Please confirm access to your account by entering the authentication code provided by your authenticator application.
+                                                {{ $t('seller_registration.password.two_factor_description') }}
                                             </template>
-                                
                                             <template v-else>
-                                                Please confirm access to your account by entering one of your emergency recovery codes.
+                                                {{ $t('seller_registration.password.two_factor_recovery') }}
                                             </template>
                                         </div>
                                     </div>
 
                                     <form @submit.prevent="submit">
                                         <div v-if="! recovery">
-                                            <InputLabel for="code" value="Code" />
+                                            <InputLabel for="code" :value="$t('seller_registration.password.two_factor_code')" />
                                             <TextInput
                                                 id="code"
                                                 ref="codeInput"
@@ -110,7 +109,7 @@ const submit = () => {
                                         </div>
                             
                                         <div v-else>
-                                            <InputLabel for="recovery_code" value="Recovery Code" />
+                                            <InputLabel for="recovery_code" :value="$t('seller_registration.password.two_factor_recovery_code')" />
                                             <TextInput
                                                 id="recovery_code"
                                                 ref="recoveryCodeInput"
@@ -125,15 +124,14 @@ const submit = () => {
                                         <div class="d-flex align-items-center justify-content-end mt-4">
                                             <button type="button" class="btn btn-primary me-1" @click.prevent="toggleRecovery">
                                                 <template v-if="! recovery">
-                                                    Use a recovery code
+                                                    {{ $t('seller_registration.password.two_factor_use_recovery') }}
                                                 </template>
-                            
                                                 <template v-else>
-                                                    Use an authentication code
+                                                    {{ $t('seller_registration.password.two_factor_use_code') }}
                                                 </template>
                                             </button>
                             
-                                            <BButton variant="secondary" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">Log in</BButton>
+                                            <BButton variant="secondary" type="submit" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">{{ $t('seller_registration.password.two_factor_submit') }}</BButton>
                                         </div>
                                     </form>
                                 </div>

@@ -217,7 +217,10 @@ const confirmDeleteSector = (sector) => {
                 </thead>
                 <tbody>
                   <tr v-for="sector in sectorsList" :key="sector.id">
-                    <td class="fw-medium">{{ sector.name }}</td>
+                    <td class="fw-medium">
+                      {{ sector.name }}
+                      <span v-if="sector.is_primary" class="badge bg-primary-subtle text-primary ms-1">{{ $t('sectors.form.is_primary') }}</span>
+                    </td>
                     <td class="text-end">{{ money(sector.delivery_price) }}</td>
                     <td class="text-end">{{ money(sector.return_price) }}</td>
                     <td class="text-center">{{ sector.orders_count ?? 0 }}</td>

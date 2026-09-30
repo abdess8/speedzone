@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { formatMoney as money } from '@/common/formatMoney';
 import PaymentMethodBadge from '@/Components/PaymentMethodBadge.vue';
 import FailureReasonBadge from '@/Components/FailureReasonBadge.vue';
+import OrderSourceBadge from '@/Components/OrderSourceBadge.vue';
 
 /**
  * Order card for the mobile list of sellers and back-office staff.
@@ -65,9 +66,7 @@ const createdAt = computed(() =>
             {{ $t('orders.ecommerce_order_ref') }}: {{ order.ecommerce_order_ref }}
           </div>
           <div v-if="order.creation_source && order.creation_source !== 'manual'" class="mt-1">
-            <span class="badge" :class="`bg-${order.creation_source_color}-subtle text-${order.creation_source_color}`">
-              {{ order.creation_source_label }}
-            </span>
+            <OrderSourceBadge :order="order" />
           </div>
           <div class="text-muted fs-12 mt-1 text-truncate">
             {{ customer.full_name }}

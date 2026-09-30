@@ -114,6 +114,13 @@ const cityOptions = computed(() =>
                 <label class="form-check-label" for="sectorActive">{{ form.is_active ? $t('common.active') : $t('common.inactive') }}</label>
               </div>
             </BCol>
+            <BCol md="12">
+              <div class="form-check fs-15">
+                <input class="form-check-input" type="checkbox" id="sectorPrimary" v-model="form.is_primary" />
+                <label class="form-check-label" for="sectorPrimary">{{ $t('sectors.form.is_primary') }}</label>
+              </div>
+              <div class="form-text">{{ $t('sectors.form.is_primary_hint') }}</div>
+            </BCol>
           </BRow>
         </BCardBody>
       </BCard>

@@ -31,6 +31,7 @@ class SectorResource extends JsonResource
             ),
             'delivery_delay' => $this->delivery_delay,
             'is_active' => (bool) $this->is_active,
+            'is_primary' => (bool) $this->is_primary,
             'city' => $this->whenLoaded('city', fn () => $this->city ? [
                 'id' => $this->city->id,
                 'name' => $this->city->name,

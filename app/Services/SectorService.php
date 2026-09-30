@@ -6,6 +6,7 @@ use App\Models\Sector;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class SectorService
 {
@@ -66,7 +67,15 @@ class SectorService
      */
     public function create(array $data): Sector
     {
-        return Sector::create($data)->load('city');
+        return DB::transaction(function () use ($data) {
+            $sector = Sector::create($data)->load('city');
+
+            if ($sector->is_primary) {
+                $this->makeSolePrimary($sector);
+            }
+
+            return $sector->refresh()->load('city');
+        });
     }
 
     /**
@@ -74,13 +83,32 @@ class SectorService
      */
     public function update(Sector $sector, array $data): Sector
     {
-        $sector->update($data);
+        return DB::transaction(function () use ($sector, $data) {
+            $sector->update($data);
 
-        return $sector->refresh()->load('city');
+            if ($sector->is_primary) {
+                $this->makeSolePrimary($sector);
+            }
+
+            return $sector->refresh()->load('city');
+        });
     }
 
     public function delete(Sector $sector): void
     {
         $sector->delete();
+    }
+
+    /**
+     * A city has at most one primary sector: the one used when an import
+     * arrives without a quartier.
+     */
+    private function makeSolePrimary(Sector $sector): void
+    {
+        Sector::query()
+            ->where('city_id', $sector->city_id)
+            ->whereKeyNot($sector->id)
+            ->where('is_primary', true)
+            ->update(['is_primary' => false]);
     }
 }

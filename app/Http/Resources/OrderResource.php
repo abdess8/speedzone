@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use App\Enums\DriverInvoiceStatus;
 use App\Enums\InvoiceStatus;
-use App\Enums\OrderCreationSource;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PickupRequestStatus;
@@ -30,10 +29,7 @@ class OrderResource extends JsonResource
         $payment = $this->payment_method instanceof PaymentMethod
             ? $this->payment_method
             : PaymentMethod::resolve((string) $this->payment_method);
-        $source = $this->creation_source instanceof OrderCreationSource
-            ? $this->creation_source
-            : OrderCreationSource::tryFrom((string) $this->creation_source)
-                ?? OrderCreationSource::Manual;
+        $sourceBadge = $this->resource->sourcePresentation();
 
         return [
             'id' => $this->id,
@@ -44,9 +40,7 @@ class OrderResource extends JsonResource
             'status' => $status->value,
             'status_label' => $status->label(),
             'status_color' => $status->color(),
-            'creation_source' => $source->value,
-            'creation_source_label' => $source->label(),
-            'creation_source_color' => $source->color(),
+            ...$sourceBadge,
             'ecommerce_sync_id' => $this->ecommerce_sync_id,
             'external_order_id' => $this->external_order_id,
             'ecommerce_order_ref' => $this->ecommerce_order_ref,

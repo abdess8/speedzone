@@ -81,6 +81,8 @@ Route::get('/tracking/{trackingNumber}', [LandingController::class, 'track'])
 
 Route::get('/verify-email', fn () => redirect()->route('verification.notice'))->name('verify-email');
 
+Route::post('locale', [LocaleController::class, 'update'])->name('locale.update');
+
 // Uploaded files on the public disk. The web server normally answers these
 // through the `public/storage` symlink; this route is the fallback when that
 // link is missing after a deploy.
@@ -138,8 +140,6 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     });
 
     Route::redirect('/admin/users/pending', '/admin/pending-users');
-
-    Route::post('locale', [LocaleController::class, 'update'])->name('locale.update');
 
     // Global search bar. Deliberately behind no `permission:` middleware: each
     // searchable object gates itself, so the endpoint answers with whatever

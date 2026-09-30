@@ -22,6 +22,7 @@ const form = useForm({
     : {}),
   delivery_delay: props.sector.delivery_delay ?? "",
   is_active: props.sector.is_active,
+  is_primary: !!props.sector.is_primary,
 });
 
 const submit = () => {

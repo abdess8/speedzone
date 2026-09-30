@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\PaymentMethod;
+use App\Models\Sector;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -32,10 +33,10 @@ class ImportOrdersRequest extends FormRequest
         }
 
         $this->merge([
-            'orders' => array_map(
+            'orders' => $this->fillPrimarySectors(array_map(
                 fn ($row) => is_array($row) ? $this->normalizeRow($row) : $row,
                 $rows
-            ),
+            )),
         ]);
     }
 
@@ -69,6 +70,50 @@ class ImportOrdersRequest extends FormRequest
         }
 
         return $row;
+    }
+
+    /**
+     * An empty sector on a row whose city is known becomes that city's primary
+     * sector, so bulk files without a quartier column still land in a zone.
+     *
+     * @param  array<int, mixed>  $rows
+     * @return array<int, mixed>
+     */
+    private function fillPrimarySectors(array $rows): array
+    {
+        $cityIds = collect($rows)
+            ->filter(fn ($row) => is_array($row)
+                && blank($row['sector_id'] ?? null)
+                && filled($row['city_id'] ?? null))
+            ->pluck('city_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->all();
+
+        if ($cityIds === []) {
+            return $rows;
+        }
+
+        $primaries = Sector::query()
+            ->whereIn('city_id', $cityIds)
+            ->active()
+            ->primary()
+            ->get(['id', 'city_id'])
+            ->keyBy('city_id');
+
+        foreach ($rows as $index => $row) {
+            if (! is_array($row) || filled($row['sector_id'] ?? null) || blank($row['city_id'] ?? null)) {
+                continue;
+            }
+
+            $primary = $primaries->get((int) $row['city_id']);
+
+            if ($primary !== null) {
+                $rows[$index]['sector_id'] = $primary->id;
+            }
+        }
+
+        return $rows;
     }
 
     /**

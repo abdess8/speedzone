@@ -35,6 +35,8 @@ return [
         'delivery_delay' => 'Lead Time',
         'delivery_delay_placeholder' => 'e.g. 24H or 48H-72H',
         'delivery_delay_hint' => 'Delivery window promised to the seller for this sector.',
+        'is_primary' => 'Primary sector',
+        'is_primary_hint' => 'Used automatically on import and storefront syncs when an order has no sector, as long as the city is known.',
     ],
     'delete_confirm_title' => 'Delete this sector?',
     'delete_confirm_text' => ':name will be removed.',

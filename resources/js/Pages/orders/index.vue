@@ -14,6 +14,7 @@ import DeliveryOutcomeSheet from "./Partials/DeliveryOutcomeSheet.vue";
 import DriverReturnSheet from "./Partials/DriverReturnSheet.vue";
 import OrderCard from "./Partials/OrderCard.vue";
 import OrderDetailSheet from "./Partials/OrderDetailSheet.vue";
+import OrderSourceBadge from "@/Components/OrderSourceBadge.vue";
 import SectorDispatchModal from "./Partials/SectorDispatchModal.vue";
 import FailureReasonBadge from "@/Components/FailureReasonBadge.vue";
 import Swal from "sweetalert2";
@@ -725,9 +726,7 @@ onMounted(() => {
                     {{ $t('orders.ecommerce_order_ref') }}: {{ order.ecommerce_order_ref }}
                   </div>
                   <div v-if="order.creation_source && order.creation_source !== 'manual'" class="mt-1">
-                    <span class="badge" :class="`bg-${order.creation_source_color}-subtle text-${order.creation_source_color}`">
-                      {{ order.creation_source_label }}
-                    </span>
+                    <OrderSourceBadge :order="order" />
                   </div>
                   <div v-if="order.is_fragile || order.can_be_opened" class="mt-1">
                     <span v-if="order.is_fragile" class="badge bg-danger-subtle text-danger me-1">{{ $t('orders.badges.fragile') }}</span>

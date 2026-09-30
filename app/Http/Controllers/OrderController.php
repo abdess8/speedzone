@@ -72,7 +72,11 @@ class OrderController extends Controller
         // relation is neither eager loaded nor serialised here, and the select
         // is limited to the columns the table shows.
         $orders = $this->orderQuery
-            ->build($request, $request->user(), ['city:id,name', 'sector:id,name'])
+            ->build($request, $request->user(), [
+                'city:id,name',
+                'sector:id,name',
+                'ecommerceIntegration:id,platform,store_id,shop_name',
+            ])
             ->select(OrderListResource::COLUMNS)
             ->paginate($this->orderQuery->perPage($request))
             ->withQueryString();

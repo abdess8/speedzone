@@ -10,6 +10,7 @@ use App\Models\EcommerceIntegration;
 use App\Models\EcommerceIntegrationSync;
 use App\Models\EcommerceIntegrationSyncRow;
 use App\Models\Order;
+use App\Models\Sector;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -396,6 +397,41 @@ class YouCanOrderMapper
     }
 
     /**
+     * Named secteur when the storefront mapped one, otherwise the city's
+     * primary sector, otherwise the first active sector so existing cities
+     * without a primary still import.
+     */
+    private function resolveSector(?City $city, ?string $rawName): ?Sector
+    {
+        if ($city === null) {
+            return null;
+        }
+
+        $sectors = Sector::query()
+            ->forCity($city->id)
+            ->active()
+            ->orderBy('id')
+            ->get(['id', 'city_id', 'name', 'is_primary']);
+
+        if ($sectors->isEmpty()) {
+            return null;
+        }
+
+        if (filled($rawName)) {
+            $needle = Str::lower($this->fold(trim($rawName)));
+            $matched = $sectors->first(function (Sector $sector) use ($needle): bool {
+                return Str::lower($this->fold($sector->name)) === $needle;
+            });
+
+            if ($matched instanceof Sector) {
+                return $matched;
+            }
+        }
+
+        return $sectors->firstWhere('is_primary', true) ?? $sectors->first();
+    }
+
+    /**
      * @return Collection<int, City>
      */
     private function cities(): Collection
@@ -578,7 +614,7 @@ class YouCanOrderMapper
     {
         $phone = $this->normalizePhone($raw['customer_phone'] ?? '');
         $city = $this->matchCity($raw['city_id'] ?? null);
-        $sector = $city?->activeSectors()->orderBy('id')->first();
+        $sector = $this->resolveSector($city, $raw['sector_id'] ?? null);
         $payment = $this->parsePayment($raw['payment_method'] ?? '');
         $amount = is_numeric($raw['order_amount'] ?? null) ? round((float) $raw['order_amount'], 2) : $raw['order_amount'];
 

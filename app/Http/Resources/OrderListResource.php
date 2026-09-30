@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\OrderCreationSource;
 use App\Enums\OrderFailureReason;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
@@ -45,6 +44,7 @@ class OrderListResource extends JsonResource
         'total_amount',
         'status',
         'creation_source',
+        'ecommerce_integration_id',
         'ecommerce_order_ref',
         'failed_attempts_count',
         'failure_reason',
@@ -74,10 +74,7 @@ class OrderListResource extends JsonResource
             ? $this->failure_reason
             : OrderFailureReason::tryFrom((string) $this->failure_reason);
 
-        $source = $this->creation_source instanceof OrderCreationSource
-            ? $this->creation_source
-            : OrderCreationSource::tryFrom((string) $this->creation_source)
-                ?? OrderCreationSource::Manual;
+        $sourceBadge = $this->resource->sourcePresentation();
 
         return [
             'id' => $this->id,
@@ -86,9 +83,7 @@ class OrderListResource extends JsonResource
             'status' => $status->value,
             'status_label' => $status->label(),
             'status_color' => $status->color(),
-            'creation_source' => $source->value,
-            'creation_source_label' => $source->label(),
-            'creation_source_color' => $source->color(),
+            ...$sourceBadge,
             'ecommerce_order_ref' => $this->ecommerce_order_ref,
             // Warns the driver that the address has already turned him away.
             'failed_attempts_count' => (int) $this->failed_attempts_count,

@@ -23,6 +23,7 @@ class Sector extends Model
         'delivery_driver_price',
         'delivery_delay',
         'is_active',
+        'is_primary',
     ];
 
     protected $casts = [
@@ -30,6 +31,7 @@ class Sector extends Model
         'return_price' => 'decimal:2',
         'delivery_driver_price' => 'decimal:2',
         'is_active' => 'boolean',
+        'is_primary' => 'boolean',
     ];
 
     /*
@@ -72,5 +74,19 @@ class Sector extends Model
     public function scopeForCity(Builder $query, int $cityId): Builder
     {
         return $query->where('city_id', $cityId);
+    }
+
+    public function scopePrimary(Builder $query): Builder
+    {
+        return $query->where('is_primary', true);
+    }
+
+    public static function primaryForCity(int $cityId): ?self
+    {
+        return static::query()
+            ->forCity($cityId)
+            ->active()
+            ->primary()
+            ->first();
     }
 }

@@ -52,6 +52,9 @@ onMounted(() => {
         <span class="badge fs-13" :class="sector.is_active ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'">
           {{ sector.is_active ? $t('common.active') : $t('common.inactive') }}
         </span>
+        <span v-if="sector.is_primary" class="badge fs-13 bg-primary-subtle text-primary">
+          {{ $t('sectors.form.is_primary') }}
+        </span>
         <!-- Labels collapse below `sm`; `title` still names the icon-only button. -->
         <div class="ms-auto action-bar">
           <Link :href="route('sectors.index')" class="btn btn-sm btn-light" :title="$t('common.back')">

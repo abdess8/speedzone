@@ -4,12 +4,32 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Services\LandingCoverageService;
+use App\Support\Domains;
+use App\Support\LoginRedirect;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class LandingController extends Controller
 {
+    /**
+     * `/` is the public vitrine on the marketing host, and the post-login
+     * home on the app host once the two are split.
+     */
+    public function home(Request $request): Response|RedirectResponse
+    {
+        if (Domains::splitEnabled() && Domains::isAppHost($request->getHost())) {
+            if ($request->user()) {
+                return redirect()->to(LoginRedirect::forUser($request->user()));
+            }
+
+            return redirect()->route('login');
+        }
+
+        return $this->index();
+    }
+
     /**
      * Public SpeedZone marketing landing page.
      *

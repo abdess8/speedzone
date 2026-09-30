@@ -6,6 +6,7 @@ use App\Enums\UserStatus;
 use App\Models\Store;
 use App\Services\AlertService;
 use App\Services\Chatbot\ChatbotService;
+use App\Support\Domains;
 use App\Support\StoreContext;
 use App\Support\TranslationBundle;
 use Illuminate\Http\Request;
@@ -74,6 +75,10 @@ class HandleInertiaRequests extends Middleware
             // a launcher whose every message would fail.
             'chatbot' => fn () => [
                 'enabled' => app(ChatbotService::class)->isEnabled(),
+            ],
+            'domains' => [
+                'app_url' => Domains::splitEnabled() ? Domains::appUrl() : null,
+                'marketing_url' => Domains::splitEnabled() ? Domains::marketingUrl() : null,
             ],
             // Not `alerts`: the management screen already ships a prop by that
             // name, and a page prop shadows a shared one.

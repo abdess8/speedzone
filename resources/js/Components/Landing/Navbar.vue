@@ -4,12 +4,18 @@ import { Link } from '@inertiajs/vue3';
 import LandingButton from '@/Components/Landing/LandingButton.vue';
 import LocaleSwitcher from '@/Components/Landing/LocaleSwitcher.vue';
 import { useLandingLocale } from '@/Components/Landing/i18n';
+import { useAppLinks } from '@/composables/useAppLinks';
 
 defineProps({
     authenticated: { type: Boolean, default: false },
 });
 
 const { t } = useLandingLocale();
+const { toApp } = useAppLinks();
+
+const loginHref = toApp('/login');
+const registerHref = toApp('/register');
+const dashboardHref = toApp('/dashboard');
 
 const scrolled = ref(false);
 const mobileOpen = ref(false);
@@ -68,24 +74,25 @@ onBeforeUnmount(() => {
 
                 <div class="sz-nav__mobile-cta">
                     <LocaleSwitcher block />
-                    <LandingButton v-if="authenticated" href="/dashboard" variant="primary" size="sm" block>
+                    <LandingButton v-if="authenticated" :href="dashboardHref" variant="primary" size="sm" block>
                         {{ t('nav.dashboard') }}
                     </LandingButton>
                     <template v-else>
-                        <LandingButton href="/login" variant="outline" size="sm" block>{{ t('nav.login') }}</LandingButton>
-                        <LandingButton href="/register" variant="primary" size="sm" block>{{ t('nav.register') }}</LandingButton>
+                        <LandingButton :href="loginHref" variant="outline" size="sm" block>{{ t('nav.login') }}</LandingButton>
+                        <LandingButton :href="registerHref" variant="primary" size="sm" block>{{ t('nav.register') }}</LandingButton>
                     </template>
                 </div>
             </nav>
 
             <div class="sz-nav__actions">
                 <LocaleSwitcher />
-                <LandingButton v-if="authenticated" href="/dashboard" variant="primary" size="sm">
+                <LandingButton v-if="authenticated" :href="dashboardHref" variant="primary" size="sm">
                     {{ t('nav.dashboard') }}
                 </LandingButton>
                 <template v-else>
-                    <Link href="/login" class="sz-nav__signin">{{ t('nav.login') }}</Link>
-                    <LandingButton href="/register" variant="primary" size="sm">{{ t('nav.register') }}</LandingButton>
+                    <a v-if="loginHref.startsWith('http')" :href="loginHref" class="sz-nav__signin">{{ t('nav.login') }}</a>
+                    <Link v-else href="/login" class="sz-nav__signin">{{ t('nav.login') }}</Link>
+                    <LandingButton :href="registerHref" variant="primary" size="sm">{{ t('nav.register') }}</LandingButton>
                 </template>
             </div>
 

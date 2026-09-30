@@ -6,6 +6,7 @@ import TextInput from '@/Components/TextInput.vue';
 import Lottie from "@/Components/widgets/lottie.vue";
 import animationData from "@/Components/widgets/rhvddzym.json";
 import AuthPageFooter from '@/Components/AuthPageFooter.vue';
+import AuthLogo from '@/Components/AuthLogo.vue';
 
 defineProps({
     status: String,
@@ -57,9 +58,7 @@ export default {
                     <BCol lg="12">
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
-                                <Link href="/" class="d-inline-block auth-logo">
-                                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="88">
-                                </Link>
+                                <AuthLogo />
                             </div>
                             <p class="mt-3 fs-15 fw-medium">{{ $t('seller_registration.password.forgot_subtitle') }}</p>
                         </div>

@@ -2,8 +2,10 @@
 import SectionHeading from '@/Components/Landing/SectionHeading.vue';
 import LandingButton from '@/Components/Landing/LandingButton.vue';
 import { useLandingLocale } from '@/Components/Landing/i18n';
+import { useAppLinks } from '@/composables/useAppLinks';
 
 const { t } = useLandingLocale();
+const { toApp } = useAppLinks();
 
 const features = ['orders', 'tracking', 'drivers', 'cod', 'history', 'notifications', 'billing', 'qr'];
 </script>
@@ -79,7 +81,7 @@ const features = ['orders', 'tracking', 'drivers', 'cod', 'history', 'notificati
                     </li>
                 </ul>
                 <div class="sz-platform__cta">
-                    <LandingButton href="/register" variant="primary" size="lg">
+                    <LandingButton :href="toApp('/register')" variant="primary" size="lg">
                         {{ t('platform.cta') }}
                     </LandingButton>
                 </div>

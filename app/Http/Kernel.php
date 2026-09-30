@@ -12,6 +12,7 @@ use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\ResolveActiveStore;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\SplitMarketingAndAppHosts;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\ValidateSignature;
@@ -49,6 +50,7 @@ class Kernel extends HttpKernel
         // \App\Http\Middleware\TrustHosts::class,
         LogSlowRequests::class,
         TrustProxies::class,
+        SplitMarketingAndAppHosts::class,
         HandleCors::class,
         PreventRequestsDuringMaintenance::class,
         ValidatePostSize::class,

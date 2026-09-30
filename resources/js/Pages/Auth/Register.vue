@@ -7,6 +7,7 @@ import TextInput from '@/Components/TextInput.vue';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
 import AuthPageFooter from '@/Components/AuthPageFooter.vue';
+import AuthLogo from '@/Components/AuthLogo.vue';
 
 const ACCOUNT_TYPES = ['seller', 'driver'];
 
@@ -93,9 +94,7 @@ export default {
                 <BRow>
                     <BCol lg="12">
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
-                            <Link href="/" class="d-inline-block auth-logo">
-                                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="88">
-                            </Link>
+                            <AuthLogo />
                             <p class="mt-3 fs-15 fw-medium">{{ $t('seller_registration.register.subtitle') }}</p>
                         </div>
                     </BCol>

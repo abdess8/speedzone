@@ -2,8 +2,10 @@
 import LandingButton from '@/Components/Landing/LandingButton.vue';
 import TrackingSearch from '@/Components/Landing/TrackingSearch.vue';
 import { useLandingLocale } from '@/Components/Landing/i18n';
+import { useAppLinks } from '@/composables/useAppLinks';
 
 const { t } = useLandingLocale();
+const { toApp } = useAppLinks();
 </script>
 
 <template>
@@ -30,7 +32,7 @@ const { t } = useLandingLocale();
                 <p class="sz-hero__subtitle">{{ t('hero.subtitle') }}</p>
 
                 <div class="sz-hero__actions">
-                    <LandingButton href="/register" variant="primary" size="lg">
+                    <LandingButton :href="toApp('/register')" variant="primary" size="lg">
                         {{ t('hero.cta') }}
                     </LandingButton>
                     <LandingButton href="#tarifs" variant="light" size="lg">

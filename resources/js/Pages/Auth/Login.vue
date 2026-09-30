@@ -5,6 +5,7 @@ import Checkbox from '@/Components/Checkbox.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
+import AuthLogo from '@/Components/AuthLogo.vue';
 import AuthPageFooter from '@/Components/AuthPageFooter.vue';
 
 defineProps({
@@ -56,9 +57,7 @@ const submit = () => {
                     <BCol lg="12">
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
-                                <Link href="/" class="d-inline-block auth-logo">
-                                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="88">
-                                </Link>
+                                <AuthLogo />
                             </div>
                             <p class="mt-3 fs-15 fw-medium">{{ $t('seller_registration.login.subtitle') }}</p>
                         </div>

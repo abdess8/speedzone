@@ -10,16 +10,22 @@ const props = defineProps({
     external: { type: Boolean, default: false },
 });
 
+const isRemote = computed(() => {
+    if (props.external) {
+        return true;
+    }
+
+    return typeof props.href === 'string' && /^https?:\/\//i.test(props.href);
+});
+
 const componentType = computed(() => {
     if (!props.href) return 'button';
-    return props.external ? 'a' : Link;
+    return isRemote.value ? 'a' : Link;
 });
 
 const bindings = computed(() => {
     if (!props.href) return {};
-    return props.external
-        ? { href: props.href }
-        : { href: props.href };
+    return { href: props.href };
 });
 </script>
 

@@ -74,7 +74,7 @@ use Illuminate\Support\Facades\Route;
 | the dashboard; guests and authenticated users can both reach it.
 |--------------------------------------------------------------------------
 */
-Route::get('/', [LandingController::class, 'index'])->name('landing');
+Route::get('/', [LandingController::class, 'home'])->name('landing');
 Route::get('/tracking/{trackingNumber}', [LandingController::class, 'track'])
     ->where('trackingNumber', '[A-Za-z0-9\-]+')
     ->name('tracking.public');
@@ -661,8 +661,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::controller(VelzonRoutesController::class)->group(function () {
 
         // dashboards
-        // NOTE: "/" is intentionally handled by the public LandingController
-        // (registered at the top of this file). The dashboard lives at "/dashboard".
+        // NOTE: "/" is the public vitrine (LandingController at the top of
+        // this file). On app.speedzoneexpress.ma it redirects to login or
+        // the user's home. The staff dashboard itself lives at "/dashboard".
         Route::get('/dashboard', 'dashboard')->middleware('permission:dashboard.view');
 
         // Route::get('/dashboard/analytics', 'dashboard_analytics');

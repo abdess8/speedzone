@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import SectionHeading from '@/Components/Landing/SectionHeading.vue';
 import LandingButton from '@/Components/Landing/LandingButton.vue';
 import { useLandingLocale } from '@/Components/Landing/i18n';
+import { useAppLinks } from '@/composables/useAppLinks';
 
 const props = defineProps({
     cities: { type: Array, default: () => [] },
@@ -10,6 +11,7 @@ const props = defineProps({
 });
 
 const { t, tName } = useLandingLocale();
+const { toApp } = useAppLinks();
 
 const query = ref('');
 
@@ -67,7 +69,7 @@ const rows = computed(() => {
                                 {{ t(`pricing.included.items.${item}`) }}
                             </li>
                         </ul>
-                        <LandingButton href="/register" variant="primary" size="md" block>
+                        <LandingButton :href="toApp('/register')" variant="primary" size="md" block>
                             {{ t('pricing.cta') }}
                         </LandingButton>
                     </div>

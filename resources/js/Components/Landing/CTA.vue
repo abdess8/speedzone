@@ -1,12 +1,14 @@
 <script setup>
 import LandingButton from '@/Components/Landing/LandingButton.vue';
 import { useLandingLocale } from '@/Components/Landing/i18n';
+import { useAppLinks } from '@/composables/useAppLinks';
 
 defineProps({
     authenticated: { type: Boolean, default: false },
 });
 
 const { t } = useLandingLocale();
+const { toApp } = useAppLinks();
 </script>
 
 <template>
@@ -24,10 +26,10 @@ const { t } = useLandingLocale();
                     <h2 class="sz-cta__title">{{ t('cta.title') }}</h2>
                     <p class="sz-cta__text">{{ t('cta.text') }}</p>
                     <div class="sz-cta__actions">
-                        <LandingButton v-if="authenticated" href="/dashboard" variant="light" size="lg">
+                        <LandingButton v-if="authenticated" :href="toApp('/dashboard')" variant="light" size="lg">
                             {{ t('cta.dashboard') }}
                         </LandingButton>
-                        <LandingButton v-else href="/register" variant="light" size="lg">
+                        <LandingButton v-else :href="toApp('/register')" variant="light" size="lg">
                             {{ t('cta.primary') }}
                         </LandingButton>
                         <LandingButton href="#contact" variant="ghost" size="lg">

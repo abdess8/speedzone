@@ -3,8 +3,10 @@ import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { useLandingLocale } from '@/Components/Landing/i18n';
 import MadeWithLove from '@/Components/MadeWithLove.vue';
+import { useAppLinks } from '@/composables/useAppLinks';
 
 const { t } = useLandingLocale();
+const { toApp } = useAppLinks();
 
 const year = new Date().getFullYear();
 
@@ -18,7 +20,8 @@ const whatsappUrl = computed(() => {
     return digits ? `https://wa.me/${digits}` : null;
 });
 
-const joinHref = computed(() => (authenticated.value ? '/dashboard' : '/register'));
+const joinHref = computed(() => toApp(authenticated.value ? '/dashboard' : '/register'));
+const joinIsRemote = computed(() => /^https?:\/\//i.test(joinHref.value));
 const joinLabel = computed(() => (authenticated.value ? t('nav.dashboard') : t('footer.join')));
 
 const columns = [
@@ -131,7 +134,18 @@ const columns = [
                         </svg>
                         {{ t('footer.whatsapp') }}
                     </a>
-                    <Link class="sz-footer__cta sz-footer__cta--solid" :href="joinHref">
+                    <a
+                        v-if="joinIsRemote"
+                        class="sz-footer__cta sz-footer__cta--solid"
+                        :href="joinHref"
+                    >
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                            <rect x="4" y="3.5" width="16" height="17" rx="2.2" stroke="currentColor" stroke-width="1.8" />
+                            <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        </svg>
+                        {{ joinLabel }}
+                    </a>
+                    <Link v-else class="sz-footer__cta sz-footer__cta--solid" :href="joinHref">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
                             <rect x="4" y="3.5" width="16" height="17" rx="2.2" stroke="currentColor" stroke-width="1.8" />
                             <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />

@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import ChangeAccountEmailForm from '@/Components/Auth/ChangeAccountEmailForm.vue';
 import AuthPageFooter from '@/Components/AuthPageFooter.vue';
+import AuthLogo from '@/Components/AuthLogo.vue';
 
 const props = defineProps({
     status: String,
@@ -41,9 +42,7 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
                     <BCol lg="12">
                         <div class="text-center mt-sm-5 mb-4 text-white-50">
                             <div>
-                                <Link href="/" class="d-inline-block auth-logo">
-                                <img src="@assets/images/logo-light.png" alt="SpeedZone Express" height="88">
-                                </Link>
+                                <AuthLogo />
                             </div>
                             <p class="mt-3 fs-15 fw-medium">{{ $t('seller_registration.login.subtitle') }}</p>
                         </div>

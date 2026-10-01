@@ -6,6 +6,7 @@ use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsurePermission;
+use App\Http\Middleware\ExpireStaleAuthCookies;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\LogSlowRequests;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
@@ -82,6 +83,7 @@ class Kernel extends HttpKernel
             ShareInertiaData::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            ExpireStaleAuthCookies::class,
         ],
 
         'api' => [

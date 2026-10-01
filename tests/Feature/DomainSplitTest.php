@@ -82,3 +82,21 @@ test('login on the app host is not redirected away', function () {
     $this->get('https://app.speedzoneexpress.ma/login')
         ->assertOk();
 });
+
+test('the login page expires leftover host-only session cookies', function () {
+    enableDomainSplit();
+    config([
+        'session.domain' => '.speedzoneexpress.ma',
+        'session.cookie' => 'speedzone_session',
+        'session.secure' => true,
+    ]);
+
+    $response = $this->get('https://app.speedzoneexpress.ma/login');
+    $response->assertOk();
+
+    $hostOnly = collect($response->headers->getCookies())
+        ->first(fn ($cookie) => $cookie->getName() === 'XSRF-TOKEN' && $cookie->getDomain() === null);
+
+    expect($hostOnly)->not->toBeNull()
+        ->and($hostOnly->getExpiresTime())->toBeLessThan(time());
+});

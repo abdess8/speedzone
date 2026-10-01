@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use App\Support\StaleAuthCookies;
 use App\Support\TranslationBundle;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Request;
@@ -81,12 +82,14 @@ class Handler extends ExceptionHandler
 
         $user = $request->user();
 
-        return Inertia::render('errors/Error', [
+        $response = Inertia::render('errors/Error', [
             'status' => $status,
             'homeUrl' => $user ? url('/dashboard') : route('login'),
             'translations' => TranslationBundle::forLocale(app()->getLocale()),
         ])
             ->toResponse($request)
             ->setStatusCode($status);
+
+        return StaleAuthCookies::expireOn($response);
     }
 }

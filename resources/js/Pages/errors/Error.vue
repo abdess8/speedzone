@@ -1,8 +1,10 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import Layout from '@/Layouts/main.vue';
 import ErrorPanel from './ErrorPanel.vue';
+
+const RELOAD_FLAG = 'speedzone:419-reloaded';
 
 const props = defineProps({
   status: { type: Number, required: true },
@@ -12,6 +14,24 @@ const props = defineProps({
 const page = usePage();
 const authenticated = computed(() => Boolean(page.props.auth?.user));
 const pageTitle = computed(() => String(props.status));
+
+onMounted(() => {
+  if (props.status !== 419) {
+    return;
+  }
+
+  try {
+    if (sessionStorage.getItem(RELOAD_FLAG)) {
+      return;
+    }
+
+    sessionStorage.setItem(RELOAD_FLAG, '1');
+  } catch {
+    return;
+  }
+
+  window.location.reload();
+});
 </script>
 
 <template>

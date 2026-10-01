@@ -83,6 +83,16 @@ test('login on the app host is not redirected away', function () {
         ->assertOk();
 });
 
+test('the login page can switch locale on the app host', function () {
+    enableDomainSplit();
+
+    $this->from('https://app.speedzoneexpress.ma/login')
+        ->post('https://app.speedzoneexpress.ma/locale', ['locale' => 'en'])
+        ->assertRedirect('https://app.speedzoneexpress.ma/login');
+
+    expect(session('locale'))->toBe('en');
+});
+
 test('the login page expires leftover host-only session cookies', function () {
     enableDomainSplit();
     config([

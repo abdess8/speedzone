@@ -26,5 +26,7 @@ test('split turns on when both hosts differ', function () {
         ->and(Domains::isMarketingPath('/'))->toBeTrue()
         ->and(Domains::isMarketingPath('/tracking/SPD-1'))->toBeTrue()
         ->and(Domains::isMarketingPath('/login'))->toBeFalse()
-        ->and(Domains::isMarketingPath('/dashboard'))->toBeFalse();
+        ->and(Domains::isMarketingPath('/dashboard'))->toBeFalse()
+        ->and(Domains::isMarketingPath('/locale'))->toBeFalse()
+        ->and(Domains::isExemptFromSplit('/locale'))->toBeTrue();
 });

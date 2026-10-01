@@ -74,10 +74,6 @@ final class Domains
             return true;
         }
 
-        if ($path === '/locale' || $path === '/locale/') {
-            return true;
-        }
-
         return str_starts_with($path, '/storage/');
     }
 
@@ -86,6 +82,8 @@ final class Domains
         $path = '/'.ltrim($path, '/');
 
         return $path === '/up'
+            || $path === '/locale'
+            || $path === '/locale/'
             || str_starts_with($path, '/.well-known/')
             || str_starts_with($path, '/build/');
     }

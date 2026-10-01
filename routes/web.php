@@ -661,10 +661,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::controller(VelzonRoutesController::class)->group(function () {
 
         // dashboards
-        // NOTE: "/" is the public vitrine (LandingController at the top of
-        // this file). On app.speedzoneexpress.ma it redirects to login or
-        // the user's home. The staff dashboard itself lives at "/dashboard".
-        Route::get('/dashboard', 'dashboard')->middleware('permission:dashboard.view');
+        // NOTE: "/" is the public vitrine on the apex. On app.speedzoneexpress.ma
+        // it always redirects to /login. The staff dashboard lives at "/dashboard".
+        Route::get('/dashboard', 'dashboard')
+            ->middleware('permission:dashboard.view')
+            ->name('dashboard');
 
         // Route::get('/dashboard/analytics', 'dashboard_analytics');
         // Route::get('/dashboard/crm', 'dashboard_crm');

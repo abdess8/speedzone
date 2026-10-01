@@ -2,7 +2,7 @@
 
 namespace App\Exceptions;
 
-use App\Support\LoginRedirect;
+use App\Support\TranslationBundle;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -36,7 +36,15 @@ class Handler extends ExceptionHandler
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
-            //
+            $line = sprintf(
+                "[%s] %s: %s in %s:%d\n",
+                date('c'),
+                $e::class,
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine()
+            );
+            @file_put_contents(storage_path('logs/exceptions.log'), $line, FILE_APPEND);
         });
 
         $this->renderable(function (Throwable $e, Request $request) {
@@ -75,7 +83,8 @@ class Handler extends ExceptionHandler
 
         return Inertia::render('errors/Error', [
             'status' => $status,
-            'homeUrl' => $user ? LoginRedirect::forUser($user) : url('/'),
+            'homeUrl' => $user ? url('/dashboard') : route('login'),
+            'translations' => TranslationBundle::forLocale(app()->getLocale()),
         ])
             ->toResponse($request)
             ->setStatusCode($status);

@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\User;
-use App\Support\LoginRedirect;
 use Inertia\Testing\AssertableInertia as Assert;
 
 function enableDomainSplit(): void
@@ -33,21 +32,17 @@ test('back-office paths on the marketing host redirect to the app host', functio
         ->assertRedirect('https://app.speedzoneexpress.ma/dashboard');
 });
 
-test('the app host root sends guests to login', function () {
+test('the app host root always sends visitors to login', function () {
     enableDomainSplit();
 
     $this->get('https://app.speedzoneexpress.ma/')
         ->assertRedirect('https://app.speedzoneexpress.ma/login');
-});
-
-test('the app host root sends signed-in users to the dashboard', function () {
-    enableDomainSplit();
 
     $user = User::factory()->create();
 
     $this->actingAs($user)
         ->get('https://app.speedzoneexpress.ma/')
-        ->assertRedirect(LoginRedirect::forUser($user));
+        ->assertRedirect('https://app.speedzoneexpress.ma/login');
 });
 
 test('public tracking on the app host redirects to the marketing site', function () {

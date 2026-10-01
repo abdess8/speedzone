@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Role;
-use App\Support\LoginRedirect;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -25,7 +24,7 @@ test('a forbidden screen is an inertia page that keeps the application chrome', 
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('errors/Error')
             ->where('status', 403)
-            ->where('homeUrl', LoginRedirect::forUser($driver))
+            ->where('homeUrl', url('/dashboard'))
         );
 });
 
@@ -38,7 +37,7 @@ test('an unknown address is an inertia 404 with a way home', function () {
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('errors/Error')
             ->where('status', 404)
-            ->where('homeUrl', LoginRedirect::forUser($seller))
+            ->where('homeUrl', url('/dashboard'))
         );
 });
 
@@ -48,7 +47,7 @@ test('a guest 404 still renders the branded error page', function () {
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('errors/Error')
             ->where('status', 404)
-            ->where('homeUrl', url('/'))
+            ->where('homeUrl', route('login'))
         );
 });
 

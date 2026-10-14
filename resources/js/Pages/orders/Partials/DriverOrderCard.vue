@@ -86,36 +86,36 @@ const whatsAppLink = computed(() =>
 <template>
   <div class="card driver-card mb-3">
     <div class="card-body p-3">
-      <div class="d-flex align-items-start justify-content-between gap-2">
-        <div class="min-w-0">
-          <!-- Plain text, not a link: the detail screen is out of bounds here. -->
-          <div class="fw-semibold fs-15">{{ order.tracking_number }}</div>
-          <div class="text-muted fs-12 mt-1">
-            <i class="ri-map-pin-2-line align-bottom"></i>
-            {{ order.city?.name ?? $t('common.empty_value') }}
-            <template v-if="order.sector"> · {{ order.sector.name }}</template>
-          </div>
+      <div class="min-w-0">
+        <!-- Plain text, not a link: the detail screen is out of bounds here. -->
+        <div class="fw-semibold fs-15">{{ order.tracking_number }}</div>
+        <div class="text-muted fs-12 mt-1 driver-card-location">
+          <i class="ri-map-pin-2-line align-bottom"></i>
+          {{ order.city?.name ?? $t('common.empty_value') }}
+          <template v-if="order.sector"> · {{ order.sector.name }}</template>
         </div>
-        <div class="text-end flex-shrink-0">
-          <span class="badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
-            {{ order.status_label }}
-          </span>
-          <div v-if="attempts > 0" class="badge bg-warning-subtle text-warning mt-1">
-            <i class="ri-history-line align-bottom me-1"></i>
-            {{ $t('orders.delivery_outcome.attempts_badge', { count: attempts }) }}
-          </div>
-          <!-- Why the last attempt failed, so the driver knows what to do
-               differently before he rings again. -->
-          <div v-if="order.failure_reason" class="mt-1">
-            <FailureReasonBadge :order="order" :show-attempts="false" />
-          </div>
-        </div>
+      </div>
+
+      <!-- Badges sit on their own wrapping row. A side column that refuses to
+           shrink (status + attempts + failure reason, all nowrap) collapses the
+           tracking number and the address to one character per line on a phone. -->
+      <div class="driver-card-badges">
+        <span class="badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
+          {{ order.status_label }}
+        </span>
+        <span v-if="attempts > 0" class="badge bg-warning-subtle text-warning">
+          <i class="ri-history-line align-bottom me-1"></i>
+          {{ $t('orders.delivery_outcome.attempts_badge', { count: attempts }) }}
+        </span>
+        <!-- Why the last attempt failed, so the driver knows what to do
+             differently before he rings again. -->
+        <FailureReasonBadge v-if="order.failure_reason" :order="order" :show-attempts="false" />
       </div>
 
       <hr class="my-3" />
 
       <div class="d-flex align-items-start justify-content-between gap-3">
-        <div class="min-w-0">
+        <div class="min-w-0 flex-grow-1">
           <div class="fw-medium text-truncate">{{ customer.full_name }}</div>
           <a
             v-if="callLink"
@@ -209,12 +209,32 @@ const whatsAppLink = computed(() =>
   border-radius: 0.85rem;
 }
 
+.driver-card-location,
+.driver-card-address {
+  overflow-wrap: break-word;
+}
+
 .driver-card-address {
   /* Two lines is enough to recognise a street without pushing the CTA offscreen. */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.driver-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.driver-card-badges :deep(.badge) {
+  white-space: normal;
+  text-align: start;
+  line-height: 1.35;
+  max-width: 100%;
 }
 
 .driver-card-action {

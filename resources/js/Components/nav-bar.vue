@@ -144,10 +144,14 @@ export default {
 
         <GlobalSearch />
 
-        <div class="d-flex align-items-center">
-          <StoreSwitcher />
+        <div class="d-flex align-items-center topbar-actions">
+          <div class="d-none d-md-block">
+            <StoreSwitcher />
+          </div>
 
-          <NavModeSwitcher />
+          <div class="d-none d-md-block">
+            <NavModeSwitcher />
+          </div>
 
           <BDropdown
             class="dropdown"
@@ -179,7 +183,7 @@ export default {
             </BLink>
           </BDropdown>
 
-          <div class="ms-1 header-item d-none d-sm-flex">
+          <div class="ms-1 header-item d-none d-md-flex">
             <BButton
               type="button"
               variant="ghost-secondary"
@@ -191,7 +195,7 @@ export default {
             </BButton>
           </div>
 
-          <div class="ms-1 header-item d-none d-sm-flex">
+          <div class="ms-1 header-item d-none d-md-flex">
             <BButton
               type="button"
               variant="ghost-secondary"
@@ -205,7 +209,7 @@ export default {
           <Link
             v-if="canReachSupport"
             :href="route('support-tickets.index')"
-            class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle ms-1 header-item d-none d-sm-flex"
+            class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle ms-1 header-item d-none d-md-flex"
             :title="$t('support_tickets.title')"
           >
             <i class="bx bx-message-rounded-dots fs-22"></i>

@@ -105,6 +105,7 @@ class EcommerceIntegrationService
             'auto_sync_enabled' => (bool) $integration->auto_sync_enabled,
             'sync_interval_minutes' => (int) $integration->sync_interval_minutes,
             'import_status' => $integration->import_status ?: $this->defaultImportStatus($integration),
+            'delivery_included' => $integration->deliveryIncludedByDefault(),
             'field_mapping' => $integration->resolvedFieldMapping(),
             'status_mapping' => $integration->status_mapping ?: (object) [],
             'source_fields' => $integration->source_fields ?: $this->builtinSources($integration),
@@ -219,6 +220,10 @@ class EcommerceIntegrationService
         $integration->auto_sync_enabled = (bool) $data['auto_sync_enabled'];
         $integration->sync_interval_minutes = (int) $data['sync_interval_minutes'];
         $integration->import_status = (string) $data['import_status'];
+
+        if (array_key_exists('delivery_included', $data)) {
+            $integration->delivery_included = filter_var($data['delivery_included'], FILTER_VALIDATE_BOOLEAN);
+        }
 
         if (array_key_exists('field_mapping', $data) && is_array($data['field_mapping'])) {
             $integration->field_mapping = $this->mergeFieldMapping(

@@ -105,7 +105,7 @@ class ShopifyOrderMapper
         }
 
         $raw = $this->extractRaw($payload, $integration->resolvedFieldMapping());
-        $values = $this->resolveValues($raw);
+        $values = $this->resolveValues($raw, $integration->deliveryIncludedByDefault());
         $phone = $this->normalizePhone((string) $values['customer_phone']);
 
         if ($phone === null) {
@@ -191,9 +191,9 @@ class ShopifyOrderMapper
      * @param  array<string, string>  $raw
      * @return array<string, mixed>
      */
-    public function resolveValues(array $raw): array
+    public function resolveValues(array $raw, bool $deliveryIncludedDefault = true): array
     {
-        return $this->base->resolveValues($raw);
+        return $this->base->resolveValues($raw, $deliveryIncludedDefault);
     }
 
     /**

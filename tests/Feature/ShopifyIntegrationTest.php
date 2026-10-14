@@ -344,3 +344,34 @@ it('persists the Shopify SpeedZone-to-Shopify status mapping', function () {
         'OUT_FOR_DELIVERY' => 'out_for_delivery',
     ]);
 });
+
+it('stores whether the Shopify order total already includes delivery', function () {
+    $seller = shopifySeller();
+    $store = shopifyStore($seller);
+
+    $integration = EcommerceIntegration::query()->create([
+        'seller_id' => $seller->id,
+        'store_id' => $store->id,
+        'platform' => EcommercePlatform::Shopify,
+        'status' => EcommerceIntegrationStatus::Connected,
+        'shop_slug' => 'atlas.myshopify.com',
+        'shop_name' => 'Atlas Shopify',
+        'access_token' => 'shpat_secret',
+        'connected_at' => now(),
+        'connected_by' => $seller->id,
+        'import_status' => ShopifyImportStatus::Unfulfilled->value,
+    ]);
+
+    expect($integration->fresh()->deliveryIncludedByDefault())->toBeTrue();
+
+    $this->actingAs($seller)
+        ->put(route('integrations.settings.update', $integration), [
+            'auto_sync_enabled' => false,
+            'sync_interval_minutes' => 15,
+            'import_status' => ShopifyImportStatus::Unfulfilled->value,
+            'delivery_included' => false,
+        ])
+        ->assertRedirect(route('integrations.shopify', ['store_id' => $store->id]));
+
+    expect($integration->fresh()->delivery_included)->toBeFalse();
+});

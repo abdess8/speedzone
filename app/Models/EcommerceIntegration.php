@@ -44,6 +44,7 @@ class EcommerceIntegration extends Model
         'auto_sync_enabled',
         'sync_interval_minutes',
         'import_status',
+        'delivery_included',
         'field_mapping',
         'status_mapping',
         'source_fields',
@@ -61,6 +62,7 @@ class EcommerceIntegration extends Model
         'connected_at' => 'datetime',
         'auto_sync_enabled' => 'boolean',
         'sync_interval_minutes' => 'integer',
+        'delivery_included' => 'boolean',
         'field_mapping' => 'array',
         'status_mapping' => 'array',
         'source_fields' => 'array',
@@ -107,6 +109,17 @@ class EcommerceIntegration extends Model
     /**
      * @return array<string, string|null>
      */
+    /**
+     * Store totals already include shipping unless the seller says otherwise.
+     *
+     * A missing value stays included: that is the default for every connector
+     * created before the checkbox existed.
+     */
+    public function deliveryIncludedByDefault(): bool
+    {
+        return $this->delivery_included !== false;
+    }
+
     public function resolvedFieldMapping(): array
     {
         if ($this->platform === EcommercePlatform::Shopify) {

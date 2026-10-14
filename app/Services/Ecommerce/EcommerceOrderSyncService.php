@@ -171,7 +171,7 @@ class EcommerceOrderSyncService
             }
 
             $raw = $mapper->extractRaw($payload, $integration->resolvedFieldMapping());
-            $values = $mapper->resolveValues($raw);
+            $values = $mapper->resolveValues($raw, $integration->deliveryIncludedByDefault());
 
             if ($stageOnly) {
                 $this->stageRow(
@@ -349,7 +349,7 @@ class EcommerceOrderSyncService
             $shopRef = $mapper->orderRef($payload);
             $ref = $shopRef ?? $externalId;
             $raw = $mapper->extractRaw($payload, $integration->resolvedFieldMapping());
-            $values = $mapper->resolveValues($raw);
+            $values = $mapper->resolveValues($raw, $integration->deliveryIncludedByDefault());
 
             if (! $driver->matchesImportStatus($payload, $integration)) {
                 $skippedCount++;

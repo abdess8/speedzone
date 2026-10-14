@@ -126,26 +126,26 @@ const currentEntity = () => entities.value.find((row) => row.value === entityTyp
 </template>
 
 <style scoped>
-/* Directly beneath the assistant's launcher, which owns the corner above it. */
+/* Just above the mobile tab bar. The assistant launcher sits above this one. */
 .qa-widget {
   position: fixed;
-  right: 1rem;
-  bottom: calc(9.25rem + env(safe-area-inset-bottom, 0px));
+  right: 0.85rem;
+  bottom: calc(4.35rem + env(safe-area-inset-bottom, 0px));
   z-index: 1044;
 }
 
 .qa-launcher {
   display: flex;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.35rem;
+  height: 2.35rem;
   align-items: center;
   justify-content: center;
   border: 0;
   border-radius: 999px;
   background-color: var(--vz-secondary, #f15a24);
-  box-shadow: 0 6px 18px rgba(241, 90, 36, 0.35);
+  box-shadow: 0 4px 12px rgba(241, 90, 36, 0.32);
   color: #fff;
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   transition: transform 0.18s ease;
 }
 

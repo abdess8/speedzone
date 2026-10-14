@@ -485,7 +485,7 @@ const onKeydown = (event) => {
 @media (max-width: 767.98px) {
   .cb-widget {
     right: 1rem;
-    bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    bottom: calc(7.15rem + env(safe-area-inset-bottom, 0px));
   }
 
   .cb-panel {

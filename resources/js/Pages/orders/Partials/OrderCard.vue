@@ -74,18 +74,19 @@ const createdAt = computed(() =>
           </div>
         </div>
 
-        <div class="text-end flex-shrink-0">
-          <span class="badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
-            {{ order.status_label }}
-          </span>
-          <div v-if="order.failure_reason" class="mt-1">
-            <FailureReasonBadge :order="order" />
-          </div>
-        </div>
+      </div>
+
+      <!-- Same reason as the driver card: a nowrap badge column squeezes the
+           tracking number down to one glyph per line once attempts are shown. -->
+      <div class="order-card-badges">
+        <span class="badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
+          {{ order.status_label }}
+        </span>
+        <FailureReasonBadge v-if="order.failure_reason" :order="order" />
       </div>
 
       <div class="d-flex align-items-end justify-content-between gap-2 mt-3">
-        <div class="min-w-0">
+        <div class="min-w-0 flex-grow-1">
           <PaymentMethodBadge
             :label="order.payment_method_label"
             :emoji="order.payment_method_emoji"
@@ -118,6 +119,21 @@ const createdAt = computed(() =>
 
 .order-card-selected {
   border-color: var(--vz-primary, #0d4a9d);
+}
+
+.order-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.order-card-badges :deep(.badge) {
+  white-space: normal;
+  text-align: start;
+  line-height: 1.35;
+  max-width: 100%;
 }
 
 .min-w-0 {

@@ -205,11 +205,30 @@ it('creates SpeedZone parcels from Shopify on sync now', function () {
         ->and($order->customer_first_name)->toBe('Sara')
         ->and($order->customer_phone)->toBe('0612345678')
         ->and((float) $order->order_amount)->toBe(199.0)
+        ->and($order->delivery_included)->toBeTrue()
         ->and($order->store_id)->toBe($store->id)
         ->and($sync->status)->toBe(EcommerceSyncStatus::Succeeded)
         ->and($sync->trigger)->toBe(EcommerceSyncTrigger::Manual)
         ->and($sync->created_count)->toBe(1)
         ->and($order->ecommerce_sync_id)->toBe($sync->id);
+});
+
+it('keeps delivery on top when the Shopify total excludes it', function () {
+    shopifySyncCity();
+    $seller = shopifySyncSeller();
+    $store = shopifySyncStore($seller);
+    $integration = connectedShopify($seller, $store);
+    $integration->update(['delivery_included' => false]);
+
+    fakeShopifyOrders([shopifyOrder(['total_price' => '200.00'])]);
+
+    $this->actingAs($seller)->post(route('integrations.sync', $integration));
+
+    $order = Order::query()->first();
+
+    expect($order)->not->toBeNull()
+        ->and((float) $order->order_amount)->toBe(200.0)
+        ->and($order->delivery_included)->toBeFalse();
 });
 
 it('pushes mapped SpeedZone statuses to Shopify on sync now', function () {

@@ -97,7 +97,7 @@ class YouCanOrderMapper
         }
 
         $raw = $this->extractRaw($payload, $integration->resolvedFieldMapping());
-        $values = $this->resolveValues($raw);
+        $values = $this->resolveValues($raw, $integration->deliveryIncludedByDefault());
         $phone = $this->normalizePhone((string) $values['customer_phone']);
 
         if ($phone === null) {
@@ -610,7 +610,7 @@ class YouCanOrderMapper
      * @param  array<string, string>  $raw
      * @return array<string, mixed>
      */
-    public function resolveValues(array $raw): array
+    public function resolveValues(array $raw, bool $deliveryIncludedDefault = true): array
     {
         $phone = $this->normalizePhone($raw['customer_phone'] ?? '');
         $city = $this->matchCity($raw['city_id'] ?? null);
@@ -638,7 +638,7 @@ class YouCanOrderMapper
             'is_fragile' => $this->parseFlag($raw['is_fragile'] ?? ''),
             'can_be_opened' => $this->parseFlag($raw['can_be_opened'] ?? ''),
             'option_exchange' => $this->parseFlag($raw['option_exchange'] ?? ''),
-            'delivery_included' => $this->parseFlag($raw['delivery_included'] ?? ''),
+            'delivery_included' => $this->resolveDeliveryIncluded($raw['delivery_included'] ?? '', $deliveryIncludedDefault),
         ];
     }
 
@@ -651,6 +651,19 @@ class YouCanOrderMapper
         }
 
         return PaymentMethod::CASH->value;
+    }
+
+    /**
+     * An empty store column means the seller did not map one, so the
+     * integration checkbox decides. A written oui/non still wins per order.
+     */
+    private function resolveDeliveryIncluded(string $raw, bool $default): bool
+    {
+        if (trim($raw) === '') {
+            return $default;
+        }
+
+        return $this->parseFlag($raw);
     }
 
     private function parseFlag(string $raw): bool

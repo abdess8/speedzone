@@ -303,6 +303,8 @@ return [
             'help' => 'Choose which YouCan field fills each SpeedZone column. Checkout extra fields appear after the first sync.',
             'youcan_field' => 'YouCan field',
             'source_field' => 'Store field',
+            'delivery_included' => 'The delivery price is included in the order amount',
+            'delivery_included_help' => 'Checked by default. A store total of 200 MAD becomes the SpeedZone order amount with delivery included, so the driver does not collect the fee on top. Uncheck if that amount excludes delivery.',
         ],
         'status' => [
             'running' => 'Running',

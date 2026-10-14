@@ -43,6 +43,7 @@ const currentPath = ref('/');
 
 /** Inertia visits never remount this bar, so the active tab is synced by event. */
 let stopNavigateListener = null;
+let scrollFrame = null;
 
 function syncPath() {
   currentPath.value = window.location.pathname;
@@ -109,16 +110,39 @@ function onFocusChange() {
   requestAnimationFrame(syncKeyboardOpen);
 }
 
+/**
+ * Once the page leaves the top, both chrome bars slide away. They come back
+ * only when the user is at the top again.
+ */
+function syncChrome() {
+  const atTop = window.scrollY <= 8;
+  document.body.classList.toggle('mobile-chrome-hidden', !atTop);
+}
+
+function onScroll() {
+  if (scrollFrame !== null) {
+    return;
+  }
+
+  scrollFrame = requestAnimationFrame(() => {
+    syncChrome();
+    scrollFrame = null;
+  });
+}
+
 onMounted(() => {
   syncPath();
   document.body.classList.toggle('has-bottom-nav', tabs.value.length > 1);
 
   document.addEventListener('focusin', onFocusChange);
   document.addEventListener('focusout', onFocusChange);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  syncChrome();
 
   stopNavigateListener = router.on('navigate', () => {
     syncPath();
     closeSheet();
+    syncChrome();
   });
 });
 
@@ -126,7 +150,12 @@ onBeforeUnmount(() => {
   stopNavigateListener?.();
   document.removeEventListener('focusin', onFocusChange);
   document.removeEventListener('focusout', onFocusChange);
+  window.removeEventListener('scroll', onScroll);
+  if (scrollFrame !== null) {
+    cancelAnimationFrame(scrollFrame);
+  }
   document.body.classList.remove('has-bottom-nav');
+  document.body.classList.remove('mobile-chrome-hidden');
   document.body.classList.remove('keyboard-open');
 });
 
@@ -299,7 +328,7 @@ function go(item) {
   bottom: 0;
   left: 0;
   z-index: 1040;
-  padding: 0 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  padding: 0 0.55rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
   pointer-events: none;
 }
 
@@ -307,22 +336,23 @@ function go(item) {
   display: flex;
   align-items: stretch;
   justify-content: space-around;
-  border-radius: 1.15rem;
+  border: 1px solid rgba(135, 138, 153, 0.12);
+  border-radius: 0.95rem;
   background-color: var(--vz-card-bg, #fff);
-  box-shadow: 0 -2px 10px rgba(56, 65, 74, 0.06), 0 8px 24px rgba(56, 65, 74, 0.14);
+  box-shadow: 0 -1px 8px rgba(56, 65, 74, 0.05), 0 5px 16px rgba(56, 65, 74, 0.11);
   pointer-events: auto;
 }
 
 .bottom-nav-tab {
   display: flex;
   min-width: 0;
-  min-height: 56px;
+  min-height: 50px;
   flex: 1 1 0;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.125rem;
-  padding: 0.5rem 0.25rem;
+  gap: 0.0625rem;
+  padding: 0.3rem 0.2rem;
   border: 0;
   background: transparent;
   color: var(--vz-secondary-color, #878a99);
@@ -337,12 +367,12 @@ function go(item) {
 .bottom-nav-icon {
   position: relative;
   display: inline-flex;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 1.9rem;
+  height: 1.9rem;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   transition: background-color 0.18s ease, color 0.18s ease;
 }
 
@@ -360,7 +390,7 @@ function go(item) {
 .bottom-nav-label {
   max-width: 100%;
   overflow: hidden;
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 500;
   line-height: 1.1;
   text-overflow: ellipsis;

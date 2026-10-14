@@ -303,6 +303,8 @@ return [
             'help' => 'Indiquez quel champ YouCan alimente chaque colonne SpeedZone. Les champs personnalisés du checkout apparaissent après la première synchro.',
             'youcan_field' => 'Champ YouCan',
             'source_field' => 'Champ boutique',
+            'delivery_included' => 'Le prix de livraison est inclus dans le montant de la commande',
+            'delivery_included_help' => 'Coché par défaut. Un total de 200 MAD sur la boutique devient le montant SpeedZone, livraison comprise : le livreur n’encaisse pas les frais en plus. Décochez si ce montant est hors livraison.',
         ],
         'status' => [
             'running' => 'En cours',

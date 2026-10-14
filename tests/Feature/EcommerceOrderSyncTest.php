@@ -239,6 +239,7 @@ it('imports an open YouCan order as a SpeedZone parcel', function () {
         ->and($order->customer_first_name)->toBe('Sara')
         ->and($order->customer_phone)->toBe('0612345678')
         ->and((float) $order->order_amount)->toBe(199.0)
+        ->and($order->delivery_included)->toBeTrue()
         ->and($order->store_id)->toBe($store->id);
 
     $sync = EcommerceIntegrationSync::query()->first();
@@ -253,6 +254,25 @@ it('imports an open YouCan order as a SpeedZone parcel', function () {
         && str_contains($request->url(), 'include=customer')
         && $request->header('X-Requested-With') === ['XMLHttpRequest']
         && str_contains((string) $request->header('User-Agent')[0], 'Mozilla/5.0'));
+});
+
+it('keeps delivery on top when the YouCan total excludes it', function () {
+    syncCity();
+    $seller = syncSeller();
+    $store = syncStore($seller);
+    $integration = connectedYouCan($seller, $store);
+    $integration->update(['delivery_included' => false]);
+
+    fakeYouCanOrders([youCanOrder(['total' => 200])]);
+
+    $this->actingAs($seller)->post(route('integrations.sync', $integration));
+    commitYouCanReview($this, $seller);
+
+    $order = Order::query()->first();
+
+    expect($order)->not->toBeNull()
+        ->and((float) $order->order_amount)->toBe(200.0)
+        ->and($order->delivery_included)->toBeFalse();
 });
 
 it('imports YouCan orders older than seven days on the first catalog scan', function () {

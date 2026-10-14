@@ -94,6 +94,7 @@ const settingsForm = useForm({
   auto_sync_enabled: props.integration?.auto_sync_enabled ?? false,
   sync_interval_minutes: props.integration?.sync_interval_minutes ?? 15,
   import_status: props.integration?.import_status ?? 'unfulfilled',
+  delivery_included: props.integration?.delivery_included ?? true,
   field_mapping: mappingFrom(props.integration),
   status_mapping: statusMappingFrom(props.integration),
 });
@@ -108,6 +109,7 @@ watch(
     settingsForm.auto_sync_enabled = integration.auto_sync_enabled ?? false;
     settingsForm.sync_interval_minutes = integration.sync_interval_minutes ?? 15;
     settingsForm.import_status = integration.import_status ?? 'unfulfilled';
+    settingsForm.delivery_included = integration.delivery_included ?? true;
     settingsForm.field_mapping = mappingFrom(integration);
     settingsForm.status_mapping = statusMappingFrom(integration);
   },
@@ -674,6 +676,18 @@ watch(selectedSellerId, (sellerId) => {
                             </tr>
                           </tbody>
                         </table>
+                      </div>
+                      <div class="form-check mt-3">
+                        <input
+                          id="shopify_delivery_included"
+                          v-model="settingsForm.delivery_included"
+                          class="form-check-input"
+                          type="checkbox"
+                        />
+                        <label class="form-check-label" for="shopify_delivery_included">
+                          {{ $t('integrations.sync.mapping.delivery_included') }}
+                        </label>
+                        <div class="form-text">{{ $t('integrations.sync.mapping.delivery_included_help') }}</div>
                       </div>
                     </div>
                   </div>

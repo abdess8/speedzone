@@ -31,6 +31,7 @@ class UpdateYouCanSettingsRequest extends FormRequest
             'auto_sync_enabled' => ['required', 'boolean'],
             'sync_interval_minutes' => ['required', 'integer', Rule::in(EcommerceIntegration::SYNC_INTERVALS)],
             'import_status' => ['required', 'string', Rule::in($this->allowedImportStatuses())],
+            'delivery_included' => ['sometimes', 'boolean'],
             'field_mapping' => ['nullable', 'array'],
             'field_mapping.*' => ['nullable', 'string', 'max:191'],
             'status_mapping' => ['nullable', 'array'],

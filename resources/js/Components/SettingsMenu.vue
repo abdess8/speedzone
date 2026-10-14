@@ -58,7 +58,7 @@ const items = computed(() =>
 <template>
   <BDropdown
     variant="ghost-secondary"
-    class="ms-1 header-item d-none d-sm-flex"
+    class="ms-1 header-item d-none d-md-flex"
     toggle-class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle arrow-none"
     menu-class="dropdown-menu-end"
     :title="$t('sidebar.settings.title')"

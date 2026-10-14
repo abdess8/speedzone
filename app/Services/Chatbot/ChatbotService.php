@@ -35,6 +35,12 @@ class ChatbotService
 
     public function isEnabled(): bool
     {
+        // The assistant stays off in production until it is ready to ship.
+        // A CHATBOT_ENABLED=true on the server must not bring the widget back.
+        if (app()->environment('production')) {
+            return false;
+        }
+
         return (bool) config('ai.chatbot.enabled') && $this->driver->isConfigured();
     }
 

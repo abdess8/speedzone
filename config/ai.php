@@ -69,9 +69,11 @@ return [
     */
 
     'chatbot' => [
-        // Master switch: the widget hides itself when the feature is disabled.
-        // Off by default until the assistant is ready to ship again.
-        'enabled' => (bool) env('CHATBOT_ENABLED', false),
+        // Master switch outside production. Production always hides the widget
+        // and refuses the API, even when this flag is true on the server.
+        'enabled' => env('APP_ENV') === 'production'
+            ? false
+            : (bool) env('CHATBOT_ENABLED', false),
 
         // Seconds to wait for a single completion call.
         'timeout' => (int) env('AI_TIMEOUT', 45),

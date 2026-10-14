@@ -1210,7 +1210,7 @@ $topnav-height: 45px;
   body.has-bottom-nav {
     // Keeps the last row of a list clear of the floating bar.
     .page-content {
-      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
     }
   }
 
@@ -1222,6 +1222,104 @@ $topnav-height: 45px;
 
     .page-content {
       padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+  }
+}
+
+// Mobile topbar: keep only the brand and the four actions people use while
+// working. Navigation already lives in the bottom bar, so store/layout/settings
+// shortcuts would only crowd this row.
+@include media-breakpoint-down(md) {
+  #page-topbar {
+    .navbar-header {
+      height: 56px;
+      padding-inline: 0.625rem;
+      gap: 0.15rem;
+    }
+
+    .navbar-brand-box.horizontal-logo {
+      display: block !important;
+      width: 5.25rem;
+      flex: 0 0 5.25rem;
+      padding: 0;
+      text-align: start;
+    }
+
+    .logo {
+      height: 56px;
+      line-height: 56px;
+
+      .logo-sm {
+        display: none;
+      }
+
+      .logo-lg {
+        display: inline-block;
+        align-items: center;
+      }
+    }
+
+    .brand-logo-full {
+      width: 5rem;
+      max-height: 28px;
+      object-fit: contain;
+    }
+
+    .global-search-mount {
+      flex: 1 1 auto;
+      justify-content: flex-end;
+      padding: 0;
+      margin: 0;
+    }
+
+    .topbar-actions {
+      flex: 0 0 auto;
+    }
+
+    .navbar-header .btn-topbar,
+    .topbar-user .dropdown-toggle {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+    }
+
+    .header-item {
+      height: 56px;
+    }
+
+    .header-profile-user {
+      width: 28px;
+      height: 28px;
+    }
+
+    .topbar-user {
+      margin-left: 0.125rem !important;
+    }
+  }
+
+  #page-topbar,
+  .bottom-nav {
+    transition: transform 0.22s ease;
+  }
+
+  // Leaving the top of the page puts both bars out of the way. They return
+  // as soon as the page is scrolled back to the top.
+  body.mobile-chrome-hidden {
+    #page-topbar {
+      transform: translateY(-100%);
+      pointer-events: none;
+    }
+
+    .bottom-nav {
+      transform: translateY(120%);
+      pointer-events: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #page-topbar,
+    .bottom-nav {
+      transition: none;
     }
   }
 }

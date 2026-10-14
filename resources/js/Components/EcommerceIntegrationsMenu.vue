@@ -29,7 +29,7 @@ const visible = computed(() =>
   <BDropdown
     v-if="visible"
     variant="ghost-secondary"
-    class="ms-1 header-item d-none d-sm-flex"
+    class="ms-1 header-item d-none d-md-flex"
     toggle-class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle arrow-none"
     menu-class="dropdown-menu-end p-0"
     :title="$t('integrations.title')"

@@ -44,6 +44,8 @@ const currentPath = ref('/');
 /** Inertia visits never remount this bar, so the active tab is synced by event. */
 let stopNavigateListener = null;
 let scrollFrame = null;
+/** Last scroll offset, so a move upward can bring the bars back immediately. */
+let lastScrollY = 0;
 
 function syncPath() {
   currentPath.value = window.location.pathname;
@@ -111,12 +113,27 @@ function onFocusChange() {
 }
 
 /**
- * Once the page leaves the top, both chrome bars slide away. They come back
- * only when the user is at the top again.
+ * Scrolling down slides both chrome bars away. Any upward movement brings
+ * them back, without waiting to reach the top of the page.
  */
 function syncChrome() {
-  const atTop = window.scrollY <= 8;
-  document.body.classList.toggle('mobile-chrome-hidden', !atTop);
+  const y = window.scrollY;
+
+  if (y <= 8) {
+    lastScrollY = y;
+    document.body.classList.remove('mobile-chrome-hidden');
+    return;
+  }
+
+  const delta = y - lastScrollY;
+  lastScrollY = y;
+
+  // A resting finger jitters by a few pixels; that should not flicker the bars.
+  if (Math.abs(delta) < 6) {
+    return;
+  }
+
+  document.body.classList.toggle('mobile-chrome-hidden', delta > 0);
 }
 
 function onScroll() {
@@ -142,7 +159,8 @@ onMounted(() => {
   stopNavigateListener = router.on('navigate', () => {
     syncPath();
     closeSheet();
-    syncChrome();
+    lastScrollY = window.scrollY;
+    document.body.classList.remove('mobile-chrome-hidden');
   });
 });
 

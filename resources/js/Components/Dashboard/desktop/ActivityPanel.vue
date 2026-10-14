@@ -100,8 +100,10 @@ const tab = ref('orders');
                 {{ formatMoneyRounded(order.amount) }}<span class="ddash-activity-currency">{{ currency }}</span>
               </span>
 
-              <span class="ddash-activity-badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
-                {{ order.status_label }}
+              <span class="ddash-activity-badge-slot">
+                <span class="ddash-activity-badge" :class="`bg-${order.status_color}-subtle text-${order.status_color}`">
+                  {{ order.status_label }}
+                </span>
               </span>
 
               <i class="ri-arrow-right-s-line ddash-activity-chevron"></i>
@@ -259,21 +261,23 @@ a.ddash-activity-row:hover {
 
 .ddash-activity-tag,
 .ddash-activity-time {
-  flex: 0 0 8rem;
+  flex: 0 0 10.5rem;
   color: var(--ddash-muted, #878a99);
   font-size: 0.75rem;
+  text-align: end;
 }
 
 .ddash-activity-time {
   flex-basis: 7rem;
-  text-align: right;
 }
 
 .ddash-activity-amount {
-  flex-shrink: 0;
+  flex: 0 0 6.75rem;
   color: var(--vz-heading-color, #495057);
   font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
   font-weight: 700;
+  text-align: end;
   white-space: nowrap;
 }
 
@@ -284,10 +288,19 @@ a.ddash-activity-row:hover {
   font-weight: 500;
 }
 
+/* A fixed slot keeps a long status ("En cours de livraison") from pushing
+   the city and the amount out of their columns. */
+.ddash-activity-badge-slot {
+  display: flex;
+  width: 11.5rem;
+  min-width: 0;
+  flex: 0 0 11.5rem;
+  justify-content: flex-end;
+}
+
 .ddash-activity-badge {
   overflow: hidden;
-  max-width: 9rem;
-  flex-shrink: 0;
+  max-width: 100%;
   padding: 0.25rem 0.625rem;
   border-radius: 999px;
   font-size: 0.6875rem;

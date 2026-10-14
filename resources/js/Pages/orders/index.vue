@@ -6,7 +6,6 @@ import Layout from "@/Layouts/main.vue";
 import PageHeader from "@/Components/page-header.vue";
 import PaymentMethodBadge from "@/Components/PaymentMethodBadge.vue";
 import FilterPanel from "@/Components/FilterPanel.vue";
-import StatusPills from "@/Components/StatusPills.vue";
 import StatusKpiCards from "@/Components/StatusKpiCards.vue";
 import DriverOrderCard from "./Partials/DriverOrderCard.vue";
 import DriverStatusSheet from "./Partials/DriverStatusSheet.vue";
@@ -132,15 +131,6 @@ const applyFilters = () => {
   selected.value = [];
   reload();
 };
-
-/**
- * Which pill reads as selected.
- *
- * A sidebar scope spans several statuses, so no single pill can stand for it —
- * leaving "All" lit would claim the list is unfiltered when it is not. None is
- * lit instead, and the badge beside the title explains the scope.
- */
-const activeStatusPill = computed(() => (statusGroup.value ? null : filters.status));
 
 const selectStatus = (value) => {
   filters.status = value;
@@ -443,7 +433,7 @@ onMounted(() => {
       @select="selectStatus"
     />
 
-    <BCard no-body>
+    <BCard no-body class="orders-list-card">
       <FilterPanel
         :active-count="activeFilterCount"
         :title="$t('common.filters_title')"
@@ -451,7 +441,7 @@ onMounted(() => {
         @reset="resetFilters"
       >
         <template #title>
-          <h5 class="card-title mb-0 text-truncate">{{ $t('orders.list_title') }}</h5>
+          <h5 class="card-title mb-0 text-truncate d-none d-lg-block">{{ $t('orders.list_title') }}</h5>
           <!-- Names the sidebar view the list is restricted to, and offers a way out. -->
           <span v-if="activeView" class="badge bg-primary-subtle text-primary mt-1">
             {{ activeView.label }}
@@ -471,7 +461,7 @@ onMounted(() => {
           <button
             v-if="can.export"
             type="button"
-            class="btn btn-soft-secondary text-nowrap"
+            class="btn btn-soft-secondary text-nowrap orders-action-export"
             :title="$t('orders.export.menu')"
             :aria-label="$t('orders.export.menu')"
             @click="exportOrders"
@@ -482,7 +472,7 @@ onMounted(() => {
           <button
             v-if="canAssignDriver"
             type="button"
-            class="btn btn-soft-info text-nowrap"
+            class="btn btn-soft-info text-nowrap d-none d-lg-inline-block"
             :title="$t('orders.dispatch.menu')"
             :aria-label="$t('orders.dispatch.menu')"
             @click="showDispatch = true"
@@ -493,7 +483,7 @@ onMounted(() => {
           <Link
             v-if="canBulkEditOrders"
             :href="route('bulk-status.index', { entity_type: 'ORDER' })"
-            class="btn btn-soft-secondary text-nowrap"
+            class="btn btn-soft-secondary text-nowrap d-none d-lg-inline-block"
             :title="$t('bulk_status.menu')"
             :aria-label="$t('bulk_status.menu')"
           >
@@ -503,7 +493,7 @@ onMounted(() => {
           <Link
             v-if="can.create"
             :href="route('orders.import')"
-            class="btn btn-soft-primary text-nowrap"
+            class="btn btn-soft-primary text-nowrap orders-action-import"
             :title="$t('orders.import.menu')"
             :aria-label="$t('orders.import.menu')"
           >
@@ -513,7 +503,7 @@ onMounted(() => {
           <Link
             v-if="can.create"
             :href="route('orders.create')"
-            class="btn btn-success text-nowrap"
+            class="btn btn-success text-nowrap orders-action-create"
             :title="$t('orders.new_order')"
             :aria-label="$t('orders.new_order')"
           >
@@ -607,19 +597,6 @@ onMounted(() => {
           <input v-model="filters.delivery_to" type="date" class="form-control" />
         </BCol>
       </FilterPanel>
-
-      <!-- Status is what these lists are filtered by almost every time, so on a
-           phone it gets a row of its own instead of four taps inside the sheet.
-           Desktop keeps the select: there the whole form is visible at once. -->
-      <StatusPills
-        class="d-lg-none"
-        :model-value="activeStatusPill"
-        :options="filterOptions.statuses ?? []"
-        :all-label="$t('common.all_statuses')"
-        :label="$t('common.status')"
-        @change="selectStatus"
-      />
-
       <!-- Bulk action bar -->
       <BCardBody v-if="selected.length" class="bg-light border-bottom-dashed py-2">
         <div class="d-flex flex-wrap align-items-center gap-2">
@@ -866,3 +843,58 @@ onMounted(() => {
     />
   </Layout>
 </template>
+
+<style scoped>
+/* Phones: one row of four equal actions (import, export, add, filter). The
+   title row only stays when it carries a scope badge to clear. */
+@media (max-width: 991.98px) {
+  .orders-list-card :deep(.card-header > .d-flex) {
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+  }
+
+  .orders-list-card :deep(.card-header > .d-flex > .flex-grow-1) {
+    flex: 0 0 100%;
+    order: 0;
+  }
+
+  .orders-list-card :deep(.card-header > .d-flex > .flex-grow-1:not(:has(.badge))) {
+    display: none;
+  }
+
+  .orders-list-card :deep(.card-header > .d-flex > .btn) {
+    display: inline-flex;
+    min-width: 0;
+    min-height: 40px;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 0.5rem;
+  }
+
+  .orders-list-card :deep(.card-header > .d-flex > .btn.d-none) {
+    display: none !important;
+  }
+
+  .orders-list-card .orders-action-import {
+    order: 1;
+  }
+
+  .orders-list-card .orders-action-export {
+    order: 2;
+  }
+
+  .orders-list-card .orders-action-create {
+    order: 3;
+  }
+
+  .orders-list-card :deep(.card-header > .d-flex > .filter-trigger) {
+    order: 4;
+  }
+
+  .orders-list-card :deep(.card-header > .d-flex > .btn-ghost-danger.filter-trigger) {
+    flex: 0 0 auto;
+    order: 5;
+  }
+}
+</style>

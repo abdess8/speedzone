@@ -50,19 +50,19 @@ onBeforeUnmount(() => {
         aria-modal="true"
         :aria-label="$t('notifications.center.open')"
       >
-        <div class="search-view-bar">
-          <button
-            type="button"
-            class="search-view-back"
-            :aria-label="$t('notifications.center.close')"
-            @click="emit('close')"
-          >
-            <i class="ri-arrow-left-line"></i>
-          </button>
+        <div class="search-view-bar notif-view-bar">
+          <div class="notif-view-top">
+            <button
+              type="button"
+              class="search-view-back"
+              :aria-label="$t('notifications.center.close')"
+              @click="emit('close')"
+            >
+              <i class="ri-arrow-left-line"></i>
+            </button>
 
-          <div class="search-view-title-wrap">
-            <h2 class="search-view-title mb-0">{{ $t('common.notifications') }}</h2>
-            <span v-if="unreadCount > 0" class="badge bg-primary-subtle text-primary">
+            <h2 class="search-view-title notif-view-title mb-0">{{ $t('common.notifications') }}</h2>
+            <span v-if="unreadCount > 0" class="badge bg-primary-subtle text-primary notif-view-count">
               {{ $t('common.new_count', { count: unreadCount }) }}
             </span>
           </div>
@@ -70,9 +70,10 @@ onBeforeUnmount(() => {
           <button
             v-if="unreadCount > 0"
             type="button"
-            class="btn btn-link btn-sm text-decoration-none px-2"
+            class="notif-view-mark"
             @click="emit('mark-all-read')"
           >
+            <i class="ri-check-double-line" aria-hidden="true"></i>
             {{ $t('notifications.center.mark_all_read') }}
           </button>
         </div>
@@ -131,3 +132,59 @@ onBeforeUnmount(() => {
     </Transition>
   </Teleport>
 </template>
+
+<style scoped>
+/* The title and the "mark all read" action share one bar. On a phone the
+   action is a whole sentence, so it takes the row under the title instead of
+   squeezing "Notifications" down to a few letters. */
+.notif-view-bar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding-bottom: 0.375rem;
+}
+
+.notif-view-top {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.notif-view-title {
+  flex: 0 1 auto;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.notif-view-count {
+  flex: 0 0 auto;
+}
+
+.notif-view-mark {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-end;
+  gap: 0.35rem;
+  margin: 0 0.375rem 0.125rem;
+  padding: 0.375rem 0.5rem;
+  border: 0;
+  background: transparent;
+  color: var(--vz-primary, #0d4a9d);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.notif-view-mark:active {
+  opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notif-view-mark:active {
+    opacity: 1;
+  }
+}
+</style>

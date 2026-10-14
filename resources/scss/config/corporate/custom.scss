@@ -1302,8 +1302,8 @@ $topnav-height: 45px;
     transition: transform 0.22s ease;
   }
 
-  // Leaving the top of the page puts both bars out of the way. They return
-  // as soon as the page is scrolled back to the top.
+  // Scrolling down puts both bars out of the way. Scrolling up brings them
+  // back immediately, even when the page is still far from the top.
   body.mobile-chrome-hidden {
     #page-topbar {
       transform: translateY(-100%);
